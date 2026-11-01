@@ -1157,8 +1157,8 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 #okkoDomWord img{position:relative;height:clamp(74px,19.5vh,146px);width:auto;   /* ★ v242 邪去悔梯子字圖縮小，避免遮住下方技能框 */
   filter:drop-shadow(0 0 16px rgba(255,255,255,.55));}
 /* ★ v49 釘崎野薔薇連動演出層 */
-.nbCut{position:absolute;inset:0;z-index:21;display:none;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.20),rgba(0,0,0,.88) 74%);pointer-events:none;}
+.nbCut{position:absolute;inset:0;z-index:45;display:none;align-items:center;justify-content:center;
+  background:#000;pointer-events:none;}   /* ★ v243 用戶指定：全場純黑，蓋住 HUD 與倒計時 */
 .nbCut.on{display:flex;animation:nbIn .28s ease-out;}
 @keyframes nbIn{from{opacity:0;transform:scale(1.07)}to{opacity:1;transform:scale(1)}}
 .nbCut img{height:94%;max-width:94%;object-fit:contain;
@@ -2056,6 +2056,34 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
 /* 桌面矮視窗允許縱向滾動，避免一頁內 overflow:hidden 把底部按鈕裁掉 */
 @media (min-width:900px) and (max-height:720px){
   #resultScreen:not(.hide){ overflow-y:auto; }
+}
+/* ★ v243c 多端适配（手机横/竖屏、平板、桌面统一）：
+   ① 列宽永远铺满视口，杜绝隐式列被内容撑成 860px 后横向溢出；
+   ② 行高改为 auto（不再用 1fr 压扁内容），内容超出时整页纵向滚动，绝不裁切底部按钮；
+   ③ 矮屏（横屏手机）顶部对齐，避免 align-content:center 把内容顶到负坐标压住标题；
+   ④ 窄屏（竖屏≤520）左右两栏改单栏。 */
+#resultScreen:not(.hide){
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:none;
+  grid-auto-rows:auto;
+  align-content:start;
+  justify-items:stretch;
+  gap:6px;
+  padding:10px 14px 12px;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+#resultScreen.cleared{ grid-template-rows:none; }   /* 覆盖旧的 4 行固定模板 */
+#resultScreen:not(.hide) > *{ min-width:0; max-width:100%; box-sizing:border-box; }
+#rCols{ min-width:0; }
+#rCols > .resCol{ min-width:0; }
+/* 屏幕足够高时才纵向居中（矮屏保持顶部对齐并可滚动） */
+@media (min-height:621px){
+  #resultScreen:not(.hide){ align-content:center; }
+}
+/* 竖屏窄屏：两栏改单栏，避免卡片被挤爆 */
+@media (max-width:520px){
+  #rCols{ grid-template-columns:minmax(0,1fr); gap:6px; }
 }
 
 /* ★ v176 結算頁最底部版權免責小字 */
@@ -8062,15 +8090,23 @@ function nobaraCut(n,dur){
   setTimeout(()=>el.classList.remove('on'), dur||1700);
 }
 function nobaraLastStand(){
-  /* ★ v66：條件 = 虎杖為最後一棒 + 場上無式神（魔虛羅/顎吐均不在場）—— 刪去舊 !S.mahaDead 過嚴判定 */
-  return (typeof heroesLeft==='function' && heroesLeft().length===0) && !S.maha && !S.agyo && S.hero==='itadori';
+  /* ★ v243 用戶指定：只要「場上是虎杖」且這一刀能擊殺宿儺（靈魂·解＝宿儺最大生命 30%）就觸發彩蛋，
+     不再要求「最後一棒 / 場上無式神」。 */
+  return S.hero==='itadori' && S.phase==='fight' && S.suk.hp>0 && S.suk.hp<=SUK_MAXHP*0.30;
 }
 function itaSoulCut(){
   if(S.acted||S.phase!=='fight') return;
-  markActed('atk');
+  const final=nobaraLastStand();   /* ★ v243 虎杖在場且此擊能擊殺 ⇒ 釘崎彩蛋 */
+  if(final){
+    /* ★ v243 黑屏演出期間：鎖住操作、凍結讀秒（含倒計時），且**不提前交棒宿儺** */
+    S.acted=true; S.lastAct='atk'; S.guardUp=false; S.blockT=0;
+    S.turnWait=1;
+    syncHud();
+  }else{
+    markActed('atk');
+  }
   S.gojo.pose='atk'; S.gojo.poseT=0.35;
   SFX.atk(); shake();
-  const final=nobaraLastStand();   /* ★ v49 最後一棒 + 無式神 ⇒ 釘崎連動 */
   /* ★ v204 需求：連動時改為「釘崎兩張圖先播完 → 虎杖再使出解」——
      原先白條/白芒與第一張同 tick 起播、第二張到結算拍纔出現，釘崎反而搶在解後面。
      現時序：點擊 ⇒ 第一張(1.5s) ⇒ 第一張收 ⇒ 第二張＋「——共鳴。」(2s) ⇒
@@ -8078,6 +8114,7 @@ function itaSoulCut(){
      非連動路徑維持原樣（點擊即解）。 */
   const startKai=()=>{
     if(S.phase!=='fight') return;
+    if(final){ S.turnWait=0; markActed('atk'); }   /* ★ v243 黑屏結束後才交棒宿儺 */
     S.gojo.pose='atk'; S.gojo.poseT=0.8;
     SFX.atk(); shake();
     /* ★ v181 字樣動畫已按用戶要求移除；視覺＝白殘影衝拳 → 兩道交叉靈魂斬線 → 白色「解」字殘影 */
@@ -8117,7 +8154,7 @@ function itaSoulCut(){
       nobaraCut(2, 2000);
       say('nobara','「——共鳴。」');
       say('ita','「就是現在，釘崎！！」');
-      setTimeout(startKai, 900);     /* 第二張入場(0.28s)完成＋停留一拍 ⇒ 虎杖出「解」 */
+      setTimeout(startKai, 2000);    /* ★ v243 第二張播完（黑屏結束）才出「解」 */
     },1500);
   }else{
     startKai();
@@ -11357,6 +11394,7 @@ function drawCutHero(key,o){
   else if(p2==='cast'){ lunge=14*s; rot=-0.05; }
   else if(p2==='hurt'){ lunge=-18*s; rot=0.08; }
   else if(p2==='guard'){ lunge=-6*s; rot=-0.03; }
+  rot += (o.rot||0);   /* ★ v243 角色專屬基礎旋轉（乙骨 +10° 順時針） */
   const hurt=Math.max(0,S.gojo.hurtFx);
   const jit=hurt>0?rnd(-4,4)*s:0;
   const x=GX()+lunge+jit;
@@ -11412,7 +11450,7 @@ function drawHiguruma(){ return drawCutHero('higuruma',
 /* ★ v224 用戶指定：在「真贋相愛」領域內使用「無限制咒力解放」時，立繪也要切換 ——
    原判斷是領域圖優先（okkoDomArt），解放立繪永遠看不到；現改為**解放立繪優先**。 */
 function drawOkkotsu(){ return drawCutHero(((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':'okko'),
-  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0})||drawFighter(); }
+  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:Math.PI/18})||drawFighter(); }   /* ★ v243 乙骨順時針再轉 10° */
 function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   const o={glow:'rgba(192,57,43,.9)', ring:'#e0553c', bob:2.2, sink:()=>Math.max(0,H-GY),
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
