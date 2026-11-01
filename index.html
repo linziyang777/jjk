@@ -534,31 +534,49 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
   0%{transform:translate(0,0)}25%{transform:translate(-6px,3px)}
   50%{transform:translate(5px,-4px)}75%{transform:translate(-3px,-2px)}100%{transform:translate(0,0)}
 }
-/* ===== ★ v230 結算頁重做：原著黑白藍 + 輪盤轉動 + 收納進場 ===== */
+/* ===== ★ v236 結算頁重做二：黑底 + 紅勾邊（用戶指定：不要黃褐色） ===== */
 #resultScreen{
-  background-color:#eef4fa;
+  background-color:#0d0b0a;
   background-image:
-    radial-gradient(circle, rgba(11,26,46,.085) 1px, transparent 1.15px),
-    radial-gradient(ellipse 80% 46% at 50% 0%, rgba(34,211,238,.22), transparent 64%),
-    radial-gradient(ellipse 95% 62% at 50% 102%, rgba(43,108,176,.18), transparent 72%);
+    radial-gradient(circle, rgba(215,38,61,.16) 1px, transparent 1.15px),
+    radial-gradient(ellipse 80% 46% at 50% 0%, rgba(215,38,61,.20), transparent 64%),
+    radial-gradient(ellipse 95% 62% at 50% 102%, rgba(120,10,18,.32), transparent 72%);
   background-size:4px 4px, 100% 100%, 100% 100%;
+  color:#f2e9e4;
 }
-#resultScreen>*{animation:rIn .55s cubic-bezier(.2,1,.3,1) both;}
-@keyframes rIn{from{opacity:0;transform:translateY(16px) scale(.976)}to{opacity:1;transform:none}}
 #resultScreen .eCard{
-  border-color:#0b1a2e;
-  box-shadow:7px 7px 0 #0b1a2e, 0 0 0 3px rgba(34,211,238,.30), 0 8px 30px rgba(34,211,238,.16);
+  background:#151210;border-color:#d7263d;color:#f2e9e4;
+  box-shadow:7px 7px 0 rgba(215,38,61,.55), 0 0 0 3px rgba(215,38,61,.28), 0 8px 30px rgba(215,38,61,.18);
 }
-#resultScreen .eTag{color:#0e7490;}
-#resultScreen .eAlso{color:#0e7490;}
-#resultScreen .secTitle{color:#0b1a2e;opacity:.78;letter-spacing:5px;}
-#resultScreen .secTitle::before{content:"";width:15px;height:3px;background:#22d3ee;flex:none;}
-#resultScreen .dexCnt{background:#0b1a2e;color:#7ff0ff;}
-#resultScreen .cta{background:#0b1a2e;border-color:#0b1a2e;color:#7ff0ff;
-  box-shadow:7px 7px 0 rgba(11,26,46,.30), 0 0 26px rgba(34,211,238,.42);}
-#resultScreen .resDisc{color:#24405c;opacity:.5;}
-#resultScreen .ach{border-color:#0b1a2e;box-shadow:3px 3px 0 #0b1a2e, 0 0 12px rgba(34,211,238,.22);}
-#resultScreen .dt{color:#0e7490;}
+#resultScreen .eCard.win{background:#1a0f0e;border-color:#d7263d;}
+#resultScreen .eCard.true{background:#221010;border-color:#ff4a4a;
+  box-shadow:7px 7px 0 rgba(215,38,61,.7), 0 0 0 3px rgba(255,74,74,.35), 0 8px 30px rgba(215,38,61,.28);}
+#resultScreen .eCard.lose{background:#131110;border-color:#8a2020;box-shadow:7px 7px 0 rgba(138,32,32,.5);}
+#resultScreen .eTag{color:#ff5a5a;}
+#resultScreen .eAlso{color:#ff8a8a;}
+#resultScreen .eNm{color:#fff;}
+#resultScreen .eDesc{color:#e8dcd6;}
+#resultScreen .secTitle{color:#f2e9e4;opacity:.85;letter-spacing:5px;}
+#resultScreen .secTitle::before{content:"";width:15px;height:3px;background:#d7263d;flex:none;}
+#resultScreen .dexCnt{background:#d7263d;color:#fff;}
+#resultScreen .cta{background:#151210;border-color:#d7263d;color:#ff6b6b;
+  box-shadow:7px 7px 0 rgba(215,38,61,.45), 0 0 26px rgba(215,38,61,.4);}
+#resultScreen .resDisc{color:#b8a8a2;opacity:.6;}
+#resultScreen .ach{border-color:#d7263d;background:#151210;color:#f2e9e4;
+  box-shadow:3px 3px 0 rgba(215,38,61,.55), 0 0 12px rgba(215,38,61,.28);}
+#resultScreen .chNode{background:#151210;border-color:#d7263d;color:#f2e9e4;box-shadow:3px 3px 0 rgba(215,38,61,.5);}
+#resultScreen .chNode.last{background:#d7263d;color:#fff;}
+#resultScreen .recBox{background:#151210;border-color:#d7263d;color:#f2e9e4;box-shadow:3px 3px 0 rgba(215,38,61,.5);}
+#resultScreen .recBox.pb{background:#2a1112;}
+#resultScreen .recNew{background:#151210;}
+#resultScreen .dexRow{background:#151210;border-color:#d7263d;color:#f2e9e4;box-shadow:3px 3px 0 rgba(215,38,61,.5);}
+#resultScreen .dexRow.lock{background:#1a1614;opacity:.6;box-shadow:3px 3px 0 rgba(215,38,61,.2);}
+#resultScreen .dexRow.now{border-color:#ff4a4a;box-shadow:3px 3px 0 #ff4a4a;}
+#resultScreen .dt{color:#ff5a5a;}
+/* 通關橫幅：黑底白字紅環 */
+#resultScreen #rCore{color:#fff;background:linear-gradient(180deg,#1a1512,rgba(20,17,15,.88));
+  border-top:3px solid #d7263d;border-bottom:3px solid #d7263d;
+  text-shadow:0 0 22px rgba(215,38,61,.9), 0 0 46px rgba(215,38,61,.45);}
 
 /* 通關橫幅（中心最上方）＋ 轉動刻度環 */
 #rCoreWrap{display:none;position:relative;width:100%;max-width:760px;
@@ -568,13 +586,13 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
   position:absolute;top:50%;left:50%;width:min(216px,46vw);aspect-ratio:1/1;
   transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:.8;
   background:conic-gradient(from 0deg,
-    rgba(34,211,238,.95) 0deg,transparent 20deg, rgba(34,211,238,.45) 24deg,transparent 46deg,
-    rgba(34,211,238,.85) 50deg,transparent 74deg, rgba(34,211,238,.4) 78deg,transparent 102deg,
-    rgba(34,211,238,.9) 106deg,transparent 130deg, rgba(34,211,238,.45) 134deg,transparent 158deg,
-    rgba(34,211,238,.95) 162deg,transparent 186deg, rgba(34,211,238,.4) 190deg,transparent 214deg,
-    rgba(34,211,238,.8) 218deg,transparent 242deg, rgba(34,211,238,.45) 246deg,transparent 270deg,
-    rgba(34,211,238,.9) 274deg,transparent 298deg, rgba(34,211,238,.4) 302deg,transparent 326deg,
-    rgba(34,211,238,.85) 330deg,transparent 360deg);
+    rgba(215,38,61,.95) 0deg,transparent 20deg, rgba(215,38,61,.45) 24deg,transparent 46deg,
+    rgba(215,38,61,.85) 50deg,transparent 74deg, rgba(215,38,61,.4) 78deg,transparent 102deg,
+    rgba(215,38,61,.9) 106deg,transparent 130deg, rgba(215,38,61,.45) 134deg,transparent 158deg,
+    rgba(215,38,61,.95) 162deg,transparent 186deg, rgba(215,38,61,.4) 190deg,transparent 214deg,
+    rgba(215,38,61,.8) 218deg,transparent 242deg, rgba(215,38,61,.45) 246deg,transparent 270deg,
+    rgba(215,38,61,.9) 274deg,transparent 298deg, rgba(215,38,61,.4) 302deg,transparent 326deg,
+    rgba(215,38,61,.85) 330deg,transparent 360deg);
   -webkit-mask:radial-gradient(circle,transparent 60%,#000 61.5%);
   mask:radial-gradient(circle,transparent 60%,#000 61.5%);
   animation:ringSpin 11s linear infinite;
@@ -6781,8 +6799,9 @@ function renderRite(){
   const names=riteNames();
   /* ★ v41：附身狀態（伏黑惠的肉體）沒有「世界を断つ斬撃」條 —— 只有原身才顯示
      ★ v218 用戶指定「儀式條本身每一段讀條了就要亮」：原身形態戰鬥期間儀式條**始終顯示**
-        （用過世界斬後即使 rite=0 也掛著，玩家能實時看到每段被點亮的過程），不再中途隱藏。 */
-  row.style.display=(S.phase==='fight'&&S.trueForm)?'flex':'none';
+        （用過世界斬後即使 rite=0 也掛著，玩家能實時看到每段被點亮的過程），不再中途隱藏。
+     ★ v235 用戶指定：世界斬**用過之前**儀式條不出現 —— 首發走「龍鱗」結印預警，不掛空條。 */
+  row.style.display=(S.phase==='fight'&&S.trueForm&&S.worldUsed)?'flex':'none';
   /* ★ v234 儀式條常顯（原身戰）會與左上角的式神血條行同高疊位 ⇒ 掛 .hasRite 讓 #tgtRow 自動下移避讓 */
   const st=$('stage'); if(st) st.classList.toggle('hasRite', row.style.display==='flex');
   const j=(S.riteJust==null)?-1:S.riteJust;
