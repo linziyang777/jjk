@@ -556,12 +556,9 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 }
 /* ===== ★ v236 結算頁重做二：黑底 + 紅勾邊（用戶指定：不要黃褐色） ===== */
 #resultScreen{
-  /* ★ v237 用戶指定：背景底色改白色（保留黑網點質感）；內容超出可滑動 */
+  /* ★ v240 用戶指定：背景改為**純白**，去掉網點與頂部紅暈 */
   background-color:#fff;
-  background-image:
-    radial-gradient(circle, rgba(20,17,15,.14) 1px, transparent 1.15px),
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(215,38,61,.08), transparent 60%);
-  background-size:4px 4px, 100% 100%;
+  background-image:none;
   color:#1b1b1b;
   touch-action:auto;overscroll-behavior:contain;
   z-index:60;   /* ★ v239 高於一切 HUD（30），避免殘留的條/欄攔截觸摸滑動 */
@@ -581,8 +578,9 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 #resultScreen .secTitle{color:#1b1b1b;opacity:.8;letter-spacing:5px;}
 #resultScreen .secTitle::before{content:"";width:15px;height:3px;background:#d7263d;flex:none;}
 #resultScreen .dexCnt{background:#d7263d;color:#fff;}
-#resultScreen .cta{background:#151210;border-color:#d7263d;color:#ff6b6b;
+#resultScreen .cta{background:#151210;border-color:#d7263d;color:#ffffff;   /* ★ v240 用戶指定：字改白色 */
   box-shadow:7px 7px 0 rgba(215,38,61,.45), 0 0 26px rgba(215,38,61,.4);}
+#resultScreen .cta .ctaSub{color:rgba(255,255,255,.62);}
 #resultScreen .resDisc{color:#6b5f54;opacity:.8;}
 #resultScreen .ach{border-color:#d7263d;background:#151210;color:#f2e9e4;
   box-shadow:3px 3px 0 rgba(215,38,61,.55), 0 0 12px rgba(215,38,61,.28);}
@@ -1955,6 +1953,94 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
 #resultScreen>*{flex:0 0 auto;}
 #resultScreen::-webkit-scrollbar{width:6px;}
 #resultScreen::-webkit-scrollbar-thumb{background:var(--ink);}
+/* ===== ★ v240 結算頁左右排布（用戶指定）：一頁內呈現，成就區改橫向輪播 ===== */
+#resultScreen{
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  align-content:center;
+  justify-items:stretch;
+  gap:5px;
+  padding:10px 14px 10px;
+  overflow:hidden;                 /* ★ 一頁內：不再縱向滾動 */
+}
+#rCols{
+  display:grid;
+  grid-template-columns:minmax(0,1.06fr) minmax(0,0.94fr);
+  gap:5px 14px;
+  width:100%;max-width:860px;
+  align-items:start;justify-self:center;
+}
+.resCol{display:flex;flex-direction:column;gap:5px;min-width:0;align-items:stretch;}
+.chainRow{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;width:100%;}
+.chainRow #rChain{flex:1 1 auto;min-width:0;}
+.chainRow #rRec{flex:1 1 auto;display:flex;gap:4px;align-items:center;justify-content:flex-end;min-width:0;}
+#rCols{min-height:0;}
+.resCol>*{width:100%;}
+/* 成就：橫向輪播（手指滑動 / 鼠標橫滾），一頁只佔一行 */
+#achWrap{
+  display:flex;flex-wrap:nowrap;justify-content:flex-start;
+  gap:6px;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;
+  padding:2px 1px 6px;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+}
+#achWrap>*{flex:0 0 auto;scroll-snap-align:start;}
+#achWrap::-webkit-scrollbar{height:3px;}
+#achWrap::-webkit-scrollbar-thumb{background:rgba(215,38,61,.62);border-radius:2px;}
+/* ★ v240 用戶指定：全服戰況去掉黑框，白底上直接排字（僅此塊，反饋塊保留卡片） */
+#resultScreen #rSrv{
+  border:none;background:transparent;box-shadow:none;
+  color:#1b1b1b;padding:2px 0;
+}
+#resultScreen #rSrv .srvHd{
+  color:#1b1b1b;opacity:.5;border-bottom:1px dashed rgba(0,0,0,.16);
+  padding-bottom:4px;margin-bottom:5px;
+}
+#resultScreen #rSrv .srvHd small{color:#d7263d;opacity:.9;}
+#resultScreen #rSrv .srvBody{color:#2a2a2a;}
+#resultScreen #rSrv .srvBody b{color:#c0392b;}
+#resultScreen #rSrv .srvHi{color:#a04038;}
+#resultScreen #rSrv .srvSub{color:#7a6f6a;}
+/* ★ v240 用戶指定：通關時不顯示結局卡（如「正面突破」），只留「你已掌握咒力的核心」並下移居中；
+   失敗時只顯示結局卡、不出現咒力核心橫幅。 */
+#resultScreen.cleared #rEndCard{display:none;}
+#resultScreen.cleared{grid-template-rows:auto minmax(0,1fr) auto auto;}
+#resultScreen.cleared #rCoreWrap{align-self:center;z-index:3;position:relative;}
+/* 輪盤只做背景光環，不能壓住文字與右欄標題 */
+#rCoreWrap{position:relative;z-index:3;}
+#rCols{position:relative;z-index:2;}
+#rRing{pointer-events:none;z-index:0;}
+#rCore{position:relative;z-index:1;}
+/* 圖鑑改兩列，右欄高度減半 */
+#resultScreen .dex{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;}
+/* 緊湊化：讓兩欄 + 按鈕剛好塞進一屏（手機橫屏 ah≈430 也不滾動） */
+#resultScreen .eCard{padding:7px 10px;box-shadow:4px 4px 0 rgba(215,38,61,.5),0 0 0 2px rgba(215,38,61,.22);}
+#resultScreen .eNm{font-size:clamp(16px,3.4vw,25px);letter-spacing:2px;}
+#resultScreen .eTag{font-size:9.5px;letter-spacing:3px;}
+#resultScreen .eDesc{font-size:11px;line-height:1.5;}
+#resultScreen .secTitle{font-size:10px;letter-spacing:3px;margin:1px 0 0;}
+#resultScreen .secTitle::before{width:11px;height:2px;}
+#resultScreen .dex{gap:4px;}
+#resultScreen .dexRow{padding:3px 7px 4px;}
+#resultScreen .chNode{padding:2px 7px;font-size:10.5px;letter-spacing:1px;}
+#resultScreen .recRow{gap:4px;}
+#resultScreen .recBox{padding:3px 8px;}
+#resultScreen .recBox .rk{font-size:9.5px;}
+#resultScreen .recBox .rv{font-size:13px;}
+#resultScreen .recBox .rb{font-size:9px;}
+#resultScreen .cta{padding:6px 18px;font-size:clamp(15px,3.2vw,19px);letter-spacing:5px;}
+#resultScreen .resDisc{font-size:8.5px;line-height:1.35;margin-top:3px;opacity:.6;}
+#resultScreen .srvCard{padding:7px 10px;}
+#resultScreen .srvBody{font-size:11px;line-height:1.5;}
+#resultScreen .fbBtn{padding:5px 3px;font-size:11.5px;}
+#resultScreen .fbRow2 input{padding:5px 8px;font-size:11.5px;}
+#resultScreen #rFbSend{padding:5px 12px;font-size:11.5px;}
+/* 窄屏（手機豎屏旋轉後的橫向空間）再收一檔 */
+@media (max-width:520px){
+  #rCols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 8px;}
+  #resultScreen{padding:8px 8px 8px;}
+}
+
 /* ★ v176 結算頁最底部版權免責小字 */
 .resDisc{margin-top:10px;padding:0 6px 2px;text-align:center;
   font-size:clamp(8px,1.5vw,11px);line-height:1.7;letter-spacing:.4px;
@@ -2317,6 +2403,8 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
   <!--pnid:veJmGss9XHEsSc7kVUBRe5--><!-- 結算 -->
   <div data-page-node-id="nKjF2g3gohseWZ3SHjlMdy" class="screen hide" id="resultScreen">
     <div id="rCoreWrap"><div id="rRing"></div><div id="rCore">你已掌握咒力的核心</div></div>
+    <!-- ★ v240 左右排布容器：showResult 會把各區塊搬到左右兩欄（見 buildResultCols） -->
+    <div id="rCols"><div class="resCol" id="rColL"></div><div class="resCol" id="rColR"></div></div>
     <div data-page-node-id="8E0KItrUo8JyPQAKFZs4MX" class="eCard" id="rEndCard">
       <div data-page-node-id="rEndTagN" class="eTag" id="rEndTag"><!--pnid:7NhZVVhrfVPaKXsGmpHSXc-->RESULT</div>
       <div data-page-node-id="rEndNmN" class="eNm" id="rEndNm"><!--pnid:fNk1Qz2vT1wYdBQr9hXb7A-->戰鬥結束</div>
@@ -2725,6 +2813,8 @@ function fitUI(){
   rs.setProperty('--ah',ah+'px');
 }
 function resize(){
+  /* ★ v240 結算頁可見時重算縮放（旋轉/視口變化） */
+  if(typeof fitResult==='function') setTimeout(fitResult,30);
   /* 用佈局尺寸（clientWidth/Height）而非 getBoundingClientRect：
      手機自動橫屏時 #app 被 rotate(90deg)，getBoundingClientRect 會把寬高交換 */
   fitUI();
@@ -7319,9 +7409,9 @@ function renderRecords(kill){
     '<div class="recBox'+(pb?' pb':'')+'"><span class="rk">'+k+'</span><span class="rv">'+v+'</span>'
     +'<span class="rb">'+(best!=null?('最佳 '+best):'—')+'</span></div>'
     +(isNew?'<span class="recNew">NEW RECORD</span>':'');
+  /* ★ v240 用戶指定：去掉「出戰術師」格子（最佳人數仍寫進 SAVE，成就「不屈の魂」依賴它） */
   $('rRec').innerHTML =
-      box('出戰術師',heroes+' 人',(SAVE.best.heroes!=null?SAVE.best.heroes+' 人':null),pbH,newH)
-    + box('回合數',turns+' 回合',(SAVE.best.turns!=null?SAVE.best.turns+' 回合':null),pbT,newT)
+      box('回合數',turns+' 回合',(SAVE.best.turns!=null?SAVE.best.turns+' 回合':null),pbT,newT)
     + box('本局黑閃',S.blackN+' 次',null,false,false);
 }
 /* 結局圖鑑：本局新解鎖的高亮，未解鎖顯示 ??? */
@@ -7356,6 +7446,14 @@ function renderAch(){
 /* ===== ★ v239 全服戰況 + 手感反饋 =====
    每局結算上報一次（w=1 通關），拿回累計數據展示；玩家可點三檔手感並留言（≤80 字）。
    離線 / APK（無服務端）時 fetch 失敗 ⇒ 顯示「離線」並隱藏反饋塊，不拋錯、不阻塞結算。 */
+/* ★ v240 APK 也能看戰況：App 內是 file:// 加載，同源請求會失敗 ⇒ 改用線上域名。
+   服務端 /api/result、/api/fb 都返回 Access-Control-Allow-Origin:* ，跨域可用。 */
+function apiBase(){
+  try{
+    if(location.protocol==='file:' || !location.hostname) return 'https://jjk-shinjuku-battle-83982.app.workbuddy.host';
+  }catch(e){}
+  return '';
+}
 function jjkSid(){
   try{
     var s=localStorage.getItem('jjk_sid_v1');
@@ -7370,7 +7468,7 @@ function reportResult(kill){
   if(fb) fb.style.display='none';
   let done=false;
   const tm=setTimeout(function(){ if(!done){ done=true; el.innerHTML='<span class="srvSub">離線 · 戰況需聯網查看</span>'; } },6000);
-  const url='/api/result?s='+encodeURIComponent(jjkSid())+'&w='+(kill?1:0)+'&r='+(S.turnN||0)+'&g='+(S.rank||'');
+  const url=apiBase()+'/api/result?s='+encodeURIComponent(jjkSid())+'&w='+(kill?1:0)+'&r='+(S.turnN||0)+'&g='+(S.rank||'');
   fetch(url,{method:'POST',cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
     if(done) return; done=true; clearTimeout(tm);
     if(!d||typeof d.challenges!=='number'){ el.innerHTML='<span class="srvSub">戰況暫不可用</span>'; return; }
@@ -7382,6 +7480,7 @@ function reportResult(kill){
     }
     el.innerHTML=s;
     if(fb){ fb.style.display=''; bindFb(); }
+    if(typeof fitResult==='function') setTimeout(fitResult,40);   /* ★ v240 戰況/反饋展開後重算 */
   }).catch(function(){
     if(done) return; done=true; clearTimeout(tm);
     el.innerHTML='<span class="srvSub">離線 · 戰況需聯網查看</span>';
@@ -7408,13 +7507,49 @@ function sendFb(){
   const tx=$('rFbText'), m=tx?((tx.value||'').trim().slice(0,80)):'';
   const ok=$('rFbOk');
   box.__sent=1;
-  fetch('/api/fb?s='+encodeURIComponent(jjkSid())+'&f='+pick+'&m='+encodeURIComponent(m),{method:'POST',cache:'no-store'})
+  fetch(apiBase()+'/api/fb?s='+encodeURIComponent(jjkSid())+'&f='+pick+'&m='+encodeURIComponent(m),{method:'POST',cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(){ if(ok) ok.textContent='已記錄，謝謝。'; })
     .catch(function(){ if(ok) ok.textContent='沒能送出（離線），稍後再試。'; box.__sent=0; });
 }
 
+/* ★ v240 結算頁左右排布：把各區塊搬進左右兩欄（只搬一次，之後每次結算只更新內容）
+   左欄＝結局卡 / 接力鏈 / 挑戰紀錄 / 全服戰況；右欄＝結局圖鑑 / 藏彩蛋成就（橫向輪播）/ 手感反饋。 */
+function buildResultCols(){
+  const rs=$('resultScreen'), L=$('rColL'), R=$('rColR');
+  if(!rs||!L||!R||L.__built) return;
+  const secs=rs.querySelectorAll('.secTitle');
+  const g=id=>$(id);
+  /* ★ v240 用戶指定：回合數／黑閃移到接力鏈右側（同一個 chainRow 內） */
+  let line=L.querySelector('.chainRow');
+  if(!line){ line=document.createElement('div'); line.className='chainRow'; }
+  const _ch=g('rChain'), _rc=g('rRec');
+  if(_ch) line.appendChild(_ch);
+  if(_rc) line.appendChild(_rc);
+  const left =[g('rEndCard'), secs[0], line, g('rSrv')];
+  const right=[secs[1], g('rDex'), secs[2], g('achWrap'), g('rFb')];
+  left.forEach(function(el){ if(el) L.appendChild(el); });
+  right.forEach(function(el){ if(el) R.appendChild(el); });
+  L.__built=1;
+}
+
+/* ★ v240 結算頁「一頁內」兜底：內容比可視高度高時整頁等比縮小（下限 0.55）。
+   手機橫屏高度只有 ~400px，光靠壓字號仍會溢出 —— 這裡按實測高度縮放。 */
+function fitResult(){
+  const rs=$('resultScreen');
+  if(!rs || rs.classList.contains('hide')) return;
+  rs.style.zoom='';
+  const h=rs.clientHeight;
+  if(!h) return;
+  const need=rs.scrollHeight;
+  if(need>h+2){
+    const z=Math.max(0.55,(h-2)/need);
+    rs.style.zoom=z.toFixed(3);
+  }
+}
+
 function showResult(){
+  buildResultCols();                                 /* ★ v240 先歸位左右兩欄 */
   if($('gzFin')) $('gzFin').classList.remove('on');   /* ★ v63 收起終幕演出層 */
   $('deathCut').classList.remove('on');
   $('kashFall').classList.remove('on');
@@ -7446,6 +7581,10 @@ function showResult(){
   /* ★ v230 通關橫幅：只有真正擊倒宿儺（kill）才亮 —— 中心最上方「你已掌握咒力的核心」 */
   const _cw=$('rCoreWrap');
   if(_cw) _cw.classList.toggle('on',!!kill);
+  /* ★ v240 用戶指定：通關 ⇒ 收起結局卡（只留咒力核心橫幅）；失敗 ⇒ 只顯示結局卡 */
+  const _rsx=$('resultScreen');
+  if(_rsx) _rsx.classList.toggle('cleared',!!kill);
+  card.style.display = kill?'none':'';
   /* ★ v230 收納進場：逐個錯開，形成自上而下收攏的節奏 */
   const _rs=$('resultScreen');
   if(_rs){
@@ -7454,6 +7593,7 @@ function showResult(){
   }
   $('resultScreen').classList.remove('hide');
   $('resultScreen').scrollTop=0;
+  setTimeout(fitResult,20); setTimeout(fitResult,320);   /* ★ v240 一頁內：兩次兜底（等字體/戰況載入） */
 }
 
 /* =========================================================
@@ -9827,19 +9967,24 @@ else if(f.type==='kaiSlash'){
         ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r*0.9);
       }
       ctx.closePath(); ctx.fill();
-      /* ★ v207 需求①：整體用黑色勾邊（外弧+內弧閉合輪廓），比淺紫描邊更銳利 */
-      ctx.strokeStyle='rgba(10,6,16,.95)'; ctx.lineWidth=4.5*SC; ctx.lineJoin='round';
-      ctx.beginPath();
-      for(let i=0;i<=NPT;i++){
-        const t=i/NPT, a=-SPAN+t*2*SPAN, r=rOut(t)*jag(t,1.3);
-        const px=Math.cos(a)*r, py=Math.sin(a)*r*0.9;
-        i?ctx.lineTo(px,py):ctx.moveTo(px,py);
-      }
-      for(let i=NPT;i>=0;i--){
-        const t=i/NPT, a=-SPAN+t*2*SPAN, r=rIn(t)*jag(t,4.1);
-        ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r*0.9);
-      }
-      ctx.closePath(); ctx.stroke();
+      /* ★ v240 用戶指定：不再整圈閉合勾邊 —— 只在外弧上挑三段粗細不勻的黑筆觸，內弧補一小段，
+         配合 jag() 的高頻抖動，形成手繪般「斷斷續續、粗細不均」的墨線。 */
+      ctx.strokeStyle='rgba(10,6,16,.95)'; ctx.lineJoin='round'; ctx.lineCap='round';
+      const _arc=(ta,tb,rfn,ph,lw)=>{
+        ctx.lineWidth=lw*SC;
+        ctx.beginPath();
+        const steps=8;
+        for(let i=0;i<=steps;i++){
+          const t=ta+(tb-ta)*i/steps, a=-SPAN+t*2*SPAN, r=rfn(t)*jag(t,ph);
+          const px=Math.cos(a)*r, py=Math.sin(a)*r*0.9;
+          i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+        }
+        ctx.stroke();
+      };
+      _arc(0.03,0.24,rOut,1.3,5.2);    /* 上緣長筆 */
+      _arc(0.33,0.44,rOut,1.3,3.6);    /* 中段短筆（細一點，故意不連貫） */
+      _arc(0.57,0.93,rOut,1.3,5.6);    /* 下緣長筆 */
+      _arc(0.46,0.55,rIn,4.1,2.8);     /* 內弧只補一小段 */
       ctx.strokeStyle='rgba(233,213,255,.95)'; ctx.lineWidth=1.6*SC;
       ctx.beginPath();
       for(let i=0;i<=NPT;i++){
@@ -13171,7 +13316,7 @@ function startOkkoDomainBgm(){
      乘 0.65（≈-3.7dB）後兩者聽感一致。 */
   /* ★ v185 隨宿儺 BGM 同步減小：0.52=0.8×0.65（保留 4dB 响度對齊係數，兩者聽感仍一致） */
   /* ★ v187 用戶再次要求降低：0.52 → 0.32（再降約 4.2dB，明顯小於宿儺領域 BGM） */
-  el.loop=true; el.volume=0.32;
+  el.loop=true; el.volume=0.22;   /* ★ v240 用戶要求再降：0.32 → 0.22（約 -3.3dB） */
   const p=el.play(); if(p&&p.catch) p.catch(()=>{});
 }
 function stopOkkoDomainBgm(){
