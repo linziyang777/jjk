@@ -378,6 +378,17 @@
         本版改為「按下防禦的那一刻」用 `perfectWindowOpen()` 判定並直接結算（不再等受擊回調）。
      ⑤ 接入點：五條反轉術式／虎杖簡易領域／日車領域展延／真希天與咒縛・架勢（真希不走 blockT，按下即結算）；
         乙骨二技能是里香召喚、鹿紫雲無防禦，均不觸發。台詞按英雄取 `PERFECT_LINE`。 -->
+<!-- ★ v240 批次（用戶連續指定，共 7 條）：
+     ① 無下限失效時機：魔虛羅登場「2 回合後」才破解（原為登場瞬間），S.muBreakIn 倒計時，歸零調 gojoMuBreak()；
+        登場回合與倒數第 1 回合各播報一次；五條未上場時不播破解台詞。
+     ② 選人頁取消滑動：#selectUI overflow:hidden + touch-action:manipulation；fitUI 改「實測內容高度」
+        （zoom = ah×0.965 / scrollHeight，下限 0.42）取代固定 620 基準 —— 三種視口實測溢出均為 0。
+     ③ 暫停遮罩：點「暫停」字樣或空白處即可繼續（世界線跳躍按鈕除外），文案改「點這裡、或左上角的按鈕繼續」，
+        「暫停」兩字加 2.6s 極輕呼吸提示。
+     ④ 蒼・拳出拳圖上移：_py 由 GY-0.52×圖高 → GY-0.68×圖高；藍色爆開點改綁定圖座標（_burstY），黑閃字同步上移。
+     ⑤ 無下限被破解後，反轉術式取消「血量 ≤40%」門檻，隨時可用（仍受 CD 2 回合限制）。
+     ⑥ 反轉術式技能框恢復白色（v236 的淡綠 .b-rev 撤除，改白底墨框）。
+     ⑦ 新增 SFX.punch() 毆打衝擊音（低頻 + 噪聲爆裂），蒼・拳命中時播放。 -->
 <!-- ★ v239 全服戰況 + 手感反饋（用戶指定，不做戰報卡）：
      ① 結算頁底部新增「全服戰況」：`reportResult(kill)` POST `/api/result`，顯示
         累計挑戰人次 / 擊敗宿儺人數 / 通關時「你是第 N 位」；失敗（離線或 APK 無服務端）顯示「離線 · 戰況需聯網查看」。
@@ -602,23 +613,23 @@ html.rot .recRow,html.land .recRow{gap:5px;}
 #resultScreen .srvCard{
   width:100%;max-width:760px;box-sizing:border-box;
   border:3px solid #0b1a2e;background:#1a0f0e;color:#f2e9e4;
-  padding:11px 14px;box-shadow:5px 5px 0 rgba(215,38,61,.48),0 0 0 2px rgba(215,38,61,.18);
+  padding:9px 12px;box-shadow:4px 4px 0 rgba(215,38,61,.48),0 0 0 2px rgba(215,38,61,.18);
 }
 #resultScreen .srvHd{
   display:flex;align-items:baseline;gap:8px;
   font-size:clamp(11px,2.6vw,13px);letter-spacing:4px;color:#f2e9e4;opacity:.9;
-  padding-bottom:7px;margin-bottom:8px;border-bottom:1px dashed rgba(215,38,61,.45);
+  padding-bottom:6px;margin-bottom:7px;border-bottom:1px dashed rgba(215,38,61,.45);
 }
 #resultScreen .srvHd small{font-size:9px;letter-spacing:2px;color:#d7263d;opacity:.85;}
 #resultScreen .srvBody{
-  font-size:clamp(12px,3vw,14px);line-height:1.75;color:#e8dcd6;letter-spacing:.5px;
+  font-size:clamp(11.5px,2.9vw,13.5px);line-height:1.65;color:#e8dcd6;letter-spacing:.5px;
 }
 #resultScreen .srvBody b{color:#ff6b7a;font-size:1.18em;letter-spacing:0;padding:0 2px;}
 #resultScreen .srvHi{color:#f5c542;font-weight:400;}
 #resultScreen .srvSub{color:#a49690;font-size:.92em;}
 #resultScreen .fbRow{display:flex;gap:8px;margin:2px 0 9px;}
 #resultScreen .fbBtn{
-  flex:1;padding:9px 4px;font:inherit;font-size:clamp(12px,3vw,13.5px);letter-spacing:1px;
+  flex:1;padding:7px 4px;font:inherit;font-size:clamp(12px,3vw,13.5px);letter-spacing:1px;
   color:#f2e9e4;background:#241614;border:2px solid rgba(215,38,61,.55);cursor:pointer;
   transition:background .12s,border-color .12s;
 }
@@ -701,12 +712,13 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 #pad .btn.b-fist .ico{color:#0b6f9e;}
 #pad .btn.b-fist small{color:#0b4a6b;opacity:.85;}
 /* ★ v235 五條 2 技「反轉術式」形態：淡綠治療框（與「無下限」的白底墨框一眼可分） */
-#pad .btn.b-rev{
-  background:linear-gradient(180deg,#f0fbf3 0%,#d2f3de 100%);
-  border-color:#0f5c33;box-shadow:4px 4px 0 #0f5c33;
+#pad .btn/* ★ v240 用戶指定：反轉術式恢復白色框（原 v236 的淡綠治療框撤除） */
+.b-rev{
+  background:linear-gradient(180deg,#ffffff 0%,#eef0f2 100%);
+  border-color:var(--ink);box-shadow:4px 4px 0 var(--ink);
 }
-#pad .btn.b-rev .ico{color:#0f8a4d;}
-#pad .btn.b-rev small{color:#0f5c33;opacity:.9;}
+#pad .btn.b-rev .ico{color:var(--ink);}
+#pad .btn.b-rev small{color:#4a4a4a;opacity:.9;}
 
 /* ===== ★ v230 無下限被破解：技能框玻璃破碎 ===== */
 @keyframes glassBreak{
@@ -1368,7 +1380,11 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 #pauseOv{position:absolute;inset:0;z-index:29;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:10px;background:rgba(8,6,10,.55);}
 #pauseOv.on{display:flex;}
-#pauseOv{-webkit-touch-callout:none;user-select:none;}
+#pauseOv{-webkit-touch-callout:none;user-select:none;cursor:pointer;}
+#pauseOv .cta{cursor:pointer;}
+/* ★ v240 點字樣即可繼續：給「暫停」兩字一點可點暗示（極輕的呼吸） */
+#pauseOv .pt{animation:pauseBreath 2.6s ease-in-out infinite;}
+@keyframes pauseBreath{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.86;transform:scale(.985)}}
 #pauseOv .pt{font-size:clamp(20px,5.4vw,38px);font-weight:900;color:#fff;
   letter-spacing:clamp(4px,2vw,10px);text-shadow:3px 3px 0 #000,0 0 26px rgba(255,255,255,.6);}
 #pauseOv .ps{font-size:clamp(10px,2.6vw,13px);font-weight:700;letter-spacing:2px;color:#e8e4da;text-shadow:1px 1px 0 #000;}
@@ -1573,6 +1589,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 
 /* ---------- 角色選擇 / 鹿紫雲一 ---------- */
 #selectUI{z-index:22;zoom:var(--selz,1);   /* ★ v97 手機小屏整體等比縮放（見 fitUI 註釋） */
+  overflow:hidden;overscroll-behavior:contain;touch-action:manipulation;   /* ★ v240 用戶指定：選人頁不允許滑動（內容由 fitUI 縮放到剛好放下） */
   /* ★ v157 卡片基準寬度改按 --aw（#app 實際佈局寬）算：豎屏自動旋轉時 vw 是手機視口寬而非 #app 寬，
      卡片被 clamp 壓到下限（≈95px），整頁擠在屏幕中間；0.20×aw + 上限 300px 兼顧手機/桌面/App WebView */
   --selw:clamp(150px,calc(var(--aw)*0.20),300px);}
@@ -2132,7 +2149,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <!--pnid:lczKKdpGTtJXetTJM2YvQG--><!-- ★ v40 目標切換（場上有式神時出現） -->
     <div data-page-node-id="SJIhtIPaRzyMNXS8JGOUgz" id="tgtRow"></div>
     <!-- ★ v110 暫停遮罩：置於 #stage 層級（#field 外），才能連同下方技能欄一併擋住 -->
-    <div id="pauseOv"><div class="pt">暫 停</div><div class="ps">點左上角的按鈕繼續</div><button class="cta" id="btnPauseJump">世界線跳躍<span class="ctaSub">放棄本局・重選難度</span></button></div>
+    <div id="pauseOv"><div class="pt">暫 停</div><div class="ps">點這裡、或左上角的按鈕繼續</div><button class="cta" id="btnPauseJump">世界線跳躍<span class="ctaSub">放棄本局・重選難度</span></button></div>
     <!--pnid:AHIJlZzMzxNst05k1veEYq--><!-- 手機按鈕 -->
     <div data-page-node-id="waa8MnaPqXCnr4o8cDiaTT" id="pad">
       <div data-page-node-id="nZthsDjX1paiV6ruIRm10q" class="btn" data-act="atk" id="btnAtk"><svg data-page-node-id="bRyarpnLHidcvAK2oeVDNt" aria-hidden="true" class="ico"><use data-page-node-id="GYQo174a5YCxCXZRfT7G5S" href="#ic-kai"></use></svg><!--pnid:iHJCU0ErQ13dIlfdN33ZML--><span id="atkLabel">術式順轉·蒼</span><small data-page-node-id="XQzIWw9wD27HC35N6hpk2j" id="atkSub"><!--pnid:bcVpvWlLicspSYtF1ALTMO-->5~7% 傷害</small><span id="atkSwap" title="切換「蒼」／「蒼・拳」"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-13.6-5.6L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 13.6 5.6L20 16"/><path d="M20 20v-4h-4"/></svg></span></div>
@@ -2380,7 +2397,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <p><b>束縛・立誓</b>　每回合可立一誓：捨棄自身一項性能，換取另一項爆發 —— 條款見各角色。</p>
     <p><b>適應</b>　魔虛羅在場時，同一技能第 1 次正常／第 2 次傷害減半／第 3 次起完全免疫 —— 必須輪換技能。</p>
     <p><b>式神</b>　魔虛羅：宿儺生命首次跌破 90% 後的回合結束時召喚，可切目標「集火」擊破（死後宿儺失去適應）；顎吐：宿儺生命 &lt;85% 後的下一回合自動召喚。</p>
-    <p><b>世界斬</b>　宿儺原身形態生命 &lt;50% 後每 2~3 回合隨機亮出「龍鱗」：該回合不攻擊，下一回合直接秒殺當前術師；★ 用過一次後，血條下方的儀式進度條（<b>閻魔天掌印 → 龍鱗 → 反發 → 成雙之流星 → 定向</b>）在戰鬥頁面始終顯示，宿儺每次行動**二選一**：隨機釋放一個技能，或讀 1 段儀式 —— <b>讀條回合自身不發動攻擊</b>（只結印誦唱）；儀式讀滿後下一回合釋放世界斬、秒殺當前術師（單回合高輸出可打斷回退 1 段）。</p>
+    <p><b>世界斬</b>　宿儺原身形態生命 &lt;50% 後每 2~3 回合隨機結印（首發<b>不念咒詞、不出字</b>，只以沉默的動作預警）：該回合不攻擊，下一回合直接秒殺當前術師；★ 用過一次後，血條下方的儀式進度條（<b>閻魔天掌印 → 龍鱗 → 反發 → 成雙之流星 → 定向</b>）在戰鬥頁面始終顯示，宿儺每次行動**二選一**：隨機釋放一個技能，或讀 1 段儀式 —— <b>讀條回合自身不發動攻擊</b>（只結印誦唱）；儀式讀滿後下一回合釋放世界斬、秒殺當前術師（單回合高輸出可打斷回退 1 段）。</p>
     <p><b>信息洪流（方向鍵）</b>　無量空処「成立」瞬間，無限情報灌入宿儺腦內 —— 4 秒內依序按對 5 個方向（PC 鍵盤方向鍵／手機點畫面四枚按鈕）。按對推進並亮綠，按錯只抖動、不推進。5/5 ⇒ 宿儺 −15% 最大生命；3~4 個 ⇒ −8%；0~2 個 ⇒ 領域龜裂，五條悟 −20%。</p>
     <p><b>領域對拼</b>　五條悟展開無量空処後，宿儺立刻以「伏魔御厨子」對拼（赤黑場景自右向左展開）。魔虛羅已被擊破 ⇒ 宿儺必定輸掉對拼；否則隨機勝負。勝 ⇒ 無量空処成立：宿儺無法攻擊、每回合 −5%；領域在下一回合開始時被它從外側斬碎（魔虛羅已被擊破 ⇒ 無人能擊碎，持續到五條悟退場）。敗 ⇒ 伏魔御厨子成立：五條悟每回合受到領域必中 (解＋捌)×0.7＝21% 最大生命，自動施展「落花之情」抵消必中連擊。<b>宿儺本局最多展開 3 次伏魔御厨子</b>——用滿後便無法再對拼（無量空処／真贋相愛直接成立，魔虛羅從外側擊碎的機制照舊）；與五條悟、乙骨憂太以外的角色戰鬥時，宿儺會把「領域展開」放進與其餘技能同權的隨機池自行展開。</p>
     <p><b>術式熔斷</b>　對拼輸掉的懲罰狀態 —— 除「反轉術式」外無法使用任何術式（含式神召喚與世界斬）。</p>
@@ -2399,8 +2416,8 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <p><b>領域展延</b>　在五條悟領域內以自身領域包裹己身，強行掙脫無限情報的束縛、恢復行動。</p>
     <h3 style="--hc:#2b6cb0">五條悟<small>GOJO · 無下限・術式順轉</small></h3>
     <p><b>術式順轉・蒼／蒼・拳（1 技）</b>　默認<b>「蒼・拳」</b>：瞬身近擊，10%~14% 最大生命，不留引力殘留；按技能框<b>右上角角標</b>可切回「蒼」——5%~7%，引力殘留 2 回合，用「赫」引爆 +50%。無下限展開期間鎖定為「蒼」。</p>
-    <p><b>無下限・不可侵（2 技）</b>　3 回合內一切攻擊在身前停止、傷害歸零。魔虛羅的「適應」會將其<b>破解</b>——破解後永久失效，1 技自此默認「蒼・拳」。</p>
-    <p><b>反轉術式（2 技・形態二）</b>　生命 ≤40% 或不可侵被破解後出現：回復 <b>30%</b> 最大生命，CD 2 回合；可治癒熔斷的術式，並解鎖第 2 次「無量空処」。</p>
+    <p><b>無下限・不可侵（2 技）</b>　3 回合內一切攻擊在身前停止、傷害歸零。魔虛羅現身<b>2 回合後</b>「適應」完成，將其<b>破解</b>——破解後永久失效，1 技自此默認「蒼・拳」。這兩回合內不可侵仍然有效（展開中的會被當場打斷）。</p>
+    <p><b>反轉術式（2 技・形態二）</b>　生命 ≤40% 時出現；<b>不可侵被破解後則隨時可用</b>（不再看血線）：回復 <b>30%</b> 最大生命，CD 2 回合；可治癒熔斷的術式，並解鎖第 2 次「無量空処」。</p>
     <p><b>虛式・茈</b>　CD 2 回合／咒力消耗極低（六眼），15%~21% 最大生命。</p>
     <p><b>術式反轉・赫</b>　紅色按鈕，CD 1 回合：傷害為「蒼」的 1.5 倍（4.5%~7.3% 最大生命）；引爆「蒼」標記再 +50%。</p>
     <p><b>無量空処</b>　藍色「領域展開」按鈕：咒力門檻 10（六眼實耗 1）・本局 1 次 —— 用過「反轉術式」後解鎖第 2 次。展開後計時暫停並跳過宿儺回合，額外獲得 1 次行動力；五條悟退場時雙方領域一併消散、場景復原。★ 領域內的原身宿儛也能展開「伏魔御厨子」；但若這個無量空処是**第 2 次**使出的（反轉術式解鎖的那次），宿儛無法展開領域。</p>
@@ -2578,6 +2595,7 @@ const SFX={
   glass(){ nz(0.28,0.55,8500,2200); nz(0.16,0.38,9500,3200,0.05); tone('triangle',2600,1100,0.14,0.22,0.02); tone('sine',3400,1500,0.09,0.15,0.06); },   /* ★ v206 玻璃破碎聲（音量對齊黑閃 0.55/0.28 檔），領域破碎時觸發 */
   heal(){ [523,659,784,1047].forEach((f,i)=>tone('sine',f,f,0.28,0.15,i*0.07)); },
   hurt(){ nz(0.16,0.42,1800,280); tone('square',170,75,0.16,0.14); },
+  punch(){ nz(0.13,0.66,2400,160); tone('sine',165,44,0.22,0.40); tone('square',92,34,0.15,0.20,0.008); },   /* ★ v240 蒼・拳 近身毆打的沈悶衝擊 */
   slash(){ nz(0.13,0.45,6000,900); },
   die(){ tone('sawtooth',320,35,1.7,0.3); nz(1.7,0.45,1000,50); },
   tick(){ tone('square',1400,1400,0.04,0.07); }
@@ -2686,8 +2704,22 @@ function fitUI(){
   /* ★ v97 選人界面整體縮放：selCard 尺寸 clamp 上限以桌面視口爲基準，App 內 WebView 視口
      （≈851 CSS px）遠大於 #app 寬（≈629），卡片/標題全部頂到上限 ⇒ 兩行卡片總高超過
      #app 高（≈393）被裁字。按 #app 實際高度出 zoom 係數，整屏等比縮小。 */
-  /* ★ v124 3x2 兩行排布：設計高 500→620，保證手機端兩行卡片+標題不被裁 */
-  rs.setProperty('--selz',clamp(ah/620,0.62,1).toFixed(3));
+  /* ★ v240 用戶指定：取消選人頁滑動 —— 改「實測內容高度」自動縮放（原固定 620 基準在小屏會溢出 → 可滾動）。
+     做法：先把 zoom 歸零成 1，量出自然內容高 need，再定 zoom = ah×0.965 / need（留 3.5% 邊距）。
+     zoom 下限放寬到 0.42（手機橫屏 ah≈390 時兩行卡片仍能完整放下），上限 1。 */
+  const _sel=$('selectUI');
+  if(_sel && !_sel.classList.contains('hide')){
+    rs.setProperty('--selz','1');
+    const need=_sel.scrollHeight||0;
+    if(need>0){
+      const zc=clamp((ah*0.965)/need, 0.42, 1);
+      rs.setProperty('--selz', zc.toFixed(3));
+    }else{
+      rs.setProperty('--selz', clamp(ah/620,0.62,1).toFixed(3));
+    }
+  }else{
+    rs.setProperty('--selz', clamp(ah/620,0.62,1).toFixed(3));
+  }
   rs.setProperty('--k',k.toFixed(3));
   rs.setProperty('--aw',aw+'px');
   rs.setProperty('--ah',ah+'px');
@@ -2806,6 +2838,7 @@ const S={
   heroVulnT:0,                        /* 虎葬·碎擊：我方防禦力 -10% 剩餘回合 */
   cangMark:0, heCd:0,                 /* 五條悟：蒼標記層數 / 赫 冷卻 */
   muLimit:0, muBroken:false,          /* ★ v230 無下限・不可侵剩餘回合 / 是否被魔虛羅破解 */
+  muBreakIn:0,                        /* ★ v240 魔虛羅登場後「無下限還可支撐幾回合」（2 → 0 時永久失效） */
   gojoVanish:0,                       /* ★ v231 蒼・拳瞬身：1=立繪消失 0=在位 */
   fistPick:null,                      /* ★ v231 無下限失效後 1 技手動選擇：null=默認拳 / 'cang' / 'fist' */
   burn:0, flameCd:5,                          /* 宿儺「灶·開」的場地燃燒 / 冷卻回合 */
@@ -2853,7 +2886,7 @@ function resetBattle(){
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
   S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false;
   S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.okkoDom=0; S.okkoDomJust=0; S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaUsed=false; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; stopOkkoDomainBgm();   /* v161 重置時確保 AIZO 停播 */
-  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
+  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false; S.muBreakIn=0; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
   S.hollowSkip=0; S.hollowUsedTurn=-1; S.hollowFree=false; S.usedUnlimited=false;
   S.waveCd=9; S.waveWarn=false;
   S.dom={active:false,seq:[],idx:0,correct:0,t:0,marks:[]}; S.domainUsed=false;
@@ -3733,22 +3766,26 @@ function actAtk(allowBlack){
       const _ih=H*0.54;
       const _iw=_ih*(IMGS.gojoFist?IMGS.gojoFist.width/IMGS.gojoFist.height:0.87);
       const _px=SX()-22*SC+_iw*0.32;         /* 圖左側的拳頭正好落在宿儺身上 */
-      const _py=GY-_ih*0.52;
+      /* ★ v240 用戶指定：出拳圖整體再上移一檔（0.52 → 0.68 倍圖高），拳頭落在宿儺上半身而非腰部 */
+      const _py=GY-_ih*0.68;
+      const _burstY=_py-_ih*0.273;           /* 藍色爆開點綁定圖座標（原寫死 GY-154*SC，圖移動會脫節） */
       S.gojoVanish=1;                        /* 立繪瞬身消失 */
       S.hitStop=Math.max(S.hitStop,0.10);
       flash('fWhite'); shake();
       addFx({type:'gojoFist',dur:0.95,x:_px,y:_py,h:_ih});
       setTimeout(()=>{
-        addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:GY-154*SC,r:134*SC,seed:rnd(0,6.28)});
+        addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:_burstY,r:134*SC,seed:rnd(0,6.28)});
         S.hitStop=Math.max(S.hitStop,0.16);   /* 打擊頓挫 */
-        shake(); flash('fWhite'); SFX.atk();
+        shake(); flash('fWhite');
+        /* ★ v240 用戶指定：蒼・拳命中加上沈悶的毆打衝擊音（疊在原有 atk 之上，拳拳到肉） */
+        if(SFX.punch) SFX.punch(); else SFX.atk();
       },150);
       setTimeout(()=>{ S.gojoVanish=0; },780);   /* 瞬身回到原位 */
       setTimeout(()=>{
         if(S.phase!=='fight') return;
         if(doBlack){
           say('gojo','「黑閃——！！」');
-          fxText(SX()-30*SC,GY-190*SC,'黑閃','#e01515',true);
+          fxText(SX()-30*SC,GY-238*SC,'黑閃','#e01515',true);
           if(typeof fxBlackCrack==='function') fxBlackCrack();
         }else{
           say('gojo',pick(['「——拳。」','「術式順轉·蒼。」','「太慢了。」']));
@@ -3793,10 +3830,13 @@ function actGuard(){
   if(S.vowNoGuard>0){ say('sys','「不設防之誓」生效中——還有 '+S.vowNoGuard+' 回合無法使用 2 技！'); return; }
   if(S.acted) return;                                       /* 本回合已出招 */
   if((S.muLimit||0)>0){ say('sys','「不可侵」展開中 —— 還剩 '+S.muLimit+' 回合。'); return; }
+  /* ★ v240 用戶指定：無下限被破解後，反轉術式**不再受血量 ≤40% 的限制**，隨時可用（仍受 CD 2 回合限制）。 */
+  if(S.muBroken){
+    if(S.revCd>0){ say('sys','「反轉術式」冷卻中——還需 '+S.revCd+' 回合'); return; }
+    return gojoRevive();
+  }
   if(S.gojo.hp<=S.maxHp*0.40 && S.revCd<=0) return gojoRevive();
-  if(!S.muBroken) return gojoMuLimit();
-  if(S.revCd>0){ say('sys','「反轉術式」冷卻中——還需 '+S.revCd+' 回合'); return; }
-  say('sys','無下限術式已被魔虛羅破解 —— 本局無法再展開（血量 ≤40% 時可用反轉術式）。'); return;
+  return gojoMuLimit();
 }
 /* ★ v230 反轉術式：從原 actGuard 抽出（血量 ≤40% 時由 2 技自動切換到此形態） */
 function gojoRevive(){
@@ -3867,7 +3907,8 @@ function gojoMuBreak(){
   const b=$('btnGuard');
   if(b){ b.classList.remove('glassBreak'); void b.offsetWidth; b.classList.add('glassBreak'); setTimeout(()=>{ b.classList.remove('glassBreak'); },1050); }
   shake(); flash('fWhite');
-  say('sys','★ 魔虛羅的「適應」破解了無下限 —— 「不可侵」永久失效'+(had?'（本次展開被打斷）':'')+'；1 技「蒼」自此變為「蒼・拳」（傷害 ×2，但無法掛引力標記）。');
+  const _onStage = (S.hero==='gojo') || ((S.usedHeroes||[]).indexOf('gojo')>=0);
+  if(_onStage) say('sys','★ 魔虛羅的「適應」完成 —— 無下限「不可侵」永久失效'+(had?'（本次展開被打斷）':'')+'；1 技「蒼」自此變為「蒼・拳」（傷害 ×2，但無法掛引力標記）。');
 }
 /* 束縛（誓約）：戰鬥核心 —— 捨棄自身一項性能，換取另一項的爆發（獨臂式取捨） */
 function actVow(){
@@ -4898,6 +4939,7 @@ function showSelect(isFirst){
   if(!isFirst && S.usedHeroes.indexOf(S.hero)<0) S.usedHeroes.push(S.hero);
   const left=heroesLeft();
   if(!left.length){ showResult(); return; }      /* 全部打完 → 結算 */
+  if(typeof fitUI==='function') setTimeout(fitUI,0);   /* ★ v240 切到選人頁即重算縮放（resize 不一定觸發） */
   /* ★ v38 詛咒之王的自愈：每一棒倒下、下一棒登場之前，宿儺以反轉術式回覆
      當前階段血量上限的 10%。只在「確實還有下一棒」時觸發 —— 最後一棒陣亡直接結算，不回血。 */
   let recTxt='';
@@ -6033,8 +6075,14 @@ function summonMaha(withLog){
     landed=true;
     S.mahaSummoning=false;
     S.maha=true;
-    /* ★ v230 用戶指定：魔虛羅出場 ⇒ 無下限技能與效果一併失效（技能框玻璃破碎） */
-    if(typeof gojoMuBreak==='function') gojoMuBreak();
+    /* ★ v240 用戶指定：魔虛羅登場後「2 回合」才破解無下限（原為登場瞬間）——
+       給五條悟留出兩回合的緩衝：可以在這段時間搶輸出或提前換人。 */
+    if(!S.muBroken && S.hero==='gojo'){
+      S.muBreakIn=2;
+      say('sys','★ 魔虛羅現身——「適應」正在解析無下限：不可侵還可支撐 2 回合。');
+    }else if(!S.muBroken){
+      S.muBreakIn=2;   /* 非五條在場也照樣計時（換回五條時同樣失效） */
+    }
     /* ★ v40 魔虛羅生命 = 宿儺最大生命 30%；與顎吐同場時，後召喚者減半 */
     S.mahaMax=SUK_MAXHP*MAHO_PCT.hp*(typeof shikHalveFor==='function'?shikHalveFor('maha'):1);
     S.mahaHp=S.mahaMax; S.mahaSlashCd=0;
@@ -6201,9 +6249,9 @@ function sukunaTurn(){
     S.sukLast='';                     /* 結印回合沒有出招：術式複製無從參考 */
     S.suk.pose='cast'; S.suk.poseT=1.1;
     flash('fPurple'); shake();
-    fxManga('龍鱗',SX()-104*SC,GY-246*SC,true,'#7a0a12');
-    say('suku','「——龍鱗。」');
-    say('sys','★ 宿儺結起「龍鱗」掌印（首發世界斬）：本回合不攻擊 —— 下一回合將釋放「世界を断つ斬撃」，秒殺當前術師！');
+    /* ★ v240 用戶指定：首發世界斬**不念「龍鱗」**、也不出字 —— 原作裏首斬正是以束縛省掉了掌印，
+       只留「不發一語、五指虛握」的沉默前兆。只有用過世界斬之後、讀儀式條時才會逐段浮現咒詞。 */
+    say('sys','★ 宿儺不發一語，五指虛握、掌心朝向虛空 —— 這是「世界を断つ斬撃」的前兆：本回合不攻擊，下一回合將直接斬斷世界，秒殺當前術師！');
     syncHud();
   }
   if(S.trueForm){
@@ -6472,6 +6520,15 @@ function sukunaTurn(){
   /* ★ v54 乙骨領域：持續到離場，不再按回合收束 */
   if(S.cangMark>0) S.cangMark--;         /* ★ v40 蒼標記：2 回合內有效 */
   if((S.muLimit||0)>0) S.muLimit--;      /* ★ v230 無下限・不可侵：每回合 -1，歸零自動解除 */
+  /* ★ v240 魔虛羅的「適應」倒計時：登場 2 回合後破解無下限 */
+  if((S.muBreakIn||0)>0){
+    S.muBreakIn--;
+    if(S.muBreakIn<=0 && !S.muBroken){
+      if(typeof gojoMuBreak==='function') gojoMuBreak();
+    }else if(S.muBreakIn>0 && S.hero==='gojo'){
+      say('sys','★ 無下限被逐步解析——還可支撐 '+S.muBreakIn+' 回合。');
+    }
+  }
   if(S.heroVulnT>0) S.heroVulnT--;
   /* ★「無限制・茈」解鎖進度：本回合沒碰過茈 → +1（碰過的話 actHollow 已把進度清零） */
   if(S.hollowUsedTurn!==S.turnN){
@@ -13185,6 +13242,11 @@ $('btnAgain').addEventListener('click',function(){ enterDiff('resultScreen'); })
 /* ★ v164 暫停頁「世界線跳躍」：與結算同功能 → 難度頁重開。
    保持 S.paused=true（世界凍結，難度頁底下戰局不偷跑）；resetBattle() 在新局開始時解除凍結並收遮罩。 */
 $('btnPauseJump').addEventListener('click',function(){ enterDiff(); });
+  /* ★ v240 用戶指定：點「暫停」字樣（或遮罩空白處）也能繼續 —— 「世界線跳躍」按鈕照舊走自己的邏輯。 */
+  if($('pauseOv')) $('pauseOv').addEventListener('click',function(e){
+    if(e.target && e.target.closest && e.target.closest('#btnPauseJump')) return;
+    if(S.paused) togglePause();
+  });
 /* ★ v110 暫停按鈕（回合倒計時左側） */
 if($('pauseBtn')) $('pauseBtn').addEventListener('click',e=>{ e.stopPropagation(); togglePause(); });
 
