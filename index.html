@@ -378,6 +378,15 @@
         本版改為「按下防禦的那一刻」用 `perfectWindowOpen()` 判定並直接結算（不再等受擊回調）。
      ⑤ 接入點：五條反轉術式／虎杖簡易領域／日車領域展延／真希天與咒縛・架勢（真希不走 blockT，按下即結算）；
         乙骨二技能是里香召喚、鹿紫雲無防禦，均不觸發。台詞按英雄取 `PERFECT_LINE`。 -->
+<!-- ★ v239 全服戰況 + 手感反饋（用戶指定，不做戰報卡）：
+     ① 結算頁底部新增「全服戰況」：`reportResult(kill)` POST `/api/result`，顯示
+        累計挑戰人次 / 擊敗宿儺人數 / 通關時「你是第 N 位」；失敗（離線或 APK 無服務端）顯示「離線 · 戰況需聯網查看」。
+     ② 新增「這一局的手感」三檔（太難／剛好／太簡單）+ 選填一句（≤80 字），POST `/api/fb`；提交後鎖定。
+        DOM：`#rSrv` `#rFb`；樣式 `.srvCard`（黑卡紅邊，與 eCard 同一套語言）。
+     ③ 服務端：`/api/result` `/api/fb` `/admin/fbdel`；欄位併入 stats.json（challenges/clears/winners/fb）
+        ⇒ 自動享受「只升不降」種子兜底，重發佈不清零；後台加「累计挑战局数／通关人数」卡片、
+        日匯總挑战/通关兩列、玩家反饋表（含刪除）。
+     ④ 防護：`m` 走 `[<>]` 剝離 + 80 字截斷；fb 最多 4000 條；通關者按 sid 去重（同設備多次通關只算一位）。 -->
 <!-- ★ v229 完美格擋再調（用戶指定）：
      ① 預警配色：取消「紅 → 金」兩段，`#redAlert` 與 `#warnMark` 一律改 **黑色**；
         預警時長固定 **0.7 秒**（`S.turn<=0.7`）；進入完美窗口只讓黑框更濃、閃得更急（.075s），不再變色。
@@ -588,6 +597,47 @@ html.rot .dexRow,html.land .dexRow{padding:4px 8px 5px;}
 html.rot .chain,html.land .chain{gap:3px;}
 html.rot .chNode,html.land .chNode{padding:3px 8px;font-size:11px;}
 html.rot .recRow,html.land .recRow{gap:5px;}
+
+/* ★ v239 全服戰況 + 手感反饋（結算頁底部；與 eCard 同一套黑卡紅邊語言） */
+#resultScreen .srvCard{
+  width:100%;max-width:760px;box-sizing:border-box;
+  border:3px solid #0b1a2e;background:#1a0f0e;color:#f2e9e4;
+  padding:11px 14px;box-shadow:5px 5px 0 rgba(215,38,61,.48),0 0 0 2px rgba(215,38,61,.18);
+}
+#resultScreen .srvHd{
+  display:flex;align-items:baseline;gap:8px;
+  font-size:clamp(11px,2.6vw,13px);letter-spacing:4px;color:#f2e9e4;opacity:.9;
+  padding-bottom:7px;margin-bottom:8px;border-bottom:1px dashed rgba(215,38,61,.45);
+}
+#resultScreen .srvHd small{font-size:9px;letter-spacing:2px;color:#d7263d;opacity:.85;}
+#resultScreen .srvBody{
+  font-size:clamp(12px,3vw,14px);line-height:1.75;color:#e8dcd6;letter-spacing:.5px;
+}
+#resultScreen .srvBody b{color:#ff6b7a;font-size:1.18em;letter-spacing:0;padding:0 2px;}
+#resultScreen .srvHi{color:#f5c542;font-weight:400;}
+#resultScreen .srvSub{color:#a49690;font-size:.92em;}
+#resultScreen .fbRow{display:flex;gap:8px;margin:2px 0 9px;}
+#resultScreen .fbBtn{
+  flex:1;padding:9px 4px;font:inherit;font-size:clamp(12px,3vw,13.5px);letter-spacing:1px;
+  color:#f2e9e4;background:#241614;border:2px solid rgba(215,38,61,.55);cursor:pointer;
+  transition:background .12s,border-color .12s;
+}
+#resultScreen .fbBtn:hover{border-color:#d7263d;}
+#resultScreen .fbBtn.on{background:#d7263d;border-color:#d7263d;color:#fff;}
+#resultScreen .fbRow2{display:flex;gap:8px;}
+#resultScreen .fbRow2 input{
+  flex:1;min-width:0;padding:8px 10px;font:inherit;font-size:12.5px;
+  color:#f2e9e4;background:#120b0a;border:2px solid rgba(215,38,61,.35);outline:none;
+}
+#resultScreen .fbRow2 input::placeholder{color:#7a6a64;}
+#resultScreen .fbRow2 input:focus{border-color:rgba(215,38,61,.8);}
+#resultScreen #rFbSend{
+  flex:none;padding:8px 16px;font:inherit;font-size:12.5px;letter-spacing:2px;
+  color:#1a0f0e;background:#f5c542;border:2px solid #f5c542;cursor:pointer;
+}
+#resultScreen #rFbSend:active{transform:translate(2px,2px);}
+#resultScreen .fbOk{margin-top:7px;font-size:11.5px;color:#f5c542;letter-spacing:1px;min-height:14px;}
+html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11px;box-shadow:3px 3px 0 rgba(215,38,61,.45);}
 
 /* 通關橫幅：黑底白字紅環 */
 #resultScreen #rCore{color:#0b1a2e;background:linear-gradient(180deg,#fff,rgba(255,255,255,.85));
@@ -2263,6 +2313,23 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <div data-page-node-id="s6" class="dex" id="rDex"></div>
     <div data-page-node-id="s7" class="secTitle"><!--pnid:cM3nKp7wQr2Vb9sTjL5dZx-->本局解鎖 · 隱藏彩蛋</div>
     <div data-page-node-id="ddSchlhNBzjfnPKN1SCwqI" id="achWrap"></div>
+    <div class="srvCard" id="rSrv">
+      <div class="srvHd">全服戰況<small>LIVE</small></div>
+      <div class="srvBody" id="rSrvBody">正在讀取…</div>
+    </div>
+    <div class="srvCard" id="rFb" style="display:none">
+      <div class="srvHd">這一局的手感<small>FEEDBACK</small></div>
+      <div class="fbRow">
+        <button class="fbBtn" data-fb="2">太難</button>
+        <button class="fbBtn" data-fb="1">剛好</button>
+        <button class="fbBtn" data-fb="0">太簡單</button>
+      </div>
+      <div class="fbRow2">
+        <input id="rFbText" maxlength="80" placeholder="想跟作者說一句（選填）">
+        <button id="rFbSend">送出</button>
+      </div>
+      <div class="fbOk" id="rFbOk"></div>
+    </div>
     <button data-page-node-id="g6s5IjgnAreb7EA1Dhenn3" class="cta" id="btnAgain"><!--pnid:OgtAApD3Nq8YSfcEG9glq9-->世界線跳躍<span class="ctaSub">再來一局</span></button>
     <div class="resDisc">同人粉絲向非官方作品 · 無任何收費與商業用途 · 僅供個人學習交流；角色、名稱、圖像與音樂之權利均歸原作者及權利方所有，侵權即刪。</div>
   </div>
@@ -2780,7 +2847,7 @@ function resetBattle(){
   S.suk.hp=SUK_MAXHP; S.suk.pose='idle'; S.suk.poseT=0;
   S.suk.ce=100; S.suk.adaptMap={};
   S.hollowCd=0; S.blockT=0; S.guardFx=0; S.atkCd=3; S.warned=false; S.endT=5;
-  S.diff=DIFF_PICK; S.hitStop=0; S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.heroJolt=0; S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
+  S.diff=DIFF_PICK; S.hitStop=0; S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.heroJolt=0; S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 清慢動作 */
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
@@ -7229,6 +7296,67 @@ function renderAch(){
     : '';
   wrap.innerHTML += '<span class="achNone">'+(got.length?'本局 '+got.length+' 項 · ':'本局未解鎖 · ')+'累計 '+gotAll+'/'+total+'</span>';
 }
+/* ===== ★ v239 全服戰況 + 手感反饋 =====
+   每局結算上報一次（w=1 通關），拿回累計數據展示；玩家可點三檔手感並留言（≤80 字）。
+   離線 / APK（無服務端）時 fetch 失敗 ⇒ 顯示「離線」並隱藏反饋塊，不拋錯、不阻塞結算。 */
+function jjkSid(){
+  try{
+    var s=localStorage.getItem('jjk_sid_v1');
+    if(!s){ s='g'+Math.random().toString(36).slice(2,10); localStorage.setItem('jjk_sid_v1',s); }
+    return s;
+  }catch(e){ return 'g'+Math.random().toString(36).slice(2,10); }
+}
+function reportResult(kill){
+  const el=$('rSrvBody'); if(!el) return;
+  const fb=$('rFb');
+  el.textContent='正在讀取…';
+  if(fb) fb.style.display='none';
+  let done=false;
+  const tm=setTimeout(function(){ if(!done){ done=true; el.innerHTML='<span class="srvSub">離線 · 戰況需聯網查看</span>'; } },6000);
+  const url='/api/result?s='+encodeURIComponent(jjkSid())+'&w='+(kill?1:0)+'&r='+(S.turnN||0)+'&g='+(S.rank||'');
+  fetch(url,{method:'POST',cache:'no-store'}).then(function(r){ return r.json(); }).then(function(d){
+    if(done) return; done=true; clearTimeout(tm);
+    if(!d||typeof d.challenges!=='number'){ el.innerHTML='<span class="srvSub">戰況暫不可用</span>'; return; }
+    let s='累計 <b>'+d.challenges+'</b> 人次挑戰 · 僅 <b>'+(d.winners||0)+'</b> 人擊敗宿儺';
+    if(kill){
+      s+='<br><span class="srvHi">'+(d.rank?('你是第 '+d.rank+' 位通關的術師。'):'你已擊敗宿儺。')+'</span>';
+    }else if(d.todayClears){
+      s+='<br><span class="srvSub">今日已有 '+d.todayClears+' 人通關。</span>';
+    }
+    el.innerHTML=s;
+    if(fb){ fb.style.display=''; bindFb(); }
+  }).catch(function(){
+    if(done) return; done=true; clearTimeout(tm);
+    el.innerHTML='<span class="srvSub">離線 · 戰況需聯網查看</span>';
+  });
+}
+function bindFb(){
+  const box=$('rFb'); if(!box||box.__bound) return;
+  box.__bound=1;
+  box.addEventListener('click',function(e){
+    const b=(e.target&&e.target.closest)?e.target.closest('.fbBtn'):null;
+    if(b){
+      if(box.__sent) return;
+      Array.prototype.forEach.call(box.querySelectorAll('.fbBtn'),function(x){ x.classList.toggle('on',x===b); });
+      box.__pick=+b.dataset.fb;
+      sendFb();
+      return;
+    }
+    if(e.target&&e.target.id==='rFbSend') sendFb();
+  });
+}
+function sendFb(){
+  const box=$('rFb'); if(!box||box.__sent) return;
+  const pick=(box.__pick==null)?1:box.__pick;
+  const tx=$('rFbText'), m=tx?((tx.value||'').trim().slice(0,80)):'';
+  const ok=$('rFbOk');
+  box.__sent=1;
+  fetch('/api/fb?s='+encodeURIComponent(jjkSid())+'&f='+pick+'&m='+encodeURIComponent(m),{method:'POST',cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(){ if(ok) ok.textContent='已記錄，謝謝。'; })
+    .catch(function(){ if(ok) ok.textContent='沒能送出（離線），稍後再試。'; box.__sent=0; });
+}
+
 function showResult(){
   if($('gzFin')) $('gzFin').classList.remove('on');   /* ★ v63 收起終幕演出層 */
   $('deathCut').classList.remove('on');
@@ -7257,6 +7385,7 @@ function showResult(){
   renderRecords(kill);
   renderDex(hits);
   renderAch();
+  if(!S.reported){ S.reported=1; reportResult(kill); }   /* ★ v239 上報本局並拉全服戰況（同局只報一次） */
   /* ★ v230 通關橫幅：只有真正擊倒宿儺（kill）才亮 —— 中心最上方「你已掌握咒力的核心」 */
   const _cw=$('rCoreWrap');
   if(_cw) _cw.classList.toggle('on',!!kill);
