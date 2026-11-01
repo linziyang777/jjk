@@ -4493,7 +4493,7 @@ function gojoFinisherShow(){
 function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostBreak){
   /* ★ v38：我方主輸出招統一傷害係數。noScale 供「處刑人之劍」等即死類結算繞過。 */
   let d=raw*(noScale?1:HERO_DMG);
-  if(S.okkoDom>0 && S.hero==='okkotsu') d*=1.5;   /* ★ v77 真贋相愛：領域期間乙骨所有傷害 ×1.5 */
+  if(!noScale && S.okkoDom>0 && S.hero==='okkotsu') d*=1.5;   /* ★ v243i noScale（純愛砲等固定%招）不再吃領域 ×1.5 —— 修「寫 20% 實際打 30%」的數值異常 */
   if(kind) S.usedKinds[kind]=true;
   if(S.hero==='gojo' && S.vowNoGuard>0) d*=1.5;   /* 不設防之誓（五條悟專屬） */
   if(S.vowAtkMul>1) d*=S.vowAtkMul;              /* ★ v26 攻擊類束縛（雷神之軀/複製術式/魂之境界/天與呪縛・極致） */
@@ -4626,7 +4626,6 @@ function kashAtk(){
     say('kash',pick(['「雷——」','「提高音量！！」','「生前葬，開場。」']));
     if(S.charge<3){
       S.charge++;
-      say('sys','正電荷附着 ×'+S.charge+'（攢滿 3 層後按「幻獣琥珀・解放」引爆）');
     }
     hitSukuna(d,false,'atk');
   },170);
@@ -4637,6 +4636,7 @@ function kashUlt(){
   if(S.amberUsed){ say('sys','幻獣琥珀已經解放過了 —— 術式解放，一生只有一次。'); return; }
   if(S.amber<=0) return;
   S.amberUsed=true;
+  S.amber=2; S.amberSkip=1;   /* ★ v243j 使用技能後才開始 2 回合倒計時（未使用時完全不計時） */
   S.amberTagHide=1;   /* ★ v70 解放後一回合：標籤才出現、倒數才開始 */
   markActed('hollow');
   /* ★ v46 解放不再額外扣時間（琥珀本身已是 2 回合制） */
@@ -4662,7 +4662,6 @@ function kashUlt(){
     /* ★ v130 noKill 仍保留（不直接結算擊倒），但 allowHostBreak=true —— 附身形態血量被打空 ⇒ 立即現原身 */
     addFx({type:'amberBolt',dur:0.68});   /* ★ v115 0.85→0.68 */   /* ★ v113 咒力波贯穿：加长演出 */   /* ★ v76 雷光貫穿 */
     hitSukuna(d,true,'hollow',true,true,'kash_amber',true,false,true);
-    if(ch>0) say('sys','回授電擊——'+ch+' 層正電荷盡數收束於這一擊。');
     say('narr',pick(['旁白：雷光貫穿——宿儺的胸腔被開了個洞。','旁白：幻獣琥珀的全部咒力，一次性放出。']));
     say('sys','幻獣琥珀・解放：宿儺（附身形態）被斬掉 50% 最大生命——再多一擊，伏黑惠的肉體就會崩解。');
     syncHud();
@@ -5879,7 +5878,7 @@ function startKashimo(){
   $('warnMark').classList.remove('on');
   $('heroTag').innerHTML='鹿紫雲一<small>KASHIMO</small>';
   $('heroTag').style.background='#b8860b';
-  $('subTag').innerHTML='幻獣琥珀<small>'+S.amber+' 回合</small>';
+  $('subTag').innerHTML='呪力電撃<small>琥珀潛伏</small>';   /* ★ v243j 登場時不顯示倒計時 */
   $('subTag').style.background='#7c3aed';
   $('gjHp').parentElement.classList.add('khp');
   $('gjCe').parentElement.classList.add('amb');
@@ -6787,14 +6786,14 @@ function sukunaTurn(){
   /* ★ v46 幻獣琥珀回合制：鹿紫雲一每次行動結算後 -1 回合；歸零 ⇒ 琥珀消散、鹿紫雲一陣亡 */
   /* ★ v70 鹿紫雲一咒力：每回合回復 15 */
   if(S.hero==='kashimo' && S.phase==='fight') S.kashimo.ce=Math.min(100,(S.kashimo.ce||0)+15);
-  if(S.hero==='kashimo' && S.phase==='fight' && (S.amberTagHide||0)>0){
+  if(S.hero==='kashimo' && S.phase==='fight' && S.amberUsed && (S.amberTagHide||0)>0){
     /* ★ v70 解放後第一回合：標籤尚未顯現，倒計時也未開始（不提前消散） */
     S.amberTagHide--;
     say('sys','幻獸琥珀纏身——標記顯現中（剩 '+S.amber+' 回合，倒計時未開始）。');
-  }else if(S.hero==='kashimo' && S.phase==='fight' && (S.amberSkip||0)>0){
+  }else if(S.hero==='kashimo' && S.phase==='fight' && S.amberUsed && (S.amberSkip||0)>0){
     S.amberSkip--;   /* ★ v52 使用当回合不計數：下一回合才開始倒計時 */
     say('sys','幻獸琥珀啟動——倒計時從下一回合開始（剩 '+S.amber+' 回合）。');
-  }else if(S.hero==='kashimo' && S.phase==='fight'){
+  }else if(S.hero==='kashimo' && S.phase==='fight' && S.amberUsed){
     S.amber--;
     if(S.amber<=0){ S.amber=0; syncHud(); kashimoDeath(); return; }
     say('sys','幻獣琥珀剩餘 '+S.amber+' 回合 —— 倒計時歸零時，術式消散、鹿紫雲一將一同逝去。');
@@ -11760,7 +11759,7 @@ function renderStatus(){
   if(S.meltN>=3)     chips.push(['melt','purple','術式熔斷・'+(KIND_LABEL[S.meltKind]||'')]);
 if(S.gojoBurn)     chips.push(['melt','purple','五條悟・術式熔斷']);   /* ★ v92 對拼輸掉方熔斷 */
 if(S.sukuBurn)     chips.push(['melt','red','宿儺・術式熔斷']);       /* ★ v92 對拼輸掉方熔斷 */
-  if(S.charge>0)     chips.push(['charge','gold','正電荷 ×'+S.charge]);
+  /* ★ v243k 用戶要求：取消鹿紫雲一「正電荷」的顯示（機制仍在，僅不顯示） */
   if(S.blood>0)      chips.push(['blood','red','血契 ×'+S.blood]);
   if(S.burn>0)       chips.push(['flame','fire','燃焼 '+S.burn+' 回合']);
   if(S.para>0)       chips.push(['para','purple','麻痺・無法行動']);
@@ -11821,7 +11820,7 @@ function syncHud(){
     $('gjCeTxt').textContent=Math.floor(S.kashimo.ce||0)+' / 100';
     $('subTag').innerHTML=(S.amberTagHide>0)
       ? '呪力解放<small>……</small>'
-      : ((S.amberUsed||S.amber<30) ? '幻獣琥珀<small>'+S.amber+' 回合</small>' : '呪力電撃<small>琥珀潛伏</small>');
+      : (S.amberUsed ? '幻獣琥珀<small>'+S.amber+' 回合</small>' : '呪力電撃<small>琥珀潛伏</small>');   /* ★ v243j 未使用前不顯示倒計時 */
   }else if(S.hero==='itadori'){
     $('gjHp').style.width=S.itadori.hp+'%';
     $('gjHpTxt').textContent=S.itadori.hp.toFixed(1)+'%';
