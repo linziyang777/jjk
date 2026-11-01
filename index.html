@@ -1154,7 +1154,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   border-radius:50%;background:radial-gradient(ellipse at center,#fff 0%,#fff 46%,rgba(255,255,255,.55) 68%,rgba(255,255,255,0) 82%);
   filter:blur(2px);z-index:-1;}
 #okkoDomWord{position:absolute;isolation:isolate;}
-#okkoDomWord img{position:relative;height:clamp(150px,44vh,330px);width:auto;
+#okkoDomWord img{position:relative;height:clamp(96px,26vh,190px);width:auto;   /* ★ v242 邪去悔梯子字圖縮小，避免遮住下方技能框 */
   filter:drop-shadow(0 0 16px rgba(255,255,255,.55));}
 /* ★ v49 釘崎野薔薇連動演出層 */
 .nbCut{position:absolute;inset:0;z-index:21;display:none;align-items:center;justify-content:center;
@@ -1954,7 +1954,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
 #resultScreen::-webkit-scrollbar{width:6px;}
 #resultScreen::-webkit-scrollbar-thumb{background:var(--ink);}
 /* ===== ★ v240 結算頁左右排布（用戶指定）：一頁內呈現，成就區改橫向輪播 ===== */
-#resultScreen{
+#resultScreen:not(.hide){
   display:grid;
   grid-template-rows:auto minmax(0,1fr) auto auto;
   align-content:center;
@@ -3407,12 +3407,12 @@ function gojoVoid(){
     }
     /* ★ v192 需求②：宿儺領域已用滿 3 次 ⇒ 無法以伏魔御厨子對拼，無量空処**直接成立**；
        但「召喚魔虛羅從外側擊碎領域」的機制保留（voidMahaT）。 */
-    if(!sukuCanOpenDomain()){
+    if(!sukuCanOpenDomain(S.diff==='hard')){   /* ★ v242 困難模式：即便用盡額度，宿儺仍每次對拼（其餘封印門仍生效） */
       S.sukuDom=0; S.gojoDom=3; S.domClash=null;
       S.voidMahaT=1;                     /* 魔虛羅仍會從外側擊碎（已被擊破則該分支自行跳過） */
       flash('fWhite'); shake(); SFX.hollow();
       say('suku','「……伏魔御厨子——已經用盡了。」');
-      say('sys','★ 宿儺的「伏魔御厨子」本局已展開 '+SUKU_DOM_MAX+' 次——無法再對拼，無量空処直接成立：宿儺無法發動攻擊、每回合受到 5% 最大生命侵蝕。'+((S.maha&&!S.mahaDead)?'（下一回合魔虛羅將從外側擊碎它）':'（魔虛羅已被擊破——無人能擊碎，持續到五條悟退場）'));
+      say('sys','★ 宿儺的「伏魔御厨子」本局已展開 '+sukuDomMax()+' 次——無法再對拼，無量空処直接成立：宿儺無法發動攻擊、每回合受到 5% 最大生命侵蝕。'+((S.maha&&!S.mahaDead)?'（下一回合魔虛羅將從外側擊碎它）':'（魔虛羅已被擊破——無人能擊碎，持續到五條悟退場）'));
       domainShiftResolve();
       playDomSfx('challenge', 5.5).then(()=>resumeMainBgm());
       syncHud();
@@ -3433,7 +3433,7 @@ function gojoVoid(){
     syncHud();
     setTimeout(()=>{
       if(S.phase!=='fight'){ S.domClash=null; return; }
-      const winner=S.mahaDead?'gojo':(Math.random()<0.5?'gojo':'suku');   /* ★ v92 魔虛羅已被擊破 ⇒ 宿儺必定輸掉對拼 */
+      const _wp=(S.diff==='hard')?0.7:1; const winner=S.mahaDead?'gojo':(Math.random()<_wp?'gojo':'suku');   /* ★ v242 困難模式對拼勝率70%（普通/簡單仍100%）；魔虛羅已死宿儺必敗 */
       S.domClash.phase=(winner==='gojo')?'gojoWin':'sukuWin';
       flash('fWhite'); shake();
       if(winner==='gojo'){
@@ -4055,7 +4055,7 @@ function syncGuardBtn(){
   if(b.__sgk!==k){ b.__sgk=k; b.innerHTML=html; }
   /* ★ v235 用戶指定：2 技變成「反轉術式」時技能框跟著變色（淡綠治療框），與「無下限」一眼可分 */
   const revMode=(k==='rev'||k.indexOf('muX')===0);
-  if(b.__rev!==revMode){ b.__rev=revMode; b.classList.toggle('b-rev',revMode); }
+  if(b.__rev){ b.__rev=false; b.classList.remove('b-rev'); }   /* ★ v242 反转术式技能框保持白底，不再染绿 */
   if(b.__sgd!==dim){ b.__sgd=dim; b.classList.toggle('dim',dim); }
   const selNow=!!(S.acted&&S.lastAct==='guard');
   if(b.__sgs!==selNow){ b.__sgs=selNow; b.classList.toggle('sel',selNow); }
@@ -6269,10 +6269,10 @@ function sukunaRCT(){
 }
 
 /* ★ v192 宿儺能否展開伏魔御厨子：未用滿 3 次、不在場、未熔斷 */
-function sukuCanOpenDomain(){
+function sukuCanOpenDomain(ignoreLimit){
   if(S.phase!=='fight') return false;
   if(S.sukLost&&S.sukLost.dom) return false;   /* ★ v238 處刑人之劍沒收「伏魔御厨子」 */
-  if((S.sukuDomUsed||0)>=SUKU_DOM_MAX) return false;
+  if(!ignoreLimit && (S.sukuDomUsed||0)>=sukuDomMax()) return false;
   if(S.sukuDom>0) return false;                 /* 已在領域中 */
   if(S.sukuBurn) return false;                  /* 術式熔斷 */
   /* ★ v210 用戶指定（修 BUG：「虎杖領域中宿儺仍能展開伏魔御厨子」）：
@@ -6282,6 +6282,8 @@ function sukuCanOpenDomain(){
   if(S.hero==='itadori'&&S.itaDom>0) return false;
   return true;
 }
+/* ★ v242 原身宿儺领域对拼额度 +1（SUKU_DOM_MAX -> +1） */
+function sukuDomMax(){ return SUKU_DOM_MAX + (S.trueForm?1:0); }
 /* ★ v192 需求③：與五條悟／乙骨憂太以外的角色對戰時，「領域展開・伏魔御厨子」進入隨機池 ——
    與宿儺其餘技能**同權**（用戶：「將這招與宿儺所有技能數量加一起取平均值」）
    ⇒ 概率 = 1／可用技能數（近身斬擊・斬擊波・灶·開(二階段)・反轉術式(血量<75%)・領域展開）。 */
@@ -9223,7 +9225,7 @@ function drawFx(){
       const al=Math.min(1,k/0.08)*Math.min(1,(1-k)/0.28);
       const img=IMGS.jieInk;
       ctx.save();
-      ctx.translate(f.x,f.y-k*22*s);
+      ctx.translate(f.x-(SX()-GX())*k, f.y);   /* ★ v242 解字自右（宿儺）向左（玩家）横扫、穿过玩家，不再上飘 */
       ctx.rotate(f.rot||-0.05);
       const pop=1+0.20*Math.max(0,1-k/0.16);
       const grow=0.86+0.34*Math.min(1,k/0.22);
@@ -9257,6 +9259,22 @@ function drawFx(){
         ctx.fillStyle='#171717';
         ctx.beginPath(); ctx.arc(Math.cos(m.a)*rr,Math.sin(m.a)*rr*0.78,m.sz*s*(1-k*0.35),0,Math.PI*2); ctx.fill();
       }
+      ctx.restore();
+    }
+    else if(f.type==='lightPillar'){
+      /* ★ v242 邪去悔梯子出現時，宿儺受到從天而降光柱攻擊（純演出，不造成傷害） */
+      const k=f.t/f.dur;
+      const cx=SX(), topY=-10*SC, by=GY-110*SC;
+      const bw=(40+k*34)*SC;
+      const a=Math.sin(Math.min(1,k*1.5)*Math.PI)*0.92;
+      ctx.save();
+      const g=ctx.createLinearGradient(cx,topY,cx,by);
+      g.addColorStop(0,'rgba(255,255,255,0)');
+      g.addColorStop(0.45,'rgba(255,247,205,'+(0.82*a).toFixed(3)+')');
+      g.addColorStop(1,'rgba(255,232,150,'+(0.95*a).toFixed(3)+')');
+      ctx.fillStyle=g; ctx.fillRect(cx-bw/2, topY, bw, by-topY);
+      ctx.fillStyle='rgba(255,255,255,'+(0.92*a).toFixed(3)+')'; ctx.fillRect(cx-3*SC, topY, 6*SC, by-topY);
+      if(k>0.5){ const ka=Math.min(1,(k-0.5)/0.5); ctx.globalAlpha=ka; ctx.strokeStyle='rgba(255,238,170,0.9)'; ctx.lineWidth=4*SC; ctx.beginPath(); ctx.arc(cx,by,(12+ka*64)*SC,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=1; }
       ctx.restore();
     }
     else if(f.type==='gojoFist'){
@@ -12124,6 +12142,7 @@ function beginNext(h){
   S.vowAtkMul=1; S.vowAtkT=0; S.vowDefMul=1; S.vowDefT=0; S.vowNextMul=1;
   S.vowPierce=false; S.vowBF=false; S.vowCounter=0; S.vowCounterT=0; S.vowSelf=0; S.vowSelfT=0; S.noAdaptT=0; S.vowFragT=0; S.vowWeakT=0;
   S.acted=false; S.lastAct=''; S.turn=turnSec(); S.turnWarn=false;
+  S.para=0;                         /* ★ v242 換人／接力登場清除上一位殘留麻痺，修復「剛登場就被麻痺」 */
   S.hollowCd=0; S.itaUltCd=0; S.blockT=0; S.guardFx=0; S.guardUp=false;
   S.meltKind=''; S.meltN=0; S.stagger=0; S.perfect=false; S.perfectOn=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.okoCounter=false;
@@ -12287,6 +12306,9 @@ function okkoTrapWord(){
   if(!wd||!wa) return;
   if(!wa.getAttribute('src')) wa.setAttribute('src', IMG.okkoDom3);
   wd.classList.remove('on'); void wd.offsetWidth; wd.classList.add('on');
+  /* ★ v242 邪去悔梯子出現 ⇒ 宿儺遭受天降光柱攻擊，演出期間暫停讀秒（同領域展開） */
+  addFx({type:'lightPillar',dur:1.4});
+  S.turnWait=1; setTimeout(function(){ if(S.phase==='fight') S.turnWait=0; }, 1400);
   setTimeout(()=>wd.classList.remove('on'), 3000);
 }
 /* ★ v99 乙骨「反轉術式」：回覆自身 25% 最大生命，CD 2 回合；術式熔斷期間唯一可用技能之一 */
@@ -12324,13 +12346,13 @@ function okkoDomainClash(){
   if(S.okkBurn||S.hero!=='okkotsu') return;
   /* ★ v192 需求②：宿儺領域已用滿 3 次 ⇒ 無法對拼，「真贋相愛」直接成立（本身無對拼路線的效果照給：
      梯子讖字＋彌須葛籠）；「魔虛羅從外側擊碎領域」的機制仍保留（voidMahaT）。 */
-  if(!sukuCanOpenDomain()){
+  if(!sukuCanOpenDomain(S.diff==='hard')){   /* ★ v242 困難模式：即便用盡額度，宿儺仍每次對拼（其餘封印門仍生效） */
     S.sukuDom=0; S.domClash=null;
-    S.voidMahaT=1;
+    /* ★ v242 乙骨领域不接入「魔虚羅击碎」机制：真贋相愛持续到乙骨退场 */
     S.misagoT=2;
     flash('fWhite'); shake();
     say('suku','「……伏魔御厨子——已經用盡了。」');
-    say('sys','★ 宿儺的「伏魔御厨子」本局已展開 '+SUKU_DOM_MAX+' 次——無法對拼，「真贋相愛」直接成立（劍林絞殺＋彌須葛籠）。'+((S.maha&&!S.mahaDead)?'（下一回合魔虛羅將從外側擊碎它）':'（魔虛羅已被擊破——無人能擊碎）'));
+    say('sys','★ 宿儺的「伏魔御厨子」本局已展開 '+sukuDomMax()+' 次——無法對拼，「真贋相愛」直接成立（劍林絞殺＋彌須葛籠）。'+((S.maha&&!S.mahaDead)?'（下一回合魔虛羅將從外側擊碎它）':'（魔虛羅已被擊破——無人能擊碎）'));
     if(typeof okkoTrapWord==='function') okkoTrapWord();
     if(typeof fxMisago==='function') fxMisago();
     syncHud();
@@ -12353,7 +12375,7 @@ function okkoDomainClash(){
   syncHud();
   setTimeout(()=>{
     if(S.phase!=='fight'||S.hero!=='okkotsu'){ S.domClash=null; return; }
-    const winner=S.mahaDead?'okko':(Math.random()<0.5?'okko':'suku');
+    const _wp=(S.diff==='hard')?0.7:1; const winner=S.mahaDead?'okko':(Math.random()<_wp?'okko':'suku');   /* ★ v242 困難模式對拼勝率70% */
     S.domClash.phase=(winner==='okko')?'gojoWin':'sukuWin';
     flash('fWhite'); shake();
     if(winner==='okko'){ say('sys','★ 領域對拼——乙骨的「真贋相愛」碾碎了伏魔御厨子的結界！'); }
@@ -12366,7 +12388,7 @@ function okkoDomainClash(){
         SFX.glass(); addFx({type:'domBreak',dur:1.5,x:W/2,y:H/2});
         addFx({type:'domShatter',dur:0.9});
         flash('fWhite');
-        S.sukuBurn=true; S.misagoT=2; S.voidMahaT=1;   /* ★ v99 宿傩熔斷；魔虛羅擊碎邏輯同五條線 */
+        S.sukuBurn=true; S.misagoT=2;   /* ★ v99 宿傩熔斷；魔虛羅擊碎邏輯同五條線 */
         resumeMainBgm();                                 /* ★ v141 乙骨勝 ⇒ 恢復原 BGM */
         okkoTrapWord();                                  /* ★ v107 對拼勝利 ⇒ 領域成立 → 梯子讖字 */
         if(typeof fxMisago==='function') fxMisago();     /* ★ v107 對拼勝利後宿傩才被葛籠罩 */
