@@ -544,6 +544,7 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
   background-size:4px 4px, 100% 100%;
   color:#1b1b1b;
   touch-action:auto;overscroll-behavior:contain;
+  z-index:60;   /* ★ v239 高於一切 HUD（30），避免殘留的條/欄攔截觸摸滑動 */
 }
 #resultScreen .eCard{
   background:#151210;border-color:#d7263d;color:#f2e9e4;
