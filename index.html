@@ -6318,6 +6318,31 @@ function sukunaOpenDomain(){
    讀條回合＝本回合宿儺自身**不發動攻擊**（也不展開領域／反轉術式），只結印誦唱；
    儀式條讀滿 ⇒ 下一回合釋放「世界を断つ斬撃」。戰鬥頁面期間儀式條始終顯示。 */
 const RITE_READ_P=0.5;               /* 讀條概率 50%（其餘 50% 照常釋放技能） */
+/* ===== ★ v240 讀儀式條：抽成共用動作 =====
+   用戶指定：在他人領域內，宿儺「不發動攻擊的回合」（彌須葛籠／反轉術式修復）同樣可以讀條，
+   且讀條機率與普通回合一致（RITE_READ_P = 0.5），不額外疊加。 */
+function riteChannelOne(){
+  S.riteJust=Math.min(RITE_BASE.length-1,(S.rite||0));
+  advanceRite(1);
+  const nm=riteNames()[Math.max(0,S.rite-1)]||'定向';
+  S.sukLast='';                       /* 讀條回合沒有出招：術式複製無從參考 */
+  S.suk.pose='cast'; S.suk.poseT=0.9;
+  fxManga(nm,SX()-104*SC,GY-246*SC,true,'#7a0a12');
+  flash('fPurple'); shake();
+  say('suku','「——'+nm+'。」');
+  say('sys','★ 宿儺誦唱儀式「'+nm+'」（進度 '+S.rite+'/'+RITE_BASE.length+'）—— 本回合不發動攻擊；儀式讀滿後下一回合釋放「世界を断つ斬撃」！');
+  if(S.rite===RITE_BASE.length-1) say('suku','「……就差最後一步了。」');
+  renderRite();
+}
+/* 讀條資格＋機率：只有原身、用過世界斬、未讀滿、非熔斷時才可能讀 */
+function riteTryChannel(){
+  if(!S.trueForm || !S.worldUsed || S.sukuBurn) return false;
+  if((S.rite||0) >= RITE_BASE.length) return false;
+  if(Math.random() >= RITE_READ_P) return false;
+  riteChannelOne();
+  return true;
+}
+
 function sukunaTurn(){
   /* ★ v225：每次宿傩行動前先預熱領域語音（冪等）—— 真正展開時元素已解碼，點擊即可出聲 */
   try{ prepDomAudio(); }catch(e){}
@@ -6371,22 +6396,11 @@ function sukunaTurn(){
         return;
       }
       /* ★ v216 用戶指定：每次行動隨機二選一 —— 讀 1 段儀式（本回合不攻擊）或照常釋放技能 */
-      if(Math.random()<RITE_READ_P){
+      /* ★ v240 領域內不在此處擲骰（改由領域分支在「不攻擊回合」擲一次），避免機率被疊成 1-(1-p)² */
+      if(!(S.gojoDom>0 || S.okkoDom>0) && Math.random()<RITE_READ_P){
         channelTurn=true;
         S.wsWarn=false; S.wsCast=false;
-        /* ★ v221：先標記「即將讀亮的那一段」再推進 —— 舊版在 advanceRite 之後才設 riteJust，
-           renderRite 已在 advanceRite 裏跑完（簽名已更新），那一下閃爍永遠不會出現。 */
-        S.riteJust=Math.min(RITE_BASE.length-1,(S.rite||0));
-        advanceRite(1);
-        const nm=riteNames()[Math.max(0,S.rite-1)]||'定向';
-        S.sukLast='';                     /* 讀條回合沒有出招：術式複製無從參考 */
-        S.suk.pose='cast'; S.suk.poseT=0.9;
-        fxManga(nm,SX()-104*SC,GY-246*SC,true,'#7a0a12');
-        flash('fPurple'); shake();
-        say('suku','「——'+nm+'。」');
-        say('sys','★ 宿儺誦唱儀式「'+nm+'」（進度 '+S.rite+'/'+RITE_BASE.length+'）—— 本回合不發動攻擊；儀式讀滿後下一回合釋放「世界を断つ斬撃」！');
-        if(S.rite===RITE_BASE.length-1) say('suku','「……就差最後一步了。」');
-        renderRite();
+        riteChannelOne();
       }
     }
   }
@@ -6439,12 +6453,14 @@ function sukunaTurn(){
       addFx({type:DOMWORD,dur:0.9});
       say('sys','★ '+DOMNAME+' —— 無限的情報灌入宿傩腦內：術式熔斷的宿儺只能動用反轉術式。');
       sukunaRCT();
+      riteTryChannel();   /* ★ v240 領域內以「反轉術式」修復的回合不攻擊 ⇒ 可讀條（機率同普通） */
     }else if(S.mahaDead && S.trueForm && misagoTurn){
       S.suk.pose='cast'; S.suk.poseT=0.8;
       S.sukLast='';                       /* 籠罩回合沒有出招：術式複製無從參考 */
       addFx({type:DOMWORD,dur:0.9});
       if(typeof fxMisago==='function') fxMisago();
       say('sys','★ '+DOMNAME+' —— 宿儺以「彌須葛籠」護住己身，本回合無法發動攻擊。');
+      riteTryChannel();   /* ★ v240 彌須葛籠護身＝不攻擊 ⇒ 可讀條（機率同普通） */
     }else if(S.mahaDead && S.trueForm){
       addFx({type:DOMWORD,dur:0.9});
       {
@@ -6483,6 +6499,7 @@ function sukunaTurn(){
       S.sukLast='';                       /* 本回合沒有出招：術式複製無從參考 */
       addFx({type:DOMWORD,dur:0.9});
       say('sys','★ '+DOMNAME+' —— 無限的情報灌入宿傩腦內：本回合無法發動攻擊。');
+      riteTryChannel();   /* ★ v240 附身形不會真的讀（非原身直接攔掉），保留調用統一入口 */
     }
     /* ★ v81 信息洪流侵蝕：宿傩每回合 -5% 最大生命 */
     const vd=SUK_MAXHP*0.05;
