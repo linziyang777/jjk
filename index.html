@@ -616,6 +616,13 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 }
 #pad .btn.b-fist .ico{color:#0b6f9e;}
 #pad .btn.b-fist small{color:#0b4a6b;opacity:.85;}
+/* ★ v235 五條 2 技「反轉術式」形態：淡綠治療框（與「無下限」的白底墨框一眼可分） */
+#pad .btn.b-rev{
+  background:linear-gradient(180deg,#f0fbf3 0%,#d2f3de 100%);
+  border-color:#0f5c33;box-shadow:4px 4px 0 #0f5c33;
+}
+#pad .btn.b-rev .ico{color:#0f8a4d;}
+#pad .btn.b-rev small{color:#0f5c33;opacity:.9;}
 
 /* ===== ★ v230 無下限被破解：技能框玻璃破碎 ===== */
 @keyframes glassBreak{
@@ -1127,10 +1134,8 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   filter:blur(7px) saturate(1.06) brightness(.98);transform:scale(1.04);}
 /* ★ v156 登場動畫：漫畫白紙底 + canvas 運行時渲染（集中線/特效/立繪/大字/名牌） */
 #heroIntro{position:absolute;inset:0;z-index:20;display:none;overflow:hidden;
-  /* ★ v235 留白區底紋跟著重設計減淡：紙色 + 更疏更淡的角落感網點 */
+  /* ★ v235 再改：留白區點陣整個去掉，只留乾淨紙色 */
   background-color:#f4f1ea;
-  background-image:radial-gradient(circle, rgba(20,17,15,.32) 1.3px, rgba(20,17,15,0) 1.5px);
-  background-size:15px 15px;
   align-items:center;justify-content:center;pointer-events:none;}
 #heroIntro img{display:none;}
 #heroIntro canvas.hiCv{position:absolute;inset:0;width:100%;height:100%;z-index:2;display:block;}
@@ -3791,7 +3796,11 @@ function syncHeBtn(){
 /* ★ v230 五條悟 2 技按鈕：無下限・不可侵 ⇄ 反轉術式 雙形態 */
 function syncGuardBtn(){
   const b=$('btnGuard'); if(!b) return;
-  if(S.hero!=='gojo'){ if(b.__sgk){ b.__sgk=''; } return; }   /* 其他角色由各自邏輯接管 */
+  if(S.hero!=='gojo'){
+    if(b.__sgk){ b.__sgk=''; }
+    if(b.__rev){ b.__rev=false; b.classList.remove('b-rev'); }   /* ★ v235 換人時撤掉反轉術式框色 */
+    return;
+  }   /* 其他角色由各自邏輯接管 */
   const lowHp=(S.gojo.hp<=S.maxHp*0.40);
   let k,html,dim=!!S.acted;
   if((S.muLimit||0)>0){
@@ -3811,6 +3820,9 @@ function syncGuardBtn(){
     html=ICO('guard')+'無下限<small>不可侵・3 回合</small>';
   }
   if(b.__sgk!==k){ b.__sgk=k; b.innerHTML=html; }
+  /* ★ v235 用戶指定：2 技變成「反轉術式」時技能框跟著變色（淡綠治療框），與「無下限」一眼可分 */
+  const revMode=(k==='rev'||k.indexOf('muX')===0);
+  if(b.__rev!==revMode){ b.__rev=revMode; b.classList.toggle('b-rev',revMode); }
   if(b.__sgd!==dim){ b.__sgd=dim; b.classList.toggle('dim',dim); }
   const selNow=!!(S.acted&&S.lastAct==='guard');
   if(b.__sgs!==selNow){ b.__sgs=selNow; b.classList.toggle('sel',selNow); }
@@ -5265,9 +5277,7 @@ function hiDraw(g,cfg,art,t){
   const chars=[...cfg.kanji];
   chars.forEach((ch,i)=>{ g.fillText(ch,W-150,-chars.length/2*size*1.12+i*size*1.12+size*0.56+H*0.5); });
   g.restore();
-  /* ⑥ 半色調（★ v235 改角落點陣，整體減淡）+ 名牌 + 徽章 */
-  const ht=0.4;
-  if(ht>0){ g.save(); g.globalAlpha=ht; g.drawImage(hiLayer('halftone'),0,0); g.restore(); }
+  /* ⑥ 名牌 + 徽章（★ v235 用戶再指定：點陣整個去掉，紙面全淨） */
   /* ★ v180 用戶要求：名牌入場提速 —— 0.88s 即落定（原先 1.61s） */
   const plSlide=hiK([[0,300],[0.45,180],[0.88,0],[2.6,0]],t);
   const plAlpha=hiK([[0,0],[0.62,0],[0.88,1],[2.6,1]],t);
