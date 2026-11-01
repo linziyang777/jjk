@@ -1199,6 +1199,11 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 @keyframes idiHands{0%{opacity:0;transform:translate(-50%,-50%) scale(.94)}
   10%{opacity:1;transform:translate(-50%,-50%) scale(1)}
   56%{opacity:1}74%{opacity:0}100%{opacity:0}}
+/* ★ v253 用戶指定：虎杖領域展開的「結印圖」出現時全場改為黑屏（原本透過立繪看到戰場）。
+   黑幕在開場 8% 內壓黑、82% 後開始淡出，與黑球收束／故鄉風景浮現銜接。 */
+#itaDomIn::before{content:'';position:absolute;inset:0;background:#000;opacity:0;animation:none;}
+#itaDomIn.on::before{animation:idiBlack 3.3s ease-out forwards;}
+@keyframes idiBlack{0%{opacity:0}8%{opacity:1}80%{opacity:1}96%{opacity:0}100%{opacity:0}}
 /* ★ v83 需求：領域展開字樣上移，貼住畫面頂部的回合倒計時（#turnBar 位於 top:8px） */
 #itaDomIn .idiTxt{position:absolute;left:0;right:0;top:clamp(46px,7.5vh,72px);text-align:center;color:#fff;
   font-weight:900;letter-spacing:8px;font-size:clamp(13px,3.2vw,20px);
@@ -1752,7 +1757,11 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 .btn.b-vow .ico{color:var(--red);}
 
 /* 咒力狀態欄（黑閃連鎖 / 術式熔斷 / 電荷 / 血契 / 燃燒 / 束縛 / 共鳴） */
-#statusRow{display:none;flex-wrap:wrap;gap:calc(4px*var(--k));margin-top:calc(3px*var(--k));}
+/* ★ v251 用戶指定：宿儺的狀態徽標（術式熔斷／血契／原身…）不再佔白框內的高度，
+   改為絕對定位貼在宿儺面板下緣之外，跟式神血條同一帶 —— 白框因此收窄。 */
+#statusRow{display:none;flex-wrap:wrap;gap:calc(4px*var(--k));margin-top:0;
+  position:absolute;left:12px;top:calc(100% + 2px);z-index:12;pointer-events:none;
+  max-width:calc(100% - 24px);}
 #statusRow.on{display:flex;}
 .stChip{display:flex;align-items:center;gap:3px;border:2px solid var(--ink);background:#fff;
   padding:calc(1px*var(--k)) calc(6px*var(--k)) calc(1px*var(--k)) calc(3px*var(--k));font-size:calc(10px*var(--k));font-weight:900;letter-spacing:.5px;line-height:1.5;
@@ -2086,25 +2095,55 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
 @media (min-height:621px){
   #resultScreen:not(.hide){ align-content:center; }
 }
-/* 竖屏窄屏：两栏改单栏，避免卡片被挤爆 */
-@media (max-width:520px){
+/* ★ v249 手機端結算頁重排（用戶報「嚴重互相遮擋」）：
+   根因：手機橫屏高度只有 ~290px，grid 的行由 auto/1fr 混用 + zoom 疊加後被壓縮，
+   #rCols 的行高小於內容高度 ⇒ 圖鑑/手感卡溢出到下一行，壓住標題與「世界線跳躍」。
+   改法：手機寬度（<=900px）一律縱向 flex 流式 —— 子塊不可收縮、按自然高度逐個往下排，
+   超出即整頁縱向滾動，結構上不可能再互相遮擋。 */
+@media (max-width:900px){
+  #resultScreen:not(.hide){
+    display:flex;flex-direction:column;align-items:stretch;
+    justify-content:flex-start;align-content:normal;
+    gap:6px;overflow-y:auto;overflow-x:hidden;
+  }
+  #resultScreen:not(.hide) > *{flex:0 0 auto;width:100%;max-width:100%;}
+  #resultScreen.cleared{display:flex;}
+  #rCols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 10px;}
+  #resultScreen #rFb{padding:7px 10px;}
+  #resultScreen #rFb .fbRow{gap:6px;}
+  #resultScreen #rFb .fbBtn{padding:5px 6px;font-size:11.5px;}
+  #resultScreen #rFb .fbRow2 input{padding:5px 7px;font-size:11.5px;}
+  /* ★ v250 用戶反饋：手機端不再吸底、也不強改圖鑑列數 —— 全部按自然高度順序排，靠縱向滾動看完整頁 */
+  #resultScreen .secTitle{margin:3px 0 0;}
+  /* ★ v250 用戶報「文字被壓著看不清」：墨跡圖原本 470x520 貼左下，在矮寬的手機視口裡剛好壓住接力鏈/全服戰況/標題。
+     手機端只保留上方柔和白光，不鋪墨跡（桌面端維持原樣）。 */
+  #resultScreen:not(.hide)::before{background:radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%) !important;opacity:1;}
+  #resultScreen > #btnAgain{margin-top:8px;}
+}
+/* ★ v249 極窄（<420px 內寬）才退回單欄 */
+@media (max-width:420px){
+  #rCols{grid-template-columns:minmax(0,1fr);}
+}
+/* ★ v249 用戶反饋：閾值 520→420，讓 512 內寬的豎屏旋轉仍保留兩欄（單欄會拉得過長） */
+@media (max-width:420px){
   #rCols{ grid-template-columns:minmax(0,1fr); gap:6px; }
 }
 /* ★ v243e 電腦端結算頁：排布更舒展、全服戰況放大強調、反饋卡換藍灰配色、世界線按鈕去紅邊 */
 #resultScreen .cta{ border-color:#151210; box-shadow:8px 8px 0 rgba(0,0,0,.22); }   /* 去紅色勾邊與紅光 */
 html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 rgba(0,0,0,.22); }
-/* 反饋卡：黑紅 → 藍灰 */
-#resultScreen #rFb{ background:#eef3fa; border-color:#111; color:#16202c; box-shadow:5px 5px 0 rgba(0,0,0,.30); }   /* ★ v244 用戶指定：黑色勾邊 */
-#resultScreen #rFb .srvHd{ color:#16202c; border-bottom-color:rgba(43,108,176,.40); opacity:1; }
-#resultScreen #rFb .srvHd small{ color:#2b6cb0; }
-#resultScreen #rFb .fbBtn{ background:#fff; color:#16202c; border-color:rgba(43,108,176,.55); }
-#resultScreen #rFb .fbBtn:hover{ border-color:#2b6cb0; background:#e2ecf9; }
-#resultScreen #rFb .fbBtn.on{ background:#2b6cb0; border-color:#2b6cb0; color:#fff; }
-#resultScreen #rFb .fbRow2 input{ background:#fff; color:#16202c; border-color:rgba(43,108,176,.40); }
-#resultScreen #rFb .fbRow2 input::placeholder{ color:#7f8ea1; }
-#resultScreen #rFb .fbRow2 input:focus{ border-color:#2b6cb0; }
-#resultScreen #rFb #rFbSend{ background:#2b6cb0; border-color:#2b6cb0; color:#fff; }
-#resultScreen #rFb .fbOk{ color:#2b6cb0; }
+/* ★ v248 用戶指定：反饋卡改純黑白（藍灰全部撤掉），與結算頁黑白語言一致 */
+#resultScreen #rFb{ background:#fff; border-color:#111; color:#151210; box-shadow:5px 5px 0 rgba(0,0,0,.30); }
+#resultScreen #rFb .srvHd{ color:#151210; border-bottom-color:rgba(0,0,0,.26); opacity:1; }
+#resultScreen #rFb .srvHd small{ color:#8a8a8a; }
+#resultScreen #rFb .fbBtn{ background:#fff; color:#151210; border-color:rgba(0,0,0,.55); }
+#resultScreen #rFb .fbBtn:hover{ border-color:#111; background:#ededed; }
+#resultScreen #rFb .fbBtn.on{ background:#111; border-color:#111; color:#fff; }
+#resultScreen #rFb .fbRow2 input{ background:#fff; color:#151210; border-color:rgba(0,0,0,.38); }
+#resultScreen #rFb .fbRow2 input::placeholder{ color:#9a9a9a; }
+#resultScreen #rFb .fbRow2 input:focus{ border-color:#111; }
+#resultScreen #rFb #rFbSend{ background:#111; border-color:#111; color:#fff; }
+#resultScreen #rFb #rFbSend:active{ transform:translate(2px,2px); }
+#resultScreen #rFb .fbOk{ color:#555; }
 /* ★ v243f 結算頁：頂部呪術廻戦 Logo（居中、底緣漸隱虛化）＋下載頁同款背景 */
 #resultScreen:not(.hide){
   background-color:#C7D1D3;
@@ -3073,7 +3112,7 @@ function resetBattle(){
   S.suk.hp=SUK_MAXHP; S.suk.pose='idle'; S.suk.poseT=0;
   S.suk.ce=100; S.suk.adaptMap={};
   S.hollowCd=0; S.blockT=0; S.guardFx=0; S.atkCd=3; S.warned=false; S.endT=5;
-  S.diff=DIFF_PICK; S.hitStop=0; S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.heroJolt=0; S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
+  S.diff=DIFF_PICK; S.hitStop=0; S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.nbPlayed=false; S.soulKill=false;   /* ★ v250 釘崎彩蛋是否已播（避免真結局重複播） */ S.heroJolt=0; S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 清慢動作 */
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
@@ -3740,6 +3779,10 @@ function domainAnnounce(){
   clearTimeout(el.__t); el.__t=null;
   el.__shownAt=Date.now(); el.__dur=ita?3.3:2.1;   /* ★ v88 看門狗用 */
   el.dataset.armed='1';                            /* ★ v90 標記「本次演出已由合法路徑授權」 */
+  /* ★ v253 用戶指定：領域展開字樣演出期間保持回合倒計時可見 —— 記一段時間戳，
+     syncStageChrome 據此不把 S.cutin 當成「整屏遮蓋」。 */
+  S.domAnnUntil=performance.now()+(ita?3500:2400);
+  try{ syncStageChrome(); }catch(e){}
 }
 /* ★ v90 領域展開授權令牌：只有真正發動領域技能的路徑會把 allowDomainAnnounce 置位一次，
    domainAnnounce() 消費掉它才允許演出。避免任何誤觸 / 殘留把大字帶到畫面上。 */
@@ -3852,13 +3895,23 @@ function yujiWin(){
   $('deathCut').classList.remove('on');
   syncHud();
   SFX.black(); SFX.die(); flash('fWhite'); shake();
-  fxManga('逕庭拳',W*0.5,GY-210*SC,true,'#c0392b');
+  /* ★ v253 用戶指定：用「靈魂·解」收掉宿儺時不要飄「逕庭拳」字樣（解字已在出招時打過） */
+  if(!S.soulKill) fxManga('逕庭拳',W*0.5,GY-210*SC,true,'#c0392b');
+  S.soulKill=false;
   fxImpact(SX()-30*SC,GY-150*SC,true);
   S.suk.pose='hurt'; S.suk.poseT=2.6;
   queue.length=0;
   say('suku','「……什麼？這股咒力——」');
   say('ita','「——給這循環的詛咒，做個了結吧。宿儺！」');
   say('narr','旁白：領域崩毀，詛咒之王的軀體開始瓦解。');
+  /* ★ v250 用戶報「虎杖擊殺宿儺時釘崎演出沒了」：彩蛋原先只掛在「靈魂·解」的出招分支，
+     用逕庭拳／黑閃／領域收人頭時就不會播。現改為真結局統一補播（靈魂·解已播過則跳過）。 */
+  const _nbPending=!S.nbPlayed;
+  if(_nbPending){
+    S.nbPlayed=true;
+    nobaraCut(1,1500);
+    setTimeout(()=>{ if(S.phase!=='over') return; nobaraCut(2,2000); say('nobara','「——共鳴。」'); },1500);
+  }
   /* ★ v247 用戶指定：虎杖擊殺宿儺 ⇒ 追加「宿儺退場對白」（黑屏逐句播放、可點擊跳過），播完才進結算 */
   setTimeout(()=>{
     if(S.phase!=='over') return;
@@ -3872,7 +3925,7 @@ function yujiWin(){
       ['narr','旁白：宿儺拒絕了「共存」的提議。史上最強的詛咒之王，就此徹底消散。'],
       ['sys','真結局「宿儺討伐」達成！']
     ], showResult);
-  }, 2600);
+  }, 2600+(_nbPending?3500:0));
 }
 /* 宿儺「灶·開」：火焰術式，點燃場地 */
 function fireFlame(){
@@ -4257,9 +4310,14 @@ function stageOffsetTop(el, root){
 function placeTgtRow(){
   const row=$('tgtRow'), sr=$('statusRow'), stage=$('stage');
   if(!row||!sr||!stage) return;
-  const y=stageOffsetTop(sr, stage);
+  /* ★ v251 狀態徽標已移到白框外（絕對定位）⇒ 以實際高度判斷是否在顯示；
+     徽標行隱藏時改用宿儺面板下緣，式神血條不會再跳到血條上。 */
+  const hud=stage.querySelector('.hud');
+  let y=null;
+  if(sr.offsetHeight>0){ const sy=stageOffsetTop(sr, stage); if(sy!=null) y=sy+sr.offsetHeight+4; }
+  if(y==null && hud){ const hy=stageOffsetTop(hud, stage); if(hy!=null) y=hy+hud.offsetHeight+4; }
   if(y==null) return;
-  row.style.top=Math.max(18,Math.round(y+sr.offsetHeight+4))+'px';   /* 下限保護：算歪時不會跑到血條上 */
+  row.style.top=Math.max(18,Math.round(y))+'px';   /* 下限保護：算歪時不會跑到血條上 */
 }
 
 function renderTargetRow(){
@@ -7781,7 +7839,7 @@ function sendFb(){
 }
 
 /* ★ v240 結算頁左右排布：把各區塊搬進左右兩欄（只搬一次，之後每次結算只更新內容）
-   左欄＝結局卡 / 接力鏈 / 挑戰紀錄 / 全服戰況；右欄＝結局圖鑑 / 藏彩蛋成就（橫向輪播）/ 手感反饋。 */
+   左欄＝結局卡 / 接力鏈 / 挑戰紀錄 / 全服戰況 / 手感反饋（★ v248 下移）；右欄＝結局圖鑑 / 藏彩蛋成就（橫向輪播）。 */
 function buildResultCols(){
   const rs=$('resultScreen'), L=$('rColL'), R=$('rColR');
   if(!rs||!L||!R||L.__built) return;
@@ -7793,8 +7851,9 @@ function buildResultCols(){
   const _ch=g('rChain'), _rc=g('rRec');
   if(_ch) line.appendChild(_ch);
   if(_rc) line.appendChild(_rc);
-  const left =[g('rEndCard'), secs[0], line, g('rSrv')];
-  const right=[secs[1], g('rDex'), secs[2], g('achWrap'), g('rFb')];
+  /* ★ v248 用戶指定：手感反饋移到「全服戰況」下方（左欄尾），右欄不再放 */
+  const left =[g('rEndCard'), secs[0], line, g('rSrv'), g('rFb')];
+  const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
   L.__built=1;
@@ -7806,6 +7865,8 @@ function fitResult(){
   const rs=$('resultScreen');
   if(!rs || rs.classList.contains('hide')) return;
   rs.style.zoom='';
+  /* ★ v249 手機端改縱向流式 + 滾動（zoom 在手機上會與 grid 行高互相干擾，反而造成遮擋） */
+  if(innerWidth<=900) return;
   const h=rs.clientHeight;
   if(!h) return;
   const need=rs.scrollHeight;
@@ -8244,6 +8305,8 @@ function itaSoulCut(){
         flash('fWhite'); shake(); shake();
         fxWorldSlash();
         fxManga('解',W*0.5,GY-250*SC,true,'#ffffff');
+        S.nbPlayed=true;   /* ★ v250 彩蛋已在出招前播過，真結局不再補播 */
+        S.soulKill=true;   /* ★ v253 這一刀是「靈魂·解」⇒ 真結局不再飄「逕庭拳」字樣 */
         hitSukuna(S.suk.hp+1,true,'black',false,true,'ita_soul_final',true,true);   /* finisher：真·秒殺 */
         return;
       }
@@ -8382,16 +8445,16 @@ function bgStatic(){
   g.setTransform(DPR*PERF,0,0,DPR*PERF,0,0);
   g.save();
   g.globalAlpha=0.085; g.fillStyle='#111';
-  g.font='900 '+(Math.min(W,H)*0.75)+'px "Noto Sans SC",serif';
+  g.font='900 '+(Math.min(W,H)*0.56)+'px "Noto Sans SC",serif';   /* ★ v250 用戶指定：字樣縮小，避免被頂部倒計時框遮住 */
   g.textAlign='center'; g.textBaseline='middle';
   /* 紅色光效描邊 */
   g.shadowColor='rgba(215,38,61,.55)'; g.shadowBlur=14*SC;
   g.lineJoin='round'; g.lineWidth=7*SC; g.strokeStyle='#d7263d';
-  g.strokeText('呪',W/2,H*0.46);
+  g.strokeText('呪',W/2,H*0.55);
   g.shadowBlur=10*SC;
-  g.strokeText('呪',W/2,H*0.46);
+  g.strokeText('呪',W/2,H*0.55);
   g.shadowBlur=0;
-  g.fillText('呪',W/2,H*0.46);
+  g.fillText('呪',W/2,H*0.55);
   g.restore();
   /* 遠景天際線（新宿剪影）——稀疏零碎：約 1/3 留空，斷續分布不再連續密鋪 */
   g.save();
@@ -13935,7 +13998,10 @@ function syncStageChrome(){
   /* ★ v116 只要「不是戰鬥相位」就一律收起回合列 —— 涵蓋開場、選人、結算、領域對拼與所有全屏演出。
      舊版只檢查那三個 .screen 的 .hide，遇到其他覆蓋層（或相位切換的瞬間）就會漏掉，導致首頁仍露出倒計時。 */
   if(S.phase!=='fight') covered=true;
-  if(S.cutin>0) covered=true;   /* ★ v199 需求③：登場動畫／漫畫頁等全屏演出期間也收起回合列（turnBar z-index:30 高於 #heroIntro:20，否則倒計時會蓋在登場動畫上） */
+  /* ★ v253 用戶指定：領域展開大字演出期間（#itaDomIn.on）回合倒計時要留在畫面上 ——
+     該演出同樣會佔用 S.cutin（約 2.25s），舊邏輯連帶把倒計時一起收掉。 */
+  const _domAnn = ((S.domAnnUntil||0)>performance.now()) || !!($('itaDomIn') && $('itaDomIn').classList.contains('on'));
+  if(S.cutin>0 && !_domAnn) covered=true;   /* ★ v199 需求③：登場動畫／漫畫頁等全屏演出期間也收起回合列（turnBar z-index:30 高於 #heroIntro:20，否則倒計時會蓋在登場動畫上） */
   if(_chromeCov===covered) return;
   _chromeCov=covered;
   st.classList.toggle('screenOn',covered);
@@ -14076,6 +14142,14 @@ const SND_SUKU_BGM='data:audio/mpeg;base64,//uQBAAP8AAAaQAAAAgAAA0gAAABAAABpBQAA
 #deathBlack .dbHint{position:absolute;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom));
   text-align:center;color:rgba(255,255,255,.46);font-size:clamp(11px,2.3vw,14px);
   letter-spacing:.14em;font-weight:600;pointer-events:none;}
+/* ★ v252 用戶指定：① 去掉「點擊下方按鈕…」那行提示；② 底部技能欄收緊，白色區域面積變小 */
+#hint{display:none !important;}
+#pad{gap:calc(7px*var(--k));padding:calc(3px*var(--k)) 10px calc(5px*var(--k));}
+#pad .btn{padding:calc(7px*var(--k)) 4px calc(6px*var(--k));font-size:calc(14.5px*var(--k));gap:calc(2px*var(--k));box-shadow:4px 4px 0 var(--ink);border-width:2.5px;}
+#pad .btn small{font-size:calc(9px*var(--k));}
+#pad.five .btn{padding:calc(6px*var(--k)) 2px calc(5px*var(--k));font-size:calc(12.5px*var(--k));}
+#pad.five .btn small{font-size:calc(8px*var(--k));letter-spacing:-.3px;}
+html.rot #pad,html.land #pad{padding-bottom:calc(4px*var(--k) + 6px);}
 </style>
 <div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
