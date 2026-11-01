@@ -536,13 +536,14 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 }
 /* ===== ★ v236 結算頁重做二：黑底 + 紅勾邊（用戶指定：不要黃褐色） ===== */
 #resultScreen{
-  background-color:#0d0b0a;
+  /* ★ v237 用戶指定：背景底色改白色（保留黑網點質感）；內容超出可滑動 */
+  background-color:#fff;
   background-image:
-    radial-gradient(circle, rgba(215,38,61,.16) 1px, transparent 1.15px),
-    radial-gradient(ellipse 80% 46% at 50% 0%, rgba(215,38,61,.20), transparent 64%),
-    radial-gradient(ellipse 95% 62% at 50% 102%, rgba(120,10,18,.32), transparent 72%);
-  background-size:4px 4px, 100% 100%, 100% 100%;
-  color:#f2e9e4;
+    radial-gradient(circle, rgba(20,17,15,.14) 1px, transparent 1.15px),
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(215,38,61,.08), transparent 60%);
+  background-size:4px 4px, 100% 100%;
+  color:#1b1b1b;
+  touch-action:auto;overscroll-behavior:contain;
 }
 #resultScreen .eCard{
   background:#151210;border-color:#d7263d;color:#f2e9e4;
@@ -556,12 +557,12 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 #resultScreen .eAlso{color:#ff8a8a;}
 #resultScreen .eNm{color:#fff;}
 #resultScreen .eDesc{color:#e8dcd6;}
-#resultScreen .secTitle{color:#f2e9e4;opacity:.85;letter-spacing:5px;}
+#resultScreen .secTitle{color:#1b1b1b;opacity:.8;letter-spacing:5px;}
 #resultScreen .secTitle::before{content:"";width:15px;height:3px;background:#d7263d;flex:none;}
 #resultScreen .dexCnt{background:#d7263d;color:#fff;}
 #resultScreen .cta{background:#151210;border-color:#d7263d;color:#ff6b6b;
   box-shadow:7px 7px 0 rgba(215,38,61,.45), 0 0 26px rgba(215,38,61,.4);}
-#resultScreen .resDisc{color:#b8a8a2;opacity:.6;}
+#resultScreen .resDisc{color:#6b5f54;opacity:.8;}
 #resultScreen .ach{border-color:#d7263d;background:#151210;color:#f2e9e4;
   box-shadow:3px 3px 0 rgba(215,38,61,.55), 0 0 12px rgba(215,38,61,.28);}
 #resultScreen .chNode{background:#151210;border-color:#d7263d;color:#f2e9e4;box-shadow:3px 3px 0 rgba(215,38,61,.5);}
@@ -573,10 +574,24 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 #resultScreen .dexRow.lock{background:#1a1614;opacity:.6;box-shadow:3px 3px 0 rgba(215,38,61,.2);}
 #resultScreen .dexRow.now{border-color:#ff4a4a;box-shadow:3px 3px 0 #ff4a4a;}
 #resultScreen .dt{color:#ff5a5a;}
+
+/* ★ v237 手機端結算頁緊湊排版（顯示不全對策）：縮框格/字級/間距 + 明確允許觸摸滾動 */
+html.rot #resultScreen,html.land #resultScreen{gap:5px;padding:12px 8px 18px;}
+html.rot #resultScreen .eCard,html.land #resultScreen .eCard{padding:10px 12px;box-shadow:4px 4px 0 rgba(215,38,61,.55), 0 0 0 2px rgba(215,38,61,.25);}
+html.rot #resultScreen .eNm,html.land #resultScreen .eNm{font-size:clamp(20px,5.4vw,34px);letter-spacing:3px;}
+html.rot #resultScreen .eDesc,html.land #resultScreen .eDesc{font-size:11.5px;line-height:1.55;}
+html.rot #resultScreen .secTitle,html.land #resultScreen .secTitle{font-size:11px;margin:4px 0 0;}
+html.rot #resultScreen .cta,html.land #resultScreen .cta{padding:8px 16px;box-shadow:4px 4px 0 rgba(215,38,61,.45);}
+html.rot .dex,html.land .dex{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:5px;}
+html.rot .dexRow,html.land .dexRow{padding:4px 8px 5px;}
+html.rot .chain,html.land .chain{gap:3px;}
+html.rot .chNode,html.land .chNode{padding:3px 8px;font-size:11px;}
+html.rot .recRow,html.land .recRow{gap:5px;}
+
 /* 通關橫幅：黑底白字紅環 */
-#resultScreen #rCore{color:#fff;background:linear-gradient(180deg,#1a1512,rgba(20,17,15,.88));
-  border-top:3px solid #d7263d;border-bottom:3px solid #d7263d;
-  text-shadow:0 0 22px rgba(215,38,61,.9), 0 0 46px rgba(215,38,61,.45);}
+#resultScreen #rCore{color:#0b1a2e;background:linear-gradient(180deg,#fff,rgba(255,255,255,.85));
+  border-top:3px solid #0e7490;border-bottom:3px solid #0e7490;
+  text-shadow:0 0 22px rgba(34,211,238,.8), 0 0 46px rgba(34,211,238,.4);}
 
 /* 通關橫幅（中心最上方）＋ 轉動刻度環 */
 #rCoreWrap{display:none;position:relative;width:100%;max-width:760px;
@@ -586,13 +601,13 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
   position:absolute;top:50%;left:50%;width:min(216px,46vw);aspect-ratio:1/1;
   transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:.8;
   background:conic-gradient(from 0deg,
-    rgba(215,38,61,.95) 0deg,transparent 20deg, rgba(215,38,61,.45) 24deg,transparent 46deg,
-    rgba(215,38,61,.85) 50deg,transparent 74deg, rgba(215,38,61,.4) 78deg,transparent 102deg,
-    rgba(215,38,61,.9) 106deg,transparent 130deg, rgba(215,38,61,.45) 134deg,transparent 158deg,
-    rgba(215,38,61,.95) 162deg,transparent 186deg, rgba(215,38,61,.4) 190deg,transparent 214deg,
-    rgba(215,38,61,.8) 218deg,transparent 242deg, rgba(215,38,61,.45) 246deg,transparent 270deg,
-    rgba(215,38,61,.9) 274deg,transparent 298deg, rgba(215,38,61,.4) 302deg,transparent 326deg,
-    rgba(215,38,61,.85) 330deg,transparent 360deg);
+    rgba(34,211,238,.95) 0deg,transparent 20deg, rgba(34,211,238,.45) 24deg,transparent 46deg,
+    rgba(34,211,238,.85) 50deg,transparent 74deg, rgba(34,211,238,.4) 78deg,transparent 102deg,
+    rgba(34,211,238,.9) 106deg,transparent 130deg, rgba(34,211,238,.45) 134deg,transparent 158deg,
+    rgba(34,211,238,.95) 162deg,transparent 186deg, rgba(34,211,238,.4) 190deg,transparent 214deg,
+    rgba(34,211,238,.8) 218deg,transparent 242deg, rgba(34,211,238,.45) 246deg,transparent 270deg,
+    rgba(34,211,238,.9) 274deg,transparent 298deg, rgba(34,211,238,.4) 302deg,transparent 326deg,
+    rgba(34,211,238,.85) 330deg,transparent 360deg);
   -webkit-mask:radial-gradient(circle,transparent 60%,#000 61.5%);
   mask:radial-gradient(circle,transparent 60%,#000 61.5%);
   animation:ringSpin 11s linear infinite;
@@ -793,7 +808,7 @@ html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 10px);}
 .w-gojo{color:var(--blue);} .w-suku{color:var(--red);}
 .w-kash{color:#b8860b;}
 .w-ita{color:#c0392b;} .w-comm{color:#5a5a5a;}
-.w-higu{color:#2b6cb0;} .w-okko{color:#7c3aed;} .w-maki{color:#2f9e5e;}
+.w-higu{color:#2b6cb0;} .w-okko{color:#7c3aed;} .w-maki{color:#3a3f45;}
 .w-judge{color:#64748b;letter-spacing:2px;}   /* ★ v31 式神「審判者」：石像灰 */
 .w-narr{color:#555;font-style:italic;} .w-sys{color:#7a5c00;font-weight:900;letter-spacing:1px;}
 
@@ -2346,7 +2361,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <p><b>赤血操術・穿血</b>　17%~23%，留下血契（最多 ×3，每回合侵蝕 3%/層）。</p>
     <p><b>領域展開</b>　生命低於 40% 最大生命時，第 4 個按鈕變為「領域展開」—— 瀕死之際的最後反擊；展開瞬間若宿儺正維持「伏魔御厨子」，其結界當場碎裂（領域必中斬擊一併解除）。領域持續到虎杖退場。</p>
     <p><b>束縛</b>　黒閃之誓（下一擊必出黑閃、×2／2 回合受傷 ×1.25）・不屈之魂（立刻回復 30% 體力／3 回合輸出 ×0.8）・魂之境界（3 回合傷害 ×1.6／每回合自損 6% 體力）。</p>
-    <h3 style="--hc:#2f9e5e">禪院真希<small>MAKI · 天與咒縛・釋魂刀</small></h3>
+    <h3 style="--hc:#3a3f45">禪院真希<small>MAKI · 天與咒縛・釋魂刀</small></h3>
     <p><b>釋魂刀</b>　8%~12%・無視適應（魔虛羅無法適應非術式攻擊）。</p>
     <p><b>天與咒縛</b>　不耗咒力・純體格「架勢」：本回合只有宿儺「解」「捌」與伏魔御厨子的「領域必中」（皆傷害減半）、顎吐「虎葬·碎擊」、魔虛羅「斬擊」傷得到真希，其餘攻擊（含誅伏賜死）全部架開。</p>
     <p><b>無聲突襲</b>　11%~15%・無視適應，CD 2 回合，首造靈魂級創傷。</p>
@@ -4934,7 +4949,7 @@ const HI_CFG={
   higuruma:{nm:'日車寬見', kanji:'誅伏賜死', accent:'#c8930a', tip:'領域「誅伏賜死」',     fx:'court',  badge:7, art:IMG.higuruma},
   okkotsu: {nm:'乙骨憂太', kanji:'真贋相愛', accent:'#7c3aed', tip:'無限呪力・術式複製', fx:'swords', badge:2, art:IMG_OKKO_CUT},
   itadori: {nm:'虎杖悠仁', kanji:'宿儺的器', accent:'#cf2f2f', tip:'逕庭拳・簡易領域',   fx:'fist',   badge:3, art:IMG.itadori},
-  maki:    {nm:'禪院真希', kanji:'天與咒縛', accent:'#2f9e5e', tip:'天與咒縛・釋魂刀',   fx:'slash',  badge:4, art:IMG.maki}
+  maki:    {nm:'禪院真希', kanji:'天與咒縛', accent:'#3a3f45', tip:'天與咒縛・釋魂刀',   fx:'slash',  badge:4, art:IMG.maki}
 };
 /* 關鍵幀插值 */
 function hiK(kf,t){
@@ -5729,7 +5744,7 @@ const RIKA_COPY=[
       if(S.blood<3){ S.blood++; say('sys','血契附着 ×'+S.blood+'——宿儺每回合受到 '+(S.blood*3)+' 點持續侵蝕。'); }
       else say('sys','血契已滿（×3），持續侵蝕 9 點/回合。');}},
   /* 禪院真希 ③無聲突襲（makiUlt）：19~24，無視適應（斬的是靈魂） */
-  {nm:'無聲突襲', col:'#2f9e5e', ico:'blood', exec:function(){
+  {nm:'無聲突襲', col:'#3a3f45', ico:'blood', exec:function(){
       S.noAdapt=true;
       hitSukuna(ri(19,24),true,'hollow',false,false,'rika_copy_silent');
       S.noAdapt=false;
@@ -8228,7 +8243,7 @@ function itaUlt(){
       addRes(8);
       syncHud();
     },390);
-  },520);
+  },0);
 }
 function startItadori(){
   $('selectUI').classList.add('hide');
@@ -10927,10 +10942,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   if(dom) o.h=()=>itaHeight()*1.16;   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':'itadori',o); }
 function drawMaki(){ return drawCutHero('maki',
-  {glow:'rgba(47,158,94,.9)', ring:'#3fbf72', bob:2.0})||drawFighter(); }
+  {glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }
 
 function drawFighter(){
-  const ACC={higuruma:'#2b6cb0',okkotsu:'#7c3aed',maki:'#2f9e5e'}[S.hero]||'#111111';
+  const ACC={higuruma:'#2b6cb0',okkotsu:'#7c3aed',maki:'#3a3f45'}[S.hero]||'#111111';
   const s=SC, gy=GY, p2=S.gojo.pose;
   const bob=Math.sin(S.t*2.0)*3*s;
   let lunge=0, rot=0;
@@ -11644,7 +11659,7 @@ const HERO_INFO={
   higuruma:{nm:'日車寬見', tag:'HIGURUMA', color:'#2b6cb0',     tip:'領域「誅伏賜死」'},
   okkotsu: {nm:'乙骨憂太', tag:'OKKOTSU',  color:'#7c3aed',     tip:'無限呪力・術式複製'},
   itadori: {nm:'虎杖悠仁', tag:'ITADORI',  color:'#8c2f24',     tip:'逕庭拳・簡易領域'},
-  maki:    {nm:'禪院真希', tag:'MAKI',     color:'#2f9e5e',     tip:'天與咒縛・釋魂刀'}
+  maki:    {nm:'禪院真希', tag:'MAKI',     color:'#3a3f45',     tip:'天與咒縛・釋魂刀'}
 };
 /* 按鈕文案表：3 號位小字可以寫成函數，用來顯示實時進度 */
 /* ★ v26 三號位（ult）配色：日車金黃 / 真希黑 / 虎杖黑紅，其餘沿用茈的紫 */
@@ -11738,7 +11753,7 @@ function beginNext(h){
   $('heroTag').innerHTML=info.nm+'<small>'+info.tag+'</small>';
   $('heroTag').style.background=info.color;
   $('subTag').innerHTML=(h==='maki')?'體力<small>PHY</small>':'呪力<small>CE</small>';
-  $('subTag').style.background=(h==='maki')?'#2f9e5e':'var(--cyan)';
+  $('subTag').style.background=(h==='maki')?'#3a3f45':'var(--cyan)';
   setHeroHint(h);   /* ★ v135 提示條跟隨角色 */
   $('gjHp').parentElement.classList.remove('khp');
   $('gjCe').parentElement.classList.remove('amb');
@@ -12085,7 +12100,7 @@ function makiAtk(){
   /* ★ v191 用戶指定：真希不再自發黑閃（撤銷 v189 的 8% 判定，回到固定傷害） */
   S.gojo.pose='atk'; S.gojo.poseT=0.3;
   addFx({type:'makiSlash',dur:0.6}); SFX.atk();   /* ★ v121 釋魂刀專屬特效：銀白刀光突進斬＋魂絲 */
-  fxManga('釋魂刀',GX()+96*SC,GY-236*SC,false,'#2f9e5e');
+  fxManga('釋魂刀',GX()+96*SC,GY-236*SC,false,'#3a3f45');
   say('maki','「沒有咒力——所以你的『適應』對我沒用。」');
   setTimeout(()=>{
     if(S.phase!=='fight') return;
