@@ -3239,7 +3239,7 @@ function fxKaiHatch(){
 }
 /* ★ v31 領域「誅伏賜死」全屏審判演出（日車「處刑人之劍」發動時疊加） */
 function fxJudge(){
-  addFx({type:'judge',dur:2.0});
+  addFx({type:'judge',dur:1.42,sp:1.45});   /* ★ v243 用戶要求加速：审判时间轴 1.45 倍速 */
 }
 
 function shake(){ const st=$('stage'); st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake'); }
@@ -3490,7 +3490,11 @@ function gojoVoid(){
           Promise.all([_gojoSfx,_sukuSfx]).then(()=>{
             if(S.phase!=='fight') return;
             domainShiftResolve();
-            startDomain(true);   /* ★ v83 無量空処成立 → 信息洪流（方向鍵）頁面 */
+            /* ★ v243 用戶要求：直接移除方向鍵玩法 —— 無量空処成立後不再進入信息洪流小遊戲，
+               亦不再有「全中 15% / 部分 8% / 龜裂 -20%」的一次性結算；領域每回合 5% 侵蝕照常生效。 */
+            S.domainUsed=true;
+            S.domBest=Math.max(S.domBest||0,DOM_N);   /* 保留「領域の支配者」成就的可獲得性 */
+            say('sys','★ 無量空処成立 —— 無限的情報灌入宿儺腦內：宿儺無法發動攻擊、每回合受到 5% 最大生命侵蝕。');
             /* ★ v141 五條成功展開 ⇒ 計時繼續後播「你是這裡的挑戰者」，播完恢復原 BGM */
             playDomSfx('challenge', 5.5).then(()=>resumeMainBgm());
           });
@@ -4250,20 +4254,27 @@ function actHollow(){
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     let d=rnd(25,35);
-    if(S.vowPub>0){                                    /* 術式公開 兌現 */
-      const k=1.8*S.vowPub;
-      d*=k;
-      fxText(W*0.5,H*0.30,'術式公開 ×'+k.toFixed(1),'#d7263d',true);
-      shake(); flash('fWhite');
-      say('sys','術式公開兌現——茈的威力 ×'+k.toFixed(1)+'（已立誓）！');
-      S.vowPub=0;
-    }
+    d=applyPubVow(d);                                  /* ★ v243 術式公開兌現（共用） */
     hitSukuna(d,true,'hollow');
     say('narr',pick(['旁白：紅與藍相撞，虛構的質量吞沒了整條街。','旁白：茈——不存在於這個世界的衝擊，正面命中。','旁白：硝煙散去，宿儺的半邊身子消失了。']));
   },1040);
   syncHud();
 }
 
+/* ★ v243 修 BUG：術式公開束縛 ⇒ 下一發「茈」×1.8。
+   此前只有普通茈兌現，走「無限制・茈」（hollowUnlimited）時完全沒乘 ⇒ 玩家常見「立誓了卻沒效果」。
+   抽成共用函數，兩條路徑都必須生效。 */
+function applyPubVow(d){
+  if((S.vowPub||0)>0){
+    const k=1.8*S.vowPub;
+    d*=k;
+    fxText(W*0.5,H*0.30,'術式公開 ×'+k.toFixed(1),'#d7263d',true);
+    shake(); flash('fWhite');
+    say('sys','術式公開兌現——茈的威力 ×'+k.toFixed(1)+'（已立誓）！');
+    S.vowPub=0;
+  }
+  return d;
+}
 /* ★ 無限制・茈：連續 4 回合不碰茈後解鎖的終極一擊 —— 抹除魔虛羅，並重創宿儺 */
 function hollowUnlimited(){
   if(S.acted) return;
@@ -4288,7 +4299,9 @@ function hollowUnlimited(){
     if(S.phase!=='fight') return;
     if(S.maha) killMaha();                    /* ★ 抹除魔虛羅（漸隱退場） */
     if(S.agyo) agyoDown();                    /* ★ v52 無限制菈連顎吐一起抹除 */
-    hitSukuna(rnd(46,58),true,'hollow');
+    let _hd=rnd(46,58);
+    _hd=applyPubVow(_hd);                     /* ★ v243 修 BUG：無限制・茈同樣吃「術式公開」×1.8 */
+    hitSukuna(_hd,true,'hollow');
     /* ★ 代價：解除上限的茈會波及自身 —— ★ v222 用戶要求降低反噬：40% → **20%**（現有生命的） */
     const back=Math.round(S.gojo.hp*0.2);
     S.gojo.hp=Math.max(1,S.gojo.hp-back);
@@ -6789,6 +6802,9 @@ function stopDomainBGM(){ if(domBgm){ clearInterval(domBgm); domBgm=null; } }
 /* ★ v83 alreadyOpen=true：無量空処已成立（gojoVoid 成功路徑調用）——跳過雙方再念領域名，
    只拉起信息洪流（方向鍵）頁面；false：獨立對拼開場（保留舊演出）。 */
 function startDomain(alreadyOpen){
+  /* ★ v243 方向鍵玩法已移除：本函數保留為空實現，任何殘留調用都不再拉起信息洪流小遊戲。 */
+  S.domainUsed=true;
+  return;
   if(S.hero!=='gojo') return;                 /* ★ 只有「無量空処」的持有者能打這一場 */
   if(S.domainUsed||S.phase!=='fight') return;
   S.domainUsed=true; S.phase='domain';
@@ -7419,7 +7435,7 @@ function splitScreen(){
 /* ---------- 成就 ---------- */
 const ACH=[
   ['black','黒閃の申し子','單局觸發 5 次以上黑閃'],
-  ['wheel','領域の支配者','領域對拼 5/5 全中'],
+  ['wheel','領域の支配者','無量空処成立'],
   ['guard','完璧なる防禦','全程零傷害'],
   ['kai','術式の探究者','三種術式全部命中過'],
   ['domain','宿儺討伐','達成真結局'],
@@ -11169,7 +11185,8 @@ else if(f.type==='kaiSlash'){
          ‧死刑判決後，日車手中的法槌變形成十字架狀的「處刑人之劍」，觸之即死。
          分拍：0~0.35 法庭柵欄升起 ／ 0.20~0.55 天秤審判者浮現 ／ 0.45~0.80 罪狀逐條宣讀
                ／ 0.80~0.95 睜眼血淚 ／ 0.85~1.15 GUILTY ／ 1.05~1.45 DEATH PENALTY ／ 1.6~2.0 淡出 */
-      const t=f.t, D=f.dur;
+      const _sp=(f.sp||1);
+      const t=f.t*_sp, D=2.0;   /* ★ v243 sp 加速时间轴；D 固定为原始总长 2.0s（仅用于淡出） */
       const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
       const fade=1-cl((t-1.60)/(D-1.60),0,1);
       ctx.save();
@@ -12260,7 +12277,7 @@ function higuAtk(){
   if(S.acted) return;
   markActed('atk');
   S.gojo.pose='atk'; S.gojo.poseT=0.3;
-  addFx({type:'higuCourt',dur:1.15});   /* ★ v118 敲槌開庭：法槌砸落＋衝擊環＋席位升起＋ORDER! 條幅 */
+  addFx({type:'higuCourt',dur:0.78});   /* ★ v243 用戶要求加速：1.15 → 0.78s */
   SFX.atk();
   fxManga('法槌・開廷',GX()+96*SC,GY-236*SC,false,'#2b6cb0');
   say('higu','「開廷——被告，兩面宿儺。」');
@@ -12273,7 +12290,7 @@ function higuAtk(){
       else say('sys','罪狀 +1（'+S.guilt+'/3）——攢滿 3 層可下達「沒收」與「處刑」。');
     }
     syncHud();
-  },160);
+  },115);   /* ★ v243 加快：160 → 115ms */
 }
 function higuGuard(){
   if(S.acted) return;
@@ -12306,11 +12323,11 @@ function higuUlt(){
   fxJudge();   /* ★ v31 誅伏賜死全屏審判演出：GUILTY → DEATH PENALTY → 處刑人之劍 */
   say('higu','「——判決：死刑。」');
   S.hitStop=Math.max(S.hitStop,0.10);
-  skillBeat({charge:520,cast:0.9,stop:0.15,flash:'fWhite',slow:0.60,word:'處刑人之劍'});   /* ★ v86 審判藍 */
+  skillBeat({charge:380,cast:0.66,stop:0.12,flash:'fWhite',slow:0.60,word:'處刑人之劍'});   /* ★ v243 用戶要求加速：520/0.9 → 380/0.66 */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     const exec=(S.suk.hp<=SUK_MAXHP*0.25);   /* ★v38：即死血線隨上限換算（與文案「≤25%」一致） */
-    addFx({type:'guillotine',dur:1.1});   /* ★ v76 十字劍墜斬 */
+    addFx({type:'guillotine',dur:0.78});   /* ★ v76 十字劍墜斬 ／ ★ v243 1.1 → 0.78s */
     hitSukuna(exec?Math.max(30,S.suk.hp):30,true,'hollow',false,true);   /* noScale：處刑人之劍不參與 ×0.70 */
     if(exec) say('sys','★ 處刑人之劍——即死判定成立！');
     else say('sys','處刑人之劍命中——但宿儺沒落在即死血線（≤25%），只造成重創。');
@@ -12339,7 +12356,7 @@ function higuUlt(){
       syncHud();
     }
     syncHud();
-  },1000);   /* ★ v31 700→1000：等審判演出宣判完再落劍（宿儺 1150ms 反擊之前） */
+  },690);   /* ★ v243 加快落劍：1000 → 690ms（仍在宿儺 1150ms 反擊之前） */
 }
 
 /* ★ v53 乙骨領域演出：全屏漫畫頁 → 場地中央浮現「邪去悔の梯子」 → 劍林場地 */
