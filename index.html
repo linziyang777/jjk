@@ -4124,6 +4124,22 @@ function syncVoidBtn(){
   if(b.__dim!==dim){ b.__dim=dim; b.classList.toggle('dim',dim); }
 }
 /* ★ v40 目標切換列：場上有式神時出現 —— 玩家可以「集火」式神 */
+/* ★ v240 用戶指定：式神血條行排到「血契／共鳴」那排（#statusRow）下方 ——
+   原本固定 top:31k 正好壓在 statusRow 上（用戶截圖）。改為每次渲染時按實際佈局定位，
+   statusRow 為空（無血契/共鳴）時自然回到血條正下方。 */
+function stageOffsetTop(el, root){
+  let y=0, n=el;
+  while(n && n!==root){ y+=n.offsetTop; n=n.offsetParent; }
+  return (n===root) ? y : null;
+}
+function placeTgtRow(){
+  const row=$('tgtRow'), sr=$('statusRow'), stage=$('stage');
+  if(!row||!sr||!stage) return;
+  const y=stageOffsetTop(sr, stage);
+  if(y==null) return;
+  row.style.top=Math.max(18,Math.round(y+sr.offsetHeight+4))+'px';   /* 下限保護：算歪時不會跑到血條上 */
+}
+
 function renderTargetRow(){
   const row=$('tgtRow'); if(!row) return;
   /* ★ v191 用戶指定：式神血條只在「戰鬥場景」顯示 ——
@@ -4138,6 +4154,7 @@ function renderTargetRow(){
     if(S.agyo) list.push(['agyo','顎吐',Math.round(S.agyoHp)+'/'+Math.round(S.agyoMax)]);
   }
   const show=scene && list.length>1;
+  if(show) placeTgtRow();   /* ★ v240 每次顯示時按 statusRow 實際高度重新定位 */
   if(row.__show!==show){
     row.__show=show; row.classList.toggle('on',show);
     /* ★ v219 用戶指定：式神血條行出現時，旁述條自動上移避讓（由 CSS #stage.hasTgt #bubble 控制） */
@@ -4147,6 +4164,7 @@ function renderTargetRow(){
   const sig=list.map(x=>x[0]+x[2]+(S.target===x[0]?1:0)).join('|');
   if(row.__sig===sig) return;
   row.__sig=sig;
+  placeTgtRow();   /* ★ v240 內容變動後再定位一次（statusRow 可能同時增删） */
   row.innerHTML=list.map(x=>
     '<span class="tg'+(S.target===x[0]?' on':'')+'" data-tg="'+x[0]+'">'+x[1]+
     (x[2]?('<small> '+x[2]+'</small>'):'')+'</span>').join('');
