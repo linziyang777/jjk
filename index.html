@@ -2322,7 +2322,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <p><b>完美格擋</b>　畫面邊緣亮起<b>黑色預警（0.7 秒）</b>後，在<b>最後 0.5 秒</b>內按下防禦型技能（簡易領域／領域展延／天與咒縛・架勢／無下限・不可侵）即觸發：畫面劇烈震動、全場壓暗並聚焦己身，出現黑字紅邊的「完璧」，<b>下回合行動力 +1</b>。注意：反轉術式是治療，<b>不參與</b>完美格擋；預警的前 0.2 秒按下只算普通格擋。</p>
     <p><b>「解」／「捌」</b>　伏魔御厨子成立後的必中斬擊：「解」的斬雨把領域內無咒力之物斬成粉碎；「捌」貼身、按咒力差一刀切下。領域展開的當回合「解＋捌」同時斬下，之後每回合只落「解」—— 傷害一律＝(解 15%＋捌 15%)×0.7＝<b>21% 最大生命</b>；「落花之情」可抵消後續連擊。</p>
     <p><b>灶·開</b>　二階段起放出火焰，點燃場地（3 回合 × 每回合 3% 最大生命灼燒）；虎杖的簡易領域可滅火。</p>
-    <p><b>神武解：電撃</b>　★ 原身形態新增技能（動畫與鹿紫雲一的「雷」相同，只是打向玩家角色）：造成 5% 宿儺最大生命傷害，並使我方<b>麻痺 1 回合</b>（受到傷害後解除）。被日車寬見的束縛「沒収・神武解」命中後，宿儺本局永久失去此技能（附身／原身皆然）。</p>
+    <p><b>神武解：電撃</b>　★ 原身形態新增技能（動畫與鹿紫雲一的「雷」相同，只是打向玩家角色）：造成 5% 宿儺最大生命傷害，並使我方<b>麻痺 1 回合</b>（受到傷害後解除）。被日車寬見的束縛「沒収・神武解」或「處刑人之劍」首次命中後，宿儺本局永久失去此技能（附身／原身皆然）。</p>
     <p><b>世界を断つ斬撃</b>　原身形態限定的秒殺技（見共通機制）。</p>
     <p><b>式神召喚</b>　魔虛羅（宿儺生命 &lt;90% 後）／顎吐（生命 &lt;85% 後）。</p>
     <p><b>反轉術式</b>　回復 20% 最大生命並修復術式熔斷 —— 熔斷後的下一回合必定發動；其餘回合血量 &lt;75% 時也有概率自行發動；另有每換一棒的自愈 10%（最後一棒不觸發）。</p>
@@ -2345,7 +2345,7 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
     <h3 style="--hc:#2b6cb0">日車寬見<small>HIGURUMA · 領域「誅伏賜死」</small></h3>
     <p><b>法槌・開廷</b>　累積罪狀 +1。</p>
     <p><b>領域展延</b>　12% 咒力・中和術式；★ 展延同時記下術式構造 ⇒ <b>罪狀 +1</b>（防禦回合也能推進處刑人之劍）。</p>
-    <p><b>處刑人之劍</b>　罪狀滿 3 可下達 —— 宿儺血量 ≤25% 時即死。</p>
+    <p><b>處刑人之劍</b>　罪狀滿 3 可下達 —— 宿儺血量 ≤25% 時即死。★ 命中必沒收：首次命中沒收「神武解：電撃」；此後每次命中再隨機沒收宿儺的一個技能（近身斬擊／斬擊波／灶·開／神武解：電撃／反轉術式／伏魔御厨子）——被沒收的技能本局不可再用，宿儺每次攻擊只能從剩餘技能中隨機選擇；全部沒收光則空過回合。</p>
     <p><b>束縛</b>　沒収・神武解（適應清零、2 回合受傷 ×0.4／3 回合輸出 ×0.75；★ 命中後宿儺本局失去「神武解：電撃」）・有罪判決（罪狀 +2／2 回合受傷 ×1.3）・弁護人之誓（3 回合受傷 ×0.6／輸出 ×0.8）。</p>
     <h3 style="--hc:#7c3aed">乙骨憂太<small>OKKOTSU · 無限呪力・術式複製</small></h3>
     <p><b>太刀・呪斬</b>　3.5%~5% 最大生命。</p>
@@ -2709,6 +2709,7 @@ const S={
   hero:'gojo', kashimo:{hp:100,ce:100}, amber:30, amberTagHide:0,   /* ★ v70 ce＝咒力條；amberTagHide＝解放後標籤延遲 */
   amberUsed:false, amberSkip:1, trueForm:false,   /* ★ v52 amberSkip：使用当回合不扣倒計時 */      /* ★ 幻獣琥珀是否已解放（一生一次）/ 宿儺是否已顯原身 */
   sukuNoShinbu:false,                 /* ★ v214 日車「沒収・神武解」命中 ⇒ 宿儺本局永久失去「神武解：電撃」（附身／原身都一樣） */
+  sukLost:{},                          /* ★ v238 處刑人之劍沒收的宿儺技能表 {melee:1,wave:1,flame:1,bolt:1,rct:1,dom:1} */
   downDone:false, pendingTrueForm:false, /* ★ 退場演出是否已排；原身是否已預約（琥珀打出但被中途打斷時補做） */
   usedHeroes:[],                     /* ★ v32 已登場過的角色（含陣亡者）：開局爲空 —— 第一位由玩家自選 */
   itadori:{hp:100}, blood:0, itaUltCd:0, itaHeal:false, itaDom:0,   /* ★ v47 itaDom＝領域是否成立（★ v89 起不再倒數，持續到虎杖退場） */
@@ -2805,7 +2806,7 @@ function resetBattle(){
   S.vowPub=0; S.vowNoGuard=0; S.maxHp=100; S.vowTurn=0; S.vowOpen=false;
   S.vowAtkMul=1; S.vowAtkT=0; S.vowDefMul=1; S.vowDefT=0; S.vowNextMul=1;
   S.vowPierce=false; S.vowBF=false; S.vowCounter=0; S.vowCounterT=0; S.vowSelf=0; S.vowSelfT=0; S.noAdaptT=0; S.vowFragT=0; S.vowWeakT=0;
-  S.worldUsed=false; S.worldKill=false; S.sukuNoShinbu=false;
+  S.worldUsed=false; S.worldKill=false; S.sukuNoShinbu=false; S.sukLost={};
   S.vowUsedHeroes={}; S.okkBurn=false; S.gojoCeBroken=false;   /* ★ v99 束縛/乙骨熔斷/咒力條碎裂 重置 */
   $('yujiDomain').classList.remove('on');
   closeVowUI();
@@ -6046,6 +6047,7 @@ function sukunaRCT(){
 /* ★ v192 宿儺能否展開伏魔御厨子：未用滿 3 次、不在場、未熔斷 */
 function sukuCanOpenDomain(){
   if(S.phase!=='fight') return false;
+  if(S.sukLost&&S.sukLost.dom) return false;   /* ★ v238 處刑人之劍沒收「伏魔御厨子」 */
   if((S.sukuDomUsed||0)>=SUKU_DOM_MAX) return false;
   if(S.sukuDom>0) return false;                 /* 已在領域中 */
   if(S.sukuBurn) return false;                  /* 術式熔斷 */
@@ -6173,9 +6175,15 @@ function sukunaTurn(){
   if(S.stage>=2 && S.flameCd<=0){ type='flame'; S.flameCd=7; }
   /* ★ v214：原身宿儺新增「神武解：電撃」進隨機池（被日車「沒収・神武解」没收後移除） */
   if(S.trueForm && !S.sukuNoShinbu && Math.random()<0.22) type='bolt';
+  /* ★ v238 處刑人之劍沒收 ⇒ 被沒收的技能從隨機池移除；全沒收光則空過一回合 */
+  const SL=S.sukLost||{};
+  if(type==='melee'&&SL.melee) type=SL.wave?'wave':'none';
+  if(type==='wave'&&SL.wave) type=SL.melee?'melee':'none';
+  if(type==='flame'&&SL.flame) type='none';
+  if(type==='bolt'&&SL.bolt) type='none';
   S.sukLast=type;                       /* 供乙骨「術式複製」參考 */
   /* ★ v92 反轉術式進入隨機池：非熔斷時血量低於 75% 且隨機命中 ⇒ 本回合改用反轉術式 */
-  const rctRandom=!S.sukuBurn && S.suk.hp<SUK_MAXHP*0.75 && Math.random()<0.18;
+  const rctRandom=!S.sukuBurn && !(S.sukLost&&S.sukLost.rct) && S.suk.hp<SUK_MAXHP*0.75 && Math.random()<0.18;   /* ★ v238 反轉術式被沒收則不再隨機 */
   /* ★ v77 乙骨領域內：宿傩每 2 回合發動「彌須葛籠」，發動回合自身不能發動攻擊
      ★ v92 無量空処內且魔虛羅已被擊破：原身形態同樣以 2 回合週期發動「彌須葛籠」 */
   let misagoTurn=false;
@@ -6230,7 +6238,14 @@ function sukunaTurn(){
            乙骨的「真贋相愛」內不給這個選項（用戶只指定五條的領域）。 */
         if(!ISOKKO && (S.gojoVoidCnt||0)<2 && sukuCanOpenDomain()) pool.push('dom');
         if(rctRandom) pool.push('rct');
-        const act=pool[Math.floor(Math.random()*pool.length)];
+        /* ★ v238 處刑人之劍沒收 ⇒ 被沒收的技能從領域內隨機池移除 */
+        const pool2=pool.filter(x=>!(S.sukLost&&S.sukLost[x]));
+        if(!pool2.length){
+          S.suk.pose='cast'; S.suk.poseT=0.8;
+          S.sukLast='';
+          say('sys','★ 宿儺的技能已被「處刑人之劍」沒收殆盡——這一回合無從出手。');
+        }
+        const act=pool2[Math.floor(Math.random()*pool2.length)];
         S.sukLast=act==='rct'?'':act;     /* 供乙骨「術式複製」參考 */
         if(act==='rct') sukunaRCT();
         else if(act==='melee') sukunaAttack();
@@ -6285,7 +6300,13 @@ function sukunaTurn(){
   else if(type==='melee') sukunaAttack();
   else if(type==='wave') fireWave();
   else if(type==='bolt') sukuShinbu();   /* ★ v214 原身「神武解：電撃」 */
-  else fireFlame();
+  else if(type==='flame' && !(S.sukLost&&S.sukLost.flame)) fireFlame();
+  else{
+    /* ★ v238 處刑人之劍把技能沒收殆盡：空過一回合 */
+    S.suk.pose='cast'; S.suk.poseT=0.8;
+    S.sukLast='';
+    say('sys','★ 宿儺的技能已被「處刑人之劍」沒收殆盡——這一回合無從出手。');
+  }
   /* ★ v81/v192 伏魔御厨子：領域內必中斬擊「解」「捌」——
      傷害 ＝ (解 15% ＋ 捌 15%) × 0.7 ＝ 21% 最大生命（用戶指定，原為固定 10%）；
      動畫 ＝ ★ v192 用戶指定：**展開的當回合播「解＋捌」雙發**（去掉原本每回合都播的紅條捌），
@@ -11851,6 +11872,30 @@ function higuUlt(){
     hitSukuna(exec?Math.max(30,S.suk.hp):30,true,'hollow',false,true);   /* noScale：處刑人之劍不參與 ×0.70 */
     if(exec) say('sys','★ 處刑人之劍——即死判定成立！');
     else say('sys','處刑人之劍命中——但宿儺沒落在即死血線（≤25%），只造成重創。');
+    /* ★ v238 用戶指定：命中必沒收 —— 首擊沒收「神武解：電撃」，此後每擊再隨機沒收一個技能（永久） */
+    if(S.suk.hp>0 && S.phase==='fight'){
+      S.sukLost=S.sukLost||{};
+      const NAMES={melee:'近身斬擊',wave:'斬擊波',flame:'灶·開',bolt:'神武解：電撃',rct:'反轉術式',dom:'伏魔御厨子'};
+      if(!S.sukuNoShinbu){
+        S.sukuNoShinbu=true;
+        say('sys','★ 處刑人之劍首擊命中——宿儺的「神武解：電撃」被沒收，本局再也無法使用！');
+      }else{
+        const cand=[];
+        if(!S.sukLost.melee) cand.push('melee');
+        if(!S.sukLost.wave) cand.push('wave');
+        if(S.stage>=2 && !S.sukLost.flame) cand.push('flame');
+        if(!S.sukLost.rct && !S.sukuBurn) cand.push('rct');
+        if(!S.sukLost.dom) cand.push('dom');
+        if(cand.length){
+          const sk=cand[Math.floor(Math.random()*cand.length)];
+          S.sukLost[sk]=1;
+          say('sys','★ 處刑人之劍命中——宿儺的「'+NAMES[sk]+'」被沒收！此後每次攻擊只能從剩餘技能中隨機選擇（剩 '+cand.length+' 招 → '+(cand.length-1)+' 招）。');
+        }else{
+          say('sys','★ 處刑人之劍命中——宿儺的技能已被沒收殆盡。');
+        }
+      }
+      syncHud();
+    }
     syncHud();
   },1000);   /* ★ v31 700→1000：等審判演出宣判完再落劍（宿儺 1150ms 反擊之前） */
 }
