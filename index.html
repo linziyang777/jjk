@@ -1154,7 +1154,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   border-radius:50%;background:radial-gradient(ellipse at center,#fff 0%,#fff 46%,rgba(255,255,255,.55) 68%,rgba(255,255,255,0) 82%);
   filter:blur(2px);z-index:-1;}
 #okkoDomWord{position:absolute;isolation:isolate;}
-#okkoDomWord img{position:relative;height:clamp(96px,26vh,190px);width:auto;   /* ★ v242 邪去悔梯子字圖縮小，避免遮住下方技能框 */
+#okkoDomWord img{position:relative;height:clamp(74px,19.5vh,146px);width:auto;   /* ★ v242 邪去悔梯子字圖縮小，避免遮住下方技能框 */
   filter:drop-shadow(0 0 16px rgba(255,255,255,.55));}
 /* ★ v49 釘崎野薔薇連動演出層 */
 .nbCut{position:absolute;inset:0;z-index:21;display:none;align-items:center;justify-content:center;
@@ -1735,9 +1735,9 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
   /* ★ v234 用戶指定：整行搬到左上角、宿儺血條框（#skRow）正下方 —— 原先疊在底部會與技能欄/血條帶
      互相干涉（用戶截圖）。高度對齊：.hud 頂部 padding 6k + #skRow 行高約 20k+邊框，再加一點淨空。
      z-index 壓到 12（低於暫停遮罩 29），並在 renderTargetRow 裏掛起時整行隱藏。 */
-  position:absolute;left:12px;top:calc(31px*var(--k) + 4px);z-index:12;pointer-events:none;}
+  position:absolute;left:12px;top:calc(31px*var(--k) + 13px);z-index:12;pointer-events:none;}   /* ★ v243 下移留出與狀態條的空隙 */
 /* ★ v234 原身戰儀式條（#riteRow）常顯 ⇒ 式神血條行再往下讓一行（儀式條行高 ≈22k） */
-#stage.hasRite #tgtRow{top:calc(55px*var(--k) + 8px);}
+#stage.hasRite #tgtRow{top:calc(55px*var(--k) + 18px);}   /* ★ v243 同步下移 */
 #tgtRow.on{display:flex;pointer-events:auto;}
 #tgtRow .tg{font-weight:900;font-size:clamp(10px,2.6vw,13px);letter-spacing:1px;
   padding:6px 11px;border:3px solid var(--ink);background:#fff;color:var(--ink);
@@ -2039,6 +2039,23 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
 @media (max-width:520px){
   #rCols{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 8px;}
   #resultScreen{padding:8px 8px 8px;}
+}
+/* ★ v243 修復 PC 寬屏結算頁：此前 #resultScreen 的隱式網格列被 #rCols 撐成固定 860px 且左對齊，
+   導致內容整體貼左、右側大片留白。改為「列填滿 + 各區塊居中限寬」。 */
+@media (min-width:900px){
+  #resultScreen:not(.hide){ grid-template-columns:minmax(0,1fr); }
+  #resultScreen > #rCoreWrap,
+  #resultScreen > #rEndCard,
+  #resultScreen > #btnAgain,
+  #resultScreen > .resDisc{ justify-self:center; width:100%; max-width:880px; box-sizing:border-box; }
+  #resultScreen > #btnAgain{ max-width:760px; }
+  #resultScreen .eNm{ font-size:clamp(20px,2.6vw,30px); }
+  #resultScreen .eDesc{ font-size:12.5px; }
+  #resultScreen .secTitle{ font-size:11.5px; letter-spacing:4px; }
+}
+/* 桌面矮視窗允許縱向滾動，避免一頁內 overflow:hidden 把底部按鈕裁掉 */
+@media (min-width:900px) and (max-height:720px){
+  #resultScreen:not(.hide){ overflow-y:auto; }
 }
 
 /* ★ v176 結算頁最底部版權免責小字 */
@@ -2922,13 +2939,13 @@ const S={
   agyo:false, agyoHp:0, agyoMax:0, agyoCd:0, agyoPend:0, agyoUsed:false,
   okkoDom:0, misagoT:0, gojoDom:0, gojoVoidT:0, gojoVoidCnt:0, voidMax:1, sukuDom:0, domClash:null, voidMahaT:0,   /* ★ v53 乙骨領域是否成立（★ v89 起不再倒數，持續到乙骨退場；場地＝劍林）／★ v77 彌須葛籠倒數／★ v78 五條「無量空処」／★ v86 voidMax＝本局可展開次數上限（1，反轉術式刷新後爲 2） */
   sukuBurn:false, gojoBurn:false, okkBurn:false,    /* ★ v92 領域對拼輸掉方的術式熔斷（除「反轉術式」外無法使用任何術式） */
-  rika:false, rikaHp:0, rikaMax:0, rikaT:0, rikaCopy:'', ceCap:100, rikaUsed:false, rikaCopyCd:0, rikaRevCd:0, okkoRevCd:0, rikaCopyKeep:false,   /* ★ v55 式神・里香 */   /* ★ v212 rikaCopyKeep：里香「時限到」退場 ⇒ 模仿術式仍可用；「血量耗盡」被擊破 ⇒ 不可用 */   /* ★ v46 agyoUsed：一場只召喚一次式神 */
+  rika:false, rikaHp:0, rikaMax:0, rikaT:0, rikaCopy:'', ceCap:100, rikaUsed:false, rikaCd:0, rikaCopyCd:0, rikaRevCd:0, okkoRevCd:0, rikaCopyKeep:false,   /* ★ v55 式神・里香 */   /* ★ v212 rikaCopyKeep：里香「時限到」退場 ⇒ 模仿術式仍可用；「血量耗盡」被擊破 ⇒ 不可用 */   /* ★ v46 agyoUsed：一場只召喚一次式神 */
   mahaHp:0, mahaMax:0, mahaSlashCd:0,
   para:0,                             /* 我方「麻痺」剩餘回合（受到傷害即解除） */
   heroVulnT:0,                        /* 虎葬·碎擊：我方防禦力 -10% 剩餘回合 */
   cangMark:0, heCd:0,                 /* 五條悟：蒼標記層數 / 赫 冷卻 */
   muLimit:0, muBroken:false,          /* ★ v230 無下限・不可侵剩餘回合 / 是否被魔虛羅破解 */
-  muBreakIn:0,                        /* ★ v240 魔虛羅登場後「無下限還可支撐幾回合」（2 → 0 時永久失效） */
+  muBreakIn:0, muBreakAt:0,           /* ★ v243 muBreakIn=顯示用；muBreakAt=绝对回合戳（登场后满2个完整回合才破解） */
   gojoVanish:0,                       /* ★ v231 蒼・拳瞬身：1=立繪消失 0=在位 */
   fistPick:null,                      /* ★ v231 無下限失效後 1 技手動選擇：null=默認拳 / 'cang' / 'fist' */
   burn:0, flameCd:5,                          /* 宿儺「灶·開」的場地燃燒 / 冷卻回合 */
@@ -2975,8 +2992,8 @@ function resetBattle(){
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
   S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false;
-  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.okkoDom=0; S.okkoDomJust=0; S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaUsed=false; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; stopOkkoDomainBgm();   /* v161 重置時確保 AIZO 停播 */
-  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false; S.muBreakIn=0; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
+  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.okkoDom=0; S.okkoDomJust=0; S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaUsed=false; S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; stopOkkoDomainBgm();   /* v161 重置時確保 AIZO 停播 */
+  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false; S.muBreakIn=0; S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
   S.hollowSkip=0; S.hollowUsedTurn=-1; S.hollowFree=false; S.usedUnlimited=false;
   S.waveCd=9; S.waveWarn=false;
   S.dom={active:false,seq:[],idx:0,correct:0,t:0,marks:[]}; S.domainUsed=false;
@@ -3130,6 +3147,17 @@ function fxMisago(){
   say('suku',pick(['「彌須葛籠。」','「——彌須葛籠。」']));
   SFX.atk();
 }
+/* ★ v243 黑閃專屬音效：獨立 Audio，可連續觸發；統一在「技能打出的瞬間」播放 */
+function playBlackFlashSfx(){
+  try{
+    if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH){
+      if(!window.__bfEl){ window.__bfEl=new Audio(); window.__bfEl.preload='auto'; window.__bfEl.src=sndUrl(SND_BLACKFLASH); }
+      try{ window.__bfEl.currentTime=0; }catch(err){}
+      const p=window.__bfEl.play(); if(p&&p.catch) p.catch(()=>{});
+      window.__bfSfxAt=performance.now();
+    }
+  }catch(err){}
+}
 /* ★ v70 黑閃：中招者（宿傩）形象上猛然閃現裂紋，隨即消失 */
 function fxBlackCrack(){
   const hh=(typeof sukHeight==='function')?sukHeight():H*0.62;
@@ -3137,14 +3165,9 @@ function fxBlackCrack(){
     /* ★ v147 用戶指定：音效「略微早於」動畫 —— 動畫延後 120ms 入場（音效在同幀立即起播） */
     if(window.__bfFxT){ clearTimeout(window.__bfFxT); window.__bfFxT=0; }
     window.__bfFxT=setTimeout(function(){ window.__bfFxT=0; addFx({type:'blackcrack',dur:0.8,x:_bx,y:_by,h:hh*1.30}); },120);   /* ★ v147 時長 0.55→0.8s */   /* ★ v72 補 y：同上 */
-  /* ★ v145 用戶指定：黑閃音效隨特效播放（獨立 Audio，不佔用領域音效通道、可連續觸發） */
-  try{
-    if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH){
-      if(!window.__bfEl){ window.__bfEl=new Audio(); window.__bfEl.preload='auto'; window.__bfEl.src=sndUrl(SND_BLACKFLASH); }
-      try{ window.__bfEl.currentTime=0; }catch(err){}
-      const p=window.__bfEl.play(); if(p&&p.catch) p.catch(()=>{});
-    }
-  }catch(err){}
+  /* ★ v243 音效已提前到「技能打出的瞬間」（playBlackFlashSfx）——此處僅作兜底：
+     若 0.8 秒內尚未播過（如完美格擋等非 QTE 路徑），才在此補播一次。 */
+  if(!window.__bfSfxAt || performance.now()-window.__bfSfxAt>800) playBlackFlashSfx();
 }
 function fxText(x,y,txt,col,big){ addFx({type:'text',dur:big?1.0:0.7,x:x,y:y,txt:txt,col:col||'#111',big:!!big}); }
 function fxRing(x,y,col){ addFx({type:'ring',dur:0.45,x:x,y:y,col:col||'#111'}); }
@@ -3186,27 +3209,26 @@ function heroJoltHit(){
   S.gojo.hurtFx=Math.max(S.gojo.hurtFx||0,0.30);
 }
 function fxRedSlash(){
-  const LEN=Math.min(W,H)*0.62, gx=GX(), gy=GY;   /* ★ v224 加大 0.50→0.62 */
-  /* 命中事件表：每道針芒中心掠過玩家 x 的時刻（render 的白色衝擊星與「頓挫」共用同一份時序） */
-  const hits=[];
-  for(const wv of RED_WAVES){
-    for(let k=0;k<wv.n;k++){
-      const span=W+LEN;
-      const pHit=Math.max(0,Math.min(1,(W+LEN/2-gx)/span));
-      hits.push({t:wv.t0*RED_DUR+0.16*RED_DUR*pHit, x:gx+rnd(-14,14)*SC,
-        y:gy-140*SC+wv.y*SC+(k-(wv.n-1)/2)*34*SC, a:wv.a, first:(k===0)});
-    }
-  }
-  addFx({type:'redslash',dur:RED_DUR,ang:-0.16,y0:H*0.5,hits:hits});
+  /* ★ v243 用戶指定：刪掉「針芒橫掃」，改為多道赤紅斬擊直接出現在玩家身上（快・大・頓挫） */
+  const gx=GX(), gy=GY-150*SC;
+  const defs=[
+    {dx:-34,dy:-52,a:-0.62,len:0.62,w:1.00},
+    {dx: 30,dy:-22,a: 0.48,len:0.72,w:1.05},
+    {dx: -6,dy: 28,a:-1.18,len:0.56,w:0.92},
+    {dx: 38,dy: 46,a: 0.92,len:0.60,w:0.88},
+    {dx:-40,dy:  4,a:-0.16,len:0.68,w:0.82}
+  ];
+  const slashes=defs.map(function(d,i){ return {x:gx+d.dx*SC, y:gy+d.dy*SC, a:d.a, len:d.len, w:d.w, t:i*0.030}; });
+  addFx({type:'redslash',dur:0.36,slashes:slashes});
   S.speed=1.4;
-  shake(); S.hitStop=Math.max(S.hitStop||0,0.06);   /* ★ v184 打擊感：發動瞬間震屏＋微定格 */
-  /* ★ v190 頓挫：每道針芒掠過玩家時觸發；微定格只給每波第一道（全給會連鎖定格、反而拖慢動畫） */
-  for(const h2 of hits){
+  shake(); S.hitStop=Math.max(S.hitStop||0,0.08);
+  for(let i=0;i<slashes.length;i++){
+    const s2=slashes[i];
     setTimeout(function(){
       if(S.phase!=='fight') return;
       heroJoltHit();
-      if(h2.first) S.hitStop=Math.max(S.hitStop||0,0.035);
-    }, Math.round((h2.t+0.02*RED_DUR)*1000));
+      S.hitStop=Math.max(S.hitStop||0,0.045);   /* 每一道都給微定格 ⇒ 連成頓挫節奏 */
+    }, Math.round((s2.t+0.02)*1000));
   }
 }
 /* ★ v100 宿儺「解/捌」：漫畫交叉排線斬擊面（參考原作排線切割表現）——
@@ -3572,17 +3594,9 @@ function hurtHero(d,kind){
   if(S.rika && S.hero==='okkotsu' && S.phase==='fight' && S.okkoDom>0 && d>0){
     if(!S.rikaDomNote){ S.rikaDomNote=1; say('sys','領域「真贋相愛」守護着里香 —— 里香不再分擔傷害。'); }
   }else if(S.rika && S.hero==='okkotsu' && S.phase==='fight' && d>0){
-    const take=Math.max(1,Math.round(d*0.5*(SUK_MAXHP/100)*10)/10);
-    S.rikaHp=Math.max(0,S.rikaHp-take);
-    fxText(GX()+60*SC,GY-236*SC,'里香 -'+take,'#7c3aed',false);
+    /* ★ v243 用戶指定：里香沒有生命值、無法被殺死 —— 只替乙骨分擔一半傷害，時限到 / 咒力解放才退場 */
     d=Math.round(d*0.5*10)/10;
-    if(S.rikaHp<=0){
-      say('rika','「……憂太，對不起。」');
-      say('sys','里香被擊破 —— 分擔到此爲止，「模仿術式」也隨之失效（里香是生命耗盡退場的）。');
-      if(typeof rikaLeave==='function') rikaLeave(false);   /* ★ v212：血量耗盡 ⇒ 模仿術式不可用 */
-    }else{
-      say('sys','里香分擔 —— 一半傷害轉移到里香身上（里香生命 '+Math.round(S.rikaHp)+'/'+Math.round(S.rikaMax)+'）。');
-    }
+    fxText(GX()+60*SC,GY-236*SC,'里香分擔','#7c3aed',false);
   }
   d=d*diffDmg();                       /* ★ 難度係數只作用在「角色受傷」這一處 */
   if(S.trueForm) d*=1.3;               /* ★ 宿儺原身：四臂二面，壓制力提升 */
@@ -3921,7 +3935,7 @@ function actGuard(){
   if(S.acted) return;                                       /* 本回合已出招 */
   if((S.muLimit||0)>0){ say('sys','「不可侵」展開中 —— 還剩 '+S.muLimit+' 回合。'); return; }
   /* ★ v240 用戶指定：無下限被破解後，反轉術式**不再受血量 ≤40% 的限制**，隨時可用（仍受 CD 2 回合限制）。 */
-  if(S.muBroken){
+  if(S.muBroken || S.gojoBurn){   /* ★ v243 術式熔斷時無下限同樣展開不了 ⇒ 2 技固定為反轉術式，解除「熔斷卻用不了反轉」的死鎖 */
     if(S.revCd>0){ say('sys','「反轉術式」冷卻中——還需 '+S.revCd+' 回合'); return; }
     return gojoRevive();
   }
@@ -4040,7 +4054,7 @@ function syncGuardBtn(){
     k='mu'+S.muLimit;
     html=ICO('guard')+'不可侵<small>剩 '+S.muLimit+' 回合</small>';
     dim=true;
-  }else if(S.muBroken){
+  }else if(S.muBroken || S.gojoBurn){
     k='muX'+S.revCd;
     html=ICO('spark')+'反轉術式<small>'+(S.revCd>0?('CD '+S.revCd+' 回合'):'回復 30% 生命')+'</small>';
     if(S.revCd>0) dim=true;
@@ -4759,6 +4773,59 @@ const DEATH_LINES={
   okkotsu:['okko','「里香……對不起。這次，又沒能護住大家。」'],
   maki:['maki','「……嘖。還是，不夠快。」']
 };
+/* ★ v243 用戶指定：角色退場對白改為黑屏演出 —— 屏幕由外向內瞬間變黑，只留白色對白居中輪播，
+   點擊畫面任意處跳過（畫面最下方一行小字提示）。 */
+let dbTok=0;
+function deathBlackout(lines, done){
+  const el=document.getElementById('deathBlack');
+  if(!el){ try{ done&&done(); }catch(e){} return; }
+  const mask=el.querySelector('.dbMask');
+  const txt=el.querySelector('.dbTxt');
+  const tok=++dbTok;
+  let i=0, timer=null, started=false, kick=null;
+  function clearT(){ if(timer){ clearTimeout(timer); timer=null; } if(kick){ clearTimeout(kick); kick=null; } }
+  function finish(){
+    if(tok!==dbTok) return;
+    clearT(); dbTok++;
+    el.classList.remove('on'); el.style.pointerEvents='none';
+    txt.classList.remove('in'); txt.textContent='';
+    try{ done&&done(); }catch(e){}
+  }
+  function next(){
+    if(tok!==dbTok) return;
+    clearT();
+    if(i>=lines.length){ finish(); return; }
+    const ln=lines[i++];
+    const text=Array.isArray(ln)?String(ln[1]):String(ln);
+    txt.classList.remove('in'); void txt.offsetWidth;
+    txt.textContent=text;
+    txt.classList.add('in');
+    const ms=Math.max(1700, Math.min(4800, text.length*96));   /* 依字數給足閱讀時間 */
+    timer=setTimeout(next, ms);
+  }
+  el.classList.add('on');
+  el.style.pointerEvents='auto';
+  el.onpointerdown=function(ev){ try{ ev.preventDefault(); }catch(e){} finish(); };
+  /* 「由外向內瞬間變黑」：径向遮罩半徑由大到 0（中心透明區收縮）⇒ 黑色自四邊灌入中央 */
+  const t0=performance.now(), dur=300;
+  const rMax=Math.hypot(window.innerWidth||800, window.innerHeight||600)*0.82;
+  function frame(now){
+    if(tok!==dbTok) return;
+    const p=Math.min(1,(now-t0)/dur);
+    const ease=1-Math.pow(1-p,3);
+    const r=rMax*(1-ease);
+    const m='radial-gradient(circle at 50% 50%, rgba(0,0,0,0) '+r.toFixed(1)+'px, #000 '+(r+2).toFixed(1)+'px)';
+    mask.style.webkitMaskImage=m; mask.style.maskImage=m;
+    if(p<1){ requestAnimationFrame(frame); }
+    else{
+      mask.style.webkitMaskImage='none'; mask.style.maskImage='none';
+      if(!started){ started=true; next(); }
+    }
+  }
+  requestAnimationFrame(frame);
+  /* ★ v243 看門狗：若 rAF 被節流/暫停（背景標籤等），480ms 後強制收掉遮罩並開始播字，絕不黑屏卡死 */
+  kick=setTimeout(function(){ if(!started){ started=true; clearTimeout(kick); kick=null; try{ mask.style.webkitMaskImage='none'; mask.style.maskImage='none'; }catch(e){} next(); } }, 480);
+}
 function heroDown(){
   /* ★ 防重入標記定在入口。
      世界斬（castWorldSlash）會先把 phase 置成 'over'，而舊代碼 heroDownGeneric() 的開頭寫着
@@ -4806,14 +4873,15 @@ function heroDownGeneric(h){
   queue.length=0;
   const info=HERO_INFO[h]||{nm:'術師'};
   const ln=DEATH_LINES[h];
-  if(ln) say(ln[0],ln[1]);
-  say('narr','旁白：'+info.nm+'倒下了——但戰鬥還沒有結束。');
-  if(h==='okkotsu') say('sys','領域「真贋相愛」收束 —— 劍林散去。');   /* ★ v64 乙骨退場：領域崩解提示 */
+  const _dbLines=[];
+  if(ln) _dbLines.push(ln);
+  _dbLines.push(['narr','旁白：'+info.nm+'倒下了——但戰鬥還沒有結束。']);
+  if(h==='okkotsu') _dbLines.push(['sys','領域「真贋相愛」收束 —— 劍林散去。']);   /* ★ v64 乙骨退場：領域崩解提示 */
   const el=$('kashFall');
   el.querySelector('.kf').textContent=info.nm+'，力盡';
   el.querySelector('.kf2').textContent='但詛咒之王，也已經是強弩之末——';
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  afterHeroDown();
+  deathBlackout(_dbLines, afterHeroDown);   /* ★ v243 死亡對白黑屏演出 */
 }
 /* 一棒倒下之後：還有下一位就進選擇界面，否則結算。
    ★ 用 token 作廢過期回調：中途重開一局 / 已經進入下一棒時，舊的 2.6 秒定時器不能再跳回來。 */
@@ -4837,13 +4905,14 @@ function itadoriDeath(){
   syncHud();
   SFX.die(); shake();
   queue.length=0;
-  say('ita','「……對不起，還是沒能……結束。」');
-  say('narr','旁白：虎杖悠仁倒下了——但戰鬥還沒有結束。');
   const el=$('kashFall');
   el.querySelector('.kf').textContent='虎杖悠仁，力盡';
   el.querySelector('.kf2').textContent='但詛咒之王，也已經是強弩之末——';
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-  afterHeroDown();
+  deathBlackout([
+    ['ita','「……對不起，還是沒能……結束。」'],
+    ['narr','旁白：虎杖悠仁倒下了——但戰鬥還沒有結束。']
+  ], afterHeroDown);   /* ★ v243 死亡對白黑屏演出 */
 }
 function kashimoDeath(){
   S.phase='over'; S.amber=0;
@@ -4859,14 +4928,15 @@ function kashimoDeath(){
   SFX.die(); shake();
   queue.length=0;
   /* 原作 237‒238 話：宿儺以「龍鱗·反發·成雙之流星」結成的一發「解」終結他 */
-  say('kash','「這就是……終結了五條悟的那一擊……！」');
-  say('kash','「……還沒，玩夠啊。」');
-  say('narr','旁白：幻獣琥珀消散——臨死之際，鹿紫雲一在走馬燈內與宿儺對話，交流了各自對「愛」的理解。這個只為向最強問清一個問題而賭上性命的男人，就此消散。');
   const el=$('kashFall');
   el.querySelector('.kf').textContent='鹿紫雲一，力盡';
   el.querySelector('.kf2').textContent='幻獣琥珀消散——';
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-   afterHeroDown();
+  deathBlackout([
+    ['kash','「這就是……終結了五條悟的那一擊……！」'],
+    ['kash','「……還沒，玩夠啊。」'],
+    ['narr','旁白：幻獣琥珀消散——臨死之際，鹿紫雲一在走馬燈內與宿儺對話，交流了各自對「愛」的理解。這個只為向最強問清一個問題而賭上性命的男人，就此消散。']
+  ], afterHeroDown);   /* ★ v243 死亡對白黑屏演出 */
    /* ★ v134 移除退场粉紫粒子（kashAura）：用户要求幻兽技能动画在鹿紫云一死亡后直接消失，
       不再补播任何粒子演出。 */
 }
@@ -5690,6 +5760,7 @@ function startKashimo(){
   S.vowAtkMul=1; S.vowAtkT=0; S.vowDefMul=1; S.vowDefT=0; S.vowNextMul=1;
   S.vowPierce=false; S.vowBF=false; S.vowCounter=0; S.vowCounterT=0; S.vowSelf=0; S.vowSelfT=0; S.noAdaptT=0; S.vowFragT=0; S.vowWeakT=0;
   S.acted=false; S.lastAct=''; S.turn=turnSec(); S.turnWarn=false;
+  S.para=0; S.heroGen=(S.heroGen||0)+1;   /* ★ v243 鹿紫雲一獨立入場也清麻痹並遞增世代號 */
   S.atkCd=2.5; S.warned=false;
   S.waveCd=6; S.waveWarn=false;
   S.gojo.pose='idle'; S.gojo.poseT=0; S.gojo.hurtFx=0;
@@ -5826,8 +5897,9 @@ function sukuShinbu(){
   addFx({type:'kashBolt',dur:0.55,rev:true});   /* rev=true ⇒ 電荷附着與必中雷落都改到玩家角色一側 */
   SFX.atk(); shake();
   const d=SUK_MAXHP*0.05;
+  const _hg=(S.heroGen||0);
   setTimeout(()=>{
-    if(S.phase!=='fight') return;
+    if(S.phase!=='fight'||(S.heroGen||0)!==_hg) return;   /* ★ v243 這段延遲命中若跨過換人 ⇒ 不再把麻痹套到新角色 */
     hurtHero(d);
     fxText(GX()+rnd(-10,10),GY-176*SC,'-'+sukPct(d),'#e030c8',true);
     fxImpact(GX()+20*SC,GY-130*SC,false);
@@ -5892,7 +5964,7 @@ function qtePress(){
   endQTE();
   /* ★ v204 需求：黃條點中的瞬間就播黑閃音效（原先在各技能結算段纔播 —— 虎杖線延遲 160ms）；
      音量已對齊音樂盒 BGM（見 SFX.black）。未點中不播。 */
-  if(hit) SFX.black();
+  if(hit){ SFX.black(); playBlackFlashSfx(); }   /* ★ v243 黃條點中＝技能打出瞬間，黑閃音效同步 */
   if(cb){ cb(hit); return; }                /* ★ v140 新路徑：交回當前技能的結算回調 */
   /* 舊路徑兜底（完美格擋必出黑閃，無回調）：沿用原本的五條悟演出 */
   S.gojo.pose='atk'; S.gojo.poseT=0.35;
@@ -5996,15 +6068,15 @@ function rikaCopyUse(){
    里香「血量耗盡」（替乙骨分擔傷害被擊破）退場 ⇒ 「模仿術式」不可使用。⇒ rikaLeave(keepCopy) */
 function rikaLeave(keepCopy){
   if(!S.rika) return;
-  S.rika=false; S.rikaHp=0; S.rikaT=0;
-  S.rikaCopyKeep=!!keepCopy;              /* true＝時限到 ⇒ 模仿術式保留；false＝被擊破 ⇒ 鎖死 */
-  if(!S.rikaCopyKeep) S.rikaCopy='';
+  S.rika=false; S.rikaT=0;
+  /* ★ v243 用戶指定：里香退場（時限到 / 咒力解放）⇒ 乙骨失去「模仿術式」，二技能回到「里香・召喚」，冷卻 4 回合 */
+  S.rikaCopyKeep=false;
+  S.rikaCopy='';
+  S.rikaCd=4;
   S.ceCap=100;
   if(S.target==='rika') S.target='sukuna';
   say('rika','「……憂太，我先回去了。」');
-  say('sys', S.rikaCopyKeep
-    ? '里香退場（時限已到）：咒力上限恢復 100；★ 「模仿術式」仍可繼續使用。'
-    : '里香退場：咒力上限恢復 100，二技能回到「里香・召喚」。');
+  say('sys','里香退場：「模仿術式」隨之消失，二技能回到「里香・召喚」（冷卻 4 回合）；咒力上限恢復 100。');
   syncHud();
 }
 /* 咒力拳的目標：敵方任一在場單位（宿儺 / 魔虛羅 / 顎吐） */
@@ -6186,10 +6258,10 @@ function summonMaha(withLog){
     /* ★ v240 用戶指定：魔虛羅登場後「2 回合」才破解無下限（原為登場瞬間）——
        給五條悟留出兩回合的緩衝：可以在這段時間搶輸出或提前換人。 */
     if(!S.muBroken && S.hero==='gojo'){
-      S.muBreakIn=2;
+      S.muBreakIn=2; S.muBreakAt=(S.turnN||0)+2;   /* ★ v243 绝对回合戳：登场后满 2 个完整回合才破解 */
       say('sys','★ 魔虛羅現身——「適應」正在解析無下限：不可侵還可支撐 2 回合。');
     }else if(!S.muBroken){
-      S.muBreakIn=2;   /* 非五條在場也照樣計時（換回五條時同樣失效） */
+      S.muBreakIn=2; S.muBreakAt=(S.turnN||0)+2;   /* 非五條在場也照樣計時（換回五條時同樣失效） */
     }
     /* ★ v40 魔虛羅生命 = 宿儺最大生命 30%；與顎吐同場時，後召喚者減半 */
     S.mahaMax=SUK_MAXHP*MAHO_PCT.hp*(typeof shikHalveFor==='function'?shikHalveFor('maha'):1);
@@ -6512,7 +6584,7 @@ function sukunaTurn(){
       : ('★ 信息洪流——宿傩受到 '+sukPct(vd)+' 最大生命侵蝕。'));
     /* ★ v86 下一回合開始 ⇒ 魔虛羅擊碎無量空処：
          已在場 → 直接由它斬（不重複召喚）；未召喚 → 先登場再斬。兩種情況都必須播 domBreak 擊碎動畫。 */
-    if(S.voidMahaT>0){
+    if(S.voidMahaT>0 && !ISOKKO){   /* ★ v243 乙骨「真贋相愛」不接入魔虛羅外側擊碎機制（修「赢了对拼几回合后自行破裂」） */
       S.voidMahaT--;
       if(!S.voidMahaT && !S.mahaDead){
         if(!S.maha) summonMaha(true);
@@ -6634,6 +6706,7 @@ function sukunaTurn(){
   if(S.makiCd>0) S.makiCd--;             /* 無聲突襲 CD 按回合遞減 */
   if(S.heCd>0) S.heCd--;                 /* ★ v40 赫：主動 CD 1 回合 */
   if(S.revCd>0) S.revCd--;               /* ★ v80 反轉術式：CD 2 回合 */
+  if(S.rikaCd>0) S.rikaCd--;             /* ★ v243 里香召喚冷卻遞減 */
   if(S.rikaCopyCd>0) S.rikaCopyCd--;     /* ★ v61 模仿術式 CD 遞減 */
   if(S.rikaRevCd>0) S.rikaRevCd--;        /* ★ v99 里香反轉術式 CD 遞減 */
   if(S.okkoRevCd>0) S.okkoRevCd--;        /* ★ v99 乙骨反轉術式 CD 遞減 */
@@ -6647,13 +6720,15 @@ function sukunaTurn(){
   /* ★ v54 乙骨領域：持續到離場，不再按回合收束 */
   if(S.cangMark>0) S.cangMark--;         /* ★ v40 蒼標記：2 回合內有效 */
   if((S.muLimit||0)>0) S.muLimit--;      /* ★ v230 無下限・不可侵：每回合 -1，歸零自動解除 */
-  /* ★ v240 魔虛羅的「適應」倒計時：登場 2 回合後破解無下限 */
-  if((S.muBreakIn||0)>0){
-    S.muBreakIn--;
-    if(S.muBreakIn<=0 && !S.muBroken){
+  /* ★ v243 魔虛羅的「適應」倒計時：改用绝对回合戳，避免召喚當回合就被 tick 吃掉一格（显得一登场就失效） */
+  if(!S.muBroken && (S.muBreakAt||0)>0){
+    const _mbRem=(S.muBreakAt||0)-(S.turnN||0);
+    if(_mbRem<=0){
+      S.muBreakAt=0; S.muBreakIn=0;
       if(typeof gojoMuBreak==='function') gojoMuBreak();
-    }else if(S.muBreakIn>0 && S.hero==='gojo'){
-      say('sys','★ 無下限被逐步解析——還可支撐 '+S.muBreakIn+' 回合。');
+    }else{
+      S.muBreakIn=_mbRem;
+      if(S.hero==='gojo') say('sys','★ 無下限被逐步解析——還可支撐 '+_mbRem+' 回合。');
     }
   }
   if(S.heroVulnT>0) S.heroVulnT--;
@@ -7162,8 +7237,9 @@ function castWorldSlash(instant){
     if(S.phase!=='over') return;
     if(S.hero==='gojo'){
       /* ★ v219 原作 236 話：宿儺對五條悟的評價 */
-      say('suku','「……值得佩服，五條悟。我這一生，都不會忘記你。」');
-      setTimeout(showSelect,2900);   /* ★ v74 刪裂屏：只留腰斬原稿漫畫頁 */
+      deathBlackout([
+        ['suku','「……值得佩服，五條悟。我這一生，都不會忘記你。」']
+      ], showSelect);   /* ★ v243 死亡對白改黑屏演出 */
     }
     else heroDown();
   },2300);
@@ -7180,24 +7256,25 @@ function gojoDown(){
   S.blockT=0; S.guardUp=false;
   SFX.die(); shake();
   queue.length=0;
-  say('narr','旁白：五條悟的咒力，見底了。');
-  say('gojo','「……抱歉，接下來，交給你們了。」');
   /* ★ v74 刪裂屏：改播腰斬原稿漫畫頁（與世界斬線一致） */
   {
     const sp=$('deathCut');
     sp.classList.remove('on'); void sp.offsetWidth; sp.classList.add('on');
   }
-  /* ★ 236 話「南へ」：機場候機廳 —— 五條悟與夏油傑的最後一段對話（原作情緒爆點） */
-  setTimeout(()=>{ say('narr','旁白：——236 話「南へ」。機場的候機廳裏，兩個人在等。'); },620);
-  setTimeout(()=>{ say('comm','夏油傑：「怎麼樣？詛咒之王。」'); },1180);
-  setTimeout(()=>{ say('narr','五條悟：「哎呀，真的超——強。而且我總感覺，宿儺還沒有使出全力呢。我覺得他就算不用惠的十種影法術，大概也能贏。」'); },1820);
-  setTimeout(()=>{ say('narr','五條悟：「肉體、技術、感覺、想像力、爆發力——我把自己的一切都傳達給了宿儺，卻沒能讓宿儺也把這一切傳達給我。為此，我感到挺抱歉的。」'); },2620);
-  setTimeout(()=>{ say('comm','夏油傑：「……真讓人嫉妒。不過，你滿足了就好。」'); },3320);
-  setTimeout(()=>{ say('narr','旁白：冥冥留下的那句話——想成爲新的自己，就往北走；想回到過去的自己，就往南走。'); },3960);
-  setTimeout(()=>{
+  /* ★ v243 用戶指定：236 話機場對白改為黑屏演出（白字居中輪播、點擊跳過） */
+  deathBlackout([
+    ['narr','旁白：五條悟的咒力，見底了。'],
+    ['gojo','「……抱歉，接下來，交給你們了。」'],
+    ['narr','——236 話「南へ」。機場的候機廳裏，兩個人在等。'],
+    ['comm','夏油傑：「怎麼樣？詛咒之王。」'],
+    ['narr','五條悟：「哎呀，真的超——強。而且我總感覺，宿儺還沒有使出全力呢。我覺得他就算不用惠的十種影法術，大概也能贏。」'],
+    ['narr','五條悟：「肉體、技術、感覺、想像力、爆發力——我把自己的一切都傳達給了宿儺，卻沒能讓宿儺也把這一切傳達給我。為此，我感到挺抱歉的。」'],
+    ['comm','夏油傑：「……真讓人嫉妒。不過，你滿足了就好。」'],
+    ['narr','冥冥留下的那句話——想成爲新的自己，就往北走；想回到過去的自己，就往南走。']
+  ], function(){
     if(S.hero!=='gojo'){ heroDown(); return; }
     showSelect();
-  },4700);
+  });
 }
 /* ---------- 誓約面板 ---------- */
 /* ★ v61 卡片渲染抽成獨立函數：openVowUI 與 syncHud（面板開著時）共用同一份簽名檢查，
@@ -7734,7 +7811,8 @@ function update(dt){
         $('redAlert').classList.toggle('perfect',inPerf);
         $('warnMark').classList.toggle('perfect',inPerf);
       }
-      if(S.turn<=0 && !S.turnWait){
+      /* ★ v243 用戶指定：玩家處於麻痹（無法行動）時，宿儺在倒計時剩 5 秒就出手，不再空等到 0 */
+      if((S.turn<=0 || (S.para>0 && S.turn<=5)) && !S.turnWait){
         /* ★ v28：讀秒結束還沒選定 → 這回合白費，宿儺照常出手；
            未用掉的行動次數攢下來，下回合可以連發（以此類推）
            ★ v115：先等當前回合的招式動畫播完，才重開讀秒並讓宿儺出手（雙方動畫不重疊）。 */
@@ -8543,7 +8621,7 @@ function itaAtk(){
   if(S.itaDom>0) return itaSoulCut();   /* ★ v47 領域內：普攻 → 靈魂·解 */
   if(S.acted) return;
   /* ★ v205 用戶指定：黒閃之誓（必出黑閃）⇒ 點擊技能的瞬間就播黑閃音效（原先到結算點纔播） */
-  if(S.vowBF) SFX.black();
+  if(S.vowBF){ SFX.black(); playBlackFlashSfx(); }   /* ★ v243 必出黑閃：按鍵瞬間出聲 */
   markActed('atk');
   S.gojo.pose='atk'; S.gojo.poseT=0.34;
   addRes(6);
@@ -8646,6 +8724,7 @@ function startItadori(){
   S.gojo.hp=100; S.gojo.ce=100;
   S.hollowCd=0; S.blockT=0; S.guardFx=0;
   S.acted=false; S.lastAct=''; S.turn=turnSec(); S.turnWarn=false;
+  S.para=0; S.heroGen=(S.heroGen||0)+1;   /* ★ v243 虎杖獨立入場也清麻痹並遞增世代號 */
   S.meltKind=''; S.meltN=0;
   S.atkCd=2.5; S.warned=false; S.waveCd=6; S.waveWarn=false;
   S.gojo.pose='idle'; S.gojo.poseT=0; S.gojo.hurtFx=0;
@@ -8973,93 +9052,44 @@ function drawFx(){
       } ctx.restore();
     }
     else if(f.type==='redslash'){
-      /* ★ v184 捌：三波赤紅針芒自右側出屏處高速刮向左側（穿過玩家位置）；線長收短
-         （約畫面短邊一半），命中瞬間白色衝擊星＋紅色碎片爆散強化打擊感（用戶要求） */
-      const t=f.t/f.dur, gx=GX(), gy=GY;
-      const WAVES=RED_WAVES;           /* ★ v190 波次表提到 fxRedSlash（與命中事件表同源） */
-      const LEN=Math.min(W,H)*0.50;
-      let rip=0;
-      for(const wv of WAVES){ const q=(f.t-wv.t0*f.dur)/(0.18*f.dur); if(q>0&&q<1) rip=Math.max(rip,Math.sin(q*Math.PI)); }
-      if(rip>0.02){
-        const artF={gojo:drawGojo,kashimo:drawKashimo,higuruma:drawHiguruma,okkotsu:drawOkkotsu,itadori:drawItadori,maki:drawMaki}[S.hero];
-        if(artF){
-          ctx.save(); ctx.globalAlpha=0.30*rip; ctx.translate(-22*SC*rip,0);
-          try{ artF(); }catch(e){}
-          ctx.restore();
-        }
-      }
-      /* 命中事件表：★ v190 起由 fxRedSlash 預生成並隨 fx 傳入（與頓挫時序同源）；此處僅兜底 */
-      if(!f.hits){
-        f.hits=[];
-        for(const wv of WAVES){
-          for(let k=0;k<wv.n;k++){
-            const span=W+LEN;
-            const pHit=Math.max(0,Math.min(1,(W+LEN/2-gx)/span));
-            f.hits.push({t:wv.t0*f.dur+0.16*f.dur*pHit, x:gx+rnd(-14,14)*SC, y:gy-140*SC+wv.y*SC+(k-(wv.n-1)/2)*34*SC, a:wv.a});
+      /* ★ v243 捌：多道赤紅斬擊直接落在玩家身上（大・快・頓挫），不再有針芒掃過 */
+      const sl=f.slashes||[];
+      for(let i=0;i<sl.length;i++){
+        const s2=sl[i];
+        const q=(f.t-s2.t)/(f.dur*0.5);
+        if(q<=0) continue;
+        const p=Math.min(1,q);
+        const fade=q>=1?Math.max(0,1-(q-1)/1.6):1;
+        if(fade<=0.01) continue;
+        const L=Math.min(W,H)*s2.len*1.25;
+        const grow=0.32+0.68*Math.min(1,p*2.4);        /* 起筆瞬間抽長 ⇒ 「刷」的頓挫 */
+        ctx.save(); ctx.translate(s2.x,s2.y); ctx.rotate(s2.a);
+        ctx.globalAlpha=fade;
+        ctx.shadowColor='rgba(255,32,32,.95)'; ctx.shadowBlur=26*SC;
+        const g=ctx.createLinearGradient(-L/2,0,L/2,0);
+        g.addColorStop(0,'rgba(150,8,16,0)');
+        g.addColorStop(0.16,'rgba(214,16,26,.98)');
+        g.addColorStop(0.5,'rgba(255,74,60,1)');
+        g.addColorStop(0.84,'rgba(214,16,26,.98)');
+        g.addColorStop(1,'rgba(150,8,16,0)');
+        ctx.strokeStyle=g; ctx.lineCap='round';
+        ctx.lineWidth=(12+8*s2.w)*SC*(1.15-0.15*p);
+        ctx.beginPath(); ctx.moveTo(-L/2*grow,0); ctx.lineTo(L/2*grow,0); ctx.stroke();
+        ctx.shadowBlur=0;
+        ctx.strokeStyle='rgba(255,244,238,'+(0.95*fade).toFixed(3)+')';
+        ctx.lineWidth=2.8*SC;
+        ctx.beginPath(); ctx.moveTo(-L/2*grow,0); ctx.lineTo(L/2*grow,0); ctx.stroke();
+        if(q<1.6 && (i%2===0)){
+          ctx.globalAlpha=(1-Math.min(1,q/1.6))*0.9;
+          ctx.fillStyle='rgba(255,60,50,.95)';
+          for(let b2=0;b2<5;b2++){
+            const ba=s2.a+Math.PI/2+((b2/4)-0.5)*1.6;
+            const br=(8+q*40)*SC;
+            ctx.beginPath(); ctx.arc(Math.cos(ba)*br,Math.sin(ba)*br,2.2*SC,0,Math.PI*2); ctx.fill();
           }
         }
-      }
-      for(const h2 of f.hits){
-        const q=(f.t-h2.t)/(0.16*f.dur);
-        if(q<=0||q>=1) continue;
-        const fadeA=1-q;
-        ctx.save(); ctx.translate(h2.x,h2.y); ctx.rotate(h2.a);
-        ctx.globalAlpha=fadeA;
-        ctx.strokeStyle='rgba(255,255,255,'+(0.95*fadeA).toFixed(3)+')';
-        ctx.lineWidth=2.4*SC; ctx.lineCap='round';
-        ctx.shadowColor='rgba(255,240,230,.95)'; ctx.shadowBlur=12*SC;
-        for(let r3=0;r3<5;r3++){
-          const aa=(r3/5)*Math.PI-Math.PI/2;
-          const r0=(6+q*46)*SC, r1=r0+(14+q*30)*SC;
-          ctx.beginPath(); ctx.moveTo(Math.cos(aa)*r0,Math.sin(aa)*r0);
-          ctx.lineTo(Math.cos(aa)*r1,Math.sin(aa)*r1); ctx.stroke();
-        }
-        ctx.shadowBlur=0;
-        ctx.strokeStyle='rgba(255,120,90,'+(0.7*fadeA).toFixed(3)+')';
-        ctx.lineWidth=2*SC;
-        ctx.beginPath(); ctx.arc(0,0,(10+q*60)*SC,0,Math.PI*2); ctx.stroke();
         ctx.restore();
       }
-      for(const wv of WAVES){
-        const p=(f.t-wv.t0*f.dur)/(0.16*f.dur);
-        if(p<=0||p>=1) continue;
-        const y0=gy-140*SC+wv.y*SC;
-        const span=W+LEN;
-        const cx=W+LEN/2-span*p;                     /* 右側出屏 → 左側出屏 */
-        for(let k=0;k<wv.n;k++){
-          const by=y0+(k-(wv.n-1)/2)*34*SC;
-          ctx.save(); ctx.translate(cx,by); ctx.rotate(wv.a);
-          for(let r2=2;r2>=1;r2--){                  /* 殘影（右側） */
-            ctx.globalAlpha=0.10*r2;
-            ctx.strokeStyle='rgba(215,38,61,1)'; ctx.lineCap='round';
-            ctx.lineWidth=(2.5+2.5*(1-p))*SC;
-            ctx.beginPath(); ctx.moveTo(-LEN/2+r2*30*SC,0); ctx.lineTo(LEN/2+r2*30*SC,0); ctx.stroke();
-          }
-          const g2=ctx.createLinearGradient(-LEN/2,0,LEN/2,0);
-          g2.addColorStop(0,'rgba(215,38,61,0)');
-          g2.addColorStop(0.3,'rgba(220,44,62,.95)');
-          g2.addColorStop(0.5,'rgba(255,244,235,1)');
-          g2.addColorStop(0.7,'rgba(220,44,62,.95)');
-          g2.addColorStop(1,'rgba(215,38,61,0)');
-          ctx.globalAlpha=1;
-          ctx.strokeStyle=g2; ctx.lineCap='round';
-          ctx.shadowColor='rgba(255,80,56,.95)'; ctx.shadowBlur=16*SC;
-          ctx.lineWidth=(3.5+2.5*(1-p))*SC;
-          ctx.beginPath(); ctx.moveTo(-LEN/2,0); ctx.lineTo(LEN/2,0); ctx.stroke();
-          ctx.shadowBlur=0;
-          ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=1.4*SC;
-          ctx.beginPath(); ctx.moveTo(-LEN/2,0); ctx.lineTo(LEN/2,0); ctx.stroke();
-          ctx.restore();
-        }
-      }
-      if(!f.bits){ f.bits=[];
-        for(let i=0;i<40;i++){ const wv=WAVES[i%3];
-          f.bits.push({t0:wv.t0*f.dur+rnd(0.02,0.13)*f.dur, x:gx+rnd(-60,60)*SC, y:gy-140*SC+rnd(-60,60)*SC,
-            vx:rnd(-520,520)*SC, vy:rnd(-460,-80)*SC, life:rnd(0.25,0.55)*f.dur/1.05, len:rnd(4,16)*SC}); } }
-      for(const b of f.bits){ const q=(f.t-b.t0)/b.life; if(q<=0||q>=1) continue;
-        const bx=b.x+b.vx*f.t, by=b.y+b.vy*f.t+500*SC*f.t*f.t;
-        ctx.strokeStyle='rgba(220,50,66,'+(0.9*(1-q)).toFixed(3)+')'; ctx.lineWidth=1.7*SC;
-        ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx-b.vx*0.04,by-b.vy*0.04); ctx.stroke(); }
     }
     else if(f.type==='kaiScrape'){
       /* ★ v184 「解」：墨痕摳圖重做（硬閾值去灰白殘留·裁切）；大小＝宿儺身高一半；自右向左刮 */
@@ -9070,14 +9100,14 @@ function drawFx(){
         const t=f.t/f.dur;
         const sh=(typeof sukHeight==='function')?sukHeight():H*0.7;
         const ih=sh*0.95, iw=ih*(im.width/im.height);   /* ★ v188 0.52→0.78；★ v224 再放大到 0.95 宿儺身高 */
-        const rot=-0.42-Math.PI/2;                      /* ★ v208 再逆時針 30°（累計 -π/2） */
+        const rot=-0.30;                                /* ★ v243 改為淺斜角：讀作「橫向斬過畫面」而非向上飄 */
         const scT=0.42;
-        const cx0=SX()-24*SC;                           /* 起點：宿傩身邊（不再從右側完全出屏） */
-        const endX=GX()-iw*0.55;                        /* 終點：玩家角色身後（越過玩家、偏出左側） */
+        const cx0=W+iw*0.55;                            /* ★ v243 自畫面最右側外進場 */
+        const endX=-iw*0.60;                            /* ★ v243 刮到畫面最左側、完全出屏 */
         if(t<scT){
           const p=t/scT, e=p*p*p;                     /* easeIn：後段極速 */
           const cx=cx0-(cx0-endX)*e;
-          const cy=H*0.63+(p-0.5)*H*0.10;
+          const cy=GY-150*SC;                          /* ★ v243 固定高度：水平穿過玩家，不再上下漂移 */
           ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot);
           const back=iw*0.55;
           /* ★ v221：殘影用烘焙版再提亮一點（0.22 / 0.34 / 0.46），讓高速刮過的軌跡更實 */
@@ -9097,7 +9127,7 @@ function drawFx(){
           ctx.restore();
         } else {
           const fade=Math.max(0,1-(t-scT)/(1-scT));
-          ctx.save(); ctx.translate(endX,H*0.63); ctx.rotate(rot);
+          ctx.save(); ctx.translate(endX,GY-150*SC); ctx.rotate(rot);
           ctx.globalAlpha=Math.min(1,fade*1.25);   /* ★ v221：尾段起始不透明度拉滿（≈1），往後照 fade 消失 */
           ctx.drawImage(im,-iw/2,-ih/2,iw,ih);
           ctx.restore();
@@ -9262,19 +9292,44 @@ function drawFx(){
       ctx.restore();
     }
     else if(f.type==='lightPillar'){
-      /* ★ v242 邪去悔梯子出現時，宿儺受到從天而降光柱攻擊（純演出，不造成傷害） */
+      /* ★ v243 邪去悔梯子出現時，宿儺受到從天而降光柱攻擊（加大・加速・強化頓挫力量感） */
       const k=f.t/f.dur;
-      const cx=SX(), topY=-10*SC, by=GY-110*SC;
-      const bw=(40+k*34)*SC;
-      const a=Math.sin(Math.min(1,k*1.5)*Math.PI)*0.92;
+      const cx=SX(), topY=-10*SC, by=GY-96*SC;
+      const bw=(74+k*86)*SC;
+      const a=Math.sin(Math.min(1,k*1.15)*Math.PI)*0.96;
       ctx.save();
+      /* 外層大光暈 */
+      ctx.globalAlpha=0.55*a;
+      const g2=ctx.createLinearGradient(cx,topY,cx,by);
+      g2.addColorStop(0,'rgba(255,255,225,0)');
+      g2.addColorStop(0.7,'rgba(255,244,180,0.55)');
+      g2.addColorStop(1,'rgba(255,238,160,0.95)');
+      ctx.fillStyle=g2; ctx.fillRect(cx-bw, topY, bw*2, by-topY);
+      /* 主光柱 */
+      ctx.globalAlpha=1;
       const g=ctx.createLinearGradient(cx,topY,cx,by);
       g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(0.45,'rgba(255,247,205,'+(0.82*a).toFixed(3)+')');
-      g.addColorStop(1,'rgba(255,232,150,'+(0.95*a).toFixed(3)+')');
+      g.addColorStop(0.32,'rgba(255,252,220,'+(0.88*a).toFixed(3)+')');
+      g.addColorStop(1,'rgba(255,236,150,'+(1*a).toFixed(3)+')');
       ctx.fillStyle=g; ctx.fillRect(cx-bw/2, topY, bw, by-topY);
-      ctx.fillStyle='rgba(255,255,255,'+(0.92*a).toFixed(3)+')'; ctx.fillRect(cx-3*SC, topY, 6*SC, by-topY);
-      if(k>0.5){ const ka=Math.min(1,(k-0.5)/0.5); ctx.globalAlpha=ka; ctx.strokeStyle='rgba(255,238,170,0.9)'; ctx.lineWidth=4*SC; ctx.beginPath(); ctx.arc(cx,by,(12+ka*64)*SC,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha=1; }
+      /* 核心純白 */
+      ctx.fillStyle='rgba(255,255,255,'+(0.99*a).toFixed(3)+')'; ctx.fillRect(cx-8*SC, topY, 16*SC, by-topY);
+      /* 落點衝擊：雙層震波環 */
+      if(k>0.40){
+        const ka=Math.min(1,(k-0.40)/0.26);
+        ctx.globalAlpha=1-ka*0.28;
+        ctx.strokeStyle='rgba(255,246,196,0.98)'; ctx.lineWidth=7*SC;
+        ctx.beginPath(); ctx.arc(cx,by,(18+ka*120)*SC,0,Math.PI*2); ctx.stroke();
+        ctx.globalAlpha=(1-ka)*0.85;
+        ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.lineWidth=3.5*SC;
+        ctx.beginPath(); ctx.arc(cx,by,(36+ka*168)*SC,0,Math.PI*2); ctx.stroke();
+        /* 落點爆閃 */
+        ctx.globalAlpha=(1-ka)*0.9;
+        const gg=ctx.createRadialGradient(cx,by,0,cx,by,(60+ka*90)*SC);
+        gg.addColorStop(0,'rgba(255,255,255,0.95)'); gg.addColorStop(1,'rgba(255,240,170,0)');
+        ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(cx,by,(60+ka*90)*SC,0,Math.PI*2); ctx.fill();
+        ctx.globalAlpha=1;
+      }
       ctx.restore();
     }
     else if(f.type==='gojoFist'){
@@ -11587,7 +11642,8 @@ if(S.sukuBurn)     chips.push(['melt','red','宿儺・術式熔斷']);       /* 
   if(S.vowBF)        chips.push(['black','gold','黒閃・必中']);
   if(S.hero==='itadori') chips.push(['fist','gold','共鳴 '+Math.round(S.res)+'%']);
   if(S.hero==='kashimo') chips.push(['bolt','gold','幻獣琥珀 '+S.amber+' 回合']);
-  if(S.rika) chips.push(['guard','purple','里香 '+Math.round(S.rikaHp)+'/'+Math.round(S.rikaMax)+' ・ 殘'+S.rikaT+'回合']);
+  if(S.rika) chips.push(['guard','purple','里香 ・ 殘'+S.rikaT+'回合']);
+  else if(S.hero==='okkotsu'&&(S.rikaCd||0)>0) chips.push(['guard','purple','里香召喚 CD '+S.rikaCd]);
   const sig=chips.map(c=>c[0]+c[2]).join('|');
   if(row.__sig===sig) return;
   row.__sig=sig;
@@ -11692,7 +11748,7 @@ function syncHud(){
       if(S.hero==='gojo'&&S.revCd>0) dim=true;   /* ★ v80 反轉術式 CD 置灰 */
       /* ★ v69 乙骨 2 技能三態：里香不在場（退場後/冷卻）⇒ 模仿術式白板置灰
          ★ v212：但里香「時限到」退場（S.rikaCopyKeep）⇒ 模仿術式保留，不置灰 */
-      if(S.hero==='okkotsu'&&(((S.rikaUsed&&!S.rika)&&!S.rikaCopyKeep)||S.rikaCopyCd>0)) dim=true;   /* ★ v105 里香被擊破/複製冷卻 ⇒ 二技能置灰（反轉術式移至第 4 技） */
+      if(S.hero==='okkotsu'&&((!S.rika&&(S.rikaCd||0)>0)||S.rikaCopyCd>0)) dim=true;   /* ★ v243 召喚冷卻 / 模仿冷卻 ⇒ 置灰 */   /* ★ v105 里香被擊破/複製冷卻 ⇒ 二技能置灰（反轉術式移至第 4 技） */
     }
     /* ★ 1/2 號按鈕隨角色換名 —— 鹿紫雲一沒有「蒼」，虎杖也沒有 */
     if(a==='atk'||a==='guard'){
@@ -11707,17 +11763,17 @@ function syncHud(){
       /* ★ v232 五條悟 1 技兩形態：形態要進緩存鍵，切換時整塊重刷（角標由 swapSpanHtml() 一併寫回） */
       const fist=!!(a==='atk' && S.hero==='gojo' && !stg && gojoFistMode());
       /* ★ v60 快取鍵必須含里香狀態：召喚 / 退場後二技能要換名，否則按鈕一直不刷新 */
-      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+(S.rikaCopyKeep?'K':'-')+(S.rikaCopy||'-')+(S.rikaCopyCd||0)):'');   /* ★ v69 白板態/靈魂·解 也要刷新；★ v212 K＝里香時限到退場（模仿術式保留） */
+      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+'c'+(S.rikaCd||0)+(S.rikaCopy||'-')+(S.rikaCopyCd||0)):'');   /* ★ v69 白板態/靈魂·解 也要刷新；★ v212 K＝里香時限到退場（模仿術式保留） */
       if(b.__lab!==kk){
         b.__lab=kk;
         /* ★ 查表：6 個角色統一走 HERO_BTN（小字支持函數，用來顯示實時進度） */
         const D=HERO_BTN[S.hero]||HERO_BTN.gojo;
         /* ★ v55 乙骨：里香在場（或時限到退場後）⇒ 二技能為「模仿術式」 */
-        const t0=(a==='atk')?D.atk:((S.hero==='okkotsu'&&a==='guard'&&(S.rika||S.rikaCopyKeep))
+        const t0=(a==='atk')?D.atk:((S.hero==='okkotsu'&&a==='guard'&&S.rika)
           ?(D.rika||['spark','模仿術式','隨機複製四名術師的第三技能']):D.guard);
         /* ★ v69 模仿術式生效中：圖標/大字跟隨被複製的技能（對應角色 3 技能），小字固定「模仿術式」 */
         let kcopy=null;
-        if(a==='guard'&&S.hero==='okkotsu'&&(S.rika||S.rikaCopyKeep)&&S.rikaCopy&&typeof RIKA_COPY!=='undefined'){
+        if(a==='guard'&&S.hero==='okkotsu'&&S.rika&&S.rikaCopy&&typeof RIKA_COPY!=='undefined'){
           kcopy=RIKA_COPY.find(x=>x.nm===S.rikaCopy)||null;
         }
         if(kcopy){
@@ -11860,7 +11916,7 @@ $('pad').addEventListener('touchstart',e=>{
   const el=e.target.closest('.btn'); if(!el) return;
   e.preventDefault();
   /* ★ v185 用戶要求：里香語音再提前 —— 移動端 touchstart（比 click 早百餘毫秒）即起播 */
-  if(el.dataset.act==='guard' && S.hero==='okkotsu' && !S.rika && !S.rikaUsed && !S.acted){
+  if(el.dataset.act==='guard' && S.hero==='okkotsu' && !S.rika && !((S.rikaCd||0)>0) && !S.acted){
     try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); } }catch(e2){}
   }
   padAct(el.dataset.act);
@@ -11871,7 +11927,7 @@ $('pad').addEventListener('pointerdown',e=>{
   /* ★ v232 角標自己處理，不要冒泡成出招 */
   if(e.target&&e.target.closest&&e.target.closest('#atkSwap')) return;
   const el=e.target.closest('.btn'); if(!el) return;
-  if(el.dataset.act==='guard' && S.hero==='okkotsu' && !S.rika && !S.rikaUsed && !S.acted){
+  if(el.dataset.act==='guard' && S.hero==='okkotsu' && !S.rika && !((S.rikaCd||0)>0) && !S.acted){
     try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); } }catch(e2){}
   }
 },{passive:true});
@@ -11953,7 +12009,7 @@ function start(){
      ② 被攔下 → 靜音 play()（靜音自動播放是允許的），等首次交互再取消靜音並漸入；
      ③ 連靜音播放都不行 → 等首次交互時再正常播放。
    三級都走同一條 1 秒漸入曲線。 */
-let bgmEl=null, bgmMuted=false, bgmFadeRaf=0;
+let bgmEl=null, bgmMuted=(function(){ try{ return localStorage.getItem('jjk_bgm_muted')==='1'; }catch(e){ return false; } })(), bgmFadeRaf=0;   /* ★ v243 靜音狀態持久化 */
 let bgmTrack='main', okkoObjUrl=null;   /* ★ v29 角色專屬 BGM：當前音軌 / 乙骨音軌緩存 */
 let bgmObjUrl=null, bgmCtx=null, bgmGain=null, bgmSrcNode=null, bgmGainTried=false, bgmVolW=null;
 /* ★目標音量 0.32（2026-10-06 由 0.5 下調 ≈−4dB：原音量蓋過打擊音效與人聲臺詞，
@@ -12080,7 +12136,7 @@ const HERO_BTN={
         guard:['guard','領域展延','20% 咒力・中和術式'],
         ult:['melt','處刑人之劍',S=>'罪狀 '+S.guilt+'/3'],},
   okkotsu:{atk:['black','太刀・呪斬','5%~7% 最大生命'],
-        guard:['guard','里香・召喚','呪力上限 −50%・里香登場 5 回合'],
+        guard:['guard','里香・召喚',S=>(S.rikaCd||0)>0?('CD '+S.rikaCd+' 回合'):'呪力上限 −50%・里香登場 5 回合'],
         rika:['spark','模仿術式',S=>S.rikaCopyCd>0?('CD '+S.rikaCopyCd+' 回合'):(S.rikaCopy?('已學：'+S.rikaCopy):'隨機複製四名術師的第三技能')],
         ult:['domain','領域・真贋相愛',S=>S.okoUsed?'已无法开启领域':(S.rika?'里香在場・不耗咒力':'60% 咒力・葛籠封鎖＋傷害×1.5')],},   /* ★ v77 重做／★ v116 文案 */
   itadori:{atk:['fist','逕庭拳','5%~7% ＋ 二段追撃'],
@@ -12136,19 +12192,19 @@ function beginNext(h){
   switchBGM(h==='okkotsu'?'okko':'main');   /* ★ v29 乙骨登場切換專屬 BGM */
   /* 與鹿紫雲一/虎杖一致的通用重置（★ v62：舊適應條殘留已刪） */
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 慢動作清零 */
-  S.res=0; S.resUsed=false; S.burn=0; S.flameCd=6;
+  S.res=0; S.resUsed=false; S.burn=0; S.flameCd=6; S.voidMahaT=0;   /* ★ v243 換人清掉懸掛的領域擊碎計時 */
   S.rite=0; S.riteBreak=true; S.turnDmg=0; S.actsLeft=1; S.bonus=0; if(S.turnHold){ clearTimeout(S.turnHold); S.turnHold=null; }
   S.vowPub=0; S.vowNoGuard=0; S.vowTurn=0;
   S.vowAtkMul=1; S.vowAtkT=0; S.vowDefMul=1; S.vowDefT=0; S.vowNextMul=1;
   S.vowPierce=false; S.vowBF=false; S.vowCounter=0; S.vowCounterT=0; S.vowSelf=0; S.vowSelfT=0; S.noAdaptT=0; S.vowFragT=0; S.vowWeakT=0;
   S.acted=false; S.lastAct=''; S.turn=turnSec(); S.turnWarn=false;
-  S.para=0;                         /* ★ v242 換人／接力登場清除上一位殘留麻痺，修復「剛登場就被麻痺」 */
+  S.para=0; S.heroGen=(S.heroGen||0)+1;   /* ★ v243 換人登場：清麻痹 + 遞增世代號（延遲命中的麻痹不再落到新角色） */
   S.hollowCd=0; S.itaUltCd=0; S.blockT=0; S.guardFx=0; S.guardUp=false;
   S.meltKind=''; S.meltN=0; S.stagger=0; S.perfect=false; S.perfectOn=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.okoCounter=false;
   /* ★ v60 里香是乙骨專屬式神：換人（陣亡 / 世界斬 / 自選接力）一律退場，咒力上限復原 */
   if(S.rika && typeof rikaLeave==='function') rikaLeave();
-  else { S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaCopyKeep=false; }
+  else { S.rika=false; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaCopyKeep=false; S.rikaCd=0; }
   S.downDone=false;                    /* 換人：退場標記復位，允許再次退場 */
   S.atkCd=2.5; S.warned=false; S.waveCd=6; S.waveWarn=false;
   S.gojo.hp=100; S.gojo.pose='idle'; S.gojo.poseT=0; S.gojo.hurtFx=0;
@@ -12307,8 +12363,10 @@ function okkoTrapWord(){
   if(!wa.getAttribute('src')) wa.setAttribute('src', IMG.okkoDom3);
   wd.classList.remove('on'); void wd.offsetWidth; wd.classList.add('on');
   /* ★ v242 邪去悔梯子出現 ⇒ 宿儺遭受天降光柱攻擊，演出期間暫停讀秒（同領域展開） */
-  addFx({type:'lightPillar',dur:1.4});
-  S.turnWait=1; setTimeout(function(){ if(S.phase==='fight') S.turnWait=0; }, 1400);
+  addFx({type:'lightPillar',dur:1.05});   /* ★ v243 光柱：更快更粗更有力 */
+  S.turnWait=1; setTimeout(function(){ if(S.phase==='fight') S.turnWait=0; }, 1050);
+  shake(); S.hitStop=Math.max(S.hitStop||0,0.10);   /* ★ v243 光柱落下的顿挫 */
+  setTimeout(function(){ if(S.phase!=='fight') return; shake(); S.hitStop=Math.max(S.hitStop||0,0.14); }, 380);   /* ★ v243 第二拍：落地冲击 */
   setTimeout(()=>wd.classList.remove('on'), 3000);
 }
 /* ★ v99 乙骨「反轉術式」：回覆自身 25% 最大生命，CD 2 回合；術式熔斷期間唯一可用技能之一 */
@@ -12329,11 +12387,10 @@ function rikaReverse(){
   if(!S.rika) return;
   if(S.rikaRevCd>0) return;
   S.rikaRevCd=2;
-  const rh=Math.round(S.rikaMax*0.25*10)/10;
-  S.rikaHp=Math.min(S.rikaMax,S.rikaHp+rh);
-  const oh=Math.round(S.maxHp*0.10*10)/10;
+  /* ★ v243 里香無生命值 ⇒ 反轉術式只為乙骨續命（12%） */
+  const oh=Math.round(S.maxHp*0.12*10)/10;
   S.gojo.hp=Math.min(S.maxHp,S.gojo.hp+oh);
-  fxText(GX()+60*SC,GY-236*SC,'里香 +'+rh,'#7c3aed',false);
+  fxText(GX()+60*SC,GY-236*SC,'里香・反轉','#7c3aed',false);
   fxText(GX()+46*SC,GY-238*SC,'+'+oh,'#3fbf72',true);
   flash('fWhite'); shake();
   say('rika','「憂太，交給我——反轉術式。」');
@@ -12444,14 +12501,9 @@ function okkoGuard(){
     if(S.okkBurn){ say('sys','術式熔斷——「模仿術式」屬於術式，無法施展（但「里香・召喚」本身不受熔斷限制）。'); return; }
     return rikaCopyUse();     /* ★ v60 里香在場 ⇒ 二技能＝模仿術式 */
   }
-  if(S.rikaUsed){
-    /* ★ v212 用戶指定：里香「時限到」退場 ⇒ 二技能仍是「模仿術式」（可繼續用）；
-       「血量耗盡」被擊破 ⇒ rikaCopyKeep=false，此處擋掉並保持召喚位。 */
-    if(S.rikaCopyKeep){
-      if(S.okkBurn){ say('sys','術式熔斷——「模仿術式」屬於術式，無法施展。'); return; }
-      return rikaCopyUse();
-    }
-    say('sys','里香已退場——本局無法再次召喚（反轉術式在第 4 技）。'); return;   /* ★ v105 */
+  /* ★ v243 用戶指定：里香退場後二技能回到「里香・召喚」，冷卻 4 回合後可再次召喚 */
+  if((S.rikaCd||0)>0){
+    say('sys','「里香・召喚」冷卻中 —— 還需 '+S.rikaCd+' 回合。'); return;
   }
   /* ★ v157 用戶指定：里香語音略微提前 —— 先出聲，視覺爆點（閃光/震屏/漫畫字）晚 120ms 跟上，讓語音引領演出 */
   try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); } }catch(e){}
@@ -12463,11 +12515,11 @@ function okkoGuard(){
   },120);
   /* ★ v60 代價只有一條：咒力上限 −50%（里香吸走一半） */
   S.ceCap=50; S.gojo.ce=Math.min(S.ceCap,S.gojo.ce);
-  /* ★ v60 里香生命＝魔虛羅（SUK_MAXHP×MAHO_PCT.hp），可存在 5 回合 */
-  S.rika=true; S.rikaUsed=true; S.rikaMax=SUK_MAXHP*MAHO_PCT.hp; S.rikaHp=S.rikaMax; S.rikaT=RIKA_TURNS; S.rikaCopy='';
+  /* ★ v243 用戶指定：里香沒有生命值、不可被殺死；存在 5 回合，或「咒力解放」後退場 */
+  S.rika=true; S.rikaUsed=true; S.rikaT=RIKA_TURNS; S.rikaCopy=''; S.rikaCopyKeep=false; S.rikaCd=0;
   say('okko','「里香——出來吧。」');
   say('rika','「憂太，我一直在。」');
-  say('sys','★ 式神・里香登場（生命 '+Math.round(S.rikaMax)+'，與魔虛羅相同；可存在 '+RIKA_TURNS+' 回合）。\n代價：乙骨的咒力上限減半（50）。里香在場期間：\n· 乙骨所有技能不消耗咒力\n· 二技能變為「模仿術式」（隨機複製四名術師的第三技能，完全復刻）\n· 里香每回合以「咒力拳」出擊，並替乙骨分擔一半傷害'); syncHud();
+  say('sys','★ 式神・里香登場（不可被殺死；可存在 '+RIKA_TURNS+' 回合，或施展「無限制咒力解放」後即刻退場）。\n代價：乙骨的咒力上限減半（50）。里香在場期間：\n· 乙骨所有技能不消耗咒力\n· 二技能變為「模仿術式」（隨機複製四名術師的第三技能，完全復刻）\n· 里香每回合以「咒力拳」出擊，並替乙骨分擔一半傷害\n里香退場後：「模仿術式」消失，二技能回到「里香・召喚」（冷卻 4 回合）'); syncHud();
 }
 /* 術式複製：復刻宿儺上一次用的招式（近戰/斬擊波/火焰），效果各不相同 */
 function okkoUlt(){
@@ -12479,6 +12531,7 @@ function okkoUlt(){
     S.gojo.ce-=60;   /* ★ v60 里香在場：乙骨所有技能不消耗咒力 */
   }
   S.okoUsed=true;
+  S.voidMahaT=0;   /* ★ v243 乙骨領域展開前清掉殘留的魔虛羅擊碎計時 */
   armDomainAnnounce();                 /* ★ v90 領域展開大字授權 */
   domainShift();                       /* ★ v77 時間暫停：跳過宿儺回合 → 新回合 +1 行動 */
   domainAnnounceArmedCall();           /* ★ v90 領域展開大字（乙骨無小字；須先經 armDomainAnnounce 授權） */
@@ -12716,6 +12769,7 @@ function syncBgmBtn(){
 }
 function toggleBGM(){
   bgmMuted=!bgmMuted;
+  try{ localStorage.setItem('jjk_bgm_muted', bgmMuted?'1':'0'); }catch(e){}   /* ★ v243 記住靜音狀態 */
   try{
     if(bgmMuted){
       if(bgmEl) bgmEl.pause();
@@ -13310,11 +13364,13 @@ function prepDomAudio(){
       else { try{ rk.pause(); rk.currentTime=0; rk.muted=false; }catch(e2){} }
     }
   }catch(e){}
+  try{ if(!window.__bfEl && typeof SND_BLACKFLASH!=='undefined' && SND_BLACKFLASH){ window.__bfEl=new Audio(); window.__bfEl.preload='auto'; window.__bfEl.src=sndUrl(SND_BLACKFLASH); } }catch(e){}
   domAudioEls.__ready=true;
 }
 /* 播放單段領域音效；返回 Promise（ended 或超時兜底 resolve），保證流程不被卡死 */
 function playDomSfx(key, fallbackSec, lead, _retry, trim){
   prepDomAudio();
+  if(bgmMuted){ return new Promise(function(res){ setTimeout(res,(fallbackSec||0)*1000); }); }   /* ★ v243 靜音時領域語音一併靜音（保留原時長） */
   /* ★ v143 用戶指定：不再打断正在播的領域語音 —— 五條展開的語音在宿傩對拼展開播放宿傩語音時繼續（兩音疊放） */
   const el0=domAudioEls[key];
   if(!el0){
@@ -13362,6 +13418,7 @@ function startOkkoDomainBgm(){
   prepDomAudio();
   if(okkoDomBgmOn) return;
   if(S.paused) return;   /* ★ v199 需求④：暫停中不起播 */
+  if(bgmMuted) return;   /* ★ v243 靜音時乙骨領域 BGM 也不起播 */
   const el=domAudioEls.okkoDomain;
   if(!el) return;
   okkoDomBgmOn=true;
@@ -13391,6 +13448,7 @@ function startSukuBgm(){
   if(!sukuBgmEl) return;
   if(sukuBgmOn) return;
   if(S.paused) return;   /* ★ v199 需求④：暫停中不起播（避免暫停後異步 promise 回調又把 BGM 放起來） */
+  if(bgmMuted){ sukuBgmOn=false; return; }   /* ★ v243 用戶報「關了音樂仍聽到宿傩領域音樂」：靜音時領域 BGM 一律不起播 */
   sukuBgmOn=true;
   /* ★ v198 修復需求①：啟動伏魔御厨子 BGM 前**必定**暫停主 BGM ——
      原先只在各呼叫點自行 suspend，gojoVoid 的「宿儺對拼勝」路徑（startSukuBgm 直接呼叫）漏了，
@@ -13836,5 +13894,19 @@ const SND_SUKU_BGM='data:audio/mpeg;base64,//uQBAAP8AAAaQAAAAgAAA0gAAABAAABpBQAA
   else{ iosHintInit(); }
 })();
 </script>
+<style>
+#deathBlack{position:fixed;inset:0;z-index:70;opacity:0;visibility:hidden;pointer-events:none;background:transparent;overflow:hidden;}
+#deathBlack.on{opacity:1;visibility:visible;pointer-events:auto;}
+#deathBlack .dbMask{position:absolute;inset:0;background:#000;}
+#deathBlack .dbTxt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);
+  width:min(86vw,980px);text-align:center;color:#fff;font-weight:800;
+  font-size:clamp(20px,4.6vw,44px);line-height:1.66;letter-spacing:.02em;
+  opacity:0;transition:opacity .3s ease,transform .3s ease;text-shadow:0 2px 18px rgba(255,255,255,.12);}
+#deathBlack .dbTxt.in{opacity:1;transform:translate(-50%,-50%) translateY(0);}
+#deathBlack .dbHint{position:absolute;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom));
+  text-align:center;color:rgba(255,255,255,.46);font-size:clamp(11px,2.3vw,14px);
+  letter-spacing:.14em;font-weight:600;pointer-events:none;}
+</style>
+<div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
 </html>
