@@ -6,7 +6,7 @@
 
 > 试玩走的是国内节点，同一份文件也发布在 [GitHub Pages](https://linziyang777.github.io/jjk/)，海外访问反而更顺；国内打开要等一会儿——52 MB 摆在那儿，绕不过去。
 >
-> 仓库里的 index.html 是较早的一份快照：单文件已经涨到 52.7 MB，超过 GitHub 单次接口能提交的体积，新版本改从试玩页分发。
+> 仓库里的 `index.html` 就是当前版本（v6.5），可以直接下载离线玩。
 
 <p align="center">
   <img src="docs/battle.jpg" width="86%" alt="无量空处内的战斗：五条悟、魔虚罗、宿傩同框">
@@ -69,7 +69,7 @@
 
 ## 本地打开
 
-下载 [index.html](https://github.com/linziyang777/jjk/raw/main/index.html)（仓库内为较早快照，最新版从[试玩页](https://jjk-shinjuku-battle-83982.app.workbuddy.host/)获取），双击。不需要服务器，不需要联网。
+下载 [index.html](https://github.com/linziyang777/jjk/raw/main/index.html)（52.7 MB，v6.5），双击。不需要服务器，不需要联网。
 
 ## 同人声明
 
