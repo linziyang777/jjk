@@ -14239,6 +14239,36 @@ html:not(.rot) .nametag,html.rot .nametag,html.land .nametag{box-shadow:0 0 0 2p
 /* 上下兩道細紅線，把「畫格」與 HUD 分開 */
 #stage>.hud:first-child::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;
   background:linear-gradient(90deg,rgba(215,38,61,0),rgba(215,38,61,.85),rgba(215,38,61,0));pointer-events:none;}
+/* ★ v259 ① 結算頁滑動：不再依賴「瀏覽器全屏/地址欄收起」——
+   固定容器內補 iOS 慣性滾動與 pan-y，並用 dvh 修正可視高度，底部留安全區。 */
+#resultScreen{-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
+  height:100%;max-height:100dvh;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+html.land #app,html.rot #app{height:100vh;height:100dvh;}
+html.land #resultScreen,html.rot #resultScreen{touch-action:pan-y;-webkit-overflow-scrolling:touch;}
+
+/* ★ v259 ② 戰鬥界面：撤掉深色底，改回淺紙底（上下留白與畫格同色），
+   各血條/名牌/技能鈕仍是獨立框格，只把「黑帶」換成紙白延伸。 */
+#stage{background:#f7f4ef;}
+#stage::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 62% at 50% -8%,rgba(120,104,94,.10),rgba(120,104,94,0) 62%),
+    radial-gradient(circle at 50% 50%,rgba(30,22,18,.055) 0 1px,transparent 1.5px) 0 0/6px 6px,
+    linear-gradient(180deg,#fbf9f6 0%,#f3efe9 52%,#e9e3db 100%);}
+#stage::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  box-shadow:inset 0 0 70px 14px rgba(96,82,72,.12);}
+#field{box-shadow:0 2px 12px rgba(60,45,35,.14),0 0 0 1px rgba(0,0,0,.05);}
+html.land .nametag,html.rot .nametag,.nametag{box-shadow:0 0 0 2px rgba(255,255,255,.55),3px 3px 0 rgba(0,0,0,.30);}
+.bar{box-shadow:0 0 0 2px rgba(255,255,255,.6),2px 2px 0 rgba(0,0,0,.32);}
+#turnBar .tb{box-shadow:0 0 0 2px rgba(255,255,255,.6),2px 2px 0 rgba(0,0,0,.32);}
+#pad .btn{box-shadow:4px 4px 0 var(--ink),0 4px 12px rgba(60,45,35,.18);}
+
+/* ★ v259 ③ 選人頁「直接結算」移到右側，不再佔一列高度把頭像擠小 */
+#selectUI{position:relative;}
+#selectUI #btnFinish{position:absolute;right:clamp(8px,1.6vw,28px);top:50%;transform:translateY(-50%);
+  margin:0;z-index:8;padding:10px 16px;font-size:clamp(13px,1.6vw,17px);letter-spacing:3px;}
+@media (max-width:620px){
+  #selectUI #btnFinish{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));transform:none;}
+}
 </style>
 <div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
