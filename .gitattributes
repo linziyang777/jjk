@@ -1,0 +1,5 @@
+# index.html 是可直接双击运行的成品单文件，必须保持与本体逐字节一致，
+# 因此禁止 git 做任何行尾转换（否则 15024 个 CRLF 会被折成 LF）。
+index.html -text -diff
+*.jpg binary
+*.png binary
