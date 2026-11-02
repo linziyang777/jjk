@@ -7873,8 +7873,9 @@ function buildResultCols(){
   const _ch=g('rChain'), _rc=g('rRec');
   if(_ch) line.appendChild(_ch);
   if(_rc) line.appendChild(_rc);
-  /* ★ v248 用戶指定：手感反饋移到「全服戰況」下方（左欄尾），右欄不再放 */
-  const left =[g('rEndCard'), secs[0], line, g('rSrv'), g('rFb')];
+  /* ★ v258 用戶反饋「手感卡右邊很空」：改為整行寬度（留在 #resultScreen 內、排在兩欄之後），
+     內部再分左右兩欄 —— 左邊三檔按鈕、右邊留言框＋送出。 */
+  const left =[g('rEndCard'), secs[0], line, g('rSrv')];
   const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
@@ -14172,6 +14173,19 @@ const SND_SUKU_BGM='data:audio/mpeg;base64,//uQBAAP8AAAaQAAAAgAAA0gAAABAAABpBQAA
 #pad.five .btn{padding:calc(6px*var(--k)) 2px calc(5px*var(--k));font-size:calc(12.5px*var(--k));}
 #pad.five .btn small{font-size:calc(8px*var(--k));letter-spacing:-.3px;}
 html.rot #pad,html.land #pad{padding-bottom:calc(4px*var(--k) + 6px);}
+/* ★ v258 手感卡：整行寬度 + 左右兩欄（左＝太難/剛好/太簡單，右＝想跟作者說一句＋送出） */
+#resultScreen #rFb{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);
+  grid-template-areas:"hd hd" "row row2" "ok ok";gap:7px 14px;align-items:center;
+  width:100%;max-width:860px;justify-self:center;}
+#resultScreen #rFb .srvHd{grid-area:hd;margin-bottom:0;}
+#resultScreen #rFb .fbRow{grid-area:row;margin:0;}
+#resultScreen #rFb .fbRow2{grid-area:row2;}
+#resultScreen #rFb .fbOk{grid-area:ok;margin-top:0;text-align:left;}
+/* 窄屏（手機豎屏旋轉後的可用寬度）仍舊上下疊 */
+@media (max-width:620px){
+  #resultScreen #rFb{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"hd" "row" "row2" "ok";gap:6px;}
+}
 /* ★ v255 用戶指定：結算頁框線改黑白（結局卡／接力鏈／挑戰紀錄／各節目標題），
    結局圖鑑與隱藏彩蛋保持原樣，「世界線跳躍」按鈕不動。 */
 #resultScreen .eCard{background:#171717;border-color:#111;color:#f2f2f2;
