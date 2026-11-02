@@ -14271,6 +14271,15 @@ html.land .nametag,html.rot .nametag,.nametag{box-shadow:0 0 0 2px rgba(255,255,
 @media (max-width:620px){
   #selectUI #btnFinish{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));transform:none;}
 }
+/* ★ v261 用戶反饋：選人頁底部露出戰鬥技能條 ⇒ 整屏頁面顯示時把技能欄與 HUD 收掉，
+   同時把卡面加大吃滿畫面，「直接結算」也放大一號。 */
+#stage.screenOn #pad,#stage.screenOn #stage>.hud,#stage.screenOn .hud{opacity:0 !important;pointer-events:none !important;}
+#selectUI{--selw:clamp(170px,calc(var(--aw)*0.31),380px);}
+#selectUI .selRow{width:100%;justify-content:center;justify-items:center;}
+#selectUI .selRow{row-gap:calc(var(--selw)*0.06);}
+#selectUI .selTitle{margin-bottom:2px;}
+#selectUI #btnFinish{padding:14px 22px;font-size:clamp(17px,2.1vw,22px);letter-spacing:4px;
+  box-shadow:6px 6px 0 rgba(0,0,0,.35);}
 </style>
 <div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
