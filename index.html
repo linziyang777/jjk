@@ -805,7 +805,7 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
   margin-top:calc(3px*var(--k));}
 
 /* ---------- 中央戰鬥區 ---------- */
-#field{position:relative;flex:1;min-height:0;overflow:hidden;background:#fff;
+#field{position:absolute;inset:0;z-index:0;overflow:hidden;background:#fff;   /* ★ v263 滿鋪：整個戰鬥介面共用同一張背景 */
   background-image:radial-gradient(ellipse at 50% 64%,#ffffff 42%,#f2f2f4 78%,#e6e6ea 100%);}
 #cv{position:absolute;inset:0;display:block;}
 
@@ -846,7 +846,7 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 #logList{display:none;}
 #bubble{
   /* ★ v209 需求：旁述整體上移一些（原 bottom:1%，貼在戰場下緣、與底部血條行幾乎同高） */
-  position:absolute;bottom:4%;width:max-content;
+  position:absolute;bottom:calc(96px*var(--k) + 2%);width:max-content;   /* ★ v263 畫布滿鋪後上移，避開底部技能欄 */
   background:#fff;border:3px solid var(--ink);border-radius:4px;
   padding:calc(7px*var(--k)) calc(12px*var(--k));
   font-weight:800;font-size:calc(14px*var(--k));line-height:1.3;
@@ -882,7 +882,7 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 /* ★ v224 用戶指定：鹿紫雲一無防禦技能 ⇒ 直接把防禦技能框（2 號位）整格隱藏，剩下的三格自動撐開 */
 body.kashimo-noGuard #pad .btn[data-act="guard"]{display:none;}
 #pad{display:flex;gap:calc(9px*var(--k));padding:calc(4px*var(--k)) 12px calc(8px*var(--k));
-  z-index:7;position:relative;}
+  z-index:7;position:relative;margin-top:auto;}
 /* ★ v78 五條悟有 5 個按鈕：略微收緊字號與間距，避免手機端擠爆 */
 #pad.five{gap:calc(6px*var(--k));padding-left:8px;padding-right:8px;}
 #pad.five .btn{font-size:calc(13.5px*var(--k));padding:calc(9px*var(--k)) 2px calc(8px*var(--k));
@@ -4986,6 +4986,8 @@ const DEATH_LINES={
    點擊畫面任意處跳過（畫面最下方一行小字提示）。 */
 let dbTok=0;
 function deathBlackout(lines, done){
+  /* ★ v263 黑屏層挪進 #app：原本掛在 body 上是 fixed，豎屏旋轉（html.rot）不跟隨 ⇒ 手機看到豎屏方向 */
+  try{ var _db=$('deathBlack'), _app=$('app'); if(_db && _app && _db.parentElement!==_app) _app.appendChild(_db); }catch(e){}
   const el=document.getElementById('deathBlack');
   if(!el){ try{ done&&done(); }catch(e){} return; }
   const mask=el.querySelector('.dbMask');
@@ -7739,7 +7741,8 @@ function renderChain(){
   $('rChain').innerHTML=all.map(h=>{
     const i=used.indexOf(h), on=i>=0;
     const cls='chNode'+(on?'':' off')+(on&&i===used.length-1?' last':'');
-    return '<div class="'+cls+'"><span class="ord">'+(on?('第 '+(i+1)+' 棒'):'未出戰')+'</span>'+esc(HERO_INFO[h]?HERO_INFO[h].nm:h)+'</div>';
+    /* ★ v264 用戶指定：去掉「第 x 棒」字樣 */
+    return '<div class="'+cls+'">'+esc(HERO_INFO[h]?HERO_INFO[h].nm:h)+'</div>';
   }).join('<span class="chArrow">›</span>');
 }
 /* 挑戰紀錄：最少出戰人數 / 最少回合數（只在擊倒宿儺時計入並與歷史最佳比較） */
@@ -7879,6 +7882,10 @@ function buildResultCols(){
   const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
+  /* ★ v265 用戶指定：手感卡放到「世界線跳躍」按鈕下方（結局小字之上） */
+  const _fb=g('rFb'), _cta=g('btnAgain'), _disc=rs.querySelector('.resDisc');
+  if(_fb && _cta){ if(_disc && _disc.parentNode===_cta.parentNode) _disc.parentNode.insertBefore(_fb,_disc);
+                   else _cta.parentNode.insertBefore(_fb,_cta.nextSibling); }
   L.__built=1;
 }
 
@@ -12213,8 +12220,11 @@ function enterDiff(fromId){
   /* ★ v178 開場影片：播放中 / 剛跳過後 600ms 內，殘留的 click / tap 不生效。
      跳過按鈕在右下角，殘留 click 正好落在同位置的首頁「進入「帐」」按鈕上，
      舊版因此會「跳過後直接進難度頁」——手機端影片卡頓時尤其明顯。 */
-  try{ if(window.__bootPlaying) return;
-       if(window.__bootGuardUntil && performance.now()<window.__bootGuardUntil) return; }catch(e){}
+  /* ★ v265 修「有時點世界線跳躍沒反應」：從結算頁進入時戰鬥早已開始，開場影片鎖不該生效 */
+  if(fromId!=='resultScreen'){
+    try{ if(window.__bootPlaying) return;
+         if(window.__bootGuardUntil && performance.now()<window.__bootGuardUntil) return; }catch(e){}
+  }
   const d=$('diffScreen'); if(!d) return;
   const src=fromId?$(fromId):null;
   const reveal=function(){
@@ -12223,10 +12233,15 @@ function enterDiff(fromId){
     if(typeof syncStageChrome==='function') syncStageChrome();
   };
   if(src && !src.classList.contains('hide')){
-    if(src.classList.contains('dolly')) return;      /* 防連點 */
+    /* ★ v265 防連點帶時間戳：被後台凍結等原因卡住的 dolly 殘留，超過 1.2s 直接放行並清理 */
+    if(src.classList.contains('dolly')){
+      if(src.__dollyAt && Date.now()-src.__dollyAt<1200) return;
+      src.classList.remove('dolly'); src.classList.add('hide');
+    }
+    src.__dollyAt=Date.now();
     src.classList.add('dolly');
     reveal();                                        /* 白頁先就位，來源頁在上層推開 */
-    setTimeout(function(){ src.classList.add('hide'); src.classList.remove('dolly'); },940);   /* ★ v156 與加強版 dollyIn(.92s) 對齊 */
+    setTimeout(function(){ src.classList.add('hide'); src.classList.remove('dolly'); src.__dollyAt=0; },940);   /* ★ v156 與加強版 dollyIn(.92s) 對齊 */
   }else{
     reveal();
   }
@@ -14152,7 +14167,7 @@ const SND_SUKU_BGM='data:audio/mpeg;base64,//uQBAAP8AAAaQAAAAgAAA0gAAABAAABpBQAA
 })();
 </script>
 <style>
-#deathBlack{position:fixed;inset:0;z-index:70;opacity:0;visibility:hidden;pointer-events:none;background:transparent;overflow:hidden;}
+#deathBlack{position:absolute;inset:0;z-index:70;   /* ★ v263 移入 #app：跟隨豎屏旋轉，方向才會正確 */opacity:0;visibility:hidden;pointer-events:none;background:transparent;overflow:hidden;}
 #deathBlack.on{opacity:1;visibility:visible;pointer-events:auto;}
 #deathBlack .dbMask{position:absolute;inset:0;background:#000;}
 #deathBlack .dbTxt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);
@@ -14210,17 +14225,16 @@ html.rot #pad,html.land #pad{padding-bottom:calc(4px*var(--k) + 6px);}
     linear-gradient(180deg,#1a1513 0%,#0e0b0a 55%,#151110 100%);}
 #stage::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   box-shadow:inset 0 0 120px 30px rgba(0,0,0,.72);}
-#field{position:relative;z-index:1;border-top:3px solid #0a0908;border-bottom:3px solid #0a0908;
-  box-shadow:0 0 26px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05);}
+#field{z-index:1;}
 .hud{z-index:6;}
 #pad{z-index:7;}
 /* 畫格內：極淡的網點＋四周壓暗，白紙不再是一片死白（不動畫布本身） */
-#field::before{content://;position:absolute;inset:0;pointer-events:none;z-index:1;
+#field::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
     radial-gradient(125% 92% at 50% 48%,rgba(30,22,18,0) 56%,rgba(24,17,14,.22) 100%),
     radial-gradient(circle at 50% 50%,rgba(24,17,14,.045) 0 1px,transparent 1.4px) 0 0/5px 5px;}
 /* 畫格四角的紅色框角，讓中間畫面像漫畫分鏡而不是一條白帶 */
-#field::after{content://;position:absolute;inset:0;pointer-events:none;z-index:2;
+#field::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
   background:
     linear-gradient(#d7263d,#d7263d) 0 0/24px 2px no-repeat,
     linear-gradient(#d7263d,#d7263d) 0 0/2px 24px no-repeat,
@@ -14292,12 +14306,13 @@ html.land .nametag,html.rot .nametag,.nametag{box-shadow:0 0 0 2px rgba(255,255,
 #stage::before{background:linear-gradient(180deg,#ffffff 0%,#faf8f5 60%,#f6f2ec 100%) !important;}
 #stage::after{box-shadow:none !important;}
 #field{border-top:none !important;border-bottom:none !important;box-shadow:none !important;}
-#pad .btn{background:#fff !important;border-color:transparent !important;box-shadow:none !important;}
-#pad .btn small{opacity:.55;}
-#pad .btn:active{background:#f1efec !important;}
+/* ★ v264 用戶反饋：技能邊框補回來 —— 純白無邊時部分技能字看不清。點陣與底色分界維持已移除。 */
 
 /* ★ v262 ④ 首頁「進入『帐』」放大並下移 */
-#titleScreen .tcBottom #btnStart{padding:18px 40px;font-size:clamp(22px,2.6vw,30px);margin-bottom:-10px;}
+#titleScreen .tcBottom #btnStart{padding:12px 26px;font-size:clamp(22px,2.6vw,30px);margin-bottom:-22px;}
+/* ★ v264 接力鏈框格縮小 */
+#resultScreen .chNode{padding:2px 8px;font-size:11.5px;border-width:2px;box-shadow:2px 2px 0 rgba(0,0,0,.4);letter-spacing:1px;}
+#resultScreen .chArrow{font-size:12px;}
 </style>
 <div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
