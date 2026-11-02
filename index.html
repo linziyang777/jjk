@@ -2127,6 +2127,19 @@ html.rot .tContent .tcNote{font-size:clamp(7.5px,calc(var(--aw)*.0115),11px);}
   #resultScreen:not(.hide)::before{background:radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%) !important;opacity:1;}
   #resultScreen > #btnAgain{margin-top:8px;}
 }
+/* ★ v257 用戶報「手機打開仍錯位」：橫屏機的 CSS 內寬可能 >900px（如 1080×501），
+   媒體查詢沒命中就退回桌面網格 ⇒ 圖鑑/手感卡溢出壓住標題與世界線按鈕。
+   這裡用 html.land / html.rot（由 JS 按「短邊 <=600 或觸屏 <=1024」判定）兜底同一套縱向流式排布。 */
+html.land #resultScreen:not(.hide),html.rot #resultScreen:not(.hide){
+  display:flex !important;flex-direction:column;align-items:stretch;
+  justify-content:flex-start;align-content:normal;
+  gap:6px;overflow-y:auto;overflow-x:hidden;
+}
+html.land #resultScreen:not(.hide) > *,html.rot #resultScreen:not(.hide) > *{flex:0 0 auto;width:100%;max-width:100%;}
+html.land #resultScreen.cleared,html.rot #resultScreen.cleared{display:flex !important;}
+html.land #resultScreen:not(.hide)::before,html.rot #resultScreen:not(.hide)::before{
+  background:radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%) !important;opacity:1;}
+html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-top:8px;}
 /* ★ v249 極窄（<420px 內寬）才退回單欄 */
 @media (max-width:420px){
   #rCols{grid-template-columns:minmax(0,1fr);}
@@ -7875,7 +7888,7 @@ function fitResult(){
   if(!rs || rs.classList.contains('hide')) return;
   rs.style.zoom='';
   /* ★ v249 手機端改縱向流式 + 滾動（zoom 在手機上會與 grid 行高互相干擾，反而造成遮擋） */
-  if(innerWidth<=900) return;
+  if(innerWidth<=900 || document.documentElement.classList.contains('land') || document.documentElement.classList.contains('rot')) return;
   const h=rs.clientHeight;
   if(!h) return;
   const need=rs.scrollHeight;
