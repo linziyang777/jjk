@@ -14242,8 +14242,10 @@ html:not(.rot) .nametag,html.rot .nametag,html.land .nametag{box-shadow:0 0 0 2p
 /* ★ v259 ① 結算頁滑動：不再依賴「瀏覽器全屏/地址欄收起」——
    固定容器內補 iOS 慣性滾動與 pan-y，並用 dvh 修正可視高度，底部留安全區。 */
 #resultScreen{-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
-  height:100%;max-height:100dvh;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
-html.land #app,html.rot #app{height:100vh;height:100dvh;}
+  height:100%;max-height:100%;padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+/* ★ v260 修：rot 時寬高必須互換（寬=視口高、高=視口寬），v259 誤設 height:100dvh 會把畫面拉成方形 */
+html.land #app{height:100vh;height:100dvh;}
+html.rot #app{width:100vh;width:100dvh;height:100vw;height:100dvw;}
 html.land #resultScreen,html.rot #resultScreen{touch-action:pan-y;-webkit-overflow-scrolling:touch;}
 
 /* ★ v259 ② 戰鬥界面：撤掉深色底，改回淺紙底（上下留白與畫格同色），
