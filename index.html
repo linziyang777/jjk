@@ -1202,8 +1202,15 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v253 用戶指定：虎杖領域展開的「結印圖」出現時全場改為黑屏（原本透過立繪看到戰場）。
    黑幕在開場 8% 內壓黑、82% 後開始淡出，與黑球收束／故鄉風景浮現銜接。 */
 #itaDomIn::before{content:'';position:absolute;inset:0;background:#000;opacity:0;animation:none;}
-#itaDomIn.on::before{animation:idiBlack 3.3s ease-out forwards;}
+/* ★ v255 修：五條／乙骨等只用大字（.txtOnly），不該跟著黑屏 */
+#itaDomIn.on:not(.txtOnly)::before{animation:idiBlack 3.3s ease-out forwards;}
 @keyframes idiBlack{0%{opacity:0}8%{opacity:1}80%{opacity:1}96%{opacity:0}100%{opacity:0}}
+/* ★ v255 用戶指定：黑屏之後白光由畫面中心向外擴圓、越來越亮（同樣只給虎杖的完整演出） */
+#itaDomIn.on:not(.txtOnly)::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 50%,#fff 0%,rgba(255,255,255,.92) 24%,rgba(255,255,255,0) 64%);
+  transform:scale(0);opacity:0;animation:idiWhite 3.3s ease-out forwards;}
+@keyframes idiWhite{0%,60%{transform:scale(0);opacity:0}70%{transform:scale(.55);opacity:.55}
+  82%{transform:scale(1.5);opacity:.9}92%{transform:scale(3.2);opacity:.8}100%{transform:scale(4.4);opacity:0}}
 /* ★ v83 需求：領域展開字樣上移，貼住畫面頂部的回合倒計時（#turnBar 位於 top:8px） */
 #itaDomIn .idiTxt{position:absolute;left:0;right:0;top:clamp(46px,7.5vh,72px);text-align:center;color:#fff;
   font-weight:900;letter-spacing:8px;font-size:clamp(13px,3.2vw,20px);
@@ -3806,6 +3813,8 @@ function hideDomainAnnounce(){
   el.__shownAt=0; el.__dur=0; delete el.dataset.armed;
   /* ★ v93 狀態類全清 + 子節點動畫硬停：非 .on 態絕不允許殘留任何可顯示狀態 */
   el.classList.remove('on','txtOnly','noSub');
+  S.domAnnUntil=0;                      /* ★ v256 字樣收掉 ⇒ 立刻放回回合倒計時 */
+  try{ syncStageChrome(); }catch(e){}
   el.querySelectorAll('.idiBall,.idiHands,.idiTxt').forEach(n=>{ n.style.animation='none'; });
 }
 /* ★ v88 修「沒使用領域技卻顯示領域展開大字」：大字原本只靠一個 setTimeout 收起，
@@ -14001,7 +14010,7 @@ function syncStageChrome(){
   /* ★ v253 用戶指定：領域展開大字演出期間（#itaDomIn.on）回合倒計時要留在畫面上 ——
      該演出同樣會佔用 S.cutin（約 2.25s），舊邏輯連帶把倒計時一起收掉。 */
   const _domAnn = ((S.domAnnUntil||0)>performance.now()) || !!($('itaDomIn') && $('itaDomIn').classList.contains('on'));
-  if(S.cutin>0 && !_domAnn) covered=true;   /* ★ v199 需求③：登場動畫／漫畫頁等全屏演出期間也收起回合列（turnBar z-index:30 高於 #heroIntro:20，否則倒計時會蓋在登場動畫上） */
+  if(S.cutin>0 || _domAnn) covered=true;   /* ★ v256 用戶指定：領域展開字樣顯示期間，倒計時先收起；字樣一結束立刻回來 */   /* ★ v199 需求③：登場動畫／漫畫頁等全屏演出期間也收起回合列（turnBar z-index:30 高於 #heroIntro:20，否則倒計時會蓋在登場動畫上） */
   if(_chromeCov===covered) return;
   _chromeCov=covered;
   st.classList.toggle('screenOn',covered);
@@ -14150,6 +14159,59 @@ const SND_SUKU_BGM='data:audio/mpeg;base64,//uQBAAP8AAAaQAAAAgAAA0gAAABAAABpBQAA
 #pad.five .btn{padding:calc(6px*var(--k)) 2px calc(5px*var(--k));font-size:calc(12.5px*var(--k));}
 #pad.five .btn small{font-size:calc(8px*var(--k));letter-spacing:-.3px;}
 html.rot #pad,html.land #pad{padding-bottom:calc(4px*var(--k) + 6px);}
+/* ★ v255 用戶指定：結算頁框線改黑白（結局卡／接力鏈／挑戰紀錄／各節目標題），
+   結局圖鑑與隱藏彩蛋保持原樣，「世界線跳躍」按鈕不動。 */
+#resultScreen .eCard{background:#171717;border-color:#111;color:#f2f2f2;
+  box-shadow:6px 6px 0 rgba(0,0,0,.42),0 0 0 3px rgba(0,0,0,.20);}
+#resultScreen .eCard.win,#resultScreen .eCard.true{background:#111;border-color:#f2f2f2;
+  box-shadow:6px 6px 0 rgba(0,0,0,.45),0 0 0 3px rgba(255,255,255,.18);}
+#resultScreen .secTitle::before{background:#111;}
+#resultScreen .dexCnt{background:#111;color:#fff;}
+#resultScreen .chNode{background:#171717;border-color:#111;box-shadow:3px 3px 0 rgba(0,0,0,.45);}
+#resultScreen .chNode.last{background:#111;color:#fff;}
+#resultScreen .recBox{background:#171717;border-color:#111;box-shadow:3px 3px 0 rgba(0,0,0,.45);}
+#resultScreen .recBox.pb{background:#111;}
+#resultScreen .recNew{background:#111;}
+/* ★ v254 用戶指定：戰鬥界面不再有白色底帶 —— 舞台整體改深色漫畫底（網點＋紅光＋紙紋暗角），
+   #field 以墨線框成「畫格」，所有血條／徽標／技能鈕都成了浮在上面的獨立標誌。 */
+#stage{background:#141110;}
+#stage::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(120% 58% at 50% -6%,rgba(215,38,61,.20),rgba(215,38,61,0) 62%),
+    radial-gradient(90% 60% at 50% 108%,rgba(215,38,61,.10),rgba(215,38,61,0) 60%),
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.075) 0 1px,transparent 1.5px) 0 0/6px 6px,
+    linear-gradient(180deg,#1a1513 0%,#0e0b0a 55%,#151110 100%);}
+#stage::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  box-shadow:inset 0 0 120px 30px rgba(0,0,0,.72);}
+#field{position:relative;z-index:1;border-top:3px solid #0a0908;border-bottom:3px solid #0a0908;
+  box-shadow:0 0 26px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.05);}
+.hud{z-index:6;}
+#pad{z-index:7;}
+/* 畫格內：極淡的網點＋四周壓暗，白紙不再是一片死白（不動畫布本身） */
+#field::before{content://;position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(125% 92% at 50% 48%,rgba(30,22,18,0) 56%,rgba(24,17,14,.22) 100%),
+    radial-gradient(circle at 50% 50%,rgba(24,17,14,.045) 0 1px,transparent 1.4px) 0 0/5px 5px;}
+/* 畫格四角的紅色框角，讓中間畫面像漫畫分鏡而不是一條白帶 */
+#field::after{content://;position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:
+    linear-gradient(#d7263d,#d7263d) 0 0/24px 2px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 0 0/2px 24px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 100% 0/24px 2px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 100% 0/2px 24px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 0 100%/24px 2px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 0 100%/2px 24px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 100% 100%/24px 2px no-repeat,
+    linear-gradient(#d7263d,#d7263d) 100% 100%/2px 24px no-repeat;}
+/* 徽標化：名牌加白描邊，血條加白勾邊，讓它們在深底上依然獨立可讀 */
+html:not(.rot) .nametag,html.rot .nametag,html.land .nametag{box-shadow:0 0 0 2px rgba(255,255,255,.16),3px 3px 0 rgba(0,0,0,.6);}
+.bar{box-shadow:0 0 0 2px rgba(255,255,255,.10),2px 2px 0 rgba(0,0,0,.55);}
+#turnBar .tb{box-shadow:0 0 0 2px rgba(255,255,255,.12),2px 2px 0 rgba(0,0,0,.6);}
+/* 底部技能鈕：白卡在深底上本身就是標誌，補一道外發光更有層次 */
+#pad .btn{box-shadow:4px 4px 0 var(--ink),0 0 0 1px rgba(255,255,255,.10),0 6px 18px rgba(0,0,0,.55);}
+/* 上下兩道細紅線，把「畫格」與 HUD 分開 */
+#stage>.hud:first-child::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,rgba(215,38,61,0),rgba(215,38,61,.85),rgba(215,38,61,0));pointer-events:none;}
 </style>
 <div id="deathBlack" aria-hidden="true"><div class="dbMask"></div><div class="dbTxt"></div><div class="dbHint">輕觸畫面任意處跳過</div></div>
 </body>
