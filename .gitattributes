@@ -7,3 +7,7 @@ jjk-offline.html -text -diff
 *.mp3 binary
 *.mp4 binary
 *.gif binary
+
+# 在线版 / sw 也要逐字节一致（core.autocrlf=true 会把 CRLF 转成 LF）
+index.html -text -diff
+sw.js -text
