@@ -4102,7 +4102,7 @@ function yujiFinisherCut(){
   shake(); setTimeout(function(){ try{ shake(); }catch(e){} }, 130);
   const box=$('yujiFin'), im=$('yfImg');
   if(!box) return;
-  if(im && !im.getAttribute('src')){ try{ window.__imgQ.push(()=>{ im.src=IMG.yujiFin; }); }catch(e){} }
+  if(im && !im.getAttribute('src')){ try{ im.src=IMG.yujiFin; }catch(e){} }   /* ★ v311b 修：此處不能進延後隊列（隊列早已 flush，圖永遠不會載入） */
   box.classList.remove('on'); void box.offsetWidth; box.classList.add('on');
   setTimeout(function(){ try{ box.classList.remove('on'); }catch(e){} }, 2600);   /* ★ v311 停留 1.25s→2.6s */
 }
