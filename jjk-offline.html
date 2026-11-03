@@ -8287,20 +8287,20 @@ function buildResultCols(){
   if(!rs||!L||!R||L.__built) return;
   const secs=rs.querySelectorAll('.secTitle');
   const g=id=>$(id);
-  /* ★ v240 用戶指定：回合數／黑閃移到接力鏈右側（同一個 chainRow 內） */
-  let line=L.querySelector('.chainRow');
-  if(!line){ line=document.createElement('div'); line.className='chainRow'; }
+  /* ★ v312 用戶指定：左欄＝結局卡 → 全服戰況 → 挑戰紀錄（回合數／黑閃）；右欄不變 */
   const _ch=g('rChain'), _rc=g('rRec');
-  if(_ch) line.appendChild(_ch);
-  if(_rc) line.appendChild(_rc);
-  /* ★ v258 用戶反饋「手感卡右邊很空」：改為整行寬度（留在 #resultScreen 內、排在兩欄之後），
-     內部再分左右兩欄 —— 左邊三檔按鈕、右邊留言框＋送出。 */
-  const left =[g('rEndCard'), secs[0], line, g('rSrv')];
+  const left =[g('rEndCard'), g('rSrv'), _rc];
   const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
-  /* ★ v265 用戶指定：手感卡放到「世界線跳躍」按鈕下方（結局小字之上） */
+  /* ★ v312：接力鏈搬到「世界線跳躍」按鈕下方，連同它的標題一起，横向鋪開 */
   const _fb=g('rFb'), _cta=g('btnAgain'), _disc=rs.querySelector('.resDisc');
+  if(_cta && _ch){
+    const host=_cta.parentNode;
+    if(secs[0]) host.insertBefore(secs[0], _cta.nextSibling);
+    host.insertBefore(_ch, (secs[0]?secs[0].nextSibling:_cta.nextSibling));
+  }
+  /* ★ v265 用戶指定：手感卡放到「世界線跳躍」按鈕下方（結局小字之上） */
   if(_fb && _cta){ if(_disc && _disc.parentNode===_cta.parentNode) _disc.parentNode.insertBefore(_fb,_disc);
                    else _cta.parentNode.insertBefore(_fb,_cta.nextSibling); }
   L.__built=1;
@@ -15550,6 +15550,12 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 
 /* ═══ ★ v304 虎杖領域態文字層：式神血條行（z 12）之上、領域演出層（z 19）之下 ═══ */
 #itaDomTxt{position:absolute;inset:0;pointer-events:none;z-index:13;display:block;}
+
+/* ═══ ★ v312 結算頁：接力鏈横排 + 背景花紋變淡 ═══ */
+#resultScreen #rChain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 7px;width:100%;max-width:900px;margin:2px auto 0;}
+#resultScreen #rChain .chNode{flex:0 0 auto;}
+#resultScreen #rChain .chArrow{flex:0 0 auto;opacity:.34;font-size:14px;}
+#resultScreen::before{opacity:.34;}   /* 用戶指定：背景花紋不透明度降低 */
 
 /* ═══ ★ v307 虎杖終結一擊 ═══ */
 #yujiFin{position:absolute;inset:0;display:none;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;z-index:58;background:#0c0c10;}
