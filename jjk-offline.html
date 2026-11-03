@@ -1225,7 +1225,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   100%{transform:translate(-50%,-50%) scale(6.8);opacity:0}}
 /* 虎杖結印立繪：畫面中間浮現（邊緣羽化 + 暖光暈） */
 #itaDomIn .idiHands{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  height:clamp(240px,58vh,560px);opacity:0;animation:none;
+  height:clamp(170px,42vh,400px);opacity:0;   /* ★ v310 用戶指定：領域展開動畫的結印圖縮小，別壓到「領域展開」大字 */animation:none;
   filter:drop-shadow(0 0 26px rgba(255,244,214,.45)) drop-shadow(0 0 70px rgba(255,196,120,.30));
   }
 #itaDomIn.on .idiHands{animation:idiHands 3.3s ease-out forwards;}
@@ -12354,7 +12354,7 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   const o={glow:'rgba(192,57,43,.9)', ring:'#e0553c', bob:2.2, sink:()=>Math.max(0,H-GY),
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
-  if(dom) o.h=()=>itaHeight()*0.64;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
+  if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
   o.lift=itaLift()-(dom?40:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':'itadori',o); }
