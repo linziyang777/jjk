@@ -1,5 +1,9 @@
-# index.html 是可直接双击运行的成品单文件，必须保持与本体逐字节一致，
-# 因此禁止 git 做任何行尾转换（否则 15024 个 CRLF 会被折成 LF）。
-index.html -text -diff
+# 离线安装包：原 50MB 单文件成品，需保持逐字节一致，禁止 git 做任何行尾转换。
+jjk-offline.html -text -diff
+# 在线版拆出的资源（同源 GitHub Pages），标记为二进制避免文本转换。
 *.jpg binary
 *.png binary
+*.webp binary
+*.mp3 binary
+*.mp4 binary
+*.gif binary
