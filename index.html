@@ -4106,7 +4106,7 @@ function yujiFinisherCut(){
   shake(); setTimeout(function(){ try{ shake(); }catch(e){} }, 130);
   const box=$('yujiFin'), im=$('yfImg');
   if(!box) return;
-  if(im && !im.getAttribute('src')){ try{ im.src=IMG.yujiFin; }catch(e){} }
+  if(im && !im.getAttribute('src')){ try{ window.__imgQ.push(()=>{ im.src=IMG.yujiFin; }); }catch(e){} }
   box.classList.remove('on'); void box.offsetWidth; box.classList.add('on');
   setTimeout(function(){ try{ box.classList.remove('on'); }catch(e){} }, 1250);
 }
@@ -12358,7 +12358,7 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   const o={glow:'rgba(192,57,43,.9)', ring:'#e0553c', bob:2.2, sink:()=>Math.max(0,H-GY),
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
-  if(dom) o.h=()=>itaHeight()*0.78;        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
+  if(dom) o.h=()=>itaHeight()*0.64;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
   o.lift=itaLift()-(dom?40:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':'itadori',o); }
@@ -14816,20 +14816,27 @@ $('gzFinPic').style.backgroundImage='url('+GOJO_WIN_IMG+')';   /* ★ v63 終幕
 $('kashIn').style.backgroundImage='url('+IMG.kashIn+')';
 $('kashAmber').style.backgroundImage='url('+IMG.kashAmber+')';
 { const hp=makeHiguInPanel(); if(hp) $('higuIn').style.backgroundImage='url('+hp+')'; }   /* ★ v31 日車登場漫畫頁（canvas 生成） */
-['wheel','maho','eight','agyo','okkoDom2','rikaArt','blackCrack','itaDomBg','itaDomArt','gojoVoidSign','gojoVoidPose','gojoVoidWord','gojoVoidBg','sukuDomBg','sukuDomWord','okkoDomBg','okkoDomWord','okkoDomArt','jieInk','kaiScrape'].forEach(k=>{ const im=new Image(); im.onload=()=>{ IMGS[k]=im; }; im.src=IMG[k]; });   /* ★ v185 補預載 kaiScrape —— 此前 IMG.kaiScrape 只注入常量、未進預載列表，IMGS.kaiScrape 永遠為 undefined，「解」的墨痕線上從未顯示過 */
+/* ★ v309 首屏提速：戰鬥/領域素材改「延後預載」——
+   原本 20+ 張圖在解析時就全部排進下載隊列，把標題頁那幾張關鍵圖擠到後面（同域 6 併發）。
+   現在先只解析不派 src，等標題頁 open（或 30s 兜底）再一次性放出去；
+   繪製邏輯完全沒動，用到時圖早就到位（標題→開戰本來就有 5~10 秒）。 */
+window.__imgQ=[]; window.__flushImgQ=function(){ var q=window.__imgQ; window.__imgQ=[]; for(var _i=0;_i<q.length;_i++){ try{ q[_i](); }catch(e){} } };
+(function(){ var _n=0,_t=setInterval(function(){ _n++; var _tt=document.getElementById('titleScreen');
+  if((_tt&&_tt.classList.contains('open'))||_n>120){ clearInterval(_t); setTimeout(function(){ try{ window.__flushImgQ(); }catch(e){} },300); } },250); })();
+['wheel','maho','eight','agyo','okkoDom2','rikaArt','blackCrack','itaDomBg','itaDomArt','gojoVoidSign','gojoVoidPose','gojoVoidWord','gojoVoidBg','sukuDomBg','sukuDomWord','okkoDomBg','okkoDomWord','okkoDomArt','jieInk','kaiScrape'].forEach(k=>{ const im=new Image(); im.onload=()=>{ IMGS[k]=im; }; window.__imgQ.push(()=>{ im.src=IMG[k]; }); });   /* ★ v185 補預載 kaiScrape —— 此前 IMG.kaiScrape 只注入常量、未進預載列表，IMGS.kaiScrape 永遠為 undefined，「解」的墨痕線上從未顯示過 */
 IMG.itaDash='assets/2b1bd417b140.png';   /* ★ v200 虎杖逕庭拳虛影：衝刺姿勢漫畫抠圖 684x720 */
 loadRGBA('gojo',IMG.gojo);
 /* ★ v231 蒼・拳出拳圖：直接用 Image（帶 alpha 的 La PNG，無需摳圖/染色處理） */
-(function(){ try{ const im=new Image(); im.onload=function(){ IMGS.gojoFist=im; }; im.src=IMG.gojoFist; }catch(e){} })();   /* 新立繪：彩色線稿 + 藍色咒力，保留原色 */
-{ const gi=new Image(); gi.onload=()=>{ IMGS.gojoGuard=gi; }; gi.src=IMG.gojoGuard; }
-{ const _yi=new Image(); _yi.onload=()=>{ IMGS.yujiEnd=_yi; }; _yi.src=IMG.yujiEnd; }   /* ★ v291 虎杖結局左側背景（已摳圖，直掛） */
-{ const _si=new Image(); _si.onload=()=>{ IMGS.sukuSummon=_si; }; _si.src=IMG.sukuSummon; }
-{ const _yf=new Image(); _yf.onload=()=>{ IMGS.yujiFin=_yf; }; _yf.src=IMG.yujiFin; }   /* ★ v307 終結一擊立繪 */
-{ const _d1=new Image(); _d1.onload=()=>{ IMGS.sukuDom1=_d1; }; _d1.src=IMG.sukuDom1; }   /* ★ v305 宿儚領域姿（一階段） */
-{ const _d2=new Image(); _d2.onload=()=>{ IMGS.sukuDom2=_d2; }; _d2.src=IMG.sukuDom2; }   /* ★ v305 宿儚領域姿（二階段） */   /* ★ v291 宿傩召喚式神形態（已摳圖，直掛） */
-{ const _ko=new Image(); _ko.onload=()=>{ IMGS.kotodama=_ko; }; _ko.src=IMG.kotodama; }
-{ const _gc=new Image(); _gc.onload=()=>{ IMGS.gojoCang=_gc; }; _gc.src=IMG.gojoCang; }   /* ★ v296 五條悟「倉」形態 */
-{ const _gf=new Image(); _gf.onload=()=>{ IMGS.gojoFistPose=_gf; }; _gf.src=IMG.gojoFistPose; }   /* ★ v296 五條悟「倉・拳」受傷態 */   /* ★ v294 乙骨言靈術式（已摳圖，直掛） */   /* 已摳圖，不經 loadCutout（避免被裁邊） */
+(function(){ try{ const im=new Image(); im.onload=function(){ IMGS.gojoFist=im; }; window.__imgQ.push(()=>{ im.src=IMG.gojoFist; }); }catch(e){} })();   /* 新立繪：彩色線稿 + 藍色咒力，保留原色 */
+{ const gi=new Image(); gi.onload=()=>{ IMGS.gojoGuard=gi; }; window.__imgQ.push(()=>{ gi.src=IMG.gojoGuard; }); }
+{ const _yi=new Image(); _yi.onload=()=>{ IMGS.yujiEnd=_yi; }; window.__imgQ.push(()=>{ _yi.src=IMG.yujiEnd; }); }   /* ★ v291 虎杖結局左側背景（已摳圖，直掛） */
+{ const _si=new Image(); _si.onload=()=>{ IMGS.sukuSummon=_si; }; window.__imgQ.push(()=>{ _si.src=IMG.sukuSummon; }); }
+{ const _yf=new Image(); _yf.onload=()=>{ IMGS.yujiFin=_yf; }; window.__imgQ.push(()=>{ _yf.src=IMG.yujiFin; }); }   /* ★ v307 終結一擊立繪 */
+{ const _d1=new Image(); _d1.onload=()=>{ IMGS.sukuDom1=_d1; }; window.__imgQ.push(()=>{ _d1.src=IMG.sukuDom1; }); }   /* ★ v305 宿儚領域姿（一階段） */
+{ const _d2=new Image(); _d2.onload=()=>{ IMGS.sukuDom2=_d2; }; window.__imgQ.push(()=>{ _d2.src=IMG.sukuDom2; }); }   /* ★ v305 宿儚領域姿（二階段） */   /* ★ v291 宿傩召喚式神形態（已摳圖，直掛） */
+{ const _ko=new Image(); _ko.onload=()=>{ IMGS.kotodama=_ko; }; window.__imgQ.push(()=>{ _ko.src=IMG.kotodama; }); }
+{ const _gc=new Image(); _gc.onload=()=>{ IMGS.gojoCang=_gc; }; window.__imgQ.push(()=>{ _gc.src=IMG.gojoCang; }); }   /* ★ v296 五條悟「倉」形態 */
+{ const _gf=new Image(); _gf.onload=()=>{ IMGS.gojoFistPose=_gf; }; window.__imgQ.push(()=>{ _gf.src=IMG.gojoFistPose; }); }   /* ★ v296 五條悟「倉・拳」受傷態 */   /* ★ v294 乙骨言靈術式（已摳圖，直掛） */   /* 已摳圖，不經 loadCutout（避免被裁邊） */
 loadRGBA('suku',IMG.suku);   /* 新立繪：彩色線稿 + 紅色火焰，保留原色 */
 loadRGBA('sukuTrue',IMG.sukuTrue);   /* ★ 宿儺原身（四臂二面）：專用立繪，白底已摳、水印已 erase */
 loadRGBA('kashimo',IMG.kashimo);   /* ★ v62 修復：已有 alpha 的圖必須走 loadRGBA —— makeCutout 的「亮度→透明」會把透明區讀成 (0,0,0,0)，
