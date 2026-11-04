@@ -2839,6 +2839,8 @@ const PAPER='#ffffff';
    ========================================================= */
 const IMG={
   yujiFin:'assets/12db99ed213e.webp',
+  itaLow:'assets/0c109a06f197.webp',
+  itaMid:'assets/19122cf679da.webp',
   sukuDom1:'assets/5279d329102e.webp',   /* ★ v305 宿儚一階段領域姿 */
   sukuDom2:'assets/408fae2ad477.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
   /* ★ v231 五條悟「蒼・拳」瞬身出拳：漫畫線稿（已摳圖去水印、邊緣羽化、逆時針旋轉 30°、La+alpha 203KB） */
@@ -2908,7 +2910,7 @@ const INTRO_PANEL={
 IMG.okkoDomArt='assets/bef1a5a155dd.png';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
 const GOJO_WIN_IMG='assets/182e8f7e9a0d.webp';
-const IMGS={gojo:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null};
+const IMGS={gojo:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null};
 
 /* =========================================================
    1. 音效（Web Audio API）
@@ -12242,7 +12244,7 @@ else if(f.type==='kaiSlash'){
          故直接 source-over 疊圖即可；舊版 multiply 是為「白底黑裂紋」設計，已不可用。
          ★ 去毛刺：原圖自身帶細毛刺，經「開運算（erode2→dilate2）」清除細須，
            黑框改由「膨脹 12px 減主體」生成（而非多方向抖動），避免把毛刺複製放大。 */
-      const im=IMGS.blackCrack;
+      const im=bfFeathered(IMGS.blackCrack);
       if(im){
         const k2=f.t/f.dur;
         const al=k2<0.12?(k2/0.12):(k2>0.55?Math.max(0,1-(k2-0.55)/0.45):1);
@@ -12401,9 +12403,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
+  else if(((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight();   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
   o.lift=itaLift()-(dom?40:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
-  return drawCutHero(dom?'itaDomArt':'itadori',o); }
+  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid?'itaMid':((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
 
@@ -14889,6 +14892,8 @@ loadRGBA('gojo',IMG.gojo);
 { const gi=new Image(); gi.onload=()=>{ IMGS.gojoGuard=gi; }; window.__imgQ.push(()=>{ gi.src=IMG.gojoGuard; }); }
 { const _yi=new Image(); _yi.onload=()=>{ IMGS.yujiEnd=_yi; }; window.__imgQ.push(()=>{ _yi.src=IMG.yujiEnd; }); }   /* ★ v291 虎杖結局左側背景（已摳圖，直掛） */
 { const _si=new Image(); _si.onload=()=>{ IMGS.sukuSummon=_si; }; window.__imgQ.push(()=>{ _si.src=IMG.sukuSummon; }); }
+{ const _il=new Image(); _il.onload=()=>{ IMGS.itaLow=_il; }; _il.src=IMG.itaLow; }   /* ★ v325 虎杖 <50% 形象 */
+{ const _im=new Image(); _im.onload=()=>{ IMGS.itaMid=_im; }; _im.src=IMG.itaMid; }   /* ★ v324 虎杖 70~100% 正常形象 */
 { const _yf=new Image(); _yf.onload=()=>{ IMGS.yujiFin=_yf; }; window.__imgQ.push(()=>{ _yf.src=IMG.yujiFin; }); }   /* ★ v307 終結一擊立繪 */
 { const _d1=new Image(); _d1.onload=()=>{ IMGS.sukuDom1=_d1; }; window.__imgQ.push(()=>{ _d1.src=IMG.sukuDom1; }); }   /* ★ v305 宿儚領域姿（一階段） */
 { const _d2=new Image(); _d2.onload=()=>{ IMGS.sukuDom2=_d2; }; window.__imgQ.push(()=>{ _d2.src=IMG.sukuDom2; }); }   /* ★ v305 宿儚領域姿（二階段） */   /* ★ v291 宿傩召喚式神形態（已摳圖，直掛） */
