@@ -3694,7 +3694,7 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
-  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); }catch(e){}
+  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); suspendMainBgm(); }catch(e){}
   try{ playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom); }catch(e){}   /* ★ v326 修復領域語音 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
@@ -9332,7 +9332,7 @@ function drawSukuna(){
   /* ★ v296 用戶指定：召喚姿上移到畫面中線（約魔虚羅手臂等高） */
   const _raised=!!(S.sukuSummonForm && !tfNow && !_domArt);
   /* ★ v314 用戶指定：一階段（伏魔御厨子第一形態）領域姿再上移一點 */
-  const _domLift=(_domArt && !tfNow)?h*0.10:0;
+  const _domLift=(_domArt && !tfNow)?h*0.17:0;
   const baseY=(_raised?Math.min(gy,(H*0.50)+h*0.5):gy)-_domLift;
   const cy=baseY-h*0.5;
   shadow(x,gy,40);
@@ -12406,10 +12406,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
-  else if(((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.86;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
+  else if(((S.gojo.hp/S.maxHp)>=0.80&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.78;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
-  o.lift=itaLift()-(dom?40:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
-  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid?'itaMid':((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
+  o.lift=itaLift()-(dom?58:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
+  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/S.maxHp)>=0.80&&IMGS.itaMid?'itaMid':((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
 
@@ -15153,6 +15153,9 @@ window.__appHidden=0;
     if(document.hidden) autoPauseOnHide(); else autoResumeOnShow();
   });
   /* 兜底：部分 APP / 舊 WebView 不派發 visibilitychange，改由 blur 觸發（僅在確實不可見時） */
+  document.addEventListener('pointerdown',function(e){
+    try{ if(e.target&&e.target.closest&&!e.target.closest('#app')) autoPauseOnHide(); }catch(err){}
+  },true);   /* ★ v327 點到畫面外留白區也暂停 */
   window.addEventListener('blur',function(){
     setTimeout(function(){ if(document.hidden || !document.hasFocus()) autoPauseOnHide(); },120);
   });
