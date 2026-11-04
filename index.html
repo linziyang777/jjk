@@ -1672,7 +1672,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 .selCard .ava{width:calc(var(--selw)*0.68);height:calc(var(--selw)*0.68);
   filter:drop-shadow(0 0 6px rgba(17,17,17,.42));}
 .selCard .nm{font-weight:900;font-size:calc(var(--selw)*0.09);letter-spacing:2px;white-space:nowrap;}
-.selCard .tagx{font-size:calc(var(--selw)*0.062);font-weight:800;opacity:.85;letter-spacing:1px;white-space:nowrap;}
+.selCard .tagx{margin-top:3px;font-size:calc(var(--selw)*0.074);font-weight:800;opacity:.85;letter-spacing:1px;white-space:nowrap;}
 .selCard.dead{filter:grayscale(1);opacity:.55;}
 /* ★ v31 登場順位角標：本棒（即將登場序數）+ 原作順位小字 */
 .selCard{position:relative;}
@@ -2643,6 +2643,22 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
   <!-- ★ v160 開場影片：全屏蓋在標題頁前，播完（或點擊跳過）才觸發標題「兩圖拼合」動畫 -->
   <div id="bootVideo" role="button" tabindex="0" aria-label="開場動畫，點擊畫面開啟聲音，右下角可跳過">
     <video id="bootVideoEl" muted autoplay playsinline webkit-playsinline disableremoteplayback preload="auto" src="assets/213b053ab0a7.mp4"></video>
+    <script>/* ★ v316 手機瀏覽器開場影片黑屏修復：把 assets/ 的 mp4 先 fetch 成 blob 再交給 <video>，
+       繞開 Range / 緩存殘片 / 原生播放器接管等問題；單文件版（src 是 data:）自動跳過。 */
+(function(){
+  try{
+    var v=document.getElementById("bootVideoEl"); if(!v) return;
+    var raw=v.getAttribute("src")||"";
+    if(raw.indexOf("assets/")<0) return;
+    fetch(raw,{cache:"force-cache"}).then(function(r){ return r.ok?r.blob():null; }).then(function(b){
+      if(!b) return;
+      var U=window.URL||window.webkitURL;
+      v.src=U.createObjectURL(b);
+      try{ v.load(); }catch(e){}
+      try{ var p=v.play(); if(p&&p.catch) p.catch(function(){}); }catch(e){}
+    }).catch(function(){});
+  }catch(e){}
+})();</script>
     <canvas id="bootVideoCv" aria-hidden="true"></canvas>
     <div class="bvSound">🔇 輕觸畫面開啟聲音</div>
     <div class="bvSkip">點擊跳過 ⏭</div>
@@ -3676,7 +3692,7 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
-  try{ playExtraBgm('ujaku',0.5); }catch(e){}   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
+  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); }catch(e){}   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
   domainShift();                      /* ★ 時間暫停：跳過宿儺回合 → 新回合 +1 行動力 */
@@ -3735,7 +3751,7 @@ function gojoVoid(){
       say('narr','旁白：伏魔御厨子的結界應聲碎裂——無量的情報洪流反過來灌滿了這片空間。');
       say('sys','★ 無量空處從內側擊碎伏魔御厨子：場景變爲無量空處——宿儺無法發動攻擊、每回合受到 5% 最大生命侵蝕。');
       domainShiftResolve();
-      playDomSfx('challenge', 5.5).then(()=>resumeMainBgm());   /* ★ v141 五條從內側擊碎伏魔御廚子 ⇒ 成功展開，播挑戰者語音 */
+      playDomSfx('challenge', 5.5); try{ resumeMainBgm(); setTimeout(function(){ try{ resumeMainBgm(); }catch(e){} }, 5600); }catch(e){}   /* ★ v323 用戶指定：勝利語音與背景音樂同時播（不再等語音播完才恢復 BGM） */   /* ★ v141 五條從內側擊碎伏魔御廚子 ⇒ 成功展開，播挑戰者語音 */
       const mahaOn=!!(S.maha && !S.mahaDead);
       if(mahaOn){
         /* ★ v295 用戶指定：魔虚羅在場時不再當場斬碎 —— 撐滿兩回合，第三回合開始時崩碎（domMahaCollapse） */
@@ -4084,7 +4100,7 @@ function yujiResolve(){
   domainShiftResolve();                /* ★ v77 領域成立即開新回合 +1 行動力 */
   /* ★ v208 需求③：虎杖領域的背景音樂改用**宿傩領域展開 BGM**（同一音軌、同一播放機制：
      起播即暫停主 BGM、循環播放；領域收束／虎杖退場時由既有 stopSukuBgm()＋resumeMainBgm() 收尾） */
-  startSukuBgm();
+  try{ playExtraBgm('yuji',0.8); }catch(e){}   /* ★ v314 用戶指定：虎杖領域內用虎杖專屬曲（原用宿儺領域 BGM） */
   say('narr','旁白：球體內部浮現出他童年故鄉的風景 —— 公園、河堤、街道。');
   say('ita','「……這裏，是我長大的地方。」');
   say('sys','★ 領域展開成立（持續至虎杖悠仁退場）：虎杖的普攻升級為「靈魂·解」—— 必中的靈魂邊界斬擊，30% 靈魂傷害，無視適應與一切減傷；★ 領域期間宿儺無法展開「伏魔御厨子」（其餘技能不受影響）。');
@@ -4108,7 +4124,7 @@ function yujiFinisherCut(){
   if(!box) return;
   if(im && !im.getAttribute('src')){ try{ im.src=IMG.yujiFin; }catch(e){} }   /* ★ v311b 修：此處不能進延後隊列（隊列早已 flush，圖永遠不會載入） */
   box.classList.remove('on'); void box.offsetWidth; box.classList.add('on');
-  setTimeout(function(){ try{ box.classList.remove('on'); }catch(e){} }, 2600);   /* ★ v311 停留 1.25s→2.6s */
+  setTimeout(function(){ try{ box.classList.remove('on'); }catch(e){} }, 3600);   /* ★ v318 停留 2.6s→3.6s */
 }
 function yujiWin(){
   /* ★ v66：真結局「宿儺討伐」由釘崎連動秒殺觸發（不再限 yujiDom） */
@@ -4141,7 +4157,7 @@ function yujiWin(){
     setTimeout(()=>{ if(S.phase!=='over') return; nobaraCut(2,2000); say('nobara','「——共鳴。」'); },1500);
   }
   /* ★ v307 用户指定：钉崎演出（1500+2000ms）收完 ⇒ 終結立繪演出 */
-  const _finAt=_nbPending?3500:1400;
+  const _finAt=_nbPending?3700:1400;
   setTimeout(function(){ if(S.phase!=='over') return; yujiFinisherCut(); }, _finAt);
   /* ★ v247 用戶指定：虎杖擊殺宿儺 ⇒ 追加「宿儺退場對白」（黑屏逐句播放、可點擊跳過），播完才進結算 */
   setTimeout(()=>{
@@ -4156,7 +4172,8 @@ function yujiWin(){
       ['narr','旁白：宿儺拒絕了「共存」的提議。史上最強的詛咒之王，就此徹底消散。'],
       ['sys','真結局「宿儺討伐」達成！']
     ], showResult, 'yujiEnd');   /* ★ v297 結算立繪改到黑屏對白 */
-  }, _nbPending?6100:4000);   /* ★ v311 終結立繪停留 2.6s 之後才進黑屏對白 */
+    try{ playExtraBgm('specialz',0.6); }catch(e){}   /* ★ v315 用戶指定：進入擊殺對白就換 SPECIALZ 作背景音樂 */
+  }, _nbPending?7300:5000);   /* ★ v318 終結立繪停留 3.6s 之後才進黑屏對白 */
 }
 /* 宿儺「灶·開」：火焰術式，點燃場地 */
 function fireFlame(){
@@ -4263,7 +4280,7 @@ function actAtk(allowBlack){
       S.gojoVanish=1;                        /* 立繪瞬身消失 */
       S.hitStop=Math.max(S.hitStop,0.10);
       flash('fWhite'); shake();
-      addFx({type:'gojoFist',dur:0.95,x:_px,y:_py,h:_ih});
+      addFx({type:'gojoFist',dur:0.95,x:_px,y:_py,h:_ih*0.90})   /* ★ v323 蒼拳再縮小一點 */;
       setTimeout(()=>{
         addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:_burstY,r:134*SC,seed:rnd(0,6.28)});
         S.hitStop=Math.max(S.hitStop,0.16);   /* 打擊頓挫 */
@@ -4898,7 +4915,7 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
   /* ★ v83：信息洪流頁面不再由傷害（茈/普攻等）隨機帶出 —— 舊觸發已刪除，
      頁面只在「無量空處成功成立」時出現（見 gojoVoid 的兩條成立路徑）。 */
   if(S.suk.hp<=0 && S.phase==='fight' && !noKill){   /* 宿儺被擊倒 → 結算（noKill 時留給原身演出） */
-    try{ playExtraBgm('specialz',0.15); }catch(e){}   /* ★ v305 宿儚死後立刻換 SPECIALZ */
+    try{ playExtraBgm('specialz',0.5); }catch(e){}   /* ★ v305 宿儚死後立刻換 SPECIALZ */
     /* ★ v222 用戶報「虎杖是最後一棒卻沒出真結局」：原版只有「釘崎連動」那一刀（sid=ita_soul_final）
        才走真結局，虎杖用普通招式收掉宿儺就只算「正面突破」。現在**虎杖親手擊倒 ⇒ 一律走真結局演出**。 */
     if(S.hero==='itadori' && typeof yujiWin==='function'){ yujiWin(); return; }
@@ -6429,6 +6446,8 @@ function endQTE(){
 }
 function qtePress(){
   if(!QTE.active) return;
+  /* ★ v314 用戶反饋「QTE 閃一下就結束」：起手點按的殘留事件會在光標還沒走時就打中 ⇒ 前 220ms 忽略 */
+  if(QTE.t<0.22) return;
   const p=QTE.t/QTE.dur;
   const hit=p>=QTE.g0&&p<=QTE.g1;
   const cb=QTE.cb; QTE.cb=null;
@@ -8293,16 +8312,16 @@ function buildResultCols(){
   const g=id=>$(id);
   /* ★ v312 用戶指定：左欄＝結局卡 → 全服戰況 → 挑戰紀錄（回合數／黑閃）；右欄不變 */
   const _ch=g('rChain'), _rc=g('rRec');
-  const left =[g('rEndCard'), g('rSrv'), _rc];
+  const left =[g('rEndCard'), g('rSrv'), _rc, g('btnAgain')];   /* ★ v314 世界線跳躍按鈕放進左欄，緊跟回合數/黑閃 */
   const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
-  /* ★ v312：接力鏈搬到「世界線跳躍」按鈕下方，連同它的標題一起，横向鋪開 */
-  const _fb=g('rFb'), _cta=g('btnAgain'), _disc=rs.querySelector('.resDisc');
-  if(_cta && _ch){
-    const host=_cta.parentNode;
-    if(secs[0]) host.insertBefore(secs[0], _cta.nextSibling);
-    host.insertBefore(_ch, (secs[0]?secs[0].nextSibling:_cta.nextSibling));
+  /* ★ v312：接力鏈連同標題放在兩欄之後、手感卡之前，横向鋪開 */
+  const _fb=g('rFb'), _disc=rs.querySelector('.resDisc'), _cta=g('btnAgain');
+  if(_ch){
+    const host=rs;
+    if(secs[0]) host.insertBefore(secs[0], g('rCols').nextSibling);
+    host.insertBefore(_ch, (secs[0]?secs[0].nextSibling:g('rCols').nextSibling));
   }
   /* ★ v265 用戶指定：手感卡放到「世界線跳躍」按鈕下方（結局小字之上） */
   if(_fb && _cta){ if(_disc && _disc.parentNode===_cta.parentNode) _disc.parentNode.insertBefore(_fb,_disc);
@@ -8552,7 +8571,7 @@ function update(dt){
   /* ★ v306 領域對拼：兩片結界咬住的瞬間起持續震動，直到勝方把對方推走 */
   try{
     const _d=S.domClash;
-    const _rumble = !!_d && _d.t>_d.inDur*0.88 && _d.t<2.55;
+    const _rumble = !!_d && _d.t>_d.inDur*0.88 && _d.t < (_d.inDur + Math.min(_d.holdDur||1.1, 1.4));   /* ★ v323 相對窗口：乙骨對拼（inDur 2.6）也有整段震動 */
     if(_rumble!==_stageRumble){
       _stageRumble=_rumble;
       const _st=$('stage'); if(_st) _st.classList.toggle('clashRumble',_rumble);
@@ -8570,6 +8589,27 @@ function update(dt){
     const f=S.fx[i]; f.t+=dt;
     if(f.t>=f.dur) S.fx.splice(i,1);
   }
+  /* ★ v317 用戶反饋「宿儺展開領域後換人上場沒背景音樂」：
+     領域 BGM 停掉時若 bgmSuspendedByDomain 沒被置位，resumeMainBgm() 會直接 return ⇒ 整場靜音。
+     這裡每秒檢查一次「畫面在戰鬥但一條 BGM 都沒在響」，按當前場景補回正確的那條。 */
+  try{
+    _bgmWDT=(_bgmWDT||0)+dt;
+    if(_bgmWDT>1.2){
+      _bgmWDT=0;
+      if(!bgmMuted&&!S.paused&&S.phase==='fight'){
+        const _ex=(typeof extraBgmKey!=='undefined'&&extraBgmKey)?extraBgmEls[extraBgmKey]:null;
+        const _playing=(bgmEl&&!bgmEl.paused)||sukuBgmOn||(_ex&&!_ex.paused)||(musEl&&!musEl.paused);
+        if(!_playing){
+          /* ★ v322 額外：之前已經指定了曲子但它被暂停了（手機切頁/卡頓）⇒ 重播 */
+          if(typeof extraBgmKey!=='undefined' && extraBgmKey && extraBgmEls[extraBgmKey] && extraBgmEls[extraBgmKey].paused){ try{ extraBgmEls[extraBgmKey].play(); }catch(e){} return; }
+          if(S.sukuDom>0){ startSukuBgm(); }
+          else if(S.hero==='itadori'&&S.itaDom>0){ try{ playExtraBgm('yuji',0.8); }catch(e){} }
+          else if(S.gojoDom>0||S.gojoVoidT>0){ try{ playExtraBgm('ujaku',0.8); }catch(e){} }
+          else { bgmSuspendedByDomain=false; if(bgmEl&&bgmEl.paused) startBGM(0.8); }
+        }
+      }
+    }
+  }catch(e){}
   flushSay();
 
   if(S.phase==='fight'){
@@ -9287,7 +9327,9 @@ function drawSukuna(){
   const w=h*cut.width/cut.height;
   /* ★ v296 用戶指定：召喚姿上移到畫面中線（約魔虚羅手臂等高） */
   const _raised=!!(S.sukuSummonForm && !tfNow && !_domArt);
-  const baseY=_raised?Math.min(gy,(H*0.50)+h*0.5):gy;
+  /* ★ v314 用戶指定：一階段（伏魔御厨子第一形態）領域姿再上移一點 */
+  const _domLift=(_domArt && !tfNow)?h*0.10:0;
+  const baseY=(_raised?Math.min(gy,(H*0.50)+h*0.5):gy)-_domLift;
   const cy=baseY-h*0.5;
   shadow(x,gy,40);
   /* 咒力霧（原身形態更烈） */
@@ -9309,7 +9351,7 @@ function drawSukuna(){
 }
 
 /* ---------- 鹿紫雲一（黑墨剪影 + 雷光） ---------- */
-function kashHeight(){ return Math.min(H*0.70,405*SC); }   /* 半身立繪（★v39c 0.66→0.70, 375→405 放大） */
+function kashHeight(){ return Math.min(H*0.64,435*SC); }   /* ★ v322 用戶指定：與五條悟普通形象同等 */   /* 半身立繪（★v39c 0.66→0.70, 375→405 放大） */
 function kashCut(){ return (S.amberUsed&&IMGS.kashBeast)?IMGS.kashBeast:IMGS.kashimo; }   /* ★v39 術式解放後切換琥珀形態 */
 function kashW(){ const g=kashCut(); return kashHeight()*(g?g.width/g.height:(S.amberUsed?1.062:0.887)); }
 function drawKashimo(){
@@ -12686,6 +12728,14 @@ function syncSukLost(){
   if(l) l.innerHTML=list.map(function(n){ return '<span class="slTag">'+n+'</span>'; }).join('');
 }
 function syncHud(){
+  /* ★ v323 用戶反饋「宿儺儀式條擋住倒計時」：儀式條一出現就把回合條整體下移 */
+  try{
+    const _rr=document.getElementById('riteRow'), _tb=document.getElementById('turnBar');
+    if(_rr&&_tb){
+      const _on=((_rr.className||'')+' ').indexOf(' on ')>=0 || _rr.offsetHeight>0;
+      if(_tb.classList.contains('tbshift')!==_on) _tb.classList.toggle('tbshift',_on);
+    }
+  }catch(e){}
   try{ syncSukLost(); }catch(e){}
   /* ★ v266 續戰存檔：戰鬥中每 1.5s 節流保存 */
   if(S.phase==='fight' && !S.paused){
@@ -13067,7 +13117,7 @@ const BGM_VOL=0.10, BGM_FADE=1.0;
 /* ★ v306 用戶指定：追加 BGM（五條領域／宿儺討伐／虎杖領域）單獨一條音量常量。
    上一版沿用小得多的 BGM_VOL，實測「五條領域音樂幾乎聽不見」⇒ 拉到 0.30（約 +9.5dB）。
    要再調只改這裡。 */
-const BGM_EXTRA_VOL=0.30;   /* ★ v52 再降音量：0.16 → 0.10；★ v68 漸入改 1 秒（原 3 秒） */
+const BGM_EXTRA_VOL=0.42;   /* ★ v52 再降音量：0.16 → 0.10；★ v68 漸入改 1 秒（原 3 秒） */
 /* =========================================================
    ★ v305 追加 BGM 軌道：SPECIALZ（宿儚討伐）／虚式「薙」（五條領域）／虎杖vs乙骨（虎杖領域）
    音量一律對齊主 BGM（BGM_VOL）；切出頁面時 pauseAllAudio 會一併暫停。
@@ -13144,9 +13194,11 @@ function stopExtraBgm(fade){
 /* 領域一收就把對應 BGM 收掉，回到主 BGM */
 function extraBgmWatch(){
   if(!extraBgmKey) return;
+  /* ★ v315：擊殺專屬曲不綁領域，不能被這條看守收掉 */
+  if(extraBgmKey==='specialz'||extraBgmKey==='finish') return;
   /* 領域展開演出期間 gojoDom 還是 0（要等對拚結束才置 3），必須把演出欄一起算進「還在領域裡」的條件 */
   const _inDomain = (extraBgmKey==='ujaku')
-    ? ((S.gojoDom>0) || (S.gojoVoidT>0) || !!S.domClash)
+    ? ((S.gojoDom>0) || (S.gojoVoidT>0) || !!S.domClash || (Date.now()-(window.__ujakuAt||0) < 9000))   /* ★ v323 展開演出期寬限 */
     : ((S.itaDom>0) || S.phase==='yujiDom');
   if(!_inDomain){ stopExtraBgm(0.8); try{ resumeMainBgm(1.0); }catch(e){} }   /* ★ v306 收尾也走長淡出，銜接主 BGM */
 }
@@ -14009,7 +14061,8 @@ function toggleBGM(){
         const oe=domAudioEls.okkoDomain;
         if(oe){ try{ const p=oe.play(); if(p&&p.catch) p.catch(()=>{}); restored=true; }catch(e){} }
       }
-      if(!restored&&S.phase==='fight'&&(S.sukuDom>0||(S.hero==='itadori'&&S.itaDom>0))){ startSukuBgm(); restored=true; }
+      if(!restored&&S.phase==='fight'&&S.hero==='itadori'&&S.itaDom>0){ try{ playExtraBgm('yuji',0.8); }catch(e){} restored=true; }   /* ★ v314 虎杖領域專屬曲 */
+if(!restored&&S.phase==='fight'&&S.sukuDom>0){ startSukuBgm(); restored=true; }
       if(!restored) startBGM(0.6);      /* 靜音開關：短漸入快速恢復，不等默認 1 秒 */
       try{ if(musEl&&musWant){ const p=musEl.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}
     }
@@ -14694,10 +14747,12 @@ function startSukuBgm(_try){
      （與 AIZO 0.32 保持 4dB 響度對齊係數，兩者聽感一致） */
   /* ★ v190 用戶再次要求降低宿儺領域 BGM：0.5 → 0.35 */
   try{
-    sukuBgmEl.currentTime=0; sukuBgmEl.volume=0;
+    ++_sukuFadeSeq;                                   /* ★ v314 打斷上一次淡出，避免把新播放 pause 掉 */
+    try{ sukuBgmEl.pause(); }catch(e){}
+    sukuBgmEl.currentTime=0; sukuBgmEl.volume=0;      /* ★ v314 用戶指定：每次都從頭播 */
     /* ★ v306 銜接：0.6s 淡入到 0.35 */
-    const _sv=sukuBgmEl, _sv0=Date.now();
-    (function _sukuUp(){ const _k=Math.min(1,(Date.now()-_sv0)/600); try{ _sv.volume=0.35*_k; }catch(e){} if(_k<1) setTimeout(_sukuUp,40); })();
+    const _sv=sukuBgmEl, _sv0=Date.now(), _startSeq=_sukuFadeSeq;
+    (function _sukuUp(){ if(_startSeq!==_sukuFadeSeq) return; const _k=Math.min(1,(Date.now()-_sv0)/600); try{ _sv.volume=0.35*_k; }catch(e){} if(_k<1) setTimeout(_sukuUp,40); })();
     const p=sukuBgmEl.play();
     if(p&&p.catch) p.catch(()=>{
       /* 自動播放被拦：不要就此沒聲音，掛一次手勢後重試 */
@@ -14712,13 +14767,16 @@ function startSukuBgm(_try){
     });
   }catch(e){}
 }
+let _sukuFadeSeq=0;   /* ★ v314：新的起播/停止會 +1，打斷上一輪淡入淡出，避免把剛起播的音軌又 pause 掉 */
 function stopSukuBgm(){
   if(!sukuBgmEl){ sukuBgmOn=false; return; }
   if(!sukuBgmOn) return;
   sukuBgmOn=false;
   /* ★ v306 銜接：0.5s 淡出再停 */
+  const _seq=++_sukuFadeSeq;
   const _el=sukuBgmEl, _v0=_el.volume||0.35, _t0=Date.now();
   (function _sukuDown(){
+    if(_seq!==_sukuFadeSeq) return;   /* ★ v314 已被新一輪打斷 ⇒ 不要動這個元素 */
     const _k=Math.min(1,(Date.now()-_t0)/500);
     try{ _el.volume=Math.max(0,_v0*(1-_k)); }catch(e){}
     if(_k<1) setTimeout(_sukuDown,40);
@@ -14747,7 +14805,7 @@ function resumeMainBgm(fade){
   if(typeof extraBgmKey!=='undefined' && extraBgmKey) return;   /* ★ v305 追加 BGM 在播時不回主 BGM */
   /* ★ v208 需求③：虎杖領域也用宿傩領域 BGM —— 對拼／破碎等收束點停掉該音軌後，
      若虎杖領域仍成立 ⇒ 改恢復虎杖領域 BGM（同一音軌）而非主 BGM */
-  if(S.phase==='fight'&&S.hero==='itadori'&&S.itaDom>0){ startSukuBgm(); return; }
+  if(S.phase==='fight'&&S.hero==='itadori'&&S.itaDom>0){ try{ playExtraBgm('yuji',0.8); }catch(e){} return; }   /* ★ v314 虎杖領域＝虎杖專屬曲 */
   if(isDomainBgmPlaying()) return;   /* ★ v209：領域 BGM 在播時不恢復主 BGM（原僅擋 okkoDomBgmOn） */
   if(!bgmSuspendedByDomain) return;
   bgmSuspendedByDomain=false;
@@ -14787,7 +14845,7 @@ $('btnStart').addEventListener('click',()=>{
     try{
       const el=ensureBgm(); if(!el) return;
       if(document.hidden){ if(!el.paused){ window.__bgmPausedByHide=1; el.pause(); } }
-      else if(window.__bgmPausedByHide && !bgmMuted){ window.__bgmPausedByHide=0; bgmGesture(); }
+      else if(window.__bgmPausedByHide && !bgmMuted && !S.paused){ window.__bgmPausedByHide=0; bgmGesture(); }   /* ★ v313 遊戲暫停時不要偷偷恢復音樂 */
     }catch(e){}
   },false);
   window.addEventListener('pagehide',function(){ try{ const el=ensureBgm(); if(el&&!el.paused) el.pause(); }catch(e){} },false);
@@ -15066,8 +15124,8 @@ let _chromeCov=null;   /* ★ v116 上一次的收合狀態（僅在變化時動
 function autoPauseOnHide(){
   /* ★ v306 用戶指定：切出頁面 / 鎖屏 / 關掉手機 ⇒ 遊戲暫停，全部音樂（含領域 BGM、追加 BGM、
      領域語音、WebAudio 音效、開場影片）一起停 —— 不論當下在戰鬥還是選人／結算頁。 */
-  if(S.phase==='fight' && !S.paused){ try{ togglePause(); return; }catch(e){} }
-  try{ pauseAllAudio(); }catch(e){}
+  if(S.phase==='fight' && !S.paused){ try{ togglePause(); }catch(e){} }
+  try{ pauseAllAudio(); }catch(e){}   /* ★ v322 不论戰鬥與否都把聲音全停 */
 }
 /* ★ v306 用戶指定：回到頁面時，只要遊戲沒被暫停，音樂就接著播（不打斷戰鬥節奏） */
 function autoResumeOnShow(){
@@ -15084,6 +15142,11 @@ function autoResumeOnShow(){
     setTimeout(function(){ if(document.hidden || !document.hasFocus()) autoPauseOnHide(); },120);
   });
   window.addEventListener('pagehide',function(){ autoPauseOnHide(); });
+  /* ★ v313 補強：舊 WebView / 部分安卓機螢幕關閉時不派發 visibilitychange，只派發 webkit 版 */
+  try{ document.addEventListener('webkitvisibilitychange',function(){ if(document.hidden) autoPauseOnHide(); else autoResumeOnShow(); }); }catch(e){}
+  /* ★ v313 原生（APK 的 MainActivity onPause/onResume）可以直接調這兩個鉤子 */
+  window.__appPause=function(){ try{ autoPauseOnHide(); }catch(e){} };
+  window.__appResume=function(){ try{ autoResumeOnShow(); }catch(e){} };
   window.addEventListener('pageshow',function(){ autoResumeOnShow(); });
   try{ document.addEventListener('freeze',function(){ autoPauseOnHide(); }); }catch(e){}
 })();
@@ -15125,6 +15188,15 @@ function frameErr(tag,e){
   try{ console.warn('[frame '+tag+']',e); }catch(_){}
 }
 function loop(now){
+  /* ★ v313 用戶反饋「關機/鎖屏時遊戲沒自動暫停」：設備休眠時瀏覽器常常一個事件都不派發，
+     但回到前台的第一帧 rAF 間隔會有個大跳變 ⇒ 用這個跳變補一次暫停。 */
+  if(window.__loopPrev){
+    const _gap=now-window.__loopPrev;
+    if(_gap>5000 && !document.hidden && S.phase==='fight' && !QTE.active && !(S.cutin>0)){
+      try{ if(S.phase==='fight'&&!S.paused) autoPauseOnHide(); }catch(e){}
+    }
+  }
+  window.__loopPrev=now;
   const rdt=Math.min(0.05,(now-last)/1000); last=now;
   /* ★ v164 開場影片播放期間主循環降載：全屏遮罩底下 render/update 全是浪費，
      跳過它們把 CPU 讓給影片解碼（卡頓主因之一），跳過影片後自動恢復 */
@@ -15561,23 +15633,62 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 #resultScreen #rChain .chArrow{flex:0 0 auto;opacity:.34;font-size:14px;}
 #resultScreen::before{opacity:.34;}   /* 用戶指定：背景花紋不透明度降低 */
 
+/* ═══ ★ v320 選人頁字號/間距微調（用戶指定） ═══ */
+.selCard .tagx{margin-top:3px !important;font-size:calc(var(--selw)*0.074) !important;}
+#selHint{font-size:min(calc(var(--aw)*0.0168*var(--selzInv,1)),27px) !important;}
+
+/* ═══ ★ v320 選人頁字號/間距微調（用戶指定） ═══ */
+.selCard .tagx{margin-top:3px !important;font-size:calc(var(--selw)*0.074) !important;}
+#selHint{font-size:min(calc(var(--aw)*0.0168*var(--selzInv,1)),27px) !important;}
+
+/* ═══ ★ v321 束縛立誓界face縮小（保留手機可讀下限） ═══ */
+#vowUI{gap:6px !important;padding:12px !important;}
+#vowUI .vwTitle{font-size:clamp(13px,3.4vw,21px) !important;letter-spacing:6px !important;}
+#vowUI .vwSub{font-size:clamp(9px,2vw,11.5px) !important;max-width:min(78%,500px) !important;}
+#vowUI .vwRow{width:min(74%,500px) !important;gap:clamp(5px,1.2vw,11px) !important;}
+#vowUI:after{left:14% !important;right:14% !important;top:16% !important;bottom:18% !important;}
+
+/* ═══ ★ v321 束縛立誓界face縮小（保留手機可讀下限） ═══ */
+#vowUI{gap:6px !important;padding:12px !important;}
+#vowUI .vwTitle{font-size:clamp(13px,3.4vw,21px) !important;letter-spacing:6px !important;}
+#vowUI .vwSub{font-size:clamp(9px,2vw,11.5px) !important;max-width:min(78%,500px) !important;}
+#vowUI .vwRow{width:min(74%,500px) !important;gap:clamp(5px,1.2vw,11px) !important;}
+#vowUI:after{left:14% !important;right:14% !important;top:16% !important;bottom:18% !important;}
+
+/* ═══ ★ v323 儀式條出現 ⇒ 回合倒計時下移，避免被遮 ═══ */
+#turnBar.tbshift{margin-top:30px !important;}
+
+/* ═══ ★ v319 鹿紫雲「幻獣琥珀」形象四周近似圓形虛化 ═══ */
+#kashAmber{
+  -webkit-mask-image:radial-gradient(ellipse 60% 58% at 50% 52%,#000 54%,rgba(0,0,0,.72) 78%,rgba(0,0,0,0) 100%);
+  mask-image:radial-gradient(ellipse 60% 58% at 50% 52%,#000 54%,rgba(0,0,0,.72) 78%,rgba(0,0,0,0) 100%);
+}
+
 /* ═══ ★ v307 虎杖終結一擊 ═══ */
 #yujiFin{position:absolute;inset:0;display:none;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;z-index:58;background:#0c0c10;}
-#yujiFin.on{display:flex;}
+#yujiFin.on{display:flex;animation:yfFade .18s ease-out both;}
+@keyframes yfFade{from{opacity:0}to{opacity:1}}
 #yujiFin .yfBurst{position:absolute;left:50%;top:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);
   background:radial-gradient(circle,#fff 0%,#fff 64%,rgba(255,255,255,0) 72%);}
-#yujiFin.on .yfBurst{animation:yfBurst .92s cubic-bezier(.15,.75,.2,1) forwards;}   /* ★ v311 放慢 */
+#yujiFin.on .yfBurst{animation:yfBurst 1.15s cubic-bezier(.15,.75,.2,1) forwards;}   /* ★ v311 放慢 */
 @keyframes yfBurst{0%{width:0;height:0}45%{width:120vmax;height:120vmax}100%{width:260vmax;height:260vmax}}
-#yujiFin img{position:relative;height:84%;max-height:84%;width:auto;opacity:0;transform:scale(1.24);}
-#yujiFin.on img{animation:yfIn .62s cubic-bezier(.2,.9,.2,1) .10s forwards;}   /* ★ v311 顯現放慢（原 .26s 看不清） */
-@keyframes yfIn{0%{opacity:0;transform:scale(1.24)}55%{opacity:1}100%{opacity:1;transform:scale(1)}}
+#yujiFin img{position:relative;height:98%;max-height:98%;width:auto;opacity:0;transform:scale(1.20);
+  /* ★ v318 用戶指定：四邊漸隱（左右、上下各一條線性遮罩求交）+ 再放大 */
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 13%,#000 87%,transparent 100%),
+                     linear-gradient(to bottom,transparent 0,#000 11%,#000 86%,transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent 0,#000 13%,#000 87%,transparent 100%),
+             linear-gradient(to bottom,transparent 0,#000 11%,#000 86%,transparent 100%);
+  mask-composite:intersect;}
+#yujiFin.on img{animation:yfIn 1.05s cubic-bezier(.2,.9,.2,1) 0s forwards;}   /* ★ v315 黑閃音效與圖案同幀出現（取消 .10s 延遲） */
+@keyframes yfIn{0%{opacity:0;transform:scale(1.20)}55%{opacity:1}100%{opacity:1;transform:scale(1)}}
 
 /* ═══ ★ v306 結算頁滾動容器（包住全部內容，靠 translate3d 位移） ═══ */
 #rsWrap{display:flex;flex-direction:column;align-items:center;gap:inherit;width:100%;box-sizing:border-box;will-change:transform;}
 #rsWrap>*{flex:0 0 auto;}
 
 /* ═══ ★ v305 選人頁提示小字 ═══ */
-#selHint{font-size:min(calc(var(--aw)*0.0205*var(--selzInv,1)),32px);letter-spacing:1px;color:#5f5f5f;
+#selHint{font-size:min(calc(var(--aw)*0.0168*var(--selzInv,1)),27px);letter-spacing:1px;color:#5f5f5f;
   font-weight:800;text-align:center;margin:-2px 0 2px;pointer-events:none;line-height:1.35;}
 /* ★ v306 用戶指定：電腦端只顯示電腦端小字、手機端只顯示手機端小字 */
 #selHint .shT{display:none;}
