@@ -8312,7 +8312,12 @@ function buildResultCols(){
   const g=id=>$(id);
   /* ★ v312 用戶指定：左欄＝結局卡 → 全服戰況 → 挑戰紀錄（回合數／黑閃）；右欄不變 */
   const _ch=g('rChain'), _rc=g('rRec');
-  const left =[g('rEndCard'), g('rSrv'), _rc, g('btnAgain')];   /* ★ v314 世界線跳躍按鈕放進左欄，緊跟回合數/黑閃 */
+  /* ★ v329 全服戰況收窄 + 回合/黑閃放右邊，按鈕與手感卡上移 */
+  let _row=L.querySelector('.srvRow');
+  if(!_row){ _row=document.createElement('div'); _row.className='srvRow'; }
+  if(g('rSrv')) _row.appendChild(g('rSrv'));
+  if(_rc) _row.appendChild(_rc);
+  const left =[g('rEndCard'), _row, g('btnAgain'), g('rFb')];   /* ★ v314 世界線跳躍按鈕放進左欄，緊跟回合數/黑閃 */
   const right=[secs[1], g('rDex'), secs[2], g('achWrap')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
@@ -15679,6 +15684,13 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 /* ═══ ★ v328 結算評級字母：特別放大 + 最高圖層 ═══ */
 #rCoreWrap{overflow:visible !important;}
 #rGrade{z-index:2147483600 !important;width:clamp(64px,16vw,104px) !important;height:clamp(64px,16vw,104px) !important;font-size:clamp(40px,10vw,66px) !important;line-height:1 !important;left:clamp(-16px,-2.2vw,0px) !important;}
+
+/* ═══ ★ v329 結算：全服戰況收窄、右邊並排回合/黑閃 ═══ */
+.srvRow{display:flex;gap:10px;align-items:flex-start;width:100%;margin:2px 0 0;}
+.srvRow #rSrv{flex:0 0 56% !important;max-width:56% !important;width:56% !important;}
+.srvRow #rRec{flex:1 1 auto;min-width:0;justify-content:flex-start;}
+#rColL .btn,#rColL #btnAgain{margin-top:2px !important;}
+#rColL #rFb{margin-top:2px !important;}
 
 /* ═══ ★ v319 鹿紫雲「幻獣琥珀」形象四周近似圓形虛化 ═══ */
 #kashAmber{
