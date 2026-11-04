@@ -4179,7 +4179,7 @@ function yujiWin(){
       ['sys','真結局「宿儺討伐」達成！']
     ], showResult, 'yujiEnd');   /* ★ v297 結算立繪改到黑屏對白 */
     try{ playExtraBgm('specialz',0.6); }catch(e){}   /* ★ v315 用戶指定：進入擊殺對白就換 SPECIALZ 作背景音樂 */
-  }, _nbPending?7300:5000);   /* ★ v318 終結立繪停留 3.6s 之後才進黑屏對白 */
+  }, _nbPending?7700:5400);   /* ★ v318 終結立繪停留 3.6s 之後才進黑屏對白 */
 }
 /* 宿儺「灶·開」：火焰術式，點燃場地 */
 function fireFlame(){
@@ -4291,9 +4291,6 @@ function actAtk(allowBlack){
         addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:_burstY,r:134*SC,seed:rnd(0,6.28)});
         S.hitStop=Math.max(S.hitStop,0.16);   /* 打擊頓挫 */
         shake(); flash('fWhite');
-    try{ const _bc=document.getElementById('bsCut'), _bi=document.getElementById('bsImg');
-      if(_bc&&_bi){ if(!_bi.getAttribute('src')) _bi.src=IMG.bsCut; _bc.classList.remove('on'); void _bc.offsetWidth; _bc.classList.add('on');
-        setTimeout(function(){ try{ _bc.classList.remove('on'); }catch(e){} }, 950); } }catch(e){}
         /* ★ v240 用戶指定：蒼・拳命中加上沈悶的毆打衝擊音（疊在原有 atk 之上，拳拳到肉） */
         if(SFX.punch) SFX.punch(); else SFX.atk();
       },150);
@@ -4782,7 +4779,7 @@ function meltTick(kind){
 const SKILL_FX={
   gojo:    {word:'茈',        color:'#8b5cf6', stop:0.18, flash:'fPurple',  slow:0.55},
   kashimo: {word:'幻獣琥珀',  color:'#e030c8', stop:0.15, flash:'fWhite',   slow:0.55},   /* ★ v115 招牌色回粉紫（與 fxManga／普攻雷一致） */
-  itadori: {word:'穿血',      color:'#c0392b', stop:0.13, flash:'flashRed', slow:0.50},
+  itadori: {word:'',      color:'#c0392b', stop:0.13, flash:'flashRed', slow:0.50},
   higuruma:{word:'處刑人之劍', color:'#2b6cb0', stop:0.15, flash:'fWhite',   slow:0.60},
   okkotsu: {word:'',  color:'#7c3aed', stop:0.20, flash:'fPurple',  slow:0.60},
   maki:    {word:'',          color:'#3fbf72', stop:0.11, flash:'fWhite',   slow:0.32}   /* ★ v119 依用戶要求：不再彈「無聲」招牌字（skillBeat 用 o.word||fx.word 取值，空串會被回退，故須在此清空） */
@@ -5240,11 +5237,13 @@ function deathBlackout(lines, done, art){
   function finish(){
     if(tok!==dbTok) return;
     clearT(); dbTok++;
-    el.classList.remove('on'); el.style.pointerEvents='none';
+    el.classList.remove('on'); el.style.pointerEvents='none'; el.style.display='none';
+    try{ const _m=el.querySelector('.dbMask'); if(_m){ _m.style.webkitMaskImage='none'; _m.style.maskImage='none'; } }catch(e){}   /* ★ v351 回收掩罩 */
     try{ const _a=document.getElementById('dbArt'); if(_a){ _a.classList.remove('on'); } }catch(e){}
     txt.classList.remove('in'); txt.textContent='';
-    try{ done&&done(); }catch(e){}
+    setTimeout(function(){ try{ done&&done(); }catch(e){} },16);   /* ★ v351 延一帧進結算 */
   }
+  window.__dbNext=next;   /* ★ v351 */
   function next(){
     if(tok!==dbTok) return;
     clearT();
@@ -5266,6 +5265,7 @@ function deathBlackout(lines, done, art){
     else { _art.removeAttribute('src'); _art.dataset.pend=''; }
     _art.classList.remove('on');
   }
+  el.style.display='';
   el.classList.add('on');
   el.style.pointerEvents='auto';
   if(_art && _art.dataset.pend==='1'){ setTimeout(function(){ if(tok===dbTok) _art.classList.add('on'); },420); }
@@ -6524,6 +6524,7 @@ function setAdaptBar(on){
 const COPY_DEF={
   /* 虎杖悠仁 ③赤血操術・穿血：並附著血契（每回合持續侵蝕） */
   blood:{nm:'赤血操術・穿血', sub:'15~20% ．附著血契', exec:function(){
+      try{ addFx({type:'bloodShot',dur:0.88,y:H*0.43}); }catch(e){}   /* ★ v350 只絕血柱 */
       hitSukuna(rnd(15,20)/HERO_DMG,true,'hollow',false,false,'rika_copy_blood');
       if(S.blood<3){ S.blood++; say('sys','血契附着 ×'+S.blood+'——宿儺每回合收到 '+(S.blood*3)+' 點持續侵蝕。'); }
       else say('sys','血契已滿（×3），持續侵蝕 9 點/回合。');}},
@@ -7113,7 +7114,8 @@ function sukunaTurn(){
   let channelTurn=false;   /* ★ v216：本回合爲「讀儀式條」回合 ⇒ 宿儺不發動攻擊 */
   /* ★ v223 用戶指定：**首發**（附身／原身皆可）＝ 血量 < 30% → 本回合結印預警（不攻擊）→ 下回合直接斬出，僅一次。
      若預警期間伏黑惠的肉體被打崩（現出原身），這次預警作廢；原身滿血後需重新跌破 30% 才會再度預警。 */
-  if(!_stun && !S.worldUsed && !S.sukuBurn && S.suk.hp>0 && S.suk.hp<SUK_MAXHP*0.30){
+  const _wsThr=(S.trueForm?0.40:0.25);   /* ★ v349 一階段<25%、二階段<40% */
+  if(!_stun && !S.worldUsed && !S.sukuBurn && S.suk.hp>0 && S.suk.hp<SUK_MAXHP*_wsThr){
     if(S.wsWarn){
       S.wsWarn=false;
       castWorldSlash();
@@ -7126,7 +7128,7 @@ function sukunaTurn(){
     flash('fPurple'); shake();
     /* ★ v240 用戶指定：首發世界斬**不念「龍鱗」**、也不出字 —— 原作裏首斬正是以束縛省掉了掌印，
        只留「不發一語、五指虛握」的沉默前兆。只有用過世界斬之後、讀儀式條時才會逐段浮現咒詞。 */
-    say('sys','★ 宿儺不發一語，五指虛握、掌心朝向虛空 —— 這是「世界を断つ斬撃」的前兆：本回合不攻擊，下一回合將直接斬斷世界，秒殺當前術師！');
+    try{ const _st=document.getElementById('stage'); if(_st){ _st.classList.remove('wsWarnVig'); void _st.offsetWidth; _st.classList.add('wsWarnVig'); } }catch(e){}   /* ★ v349 預警：四邊閃黑，不出文字 */
     syncHud();
   }
   if(S.trueForm){
@@ -9615,7 +9617,10 @@ function itaUlt(){
   say('ita','「這招以血矇眼怎麼樣啊，宿儺！？」');
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    addFx({type:'bloodShot',dur:0.88,y:H*0.43});   /* ★ v115 1.05→0.88：銜接更緊 */   /* ★ v113 穿血：加长演出（聚血→贯穿→炸裂→血契残留） */   /* ★ v76 穿血射流 */
+    addFx({type:'bloodShot',dur:0.88,y:H*0.43});
+    try{ const _bc=document.getElementById('bsCut'), _bi=document.getElementById('bsImg');
+      if(_bc&&_bi){ if(!_bi.getAttribute('src')) _bi.src=IMG.bsCut; _bc.classList.remove('on'); void _bc.offsetWidth; _bc.classList.add('on');
+        setTimeout(function(){ try{ _bc.classList.remove('on'); }catch(e){} }, 950); } }catch(e){}   /* ★ v115 1.05→0.88：銜接更緊 */   /* ★ v113 穿血：加长演出（聚血→贯穿→炸裂→血契残留） */   /* ★ v76 穿血射流 */
     shake(); flash('fWhite');
     /* ★ v122 傷害數字與命中動畫同步：結算延遲到血彈命中炸裂那一拍（0.44×880≈390ms） */
     setTimeout(()=>{
@@ -11011,7 +11016,7 @@ else if(f.type==='kaiSlash'){
       const x1=SX()-26*SC, y1=GY-172*SC;
       const x=x1, y=y1;   /* ★ v343 劍氣直接出現在宿儒身上（不再飛行） */   /* ★ v198 需求③：最終落點略上移（原 GY-142） */
       const _k2=k;
-      const ang=Math.atan2(y1-y0,x1-x0);
+      const ang=0;   /* ★ v346 修復：原引用已刪除的 f.x/f.y 会抛 ReferenceError ⇒ 整個月牙不畫 */
       ctx.save();
       ctx.globalAlpha=Math.max(0,1-Math.max(0,(k-0.72)/0.28));
       ctx.translate(x,y); ctx.rotate(ang);
@@ -11256,7 +11261,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         const raw=Math.min(1,(k-0.20)/0.30);
         const e=raw<0.45 ? raw*0.267 : Math.min(1, 0.12+Math.pow((raw-0.45)/0.55,0.55)*0.88);   /* ★ 頓挫曲線 */
         const cx=x0+(x1-x0)*e;
-        const th=(0.6+3.0*e)*s;   /* ★ v341 入口細、落點粗 */                        /* ★ v233 再變細一檔（v120 1.6+3.2 → 1.1+2.2）：更細的高壓射線，馬赫錐/箭頭/速度線全部跟隨等比縮小 */
+        const thS=0.45*s; const th=(0.6+3.0*e)*s;   /* ★ v341 入口細、落點粗 */                        /* ★ v233 再變細一檔（v120 1.6+3.2 → 1.1+2.2）：更細的高壓射線，馬赫錐/箭頭/速度線全部跟隨等比縮小 */
         ctx.save(); ctx.lineCap='round';
         g=ctx.createLinearGradient(x0,yy-th*2.4,x0,yy+th*2.4);
         g.addColorStop(0,'rgba(110,12,20,0)');
@@ -11265,13 +11270,13 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         g.addColorStop(0.76,'rgba(168,26,32,.82)');
         g.addColorStop(1,'rgba(110,12,20,0)');
         ctx.fillStyle=g; ctx.shadowColor='rgba(214,40,44,.92)'; ctx.shadowBlur=16*s;
-        ctx.fillRect(x0, yy-th*2.4, cx-x0, th*4.8);
+        ctx.beginPath(); ctx.moveTo(x0, yy-thS*2.4); ctx.lineTo(cx, yy-th*2.4); ctx.lineTo(cx, yy+th*2.4); ctx.lineTo(x0, yy+thS*2.4); ctx.closePath(); ctx.fill();
         ctx.shadowBlur=0;
         g=ctx.createLinearGradient(x0,yy-th*0.5,x0,yy+th*0.5);
         g.addColorStop(0,'rgba(17,17,17,0)');
         g.addColorStop(0.5,'rgba(17,17,17,1)');                            /* ★ v115 白芯 → 黑芯 */
         g.addColorStop(1,'rgba(17,17,17,0)');
-        ctx.fillStyle=g; ctx.fillRect(x0, yy-th*0.5, cx-x0, th);
+        ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(x0, yy-thS*0.5); ctx.lineTo(cx, yy-th*0.5); ctx.lineTo(cx, yy+th*0.5); ctx.lineTo(x0, yy+thS*0.5); ctx.closePath(); ctx.fill();
         /* ★ v115 速度線：黑色橫線自血柱上下掃出，強化高速與力量感 */
         ctx.globalAlpha=Math.min(1,(k-0.20)/0.10)*(1-Math.max(0,(k-0.50)/0.08))*0.75;
         ctx.strokeStyle='rgba(17,17,17,.9)'; ctx.lineWidth=1.6*s;
@@ -13756,14 +13761,14 @@ function okkoDomainClash(){
 function okkoAtk(){
   if(S.acted) return;
   markActed('atk');
-  try{ const _oc=document.getElementById('okkoCutIn'), _oi=document.getElementById('okkoCutImg');
-    if(_oc&&_oi){ if(!_oi.getAttribute('src')) _oi.src=IMG.okkoCut; _oc.classList.remove('on'); void _oc.offsetWidth; _oc.classList.add('on');
-      setTimeout(function(){ try{ _oc.classList.remove('on'); }catch(e){} }, 800); } }catch(e){}
   /* ★ v189 用戶指定：乙骨一技能「太刀・呪斬」可自發黑閃（標準 8% 起，連閃 +3%/次、上限 +15%）。
      黑閃判定（QTE 金條）通過後才進入結算 —— 與五條「蒼」/虎杖「逕庭拳」同一套 v140 機制。 */
   const blackP=0.08+Math.min(0.15,S.blackChain*0.03);
   const black=Math.random()<blackP;
   const okkoApply=(doBlack)=>{
+  try{ const _oc=document.getElementById('okkoCutIn'), _oi=document.getElementById('okkoCutImg');
+    if(_oc&&_oi){ if(!_oi.getAttribute('src')) _oi.src=IMG.okkoCut; _oc.classList.remove('on'); void _oc.offsetWidth; _oc.classList.add('on');
+      setTimeout(function(){ try{ _oc.classList.remove('on'); }catch(e){} }, 800); } }catch(e){}
     let d=SUK_MAXHP*rnd(0.05,0.07);
     if(doBlack){ d*=2; flash('fWhite'); shake(); S.blackN++; S.blackChain++; }   /* ★ v204 音效已提到 QTE 點中瞬間 */
     S.gojo.pose='atk'; S.gojo.poseT=0.3;
@@ -15161,7 +15166,7 @@ function autoPauseOnHide(){
   try{ pauseAllAudio(); }catch(e){}   /* ★ v322 不论戰鬥與否都把聲音全停 */
 }
 /* ★ v306 用戶指定：回到頁面時，只要遊戲沒被暫停，音樂就接著播（不打斷戰鬥節奏） */
-function autoResumeOnShow(){
+function autoResumeOnShow() { try{ const _db=document.getElementById('deathBlack'); if(_db&&_db.classList.contains('on')&&typeof window.__dbNext==='function') setTimeout(window.__dbNext,260); }catch(e){}
 window.__appHidden=0;
   if(document.hidden) return;
   if(S.paused) return;
@@ -15728,10 +15733,14 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
 /* ═══ ★ v341 穿血漫畫頁覆蓋層 ═══ */
 #bsCut{position:absolute;inset:0;z-index:18;display:none;align-items:center;justify-content:center;pointer-events:none;}
 #bsCut.on{display:flex;animation:bsCutIn .92s ease-out both;}
-#bsCut img{height:74%;width:auto;max-width:92%;object-fit:contain;
-  -webkit-mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%);
+#bsCut img{height:54%;width:auto;max-width:92%;object-fit:contain;
+  -webkit-mask-image:radial-gradient(ellipse 70% 68% at 50% 50%,#000 48%,rgba(0,0,0,.45) 76%,transparent 100%);
   mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%);}
 @keyframes bsCutIn{0%{opacity:0;transform:scale(1.06)}18%{opacity:1}74%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.02)}}
+
+/* ★ v349 世界斬預警：四邊閃黑 ★ */
+@keyframes wsVig{0%{box-shadow:inset 0 0 0 0 rgba(0,0,0,0)}28%{box-shadow:inset 0 0 170px 46px rgba(0,0,0,.94)}100%{box-shadow:inset 0 0 0 0 rgba(0,0,0,0)}}
+#stage.wsWarnVig{animation:wsVig .6s ease-out;}
 
 /* ═══ ★ v319 鹿紫雲「幻獣琥珀」形象四周近似圓形虛化 ═══ */
 #kashAmber{
@@ -15755,7 +15764,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
   mask-image:linear-gradient(to right,transparent 0,#000 13%,#000 87%,transparent 100%),
              linear-gradient(to bottom,transparent 0,#000 11%,#000 86%,transparent 100%);
   mask-composite:intersect;}
-#yujiFin.on img{animation:yfIn 1.05s cubic-bezier(.2,.9,.2,1) 0s forwards;}   /* ★ v315 黑閃音效與圖案同幀出現（取消 .10s 延遲） */
+#yujiFin.on img{animation:yfIn 1.45s cubic-bezier(.2,.9,.2,1) 0s forwards;}   /* ★ v315 黑閃音效與圖案同幀出現（取消 .10s 延遲） */
 @keyframes yfIn{0%{opacity:0;transform:scale(1.20)}55%{opacity:1}100%{opacity:1;transform:scale(1)}}
 
 /* ═══ ★ v306 結算頁滾動容器（包住全部內容，靠 translate3d 位移） ═══ */
