@@ -2529,6 +2529,8 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <div data-page-node-id="tlY3DABd1BS32QMi1tMQJ9" id="hollowCut"></div>
     <!-- ★ v82 茈咏唱：画面上方一行咏唱文字（z-index 高于漫画页但贴顶小字号，不遮挡） -->
     <!--pnid:1p6KeMfFVWSI69kGnynFxe--><!-- 鹿紫雲一：登場 / 幻獣琥珀解放 漫畫頁 -->
+    <div id="okkoCutIn"><img id="okkoCutImg" alt></div>
+    <div id="bsCut"><img id="bsImg" alt></div>
     <div data-page-node-id="PVns10O4AiMUzqLNKqp67D" id="kashIn"></div>
     <div data-page-node-id="ZcBVRIZMEw0RrlBaW2rMQe" id="kashAmber"></div>
     <!--pnid:DROvhop0M83LLuX409mjy8--><!-- 日車寬見：登場漫畫頁（v30，canvas 生成，開廷） -->
@@ -2837,6 +2839,9 @@ const PAPER='#ffffff';
 const IMG={
   yujiFin:'assets/12db99ed213e.webp',
   itaLow:'assets/0c109a06f197.webp',
+  okkoCut:'assets/9c09f3a8e4fe.webp',
+  okkoLow:'assets/b749b9de046f.webp',
+  bsCut:'assets/bfa71d1872c8.webp',
   itaMid:'assets/19122cf679da.webp',
   sukuDom1:'assets/5279d329102e.webp',   /* ★ v305 宿儚一階段領域姿 */
   sukuDom2:'assets/408fae2ad477.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
@@ -2907,7 +2912,7 @@ const INTRO_PANEL={
 IMG.okkoDomArt='assets/bef1a5a155dd.png';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
 const GOJO_WIN_IMG='assets/182e8f7e9a0d.webp';
-const IMGS={gojo:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null};
+const IMGS={gojo:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null};
 
 /* =========================================================
    1. 音效（Web Audio API）
@@ -3694,7 +3699,7 @@ function gojoVoid(){
   try{ suspendMainBgm(); playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now();
     setTimeout(function(){ try{ if(S.phase==='fight'){ const _e=extraBgmEls&&extraBgmEls['ujaku']; if(_e&&_e.paused){ const _p=_e.play(); if(_p&&_p.catch)_p.catch(function(){}); } } }catch(e){} },600);
   }catch(e){}
-  try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; const _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; playDomSfx(_vk, 4.2, DOM_LEAD[_vk]); }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
+  try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; let _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; if(_vk==='gojoVoice2' && !(typeof domAudioEls!=='undefined'&&domAudioEls&&domAudioEls.gojoVoice2)) _vk='gojoDom'; const _pr=playDomSfx(_vk, 4.2, DOM_LEAD[_vk]||0); if(!_pr) playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom); }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
   domainShift();                      /* ★ 時間暫停：跳過宿儺回合 → 新回合 +1 行動力 */
@@ -3787,7 +3792,7 @@ function gojoVoid(){
     /* ===== 領域對拼：伏魔御厨子場景自右向左展開到畫面中間 → 白色對拼線
        ★ v244 對拼勝率固定 50%（魔虛羅已被擊破亦同，不再必勝）。 ===== */
     /* ★ v187 語音提早：先起播音效，台詞/大字緊隨（用戶要求） */
-    const _sukuSfx = playDomSfx('sukuDom', 4.78, Math.max(0, DOM_LEAD.sukuDom - 0.15))   /* ★ v224 已做人聲分離，不再掐尾 */;   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
+    const _sukuSfx = playDomSfx('sukuDom', 4.78, Math.max(0, DOM_LEAD.sukuDom + 0.15))   /* ★ v224 已做人聲分離，不再掐尾 */;   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
     say('suku','「領域展開——伏魔御厨子。」');
     say('narr','旁白：開放的結界自右側咬入——兩片領域在畫面中央互斬，誰的結界更精密，誰就能碾過對方。');
     /* ★ v82 對拼結束後的吞噬/擴展提速：winDur 0.9 → 0.45（宿儺勝吞沒 / 五條勝擴回全屏共用此時長） */
@@ -4248,6 +4253,9 @@ function actAtk(allowBlack){
   /* ★ v92 術式熔斷：五條悟除「反轉術式」外無法使用任何技能（含術式順轉・蒼） */
   if(S.gojoBurn){ say('sys','術式熔斷——連「蒼」都無法發動，請先用「反轉術式」治癒！'); return; }
   markActed('atk');
+  try{ const _oc=document.getElementById('okkoCutIn'), _oi=document.getElementById('okkoCutImg');
+    if(_oc&&_oi){ if(!_oi.getAttribute('src')) _oi.src=IMG.okkoCut; _oc.classList.remove('on'); void _oc.offsetWidth; _oc.classList.add('on');
+      setTimeout(function(){ try{ _oc.classList.remove('on'); }catch(e){} }, 800); } }catch(e){}
   const blackP=0.08+Math.min(0.15,S.blackChain*0.03);   /* 黑閃連鎖：每次黑閃後概率 +3%，上限 +15% */
   const black=(allowBlack!==false)&&Math.random()<blackP;
   /* ★ v140 判定將打出黑閃 ⇒ 先暫停＋壓暗＋出黃條 QTE，點中才真的打出黑閃 */
@@ -4287,6 +4295,9 @@ function actAtk(allowBlack){
         addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:_burstY,r:134*SC,seed:rnd(0,6.28)});
         S.hitStop=Math.max(S.hitStop,0.16);   /* 打擊頓挫 */
         shake(); flash('fWhite');
+    try{ const _bc=document.getElementById('bsCut'), _bi=document.getElementById('bsImg');
+      if(_bc&&_bi){ if(!_bi.getAttribute('src')) _bi.src=IMG.bsCut; _bc.classList.remove('on'); void _bc.offsetWidth; _bc.classList.add('on');
+        setTimeout(function(){ try{ _bc.classList.remove('on'); }catch(e){} }, 950); } }catch(e){}
         /* ★ v240 用戶指定：蒼・拳命中加上沈悶的毆打衝擊音（疊在原有 atk 之上，拳拳到肉） */
         if(SFX.punch) SFX.punch(); else SFX.atk();
       },150);
@@ -8530,7 +8541,7 @@ function showResult(){
    ========================================================= */
 /* ★ v110 暫停 / 繼續：世界完全凝固（S.t 不推進、特效不走、技能輸入屏蔽），render 仍每幀跑 */
 function togglePause(){
-  S.paused=!S.paused;
+  S.paused=!S.paused; try{ if(S.paused) pauseAllAudio(); else resumeAllAudio(); }catch(e){} try{ if(S.paused) pauseAllAudio(); else resumeAllAudio(); }catch(e){}
   const b=document.getElementById('pauseBtn'), o=document.getElementById('pauseOv');
   if(b) b.classList.toggle('paused',S.paused);
   if(o) o.classList.toggle('on',S.paused);
@@ -11001,8 +11012,9 @@ else if(f.type==='kaiSlash'){
     else if(f.type==='okkoWave'){
       /* ★ v77 乙骨普攻：紫色咒力太刀斬擊波 —— 月牙斬波自乙骨飛向宿傩 */
       const k=f.t/f.dur;
-      const x0=f.x, y0=f.y, x1=SX()-26*SC, y1=GY-172*SC;   /* ★ v198 需求③：最終落點略上移（原 GY-142） */
-      const x=x0+(x1-x0)*k, y=y0+(y1-y0)*k;
+      const x1=SX()-26*SC, y1=GY-172*SC;
+      const x=x1, y=y1;   /* ★ v343 劍氣直接出現在宿儒身上（不再飛行） */   /* ★ v198 需求③：最終落點略上移（原 GY-142） */
+      const _k2=k;
       const ang=Math.atan2(y1-y0,x1-x0);
       ctx.save();
       ctx.globalAlpha=Math.max(0,1-Math.max(0,(k-0.72)/0.28));
@@ -11091,21 +11103,22 @@ else if(f.type==='kaiSlash'){
       const al=Math.max(0,Math.min(aIn,aOut));
       const e=Math.min(1,k/0.26);
       const cx=x0+(x1-x0)*e;
+        const yyP=yy+Math.sin(e*Math.PI*3.4)*20*s*(1-e);   /* ★ v340 路徑曲折（落點不变） */
       const th=(9+13*Math.min(1,k/0.2))*s*(1-Math.max(0,(k-0.72)/0.10)*0.4);
       const GR=(30+20*e)*s;                        /* ★ v117 光球半徑（隨推進長大） */
       ctx.save(); ctx.globalAlpha=al;
 const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂紋略上移 */
       /* ★ v117 大圓形光球（置於最右端，取代原本的矩形光條） */
-      g=ctx.createRadialGradient(cx,yy,0,cx,yy,GR*1.85);
+      g=ctx.createRadialGradient(cx,yyP,0,cx,yyP,GR*1.85);
       g.addColorStop(0,'rgba(255,255,255,.99)');
       g.addColorStop(0.20,'rgba(255,232,252,.95)');
       g.addColorStop(0.46,'rgba(224,48,200,.66)');
       g.addColorStop(0.72,'rgba(168,60,205,.30)');
       g.addColorStop(1,'rgba(120,30,160,0)');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,yy,GR*1.85,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,yyP,GR*1.85,0,Math.PI*2); ctx.fill();
       /* 球心白核（脈動） */
       ctx.fillStyle='rgba(255,255,255,.97)';
-      ctx.beginPath(); ctx.arc(cx,yy,GR*0.52*(1+0.06*Math.sin(f.t*20)),0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,yyP,GR*0.52*(1+0.06*Math.sin(f.t*20)),0,Math.PI*2); ctx.fill();
       /* 同調音波環：越靠起點（左）越大，粉／紫交替 */
       ctx.lineCap='round';
       for(let i=0;i<7;i++){
@@ -11118,24 +11131,24 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         ctx.strokeStyle=(i%2)?'rgba(224,48,200,.9)':'rgba(139,92,246,.85)';   /* 粉／紫交替 */
         ctx.lineWidth=(2.7-0.9*u)*s;
         ctx.shadowColor=(i%2)?'rgba(224,48,200,.8)':'rgba(139,92,246,.8)'; ctx.shadowBlur=8*s;
-        ctx.beginPath(); ctx.ellipse(mx,yy,rr,ry,0,-Math.PI*0.5,Math.PI*0.5); ctx.stroke();
-        ctx.beginPath(); ctx.ellipse(mx,yy,rr,ry,0,Math.PI*0.5,Math.PI*1.5); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(mx,yyP,rr,ry,0,-Math.PI*0.5,Math.PI*0.5); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(mx,yyP,rr,ry,0,Math.PI*0.5,Math.PI*1.5); ctx.stroke();
       }
       ctx.shadowBlur=0;
       ctx.globalAlpha=al;
       /* 電弧：粉／白／紫三層（沿軸抖動） */
       ctx.strokeStyle='rgba(224,48,200,.9)'; ctx.lineWidth=8*s;
-      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(cx,yy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0,yyP); ctx.lineTo(cx,yyP); ctx.stroke();
       ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=3.4*s;
-      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(cx,yy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x0,yyP); ctx.lineTo(cx,yyP); ctx.stroke();
       ctx.strokeStyle='rgba(178,120,255,.85)'; ctx.lineWidth=1.8*s;
       for(let i=0;i<8;i++){
         const t=i/7, bx=x0+(x1-x0)*t;
         if((bx-x0)>(cx-x0)) continue;
-        ctx.beginPath(); ctx.moveTo(bx,yy);
-        let px=bx, py=yy;
+        ctx.beginPath(); ctx.moveTo(bx,yyP);
+        let px=bx, py=yyP;
         for(let j=1;j<=3;j++){
-          px+=(x1-x0)/26; py=yy+Math.sin(j*5+k*20+i*2.1)*18*s;
+          px+=(x1-x0)/26; py=yyP+Math.sin(j*5+k*20+i*2.1)*18*s;
           ctx.lineTo(px,py);
         }
         ctx.stroke();
@@ -11148,16 +11161,16 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       const k=f.t/f.dur;
       const tx=SX()-20*SC;
       const fall=Math.min(1,k/0.62);
-      const yy=-H*0.4+(GY-30*SC+H*0.4)*fall*fall;
+      const yyP=-H*0.4+(GY-30*SC+H*0.4)*fall*fall;
       const aIn=Math.min(1,k/0.06), aOut=1-Math.max(0,(k-0.86)/0.14);
       ctx.save();
       ctx.globalAlpha=Math.max(0,Math.min(aIn,aOut));
       if(k<0.62){
         ctx.fillStyle='rgba(245,197,66,.26)';
-        ctx.fillRect(tx-7*SC,0,14*SC,Math.max(0,yy+30*SC));
+        ctx.fillRect(tx-7*SC,0,14*SC,Math.max(0,yyP+30*SC));
       }
       const L=150*SC;
-      ctx.translate(tx,yy);
+      ctx.translate(tx,yyP);
       ctx.rotate(Math.sin(k*14)*0.05);
       ctx.strokeStyle='#f5c542'; ctx.lineWidth=7*SC; ctx.lineCap='round';
       ctx.beginPath(); ctx.moveTo(0,-L*0.58); ctx.lineTo(0,L*0.42); ctx.stroke();
@@ -11210,7 +11223,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
                ／ ③ 命中血花炸裂 0.44~0.86 ／ ④ 血契殘留 0.60~1.0 */
       const k=f.t/f.dur, s=SC;
       let g;
-      const x0=GX()+52*s, x1=SX()-30*s, yy=GY-132*s;
+      const x0=GX()+52*s, x1=SX()-30*s, yy=GY-178*s;   /* ★ v339 穿血全特效上移（所有坐標以 yy 為基準） */
       if(!f.bsp){
         f.bsp=[];
         for(let i=0;i<30;i++) f.bsp.push({a:rnd(0,Math.PI*2), sp:rnd(0.55,1.5), r:rnd(1.4,3.6), u:rnd(0,1)});
@@ -11247,7 +11260,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         const raw=Math.min(1,(k-0.20)/0.30);
         const e=raw<0.45 ? raw*0.267 : Math.min(1, 0.12+Math.pow((raw-0.45)/0.55,0.55)*0.88);   /* ★ 頓挫曲線 */
         const cx=x0+(x1-x0)*e;
-        const th=(1.1+2.2*q)*s;                        /* ★ v233 再變細一檔（v120 1.6+3.2 → 1.1+2.2）：更細的高壓射線，馬赫錐/箭頭/速度線全部跟隨等比縮小 */
+        const th=(0.6+3.0*e)*s;   /* ★ v341 入口細、落點粗 */                        /* ★ v233 再變細一檔（v120 1.6+3.2 → 1.1+2.2）：更細的高壓射線，馬赫錐/箭頭/速度線全部跟隨等比縮小 */
         ctx.save(); ctx.lineCap='round';
         g=ctx.createLinearGradient(x0,yy-th*2.4,x0,yy+th*2.4);
         g.addColorStop(0,'rgba(110,12,20,0)');
@@ -12379,7 +12392,7 @@ function drawHiguruma(){ return drawCutHero('higuruma',
   {h:()=>itaHeight()*0.78,glow:'rgba(43,108,176,.55)'}); }   /* ★ v274 日車立繪縮小 */   /* 日車：全身立繪 + 審判藍光環 */
 /* ★ v224 用戶指定：在「真贋相愛」領域內使用「無限制咒力解放」時，立繪也要切換 ——
    原判斷是領域圖優先（okkoDomArt），解放立繪永遠看不到；現改為**解放立繪優先**。 */
-function drawOkkotsu(){ const _k=((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':'okko');
+function drawOkkotsu(){ const _k=((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':((curHp()<70&&IMGS.okkoLow)?'okkoLow':'okko'));
   return drawCutHero(_k,
   {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0)})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
 /* ★ v298 用戶指定：虎杖立繪下緣恰好卡在數值條上沿（讀底部 HUD 位置，600ms 緩存） */
@@ -12411,7 +12424,7 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
   else if((((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid) || (((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.70;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
-  o.lift=itaLift()-(dom?72:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
+  o.lift=itaLift()-((dom?92:(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80||((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50)?8:34))*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid?'itaMid':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
@@ -13208,7 +13221,7 @@ function extraBgmWatch(){
   if(extraBgmKey==='specialz'||extraBgmKey==='finish') return;
   /* 領域展開演出期間 gojoDom 還是 0（要等對拚結束才置 3），必須把演出欄一起算進「還在領域裡」的條件 */
   const _inDomain = (extraBgmKey==='ujaku')
-    ? ((S.gojoDom>0) || (S.gojoVoidT>0) || !!S.domClash || (Date.now()-(window.__ujakuAt||0) < 9000))   /* ★ v323 展開演出期寬限 */
+    ? ((S.hero==='gojo' && ((S.hero==='gojo' && ((S.gojoDom>0) || (S.gojoVoidT>0) || !!S.domClash)))) || (Date.now()-(window.__ujakuAt||0) < 9000))   /* ★ v323 展開演出期寬限 */
     : ((S.itaDom>0) || S.phase==='yujiDom');
   if(!_inDomain){ stopExtraBgm(0.8); try{ resumeMainBgm(1.0); }catch(e){} }   /* ★ v306 收尾也走長淡出，銜接主 BGM */
 }
@@ -14515,8 +14528,8 @@ function isDomainBgmPlaying(){
 }
 function startBGM(fade){
 if(window.__appHidden) return;
-  if(S&&S.phase==='fight'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v336 五條領域期間不回主 BGM */
-  if(S&&S.phase==='fight'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v336 五條領域期間不回主 BGM */
+  if(S&&S.phase==='fight'&&S.hero==='gojo'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v336 五條領域期間不回主 BGM */
+  if(S&&S.phase==='fight'&&S.hero==='gojo'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v336 五條領域期間不回主 BGM */
   if(bgmMuted) return;
   if(isDomainBgmPlaying()) return;   /* ★ v209：領域 BGM 播放中，主 BGM 一律不起播 */
   const el=ensureBgm(); if(!el) return;
@@ -14817,7 +14830,7 @@ function suspendMainBgm(fade){
 }
 function resumeMainBgm(fade){
   /* ★ v326 五條領域期間不回主 BGM（對拼成功後也一樣） */
-  if(S&&S.phase==='fight'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }
+  if(S&&S.phase==='fight'&&S.hero==='gojo'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }
   if(typeof extraBgmKey!=='undefined' && extraBgmKey) return;   /* ★ v305 追加 BGM 在播時不回主 BGM */
   /* ★ v208 需求③：虎杖領域也用宿傩領域 BGM —— 對拼／破碎等收束點停掉該音軌後，
      若虎杖領域仍成立 ⇒ 改恢復虎杖領域 BGM（同一音軌）而非主 BGM */
@@ -14905,6 +14918,8 @@ loadRGBA('gojo',IMG.gojo);
 { const gi=new Image(); gi.onload=()=>{ IMGS.gojoGuard=gi; }; window.__imgQ.push(()=>{ gi.src=IMG.gojoGuard; }); }
 { const _yi=new Image(); _yi.onload=()=>{ IMGS.yujiEnd=_yi; }; window.__imgQ.push(()=>{ _yi.src=IMG.yujiEnd; }); }   /* ★ v291 虎杖結局左側背景（已摳圖，直掛） */
 { const _si=new Image(); _si.onload=()=>{ IMGS.sukuSummon=_si; }; window.__imgQ.push(()=>{ _si.src=IMG.sukuSummon; }); }
+{ const _ol=new Image(); _ol.onload=()=>{ IMGS.okkoLow=_ol; }; _ol.src=IMG.okkoLow; }
+{ const _oc=new Image(); _oc.onload=()=>{ IMGS.okkoCut=_oc; }; _oc.src=IMG.okkoCut; }
 { const _il=new Image(); _il.onload=()=>{ IMGS.itaLow=_il; }; _il.src=IMG.itaLow; }   /* ★ v325 虎杖 <50% 形象 */
 { const _im=new Image(); _im.onload=()=>{ IMGS.itaMid=_im; }; _im.src=IMG.itaMid; }   /* ★ v324 虎杖 70~100% 正常形象 */
 { const _yf=new Image(); _yf.onload=()=>{ IMGS.yujiFin=_yf; }; window.__imgQ.push(()=>{ _yf.src=IMG.yujiFin; }); }   /* ★ v307 終結一擊立繪 */
@@ -15702,6 +15717,22 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
 
 /* ★ v337 手機長按不选中文字 */
 html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
+
+/* ═══ ★ v342 乙骨一技能：瞬身 + 強影 ═══ */
+#okkoCutIn{position:absolute;inset:0;z-index:18;display:none;align-items:center;justify-content:center;pointer-events:none;}
+#okkoCutIn.on{display:flex;animation:okkoIn .78s ease-out both;}
+#okkoCutIn img{height:82%;width:auto;max-width:88%;object-fit:contain;
+  -webkit-mask-image:radial-gradient(ellipse 74% 76% at 50% 50%,#000 60%,rgba(0,0,0,.5) 84%,transparent 100%);
+  mask-image:radial-gradient(ellipse 74% 76% at 50% 50%,#000 60%,rgba(0,0,0,.5) 84%,transparent 100%);}
+@keyframes okkoIn{0%{opacity:0;transform:scale(.82) translateX(-14%)}35%{opacity:1;transform:scale(1.02) translateX(0)}80%{opacity:1}100%{opacity:0;transform:scale(1.04)}}
+
+/* ═══ ★ v341 穿血漫畫頁覆蓋層 ═══ */
+#bsCut{position:absolute;inset:0;z-index:18;display:none;align-items:center;justify-content:center;pointer-events:none;}
+#bsCut.on{display:flex;animation:bsCutIn .92s ease-out both;}
+#bsCut img{height:74%;width:auto;max-width:92%;object-fit:contain;
+  -webkit-mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%);
+  mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 62%,rgba(0,0,0,.5) 84%,transparent 100%);}
+@keyframes bsCutIn{0%{opacity:0;transform:scale(1.06)}18%{opacity:1}74%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.02)}}
 
 /* ═══ ★ v319 鹿紫雲「幻獣琥珀」形象四周近似圓形虛化 ═══ */
 #kashAmber{
