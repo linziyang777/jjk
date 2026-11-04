@@ -3691,7 +3691,7 @@ function gojoVoid(){
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
   try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); suspendMainBgm(); }catch(e){}
-  try{ playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom); }catch(e){}   /* ★ v326 修復領域語音 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
+  try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; const _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; playDomSfx(_vk, 4.2, DOM_LEAD[_vk]); }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
   domainShift();                      /* ★ 時間暫停：跳過宿儺回合 → 新回合 +1 行動力 */
@@ -8610,7 +8610,7 @@ function update(dt){
           if(S.sukuDom>0){ startSukuBgm(); }
           else if(S.hero==='itadori'&&S.itaDom>0){ try{ playExtraBgm('yuji',0.8); }catch(e){} }
           else if(S.gojoDom>0||S.gojoVoidT>0){ try{ playExtraBgm('ujaku',0.8); }catch(e){} }
-          else { bgmSuspendedByDomain=false; if(bgmEl&&bgmEl.paused) startBGM(0.8); }
+          else { bgmSuspendedByDomain=false; try{ if(typeof extraBgmKey!=='undefined' && extraBgmKey && !(extraBgmEls[extraBgmKey]&&!extraBgmEls[extraBgmKey].paused)) extraBgmKey=null; }catch(e){} if(bgmEl&&bgmEl.paused) startBGM(0.8); }   /* ★ v330 換人後補回主 BGM */
         }
       }
     }
