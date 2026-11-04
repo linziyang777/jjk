@@ -9048,7 +9048,7 @@ function drawSukuDomBg(){
   const im=IMGS.sukuDomBg;
   ctx.fillStyle='#07030a'; ctx.fillRect(0,0,W,H);
   if(im){
-    const k=1+0.02*Math.sin(S.t*0.6), rot=Math.sin(S.t*0.13)*0.01;
+    const k=1, rot=Math.sin(S.t*0.13)*0.01;
     const ar=im.width/im.height, cr=W/H;
     let dw,dh;
     if(ar>cr){ dh=H*1.08*k; dw=dh*ar; } else { dw=W*1.08*k; dh=dw/ar; }
@@ -12407,10 +12407,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
-  else if(((S.gojo.hp/S.maxHp)>=0.80&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.78;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
+  else if(((S.gojo.hp/100)>=0.80&&IMGS.itaMid) || ((S.gojo.hp/100)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.78;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
   o.lift=itaLift()-(dom?58:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
-  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/S.maxHp)>=0.80&&IMGS.itaMid?'itaMid':((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
+  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/100)>=0.80&&IMGS.itaMid?'itaMid':((S.gojo.hp/100)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
 
