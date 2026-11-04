@@ -3690,7 +3690,9 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
-  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); suspendMainBgm(); }catch(e){}
+  try{ suspendMainBgm(); playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now();
+    setTimeout(function(){ try{ if(S.phase==='fight'){ const _e=extraBgmEls&&extraBgmEls['ujaku']; if(_e&&_e.paused){ const _p=_e.play(); if(_p&&_p.catch)_p.catch(function(){}); } } }catch(e){} },600);
+  }catch(e){}
   try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; const _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; playDomSfx(_vk, 4.2, DOM_LEAD[_vk]); }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
@@ -8610,7 +8612,7 @@ function update(dt){
           if(S.sukuDom>0){ startSukuBgm(); }
           else if(S.hero==='itadori'&&S.itaDom>0){ try{ playExtraBgm('yuji',0.8); }catch(e){} }
           else if(S.gojoDom>0||S.gojoVoidT>0){ try{ playExtraBgm('ujaku',0.8); }catch(e){} }
-          else { bgmSuspendedByDomain=false; try{ if(typeof extraBgmKey!=='undefined' && extraBgmKey && !(extraBgmEls[extraBgmKey]&&!extraBgmEls[extraBgmKey].paused)) extraBgmKey=null; }catch(e){} if(bgmEl&&bgmEl.paused) startBGM(0.8); }   /* ★ v330 換人後補回主 BGM */
+          else { bgmSuspendedByDomain=false; try{ sukuBgmOn=false; }catch(e){} try{ if(typeof extraBgmKey!=='undefined' && extraBgmKey && !(extraBgmEls[extraBgmKey]&&!extraBgmEls[extraBgmKey].paused)) extraBgmKey=null; }catch(e){} if(bgmEl&&bgmEl.paused) startBGM(0.8); }   /* ★ v330 換人後補回主 BGM */
         }
       }
     }
@@ -9606,7 +9608,7 @@ function itaUlt(){
   say('ita','「這招以血矇眼怎麼樣啊，宿儺！？」');
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    addFx({type:'bloodShot',dur:0.88});   /* ★ v115 1.05→0.88：銜接更緊 */   /* ★ v113 穿血：加长演出（聚血→贯穿→炸裂→血契残留） */   /* ★ v76 穿血射流 */
+    addFx({type:'bloodShot',dur:0.88,y:H*0.43});   /* ★ v115 1.05→0.88：銜接更緊 */   /* ★ v113 穿血：加长演出（聚血→贯穿→炸裂→血契残留） */   /* ★ v76 穿血射流 */
     shake(); flash('fWhite');
     /* ★ v122 傷害數字與命中動畫同步：結算延遲到血彈命中炸裂那一拍（0.44×880≈390ms） */
     setTimeout(()=>{
@@ -12407,10 +12409,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
-  else if(((S.gojo.hp/100)>=0.80&&IMGS.itaMid) || ((S.gojo.hp/100)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.78;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
+  else if((((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid) || (((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.70;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
-  o.lift=itaLift()-(dom?58:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
-  return drawCutHero(dom?'itaDomArt':((S.gojo.hp/100)>=0.80&&IMGS.itaMid?'itaMid':((S.gojo.hp/100)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
+  o.lift=itaLift()-(dom?72:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
+  return drawCutHero(dom?'itaDomArt':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid?'itaMid':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
 
