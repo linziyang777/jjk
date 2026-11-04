@@ -3690,7 +3690,8 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
-  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); }catch(e){}   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
+  try{ playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now(); }catch(e){}
+  try{ playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom); }catch(e){}   /* ★ v326 修復領域語音 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
   domainShift();                      /* ★ 時間暫停：跳過宿儺回合 → 新回合 +1 行動力 */
@@ -7008,6 +7009,7 @@ function sukunaOpenDomain(){
   flash('fWhite'); shake(); SFX.hollow();
   say('suku','「領域展開——伏魔御厨子。」');
   say('sys','★ 伏魔御厨子展開——領域必中「解」「捌」每回合造成 '+Math.round((DOM_KAI_PCT+DOM_SLASH_PCT)*DOM_HIT_MUL*100)+'% 最大生命傷害（本局剩餘可展開 '+Math.max(0,SUKU_DOM_MAX-S.sukuDomUsed)+' 次）。');
+  try{ startSukuBgm(); }catch(e){}   /* ★ v326 提早 */
   _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(); });   /* 語音播完後循環伏魔御厨子 BGM */
   syncHud();
 }
@@ -11085,6 +11087,7 @@ else if(f.type==='kaiSlash'){
       const th=(9+13*Math.min(1,k/0.2))*s*(1-Math.max(0,(k-0.72)/0.10)*0.4);
       const GR=(30+20*e)*s;                        /* ★ v117 光球半徑（隨推進長大） */
       ctx.save(); ctx.globalAlpha=al;
+const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂紋略上移 */
       /* ★ v117 大圓形光球（置於最右端，取代原本的矩形光條） */
       g=ctx.createRadialGradient(cx,yy,0,cx,yy,GR*1.85);
       g.addColorStop(0,'rgba(255,255,255,.99)');
@@ -12399,7 +12402,7 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
   if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
-  else if(((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight();   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
+  else if(((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid) || ((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.86;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
   o.lift=itaLift()-(dom?40:8)*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':((S.gojo.hp/S.maxHp)>=0.70&&IMGS.itaMid?'itaMid':((S.gojo.hp/S.maxHp)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
@@ -13158,6 +13161,7 @@ function getExtraBgm(k){
   return el;
 }
 function playExtraBgm(k,fade){
+if(window.__appHidden) return; /*x*/
   if(bgmMuted) return;
   if(extraBgmKey===k){ const o=extraBgmEls[k]; if(o&&o.paused){ const p=o.play(); if(p&&p.catch)p.catch(()=>{}); } return; }
   /* ★ v306 音樂銜接：舊軌 0.55s 淡出／主 BGM 0.5s 淡出／宿儺領域 BGM 0.5s 淡出，新軌 0.75s 淡入 —— 交叉過渡不硬切 */
@@ -14503,6 +14507,7 @@ function isDomainBgmPlaying(){
   }catch(e){ return false; }
 }
 function startBGM(fade){
+if(window.__appHidden) return;
   if(bgmMuted) return;
   if(isDomainBgmPlaying()) return;   /* ★ v209：領域 BGM 播放中，主 BGM 一律不起播 */
   const el=ensureBgm(); if(!el) return;
@@ -14724,6 +14729,7 @@ function stopOkkoDomainBgm(){
 }
 /* 伏魔御厨子 BGM 起停 */
 function startSukuBgm(_try){
+  if(window.__appHidden) return;
   /* ★ v302 修復「宿儺領域音樂偶爾不播」：
      舊版在 prepDomAudio 還沒把 <audio> 建好時直接 return，之後也不重試 ⇒ 整段領域沒聲音；
      而「開/關音樂」會另路去 play 那個元素，所以點一下就恢復。
@@ -14801,6 +14807,8 @@ function suspendMainBgm(fade){
   }
 }
 function resumeMainBgm(fade){
+  /* ★ v326 五條領域期間不回主 BGM（對拼成功後也一樣） */
+  if(S&&S.phase==='fight'&&(S.gojoDom>0||S.gojoVoidT>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }
   if(typeof extraBgmKey!=='undefined' && extraBgmKey) return;   /* ★ v305 追加 BGM 在播時不回主 BGM */
   /* ★ v208 需求③：虎杖領域也用宿傩領域 BGM —— 對拼／破碎等收束點停掉該音軌後，
      若虎杖領域仍成立 ⇒ 改恢復虎杖領域 BGM（同一音軌）而非主 BGM */
@@ -15123,6 +15131,7 @@ let _chromeCov=null;   /* ★ v116 上一次的收合狀態（僅在變化時動
    切頁或失焦時同時觸發數萬次 autoPauseOnHide ⇒ 表現為「畫面卡住不動」。
    現移出函數體，全頁只註冊一次。 */
 function autoPauseOnHide(){
+  window.__appHidden=1;
   /* ★ v306 用戶指定：切出頁面 / 鎖屏 / 關掉手機 ⇒ 遊戲暫停，全部音樂（含領域 BGM、追加 BGM、
      領域語音、WebAudio 音效、開場影片）一起停 —— 不論當下在戰鬥還是選人／結算頁。 */
   if(S.phase==='fight' && !S.paused){ try{ togglePause(); }catch(e){} }
@@ -15130,6 +15139,7 @@ function autoPauseOnHide(){
 }
 /* ★ v306 用戶指定：回到頁面時，只要遊戲沒被暫停，音樂就接著播（不打斷戰鬥節奏） */
 function autoResumeOnShow(){
+window.__appHidden=0;
   if(document.hidden) return;
   if(S.paused) return;
   try{ resumeAllAudio(); }catch(e){}
