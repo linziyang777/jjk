@@ -1155,19 +1155,19 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 #gzFin{position:absolute;inset:0;z-index:25;display:none;overflow:hidden;pointer-events:none;}
 #gzFin.on{display:block;}
 #gzFinVig{position:absolute;inset:0;box-shadow:inset 0 0 0 0 #000;
-  animation:gzVig 1s cubic-bezier(.45,.05,.55,.95) forwards;}   /* ★ v244 前半段加速：2s → 1s */
+  animation:gzVig .8s cubic-bezier(.45,.05,.55,.95) forwards;}   /* ★ v244 前半段加速：2s → 1s */
 @keyframes gzVig{from{box-shadow:inset 0 0 0 0 #000;}to{box-shadow:inset 0 0 55vmax 55vmax #000;}}
 #gzFinPic{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;
-  animation:gzPicIn .95s cubic-bezier(.2,.7,.3,1) .85s forwards, gzKen 10s ease-in-out .85s forwards;}   /* ★ v244 前半段加速 */
+  animation:gzPicIn .76s cubic-bezier(.2,.7,.3,1) .85s forwards, gzKen 10s ease-in-out .85s forwards;}   /* ★ v244 前半段加速 */
 @keyframes gzPicIn{from{opacity:0;transform:scale(1.055);}to{opacity:1;transform:scale(1);}}
 @keyframes gzKen{0%{transform:scale(1.055);}55%{transform:scale(1.0);}100%{transform:scale(1.028);}}
-#gzFinGlow{position:absolute;inset:0;opacity:0;mix-blend-mode:screen;animation:gzFade 1s ease-out .95s forwards;}   /* ★ v244 前半段加速 */
+#gzFinGlow{position:absolute;inset:0;opacity:0;mix-blend-mode:screen;animation:gzFade .8s ease-out .95s forwards;}   /* ★ v244 前半段加速 */
 #gzFinGlow::before{content:"";position:absolute;inset:0;
   background:radial-gradient(58% 68% at 50% 46%, rgba(92,160,255,.30), rgba(92,160,255,.10) 52%, rgba(92,160,255,0) 78%);
-  animation:gzBreath 2.6s ease-in-out 1.9s infinite;}
+  animation:gzBreath 2.1s ease-in-out 1.9s infinite;}
 @keyframes gzFade{to{opacity:1;}}
 @keyframes gzBreath{0%,100%{opacity:.45;}50%{opacity:1;}}
-#gzFinDust{position:absolute;inset:0;opacity:0;animation:gzDust 3.2s linear 1.25s infinite;}   /* ★ v244 前半段加速 */
+#gzFinDust{position:absolute;inset:0;opacity:0;animation:gzDust 2.6s linear 1.25s infinite;}   /* ★ v244 前半段加速 */
 #gzFinDust::before{content:"";position:absolute;inset:0;
   background-image:
     radial-gradient(2px 2px at 22% 78%, rgba(130,195,255,.9), transparent 70%),
@@ -3696,10 +3696,16 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：極低消耗 */
-  try{ suspendMainBgm(); playExtraBgm('ujaku',0.8); window.__ujakuAt=Date.now();
+  try{ suspendMainBgm(); window.__ujakuAt=Date.now(); (function(){
+    function _goUjaku(){ try{ if(!S.domClash && !isDomainBgmPlaying()) playExtraBgm('ujaku',0.8); }catch(e){} }
+    var _vp=window.__gojoVoiceP;
+    if(_vp && _vp.then){ _vp.then(function(){ setTimeout(_goUjaku,150); }); } else { setTimeout(_goUjaku,4200); }
+  })();   /* v368 語音念完才起領域曲；對拼中不起 */   /* ★ v367 對拼前不提前播，勝利後才起 */
     setTimeout(function(){ try{ if(S.phase==='fight'){ const _e=extraBgmEls&&extraBgmEls['ujaku']; if(_e&&_e.paused){ const _p=_e.play(); if(_p&&_p.catch)_p.catch(function(){}); } } }catch(e){} },600);
   }catch(e){}
-  try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; let _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; if(_vk==='gojoVoice2' && !(typeof domAudioEls!=='undefined'&&domAudioEls&&domAudioEls.gojoVoice2)) _vk='gojoDom'; const _pr=playDomSfx(_vk, 4.2, DOM_LEAD[_vk]||0); if(!_pr) playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom); }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
+  try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; let _vk=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2';
+    try{ if(_vk==='gojoVoice2'){ const _e2=(typeof domAudioEls!=='undefined'&&domAudioEls)?domAudioEls.gojoVoice2:null; if(!_e2 || !_e2.getAttribute('src')) _vk='gojoDom'; } }catch(e){ _vk='gojoDom'; } const _pr=playDomSfx(_vk, 4.2, DOM_LEAD[_vk]||0); try{ window.__gojoVoiceP=_pr; }catch(e){} if(!_pr) playDomSfx('gojoDom',4.2,DOM_LEAD.gojoDom);
+    setTimeout(function(){ try{ var _e=(domAudioEls&&domAudioEls[_vk]); var _d=(domAudioEls&&domAudioEls['gojoDom']); if(_vk!=='gojoDom' && (!_e || _e.paused) && _d){ _d.currentTime=Math.max(0,DOM_LEAD.gojoDom||0); var _p=_d.play(); if(_p&&_p.catch)_p.catch(function(){}); } }catch(e){} }, 620);   /* v365 二次語音兜底 */ setTimeout(function(){ try{ if(_vk!=='gojoDom') return; var _e=(domAudioEls&&domAudioEls['gojoDom']); if(_e&&_e.paused){ var p=_e.play(); if(p&&p.catch)p.catch(function(){}); } }catch(e){} },320);   /* ★ v357 延遲補播 */ setTimeout(function(){ try{ if(_vk!=='gojoDom') return; var _e=(domAudioEls&&domAudioEls['gojoDom']); if(_e&&_e.paused){ var p=_e.play(); if(p&&p.catch)p.catch(function(){}); } }catch(e){} },320);   /* ★ v357 延遲補播 */ }catch(e){}   /* ★ v330 首次「領域展開」、後次「好久不見」 */   /* ★ v323 記下起播時刻，展開演出期間不許看守停它 */   /* ★ v305 五條選定領域展開 ⇒ 換 BGM */
   S.gojoVoidCnt++;   /* ★ v245 本局最多 (S.voidMax) 次：初始 1 次，每用一次反轉術式 +1，封頂 2 */
   armDomainAnnounce();                /* ★ v90 領域展開大字授權（只有真正展開纔會置位） */
   domainShift();                      /* ★ 時間暫停：跳過宿儺回合 → 新回合 +1 行動力 */
@@ -3792,11 +3798,13 @@ function gojoVoid(){
     /* ===== 領域對拼：伏魔御厨子場景自右向左展開到畫面中間 → 白色對拼線
        ★ v244 對拼勝率固定 50%（魔虛羅已被擊破亦同，不再必勝）。 ===== */
     /* ★ v187 語音提早：先起播音效，台詞/大字緊隨（用戶要求） */
-    const _sukuSfx = playDomSfx('sukuDom', 4.78, Math.max(0, DOM_LEAD.sukuDom + 0.15))   /* ★ v224 已做人聲分離，不再掐尾 */;   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
+    const _sukuSfx = playDomSfx('sukuDom', 4.78, Math.max(0, DOM_LEAD.sukuDom + 0.15))   /* ★ v224 已做人聲分離，不再掐尾 */;
+    try{ S.gojoVoiceN=(S.gojoVoiceN||0)+1; var _vk2=(S.gojoVoiceN<=1)?'gojoDom':'gojoVoice2'; if(_vk2==='gojoVoice2' && !(typeof domAudioEls!=='undefined'&&domAudioEls&&domAudioEls.gojoVoice2&&domAudioEls.gojoVoice2.getAttribute('src'))) _vk2='gojoDom'; playDomSfx(_vk2, 4.2, DOM_LEAD[_vk2]||0); }catch(e){}   /* v366 對拼雙語音：五條同刻開嗓 */
+    setTimeout(function(){ try{ if(S.phase==='fight' && S.sukuDom>0 && sukuBgmEl && sukuBgmEl.paused && !bgmMuted) startSukuBgm(); }catch(e){} }, 5000);   /* v366 對拼後（語音畢）起領域曲 */   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
     say('suku','「領域展開——伏魔御厨子。」');
     say('narr','旁白：開放的結界自右側咬入——兩片領域在畫面中央互斬，誰的結界更精密，誰就能碾過對方。');
     /* ★ v82 對拼結束後的吞噬/擴展提速：winDur 0.9 → 0.45（宿儺勝吞沒 / 五條勝擴回全屏共用此時長） */
-    S.domClash={t:0,inDur:1.06,holdDur:0.90,winDur:1.05,phase:'in'};   /* ★ v306 用戶指定：對撞動畫再略加快（合計 2.14s，仍早於 2.53s 的語音巨響落點） */   /* ★ v305 用戶指定：推入提速——in+hold 合計 2.53s，恰好是宿儚語音那一聲巨響（音檔 3.44s − 前導 0.91s）；巨響一落就由勝方領域推向對方。 */   /* ★ v281 用戶指定：推入放慢 */
+    S.domClash={t:0,inDur:0.92,holdDur:0.88,winDur:1.05,phase:'in'};   /* ★ v306 用戶指定：對撞動畫再略加快（合計 2.14s，仍早於 2.53s 的語音巨響落點） */   /* ★ v305 用戶指定：推入提速——in+hold 合計 2.53s，恰好是宿儚語音那一聲巨響（音檔 3.44s − 前導 0.91s）；巨響一落就由勝方領域推向對方。 */   /* ★ v281 用戶指定：推入放慢 */
     addFx({type:'sukuDomWord',dur:4.4});   /* ★ v281 字樣停留加長 */
     S.suk.pose='cast'; S.suk.poseT=1.0;
     flash('fWhite'); shake(); SFX.hollow();
@@ -4940,7 +4948,9 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     say('suku','「……不可能。」');
     say('narr','旁白：宿儺——被擊倒了。');
     shake(); flash('fWhite');
-    setTimeout(showResult, gzFinGo?4800:2200);   /* ★ v244 五條終幕前半段加速 ⇒ 總時長 5.6s → 4.8s */
+    setTimeout(function(){ try{ if(S.phase!=='over') S.phase='over'; }catch(e){} showResult();
+    setTimeout(function(){ try{ var _rs=document.getElementById('resultScreen'); if(_rs){ _rs.classList.remove('hide'); } if(_rs && _rs.classList.contains('hide')){ showResult(); } }catch(e){} }, 700);
+  }, gzFinGo?3600:2200);   /* v363 勝利動畫播完必進結算（含兜底重試） */   /* ★ v244 五條終幕前半段加速 ⇒ 總時長 5.6s → 4.8s */
     return;
   }
   /* ★ v83 領域對拼/信息洪流的舊傷害觸發已移除 —— 見 gojoVoid 成功路徑 */
@@ -5242,7 +5252,8 @@ function deathBlackout(lines, done, art){
     try{ const _m=el.querySelector('.dbMask'); if(_m){ _m.style.webkitMaskImage='none'; _m.style.maskImage='none'; } }catch(e){}   /* ★ v351 回收掩罩 */
     try{ const _a=document.getElementById('dbArt'); if(_a){ _a.classList.remove('on'); } }catch(e){}
     txt.classList.remove('in'); txt.textContent='';
-    setTimeout(function(){ try{ done&&done(); }catch(e){} },16);   /* ★ v351 延一帧進結算 */
+    setTimeout(function(){ try{ done&&done(); }catch(e){} },16);
+    setTimeout(function(){ try{ var _rs=document.getElementById('resultScreen'); if(_rs && _rs.classList.contains('hide')){ showResult(); } }catch(e){} }, 520);   /* ★ v355 跳過後保底進結算 */   /* ★ v351 延一帧進結算 */
   }
   window.__dbNext=next;   /* ★ v351 */
   function next(){
@@ -7021,7 +7032,8 @@ function sukunaOpenDomain(){
   flash('fWhite'); shake(); SFX.hollow();
   say('suku','「領域展開——伏魔御厨子。」');
   say('sys','★ 伏魔御厨子展開——領域必中「解」「捌」每回合造成 '+Math.round((DOM_KAI_PCT+DOM_SLASH_PCT)*DOM_HIT_MUL*100)+'% 最大生命傷害（本局剩餘可展開 '+Math.max(0,SUKU_DOM_MAX-S.sukuDomUsed)+' 次）。');
-  _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(); });   /* 語音播完後循環伏魔御厨子 BGM */
+  _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(); });
+  setTimeout(function(){ try{ if(S.phase==='fight'&&S.sukuDom>0&&sukuBgmEl&&sukuBgmEl.paused) startSukuBgm(); }catch(e){} }, 5200);   /* ★ v358 定時兜底 */   /* 語音播完後循環伏魔御厨子 BGM */
   syncHud();
 }
 /* 回合結束：宿儺隨機使出攻擊（含空間斬） */
@@ -7084,7 +7096,21 @@ function sukunaTurn(){
     S.turnHold=setTimeout(sukunaTurn,320);
     return;
   }
-  if(S.suk.pose==='shadow') S.suk.pose='idle';   /* ★ v266 影法術回合結束 ⇒ 現形 */
+  if(S.suk.pose==='shadow') S.suk.pose='idle';
+  /* v369 乙骨領域 5 回合：第 6 回合開始時破碎 + 術式熔斷（該回合不能行動） */
+  if(S.okkoDom>0){
+    S.okkoTurns=(S.okkoTurns||0)+1;
+    if(S.okkoTurns>=5){
+      S.okkoDom=0; S.okkoTurns=0; S.okkoBurn=1; S.domLife=0;
+      try{ stopOkkoDomainBgm(); }catch(e){}
+      try{ addFx({type:'domShatter',dur:0.9}); }catch(e){}
+      flash('fWhite'); shake();
+      say('sys','★ 真贛相愛崩解——乙骨伶香的術式进入熔断，本回合無法使用技能！');
+      try{ S.acted=true; }catch(e){}
+      syncHud();
+    }
+  } else { S.okkoTurns=0; }
+   /* ★ v266 影法術回合結束 ⇒ 現形 */
   /* ★ v225：每次宿傩行動前先預熱領域語音（冪等）—— 真正展開時元素已解碼，點擊即可出聲 */
   try{ prepDomAudio(); }catch(e){}
   $('redAlert').classList.remove('on');
@@ -8548,6 +8574,8 @@ function togglePause(){
   if(typeof renderTargetRow==='function') renderTargetRow();   /* ★ v234 暫停/恢復即時收起/放回式神血條行 */
   /* ★ v149 用戶指定：遊戲暫停 ⇒ 音樂一起暫停；繼續 ⇒ 從原位置續播 */
   try{ pauseAllAudio(); }catch(e){}
+  setTimeout(function(){ try{ pauseAllAudio(); }catch(e){} },240);   /* ★ v356 封面時延一次再停，防漏對白音計 */
+  setTimeout(function(){ try{ pauseAllAudio(); }catch(e){} },240);   /* ★ v356 封面時延一次再停，防漏對白音計 */
   if(!S.paused){ try{ resumeAllAudio(); }catch(e){} }
 }
 /* ★ v149 全音訊暫停/恢復：主 BGM、伏魔御厨子 BGM、領域語音、黑閃、全部 WebAudio 音效節點 */
@@ -11225,7 +11253,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
                ／ ③ 命中血花炸裂 0.44~0.86 ／ ④ 血契殘留 0.60~1.0 */
       const k=f.t/f.dur, s=SC;
       let g;
-      const x0=GX()+52*s, x1=SX()-30*s, yy=GY-178*s;   /* ★ v339 穿血全特效上移（所有坐標以 yy 為基準） */
+      const x0=GX()+124*s   /* ★ v354 起點右移，不重疊乙骨立繪 */, x1=SX()-30*s, yy=GY-168*s;   /* ★ v339 穿血全特效上移（所有坐標以 yy 為基準） */
       if(!f.bsp){
         f.bsp=[];
         for(let i=0;i<30;i++) f.bsp.push({a:rnd(0,Math.PI*2), sp:rnd(0.55,1.5), r:rnd(1.4,3.6), u:rnd(0,1)});
@@ -12396,7 +12424,7 @@ function drawHiguruma(){ return drawCutHero('higuruma',
    原判斷是領域圖優先（okkoDomArt），解放立繪永遠看不到；現改為**解放立繪優先**。 */
 function drawOkkotsu(){ const _k=((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':((curHp()<70&&IMGS.okkoLow)?'okkoLow':'okko'));
   return drawCutHero(_k,
-  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0), h:((_k==='okkoLow')?function(){return H*0.42;}:null)})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
+  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0), h:((_k==='okkoLow')?function(){return H*0.42;}:((_k==='okkoDomArt')?function(){return H*0.54;}:null))})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
 /* ★ v298 用戶指定：虎杖立繪下緣恰好卡在數值條上沿（讀底部 HUD 位置，600ms 緩存） */
 let _itaBarTop=0,_itaBarT=0;
 function itaLift(){
@@ -12423,10 +12451,10 @@ function drawYujiImg(){ const dom=(S.itaDom>0&&IMGS.itaDomArt);
   const o={glow:'rgba(192,57,43,.9)', ring:'#e0553c', bob:2.2, sink:()=>Math.max(0,H-GY),
    glowAlpha:()=>Math.min(0.55,0.22+0.06*S.blood+0.05*Math.sin(S.t*3.2)),
    eyeGlow:dom?null:{x:0.4689,y:0.3922}, noShadow:true};   /* ★ v201 紅瞳＋藍閃（領域線稿態無瞳孔不開） */
-  if(dom) o.h=()=>itaHeight()*0.78;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
+  if(dom) o.h=()=>itaHeight()*0.72;   /* ★ v309 用戶指定：領域姿再縮小（原 0.78，頂到螢幕且壓到「領域展開」大字） */        /* ★ v305 用戶指定：再縮小，右上氣泡不再壓到上方數值條 */
   else if((((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid) || (((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow)) o.h=()=>gojoHeight()*0.70;   /* ★ v326 縮小，避免遮住數值條 */   /* ★ v324 满血～70% 用新形象，高度同五條悟 */
   else o.h=()=>itaHeight()*0.46;           /* ★ v278 常態再縮小 */
-  o.lift=itaLift()-((dom?114:(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80||((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50)?8:34))*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
+  o.lift=itaLift()-((dom?42:(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80||((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50)?8:34))*SC;           /* ★ v304 用戶指定：虎杖形象下移一點（領域態多一點，讓頂端字樣露出） */                           /* ★ v296 再上移（直到不遮數值條） */   /* ★ v85 领域线稿抠图后适当放大 */
   return drawCutHero(dom?'itaDomArt':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)>=0.80&&IMGS.itaMid?'itaMid':(((typeof curHp==="function"?curHp():S.gojo.hp)/100)<0.50&&IMGS.itaLow?'itaLow':'itadori')),o); }
 function drawMaki(){ return drawCutHero('maki',
   {h:()=>itaHeight()*0.72, glow:'rgba(58,63,69,.9)', ring:'#6b7076', bob:2.0})||drawFighter(); }   /* ★ v296 用戶指定：真希立繪縮小（原本比宿儺原身還高） */
@@ -13031,7 +13059,7 @@ $('pad').addEventListener('touchstart',e=>{
   e.preventDefault();
   /* ★ v185 用戶要求：里香語音再提前 —— 移動端 touchstart（比 click 早百餘毫秒）即起播 */
   if(el.dataset.act==='guard' && S.hero==='okkotsu' && !S.rika && !((S.rikaCd||0)>0) && !S.acted){
-    try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); } }catch(e2){}
+    try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); setTimeout(function(){ try{ if(S.phase==='fight'&&!(extraBgmEls&&extraBgmKey)) resumeMainBgm(); }catch(e){} }, 4400);   /* ★ v352 里香語音播完回归 BGM */ setTimeout(function(){ try{ if(S.phase==='fight'&&!(extraBgmEls&&extraBgmKey)) resumeMainBgm(); }catch(e){} }, 4400);   /* ★ v352 里香語音播完回归 BGM */ } }catch(e2){}
   }
   padAct(el.dataset.act);
 },{passive:false});
@@ -13183,6 +13211,7 @@ function getExtraBgm(k){
   return el;
 }
 function playExtraBgm(k,fade){
+  try{ const _e0=(extraBgmEls&&extraBgmEls[k]); if(_e0 && extraBgmKey!==k){ _e0.pause(); _e0.currentTime=0; } }catch(e){}   /* v360 領域曲從頭播 */
 if(window.__appHidden) return; /*x*/
   if(bgmMuted) return;
   if(extraBgmKey===k){ const o=extraBgmEls[k]; if(o&&o.paused){ const p=o.play(); if(p&&p.catch)p.catch(()=>{}); } return; }
@@ -13714,7 +13743,7 @@ function okkoDomainClash(){
   /* ★ v141 宿儺領域展開：暫停主 BGM + 停宿儺領域 BGM */
   suspendMainBgm();
   stopSukuBgm();
-  S.domClash={t:0,inDur:2.36,holdDur:1.64,winDur:1.05,phase:'in'};   /* ★ v281 用戶指定：推入放慢 */
+  S.domClash={t:0,inDur:1.82,holdDur:1.60,winDur:1.05,phase:'in'};   /* ★ v281 用戶指定：推入放慢 */
   addFx({type:'sukuDomWord',dur:4.4});   /* ★ v281 字樣停留加長 */
   S.suk.pose='cast'; S.suk.poseT=1.0;
   flash('fWhite'); shake(); SFX.hollow();
@@ -14884,7 +14913,16 @@ $('btnStart').addEventListener('click',()=>{
   },false);
   window.addEventListener('pagehide',function(){ try{ const el=ensureBgm(); if(el&&!el.paused) el.pause(); }catch(e){} },false);
 /* ★ 車輪戰候選卡改爲 showSelect() 裏動態生成，點擊事件也在那裏綁定（原來寫死在這裏會找不到元素） */
-$('btnFinish').addEventListener('click',showResult);
+document.addEventListener('touchstart',function(e){   /* v365 觸控座標兜底 */
+  try{ var _tb=document.getElementById('btnFinish'); if(!_tb||_tb.style.display==='none') return; var _t=e.touches&&e.touches[0]; if(!_t) return; var _tr=_tb.getBoundingClientRect();
+    if(_t.clientX>=_tr.left-10 && _t.clientX<=_tr.right+10 && _t.clientY>=_tr.top-10 && _t.clientY<=_tr.bottom+10){
+      if(S.phase!=='over') S.phase='over'; showResult(); } }catch(err){} }, {passive:true});
+  document.addEventListener('pointerdown',function(e){   /* v364 座標命中，繞過遮擋 */
+  try{ var _b=document.getElementById('btnFinish'); if(!_b) return; if(_b.style.display==='none') return;
+    var _r=_b.getBoundingClientRect();
+    if(e.clientX>=_r.left-6 && e.clientX<=_r.right+6 && e.clientY>=_r.top-6 && e.clientY<=_r.bottom+6){
+      if(S.phase!=='over') S.phase='over'; showResult(); } }catch(err){} }, true);
+  $('btnFinish').addEventListener('click',function(){ try{ if(S.phase!=='over') S.phase='over'; }catch(e){} showResult(); });   /* ★ v359 直接結算：先補 phase 再出結算頁 */
 $('btnAgain').addEventListener('click',function(){ enterDiff('resultScreen'); });   /* ★ v153 結算「再來一局」→ 難度頁 */
 /* ★ v164 暫停頁「世界線跳躍」：與結算同功能 → 難度頁重開。
    保持 S.paused=true（世界凍結，難度頁底下戰局不偷跑）；resetBattle() 在新局開始時解除凍結並收遮罩。 */
@@ -15743,6 +15781,10 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
 @keyframes wsVig{0%{box-shadow:inset 0 0 0 0 rgba(0,0,0,0)}28%{box-shadow:inset 0 0 170px 46px rgba(0,0,0,.94)}100%{box-shadow:inset 0 0 0 0 rgba(0,0,0,0)}}
 #stage.wsWarnVig{animation:wsVig .6s ease-out;}
 
+/* ★ v353 直接結算按鈕被遮挡 ⇒ 提層並強制可點 */
+#btnFinish{pointer-events:auto !important;}
+#selInfo{z-index:60 !important;pointer-events:none !important;}
+
 /* ═══ ★ v319 鹿紫雲「幻獣琥珀」形象四周近似圓形虛化 ═══ */
 #kashAmber{
   -webkit-mask-image:radial-gradient(ellipse 60% 58% at 50% 52%,#000 54%,rgba(0,0,0,.72) 78%,rgba(0,0,0,0) 100%);
@@ -15765,7 +15807,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
   mask-image:linear-gradient(to right,transparent 0,#000 13%,#000 87%,transparent 100%),
              linear-gradient(to bottom,transparent 0,#000 11%,#000 86%,transparent 100%);
   mask-composite:intersect;}
-#yujiFin.on img{animation:yfIn 1.45s cubic-bezier(.2,.9,.2,1) 0s forwards;}   /* ★ v315 黑閃音效與圖案同幀出現（取消 .10s 延遲） */
+#yujiFin.on img{animation:yfIn 2s cubic-bezier(.2,.9,.2,1) 0s forwards;}   /* ★ v315 黑閃音效與圖案同幀出現（取消 .10s 延遲） */
 @keyframes yfIn{0%{opacity:0;transform:scale(1.20)}55%{opacity:1}100%{opacity:1;transform:scale(1)}}
 
 /* ═══ ★ v306 結算頁滾動容器（包住全部內容，靠 translate3d 位移） ═══ */
