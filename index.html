@@ -3055,7 +3055,7 @@ const DOM_KAI_PCT=0.15, DOM_SLASH_PCT=0.15;    /* 領域必中「解」「捌」
 const DOM_HIT_MUL=0.7;                         /* 領域傷害係數：(解+捌)×0.7 ＝ 21% 最大生命 */
 const MAHO_SLASH_PCT=.10; /* 魔虛羅·斬擊：10% 最大生命 */
 
-const HERO_DMG=0.70;
+const HERO_DMG=0.80;
 const SUK_RECOVER=0.10;
 let DIFF_PICK='normal';                        /* 標題頁選中的難度，start() 時寫進 S.diff */
 function turnSec(){ return (DIFFS[S.diff]||DIFFS.normal).turn; }
@@ -8500,7 +8500,11 @@ function rsScrollInit(){
   }
   rsMeasure();
 }
-function showResult(){
+function showResult(){   /* ★ v372 包一層保底：內部招式報错也要把結算層顯示出來 */
+  try{ showResultInternal(); }catch(e){ try{ console.warn('showResult err',e); }catch(_){} }
+  try{ var _r=document.getElementById('resultScreen'); if(_r) _r.classList.remove('hide'); }catch(_){}
+}
+function showResultInternal(){
   /* ★ v306 結算頁改自寫位移滾動（原生滾動在手機 transform 容器裏不可靠） */
   try{ rsScrollInit(); }catch(e){}
   /* ★ v266 段位統計欄位保底 */
@@ -9397,7 +9401,7 @@ function drawSukuna(){
 
 /* ---------- 鹿紫雲一（黑墨剪影 + 雷光） ---------- */
 function kashHeight(){ return Math.min(H*0.64,435*SC); }   /* ★ v322 用戶指定：與五條悟普通形象同等 */   /* 半身立繪（★v39c 0.66→0.70, 375→405 放大） */
-function kashCut(){ return (S.amberUsed&&IMGS.kashBeast)?IMGS.kashBeast:IMGS.kashimo; }   /* ★v39 術式解放後切換琥珀形態 */
+function kashCut(){ return (S.amberUsed&&IMGS.kashBeast)?bfFeathered(IMGS.kashBeast)   /* ★ v371 幻獸姿徑向羽化 */:IMGS.kashimo; }   /* ★v39 術式解放後切換琥珀形態 */
 function kashW(){ const g=kashCut(); return kashHeight()*(g?g.width/g.height:(S.amberUsed?1.062:0.887)); }
 function drawKashimo(){
   const s=SC, gy=GY, p=S.gojo.pose;
@@ -12424,7 +12428,7 @@ function drawHiguruma(){ return drawCutHero('higuruma',
    原判斷是領域圖優先（okkoDomArt），解放立繪永遠看不到；現改為**解放立繪優先**。 */
 function drawOkkotsu(){ const _k=((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':((curHp()<70&&IMGS.okkoLow)?'okkoLow':'okko'));
   return drawCutHero(_k,
-  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0), h:((_k==='okkoLow')?function(){return H*0.42;}:((_k==='okkoDomArt')?function(){return H*0.54;}:null))})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
+  {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0), h:((_k==='okkoLow')?function(){return H*0.42;}:((_k==='okkoDomArt')?function(){return H*0.51;}:((_k==='okkoRel')?function(){return H*0.50;}:null)))})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
 /* ★ v298 用戶指定：虎杖立繪下緣恰好卡在數值條上沿（讀底部 HUD 位置，600ms 緩存） */
 let _itaBarTop=0,_itaBarT=0;
 function itaLift(){
