@@ -1,4 +1,4 @@
-const CORE_CACHE='jjk-core-v23';
+const CORE_CACHE='jjk-core-v24';
 const ASSET_CACHE='jjk-assets';
 const CORE_URLS=['./','index.html'];
 self.addEventListener('install',function(e){self.skipWaiting();e.waitUntil(caches.open(CORE_CACHE).then(function(c){return c.addAll(CORE_URLS);}).catch(function(){}));});
