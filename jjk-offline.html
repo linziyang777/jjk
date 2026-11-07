@@ -1,3 +1,4 @@
+<!-- ★ v419 用戶指定：①領域對拼期間鎖住底部技能欄（立誓面板不再被推到對拼之後才彈出）②日車「處刑人之劍」那一次的中央大字改印技能名，並改成朱紅印章式落地 + 命中瞬間白閃震屏 -->
 <!-- ★ v417 · 推擠支援乙骨＋槽改 DOM / 選人頭像 / 真希加大 / 解捌區分 / 五條勝利縮放 -->
 <!-- ★ v413 用戶指定：宿儺招式字貼回宿儺身邊 + 日車三技能恢復處刑劍漫畫格（置於最底層）+ 五條數值下修（術式公開 1.35、無限制茈 36~42%） -->
 <!-- ★ v412 用戶指定：日車三技能演出整套重做（higuTrial：落槌→判詞→封印/處刑劍，無全屏暗幕與色塊）+ 文字系統重做（停留時間/入場退場/字號/去色塊） -->
@@ -993,6 +994,11 @@ body.kashimo-noGuard #pad .btn[data-act="guard"]{}
   white-space:nowrap;}
 .btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink);}
 .btn.dim{opacity:.4;}
+/* ★ v419 用戶指定：領域對拼（推擠）期間技能欄整體鎖住 —— 灰階＋降透明＋不吃指針事件，
+   避免玩家在對拼這 2.5~4.3 秒裡點到「束縛・立誓」（立誓面板層級低於推擠槽，會延後才彈出）。 */
+#pad.locked .btn{pointer-events:none;opacity:.40;filter:saturate(.25);}
+#pad.locked .btn small{opacity:.55;}
+#pad.locked .btn .ico{opacity:.7;}
 .btn.b-hollow{background:#f0e9ff;}
 /* ★ 難度選擇（標題頁） */
 #diffRow{display:flex;gap:10px;align-items:center;margin:12px 0 4px;}
@@ -1027,7 +1033,8 @@ body.kashimo-noGuard #pad .btn[data-act="guard"]{}
 /* ★ v26 三號位技能按角色配色：日車＝金黃（處刑人之劍）／真希＝黑（釋魂刀）／虎杖＝黑紅（赤血操術） */
 .btn.b-gold{background:linear-gradient(180deg,#ffe08a 0%,#e0a020 100%);color:#3a2a00;
   border-color:#7a5200;animation:ultGold .9s ease-in-out infinite;}
-.btn.b-gold .ico{color:#5a3f00;}
+/* ★ v419 用戶指定：日車三技能（處刑人之劍）圖標改 #FCCC8B，加一層極淡的深色投影保住可讀性。 */
+.btn.b-gold .ico{color:#FCCC8B;filter:drop-shadow(0 1px 0 rgba(72,42,6,.55));}
 .btn.b-gold small{opacity:.95;color:#4a3600;}
 .btn.b-black{background:linear-gradient(180deg,#2c2c33 0%,#0c0c10 100%);color:#e8e8f2;
   border-color:#000;box-shadow:5px 5px 0 #000;animation:ultBlack .9s ease-in-out infinite;}
@@ -4257,9 +4264,11 @@ function fxBlackCrack(){
      若 0.8 秒內尚未播過（如完美格擋等非 QTE 路徑），才在此補播一次。 */
   if(!window.__bfSfxAt || performance.now()-window.__bfSfxAt>800) playBlackFlashSfx();
 }
-function fxText(x,y,txt,col,big,dir){
+function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v412 停留時間拉長：小字 1.0s（原 0.7）、大字 1.30s（原 1.0），配合入場/停留/退場三段 */
-  addFx({type:'text',dur:big?1.30:1.00,x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0});
+  /* ★ v419 第 7 參 opt：{sz 字號倍數／dur 覆蓋停留時間／stamp 印章式落地（大字用）} */
+  opt=opt||{};
+  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp});
 }   /* ★ v407 第 6 參數 dir：+1 往右消散、−1 往左消散 */
 function fxRing(x,y,col){ addFx({type:'ring',dur:0.45,x:x,y:y,col:col||'#111'}); }
 function fxShards(x,y,rgb,big){
@@ -4624,7 +4633,7 @@ function gojoVoid(){
     say('suku','「領域展開——伏魔御厨子。」');
     say('narr','旁白：開放的結界自右側咬入——兩片領域在畫面中央互斬，誰的結界更精密，誰就能碾過對方。');
     /* ★ v82 對拼結束後的吞噬/擴展提速：winDur 0.9 → 0.45（宿儺勝吞沒 / 五條勝擴回全屏共用此時長） */
-    S.domClash={t:0,inDur:0.92,holdDur:0.88,winDur:1.05,phase:'in'}; S.pushV=0.62; S.pushWin=2.46; S.pushTickN=0; S.pushN=0; S.pushHit=0; S.pushPain=0;   /* ★ v417 推擠：起點 62%、判定窗口 2.46s */ S.sukuDomArtT=7.0;   /* ★ v396 宿儺立刻換領域姿 */   /* ★ v306 用戶指定：對撞動畫再略加快（合計 2.14s，仍早於 2.53s 的語音巨響落點） */   /* ★ v305 用戶指定：推入提速——in+hold 合計 2.53s，恰好是宿儚語音那一聲巨響（音檔 3.44s − 前導 0.91s）；巨響一落就由勝方領域推向對方。 */   /* ★ v281 用戶指定：推入放慢 */
+    S.domClash={t:0,inDur:0.92,holdDur:0.88,winDur:1.05,phase:'in'}; S.pushV=0.62; S.pushWin=2.46; S.domClash.pushWin=2.46; S.pushTickN=0; S.pushN=0; S.pushHit=0; S.pushPain=0;   /* ★ v417 推擠：起點 62%、判定窗口 2.46s */ S.sukuDomArtT=7.0;   /* ★ v396 宿儺立刻換領域姿 */   /* ★ v306 用戶指定：對撞動畫再略加快（合計 2.14s，仍早於 2.53s 的語音巨響落點） */   /* ★ v305 用戶指定：推入提速——in+hold 合計 2.53s，恰好是宿儚語音那一聲巨響（音檔 3.44s − 前導 0.91s）；巨響一落就由勝方領域推向對方。 */   /* ★ v281 用戶指定：推入放慢 */
     addFx({type:'sukuDomWord',dur:4.4});   /* ★ v281 字樣停留加長 */
     S.suk.pose='cast'; S.suk.poseT=1.0;
     flash('fWhite'); shake(); SFX.hollow();
@@ -4771,7 +4780,7 @@ function hurtHero(d,kind){
     if(S.makiBrace>0 && d>0 && (S.makiStance||0)===0){
       const _ab=d*0.35; d-=_ab; S.makiBrace=0;
       S.makiCharge=Math.min(30,(S.makiCharge||0)+_ab*0.8);   /* ★ v390 轉化率 0.5 → 0.8：一回合只吸一次，0.5 太慢，蓄不滿就換人了 */
-      fxText(GX()+rnd(-14,14),GY-214*SC,'龍骨・吸收','#3fbf75',false);
+      fxText(GX()+rnd(-14,14),GY-214*SC,'龍骨・吸收','#3a3f45',false);
     }
     if((S.makiStance||0)>0){
       if(kind==='kai'||kind==='dom'){
@@ -4779,14 +4788,14 @@ function hurtHero(d,kind){
       }else if(kind==='agyo'||kind==='maha'){
         /* 虎葬·碎擊 / 魔虛羅斬擊：全額穿透 */
       }else{
-        fxText(GX()+rnd(-12,12),GY-188*SC,'天與咒縛','#3fbf72',false,1);
+        fxText(GX()+rnd(-12,12),GY-188*SC,'天與咒縛','#3a3f45',false,1);
         say('sys','天與咒縛・架勢 —— 這一擊被架開了（只有「解」「捌」「領域必中」「虎葬·碎擊」「斬擊」傷得到真希）。');
         S.makiRead=0;   /* ★ v408 見切機制已取消（變數保留只為相容舊存檔／HUD key） */
         S.makiParry=(S.makiParry||0)+1;            /* ★ v388 本回合架開次數 ⇒ 回合末反擊 */
         syncHud(); return;
       }
     }else if(!basePhys){
-      fxText(GX()+rnd(-12,12),GY-188*SC,'天與咒縛','#3fbf72',false,1);
+      fxText(GX()+rnd(-12,12),GY-188*SC,'天與咒縛','#3a3f45',false,1);
       say('sys','天與咒縛 —— 咒力攻擊對真希無效（僅物理斬擊能傷到她）。');
       syncHud(); return;
     }
@@ -4815,7 +4824,7 @@ function hurtHero(d,kind){
      （架勢當回合由白名單規則管，不再額外疊乘；makiHalf 在架勢當回合結算 -1 後恰好剩 2 場） */
   if(S.hero==='maki'&&S.makiHalf>0&&(S.makiStance||0)===0&&d>0){
     d*=0.5;
-    fxText(GX()+rnd(-12,12),GY-206*SC,'架勢後勁 -50%','#3fbf75',false);
+    fxText(GX()+rnd(-12,12),GY-206*SC,'架勢後勁 -50%','#3a3f45',false);
   }
   /* ★ v408 全開的舊代價（3 回合受傷 +20%）已刪除 —— 改成永久失去架勢（見 makiGuard） */
   d=Math.round(d*10)/10;
@@ -5661,13 +5670,14 @@ function kindLabel(k){ const n=kindName(k); return n.length>6?n.slice(0,6):n; }
    「術式熔斷」是另一個機制：領域對拼失敗後的懲罰狀態（gojoBurn／sukuBurn／okkBurn，除反轉術式外全部封鎖）。 */
 /* ★ v86 各角色 3 技能（btnUlt）的招牌演出參數：配色／定格時長／爆閃色／招式名
    配色全部對原著：五條＝虛式紫、鹿紫＝琥珀金、虎杖＝赤血紅、日車＝審判藍、乙骨＝里香紫、真希＝釋魂綠 */
+/* ★ v419 用戶指定：真希的文字與圖案一律不用綠色，全部改灰黑（#3a3f45 系）。 */
 const SKILL_FX={
   gojo:    {word:'茈',        color:'#8b5cf6', stop:0.18, flash:'fPurple',  slow:0.55},
   kashimo: {word:'幻獣琥珀',  color:'#e030c8', stop:0.15, flash:'fWhite',   slow:0.55},   /* ★ v115 招牌色回粉紫（與 fxManga／普攻雷一致） */
   itadori: {word:'',      color:'#c0392b', stop:0.13, flash:'flashRed', slow:0.50},
   higuruma:{word:'审判·下达', color:'#2b6cb0', stop:0.15, flash:'fWhite',   slow:0.60},
   okkotsu: {word:'',  color:'#7c3aed', stop:0.20, flash:'fPurple',  slow:0.60},
-  maki:    {word:'',          color:'#3fbf72', stop:0.11, flash:'fWhite',   slow:0.32}   /* ★ v119 依用戶要求：不再彈「無聲」招牌字（skillBeat 用 o.word||fx.word 取值，空串會被回退，故須在此清空） */
+  maki:    {word:'',          color:'#3a3f45', stop:0.11, flash:'fWhite',   slow:0.32}   /* ★ v119 依用戶要求：不再彈「無聲」招牌字（skillBeat 用 o.word||fx.word 取值，空串會被回退，故須在此清空） */
 };
 /* ★ v86 「頓挫框架」：所有 3 技能共用同一條四拍節拍
    ① 前搖（pose=cast）→ ② 蓄力（charge×0.45 處細微顫動，預告即將爆發）
@@ -5689,7 +5699,9 @@ function skillBeat(o){
     S.hitStop=Math.max(S.hitStop, o.stop||fx.stop);
     flash(o.flash||fx.flash); shake();
     const sl=o.slow||fx.slow; S.slowT=sl; S.slowDur=sl;                /* ④ 餘韻慢放 */
-    if(word) fxText(W*0.5, H*0.28, word, color, true);   /* ★ v100 word='' 時跳過（領域大字改走豎排字） */
+    /* ★ v419 大字位置／字號／落地方式可按招式覆寫（o.wy／o.wsz／o.wdur／o.wstamp） */
+    if(word) fxText(W*0.5, (o.wy!=null?o.wy:H*0.28), word, color, true, 0,
+                    {sz:o.wsz||1, dur:o.wdur, stamp:!!o.wstamp});   /* ★ v100 word='' 時跳過（領域大字改走豎排字） */
     if(typeof o.boom==='function') o.boom(fx);
   }, charge);
 }
@@ -8438,7 +8450,7 @@ function sukunaTurn(){
     const _pd=Math.round((4+Math.random()*3)*_pn*10)/10;
     S.suk.hp=Math.max(0,S.suk.hp-_pd);
     addFx({type:'makiSlash',dur:0.5});
-    fxText(SX()+rnd(-16,16),GY-204*SC,'見切・反擊 '+_pd,'#3fbf75',true);
+    fxText(SX()+rnd(-16,16),GY-204*SC,'見切・反擊 '+_pd,'#3a3f45',true);
     say('sys','★ 見切・反擊 —— 真希順著架開的空檔回敬 '+_pn+' 刀，造成 '+_pd+' 點傷害。');
     syncHud();
   }
@@ -10808,10 +10820,11 @@ function itaGuard(){
   S.itaSimpleDom=1;
   /* ★ v197 需求①：使用簡易領域後 3 回合內受傷 ×0.8（與既有減傷取更優者） */
   S.vowDefMul=Math.min(S.vowDefMul,0.8); S.vowDefT=Math.max(S.vowDefT,3);
-  S.blockT=0.9; S.guardFx=0.9; S.guardUp=true;
+  S.blockT=0.9; S.guardUp=true;   /* ★ v420 環由 itaSimpleDom 動畫呈現 */
   S.gojo.pose='guard'; S.gojo.poseT=0.5;
   markActed('guard');
-  fxGuard(); SFX.block();
+  addFx({type:'itaSimpleDom',dur:1.30});   /* ★ v420 簡易領域動畫重做 */
+  SFX.block();
   flash('fWhite');
   if(perfectWindowOpen()) perfectPayoff();   /* ★ v228 最後 0.5 秒按下 ⇒ 完美格擋 */
   addRes(14);
@@ -11146,7 +11159,7 @@ const PUSH_HERO={gojo:1,okkotsu:1};
 const PUSH_F=[0.18,0.38,0.58,0.78];
 const PUSH_HIT=0.085;
 function pushOn(){ return !!(S.domClash && PUSH_HERO[S.hero]); }
-function pushWinT(){ const d=S.domClash; return d?(d.pushWin||2.46):0; }
+function pushWinT(){ const d=S.domClash; return d?((S.pushWin||d.pushWin||2.46)):0; }   /* ★ v418b 修：窗口一向寫在 S.pushWin（乙骨 4.30s），此處只讀 d.pushWin ⇒ 乙骨被誤降到 2.46s */
 function pushPanel(){ return document.getElementById('pushPanel'); }
 function pushNudge(){
   const d=S.domClash;
@@ -11181,7 +11194,7 @@ function pushStep(dt){
   const win=pushWinT();
   const on=mine && d.t<=win;
   if(lay && lay.classList.contains('on')!==on) lay.classList.toggle('on',on);
-  if(!mine) return;
+  if(!mine){ const p0=pushPanel(); if(p0 && p0.classList.contains('yuta')) p0.classList.remove('yuta'); return; }
   if(d.t>win+0.12){ S.pushTickN=0; S.pushHit=0; S.pushPain=0; return; }   /* 指針值保留到下一場對拼 */
   if(S.pushV==null) S.pushV=0.62;
   if(S.pushHit>0)  S.pushHit =Math.max(0,S.pushHit -dt*3.2);
@@ -11218,6 +11231,509 @@ function drawPushBar(){
   }
 }
 
+/* ===== v420 二技能動畫重做（3.0）：全部「填充」繪製（不用 stroke / strokeText，實機曾不顯像素）
+   可視區經驗值（844×390 實測）：角色腳下 GY≈0.84H 已被底部對白框吃掉，
+   能讀到特效的帶狀區約 y∈[60,280]（胸口 ≈ GY-hgt*0.52）。故主力元素放在胸口以上。
+   節奏：每套都鋪到 k≈0.95，不留空白尾段（定格審片時 k=0.64/0.82 兩格不得為空）。 */
+/* 直線段 → 四邊形填充 */
+function _fxBar(ax, ay, bx, by, w, col, alpha) {
+  const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+  const nx = -dy / L * w * 0.5, ny = dx / L * w * 0.5;
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(ax + nx, ay + ny); ctx.lineTo(bx + nx, by + ny);
+  ctx.lineTo(bx - nx, by - ny); ctx.lineTo(ax - nx, ay - ny);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+/* 兩端不等寬的漸細線段（刀刃／斬線） */
+function _fxTaper(ax, ay, bx, by, w0, w1, col, alpha) {
+  const dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+  const nx = -dy / L, ny = dx / L;
+  const a0 = w0 * 0.5, a1 = w1 * 0.5;
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(ax + nx * a0, ay + ny * a0);
+  ctx.lineTo(bx + nx * a1, by + ny * a1);
+  ctx.lineTo(bx - nx * a1, by - ny * a1);
+  ctx.lineTo(ax - nx * a0, ay - ny * a0);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+/* 帶白邊的黑線（壓在白背景或黑法廷背景上都讀得到） */
+function _fxBarW(ax, ay, bx, by, w, col, alpha, halo) {
+  _fxBar(ax, ay, bx, by, w + (halo == null ? 3.2 : halo) * SC, '#ffffff', alpha * 0.90);
+  _fxBar(ax, ay, bx, by, w, col, alpha);
+}
+/* 刀光：沿弧線的漸細拖尾（頭粗尾細） */
+function _fxArcTrail(cx, cy, R, a0, a1, wMax, col, alpha, halo) {
+  const N = 12;
+  for (let i = 0; i < N; i++) {
+    const u0 = i / N, u1 = (i + 1) / N;
+    const t0 = a0 + (a1 - a0) * u0, t1 = a0 + (a1 - a0) * (u1 + 0.02);
+    const wk = Math.pow(u1, 0.75);
+    const x0 = cx + Math.cos(t0) * R, y0 = cy + Math.sin(t0) * R;
+    const x1 = cx + Math.cos(t1) * R, y1 = cy + Math.sin(t1) * R;
+    if (halo) _fxBar(x0, y0, x1, y1, wMax * wk + halo * SC, '#ffffff', alpha * 0.85);
+    _fxBar(x0, y0, x1, y1, wMax * wk, col, alpha);
+  }
+}
+/* 橢圓環帶（外弧正向 + 內弧反向 ⇒ 挖空）；a0/a1 可選 */
+function _fxRing(cx, cy, rx, ry, w, col, alpha, a0, a1) {
+  const A0 = (a0 == null ? 0 : a0), A1 = (a1 == null ? Math.PI * 2 : a1);
+  const irx = Math.max(0.5, rx - w), iry = Math.max(0.5, ry - w * 0.34);
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, A0, A1, false);
+  ctx.ellipse(cx, cy, irx, iry, 0, A1, A0, true);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+/* 圓點 */
+function _fxDot(x, y, r, col, alpha) {
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+/* 由內半徑 r0 長到 r1 的放射尖刺（梯形填充） */
+function _fxSpike(cx, cy, a, r0, r1, w0, col, alpha, w1) {
+  const ca = Math.cos(a), sa = Math.sin(a), px = -sa, py = ca;
+  const wb = w0 * 0.5, wt = (w1 == null ? 0 : w1) * 0.5;
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.moveTo(cx + ca * r0 + px * wb, cy + sa * r0 + py * wb);
+  ctx.lineTo(cx + ca * r1 + px * wt, cy + sa * r1 + py * wt);
+  ctx.lineTo(cx + ca * r1 - px * wt, cy + sa * r1 - py * wt);
+  ctx.lineTo(cx + ca * r0 - px * wb, cy + sa * r0 - py * wb);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+/* 鋸齒星（漫畫衝擊爆） */
+function _fxStar(cx, cy, R, n, jag, col, alpha, rot) {
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  for (let i = 0; i < n * 2; i++) {
+    const a = (rot || 0) + i / (n * 2) * Math.PI * 2;
+    const rr = R * (i % 2 ? (1 - (jag == null ? 0.5 : jag)) : 1);
+    const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+/* 打擊點：墨黑爆星 + 白芯 */
+function _fxImpact(cx, cy, R, al) {
+  _fxStar(cx, cy, R, 9, 0.52, '#15161a', 0.92 * al, 0.22);
+  _fxStar(cx, cy, R * 0.56, 7, 0.46, '#ffffff', al, 0.22);
+}
+
+/* 連續弧帶（整條一個多邊形，寬度沿弧漸變；不會出現分段白縫） */
+function _fxArcBand(cx, cy, R, a0, a1, wA, wB, col, alpha) {
+  const N = 24;
+  ctx.save();
+  ctx.globalAlpha = (alpha == null ? 1 : alpha);
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const u = i / N, a = a0 + (a1 - a0) * u, w = (wA + (wB - wA) * u) * 0.5;
+    const x = cx + Math.cos(a) * (R + w), y = cy + Math.sin(a) * (R + w);
+    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  }
+  for (let i = N; i >= 0; i--) {
+    const u = i / N, a = a0 + (a1 - a0) * u, w = (wA + (wB - wA) * u) * 0.5;
+    ctx.lineTo(cx + Math.cos(a) * (R - w), cy + Math.sin(a) * (R - w));
+  }
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+/* ★ v420 真希·天與咒縛・架勢
+   分鏡（1.05s）：① 身前斜劈刀光（墨黑刀身 + 白熱刀芯）② 宿儺三條「解」黑斬飛來
+                 ③ 接觸點墨爆星（白芯）+ 放射火花 ④ 被架開的殘段向右上彈飛
+   排版原則：特效一律放在「身前＝畫面右側」的空檔，不壓臉、不壓軀幹；底色是白素描城市 ⇒ 以墨黑為主體。
+   原作依據：0 咒力，靠肉體與五感在斬擊到達前架開（連宿儺貼臉直斬也只輕傷）。 */
+function drawFxMakiStance(f) {
+  const TAU = Math.PI * 2;
+  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.05)));
+  const s = SC, hx = GX(), gy = GY, hgt = itaHeight();
+  const ink = '#1b1d22', wht = '#ffffff';
+  const cy = gy - hgt * 0.52;
+  /* 架開點：完全落在她身前（右側）的空檔，不壓軀幹 */
+  const C = { x: hx + hgt * 0.52, y: cy - hgt * 0.02 };
+  /* ① 刀光：以她為心的大弧，只在右半側（cos>0）掃，保證整條弧都在身外 */
+  const p1 = Math.min(1, Math.max(0, (k - 0.02) / 0.32));
+  if (p1 > 0 && k < 0.92) {
+    const hold = 1 - Math.max(0, (k - 0.50) / 0.40);
+    const al = Math.min(1, hold) * Math.min(1, p1 * 3.2);
+    const ax = hx, ay = cy + hgt * 0.06, R = hgt * 0.46;
+    const headA = 0.84 - 1.68 * p1;                 /* 右下 → 右上 */
+    const tailLen = 0.92 * Math.min(1, p1 * 2.2);
+    const tA = headA + tailLen, hA = headA, mA = tA + (hA - tA) * 0.58;
+    const gw = 0.72 + 0.28 * p1;
+    /* 三層同弧（透鏡形：兩頭收細、中段最厚）⇒ 白外光 / 墨刀身 / 白熱刀芯 */
+    const band = (w0, w1, w2, col, alpha) => {
+      _fxArcBand(ax, ay, R, tA, mA, w0, w1, col, alpha);
+      _fxArcBand(ax, ay, R, mA, hA, w1, w2, col, alpha);
+    };
+    band(7 * s, 42 * s * gw, 9 * s, wht, al * 0.86);
+    band(2.4 * s, 34 * s * gw, 3.4 * s, ink, al * 0.96);
+    band(1.0 * s, 9 * s * gw, 1.6 * s, wht, al);
+  }
+  /* ② 三條黑斬自宿傩側飛來（短促、帶白邊，才壓得住白背景） */
+  for (let i = 0; i < 3; i++) {
+    const p = Math.max(0, Math.min(1, (k - 0.06 - i * 0.06) / 0.22));
+    if (p <= 0) continue;
+    const Cs = { x: C.x + (i - 1) * 7 * s, y: C.y + (i - 1) * 16 * s };
+    const S0 = { x: Cs.x + (150 - i * 22) * s, y: Cs.y - (58 - i * 8) * s };
+    if (p < 1) {
+      const x = S0.x + (Cs.x - S0.x) * p, y = S0.y + (Cs.y - S0.y) * p;
+      _fxBarW(S0.x, S0.y, x, y, 6.2 * s, ink, 0.95, 2.8);
+      _fxTaper(x, y, x + (S0.x - Cs.x) * 0.16, y + (S0.y - Cs.y) * 0.16, 6.2 * s, 1.4 * s, ink, 0.95);
+    } else {
+      /* ④ 殘段被架開：向右上彈出 */
+      const q = Math.min(1, Math.max(0, (k - (0.34 + i * 0.05)) / 0.36));
+      if (q < 1) {
+        const al = 1 - q, L = (30 + 40 * q) * s;
+        const dx2 = 0.52, dy2 = -1;
+        _fxBarW(Cs.x, Cs.y, Cs.x + dx2 * L, Cs.y + dy2 * L, 4.6 * s, ink, 0.90 * al, 2.4);
+        _fxDot(Cs.x + dx2 * L, Cs.y + dy2 * L, 3.2 * s, ink, 0.90 * al);
+      }
+    }
+  }
+  /* ③ 接觸點：白底 + 墨爆星（雙脈衝）+ 白芯 + 放射火花（白邊讓它從素描背景上「浮起來」） */
+  for (let n = 0; n < 2; n++) {
+    const bp = Math.min(1, Math.max(0, (k - (0.26 + n * 0.24)) / 0.38));
+    if (bp <= 0 || bp >= 1) continue;
+    const al = Math.sin(Math.PI * bp), R1 = (22 + 40 * bp) * s * (n ? 0.66 : 1);
+    _fxStar(C.x, C.y, R1 * 1.26, 11, 0.50, wht, 0.92 * al, 0.22 + n * 0.3);
+    _fxStar(C.x, C.y, R1, 10, 0.54, '#15161a', 0.96 * al, 0.22 + n * 0.3);
+    _fxStar(C.x, C.y, R1 * 0.44, 7, 0.40, wht, al, 0.22 + n * 0.3);
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * TAU + 0.30 + n * 0.2;
+      _fxSpike(C.x, C.y, a, R1 * 0.92, R1 * 1.80, 4.0 * s, '#15161a', al * 0.82, 0.2);
+    }
+    for (let i = 0; i < 6; i++) {
+      const a = -0.9 + i * 0.42, r = (30 + 46 * bp) * s;
+      _fxDot(C.x + Math.cos(a) * r, C.y + Math.sin(a) * r * 0.9, (3.0 * (1 - bp) + 1.1) * s, '#3a3d44', al);
+    }
+  }
+  /* ⑤ 收束：身前殘留細弧 + 腳邊揚塵 */
+  if (k > 0.50 && k < 1) {
+    const q = Math.min(1, (k - 0.50) / 0.44), al = Math.sin(Math.PI * q) * 0.60;
+    _fxRing(hx + hgt * 0.16, cy + hgt * 0.08, hgt * 0.34, hgt * 0.34, 2.4 * s, ink, al, -0.84, 0.30);
+  }
+  if (k < 0.80) {
+    const p = Math.min(1, k / 0.80);
+    _fxRing(hx, gy - 2 * s, (30 + 92 * p) * s, (30 + 92 * p) * s * 0.24, (6 * (1 - p) + 1.6) * s, ink, (1 - p) * 0.50);
+  }
+}
+
+/* ★ v420 真希·天與咒縛・全開
+   分鏡（1.45s）：① 四周墨角收束 ② 背後（左側）墨爆星 + 白芯 ③ 放射墨刺
+                 ④ 上升墨點／氣流 ⑤ 橫向速度線（後段主力，保證 k≥0.8 不空）
+   排版原則：爆心放在她身後偏左，避免白色爆星蓋住臉與軀幹。
+   原作依據：真依死後成為完全天與咒縛者（0 咒力、肉體超規格），全開＝解放肉體規格。 */
+function drawFxMakiAwaken(f) {
+  const TAU = Math.PI * 2;
+  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.45)));
+  const s = SC, hx = GX(), gy = GY, hgt = itaHeight();
+  const ink = '#15161a', wht = '#ffffff';
+  const cy = gy - hgt * 0.50;
+  const B = { x: hx - hgt * 0.20, y: cy + hgt * 0.02 };   /* 爆心：身後偏左 */
+  /* ① 墨角收束 */
+  if (k < 0.98) {
+    const pin = Math.min(1, k / 0.12);
+    const fade = Math.min(1, Math.max(0, 1 - (k - 0.68) / 0.30));
+    const g = ctx.createRadialGradient(hx, cy, H * 0.10, hx, cy, Math.max(W, H) * 0.66);
+    g.addColorStop(0, 'rgba(10,10,12,0)');
+    g.addColorStop(1, 'rgba(10,10,12,' + (0.62 * pin * fade).toFixed(3) + ')');
+    ctx.save(); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
+  }
+  /* ② 背後墨爆星（白芯小，貼在她背側不蓋人） */
+  const fl = Math.min(1, Math.max(0, (k - 0.02) / 0.18));
+  if (fl > 0 && fl < 1) {
+    const al = Math.sin(Math.PI * fl);
+    _fxStar(B.x, B.y, (34 + 22 * fl) * s, 11, 0.52, ink, al * 0.90, 0.18);
+    _fxStar(B.x, B.y, (14 + 8 * fl) * s, 8, 0.44, wht, al, 0.18);
+    for (let i = 0; i < 5; i++) {
+      const a = -0.62 + i * 0.36;
+      _fxSpike(B.x, B.y, a, hgt * 0.10, hgt * 0.82, 11 * s, ink, al * 0.62, 0.4);
+    }
+  }
+  /* ③ 放射墨刺（外圈，slow 呼吸感） */
+  const sp = Math.min(1, Math.max(0, (k - 0.03) / 0.26));
+  if (sp > 0 && k < 0.99) {
+    const fade = Math.min(1, Math.max(0, 1 - (k - 0.78) / 0.20));
+    const r0 = hgt * 0.24;
+    for (let i = 0; i < 17; i++) {
+      const a = i / 17 * TAU + 0.22 + Math.sin(k * 7 + i) * 0.02;
+      const L = hgt * (0.15 + 0.30 * Math.abs(Math.sin(i * 2.7) + 0.35)) * Math.min(1, sp * 1.8);
+      _fxSpike(B.x, B.y, a, r0, r0 + L, (5 + 8 * Math.abs(Math.cos(i * 1.9))) * s, ink, 0.60 * fade, 0.6);
+    }
+  }
+  /* ④ 上升墨點 */
+  if (k > 0.20) {
+    for (let i = 0; i < 12; i++) {
+      const q = ((k - 0.20) * 0.9 + i * 0.097) % 1;
+      const a = Math.sin(Math.PI * q) * 0.46;
+      if (a <= 0.02) continue;
+      const px2 = hx + Math.sin(i * 1.7) * 66 * s + Math.sin(q * 5 + i) * 10 * s;
+      const py2 = gy - 16 * s - q * hgt * 1.06;
+      _fxDot(px2, py2, (5.0 + 4 * Math.abs(Math.cos(i * 2.1))) * s * (0.72 + 0.28 * q), '#2a2c33', a);
+    }
+  }
+  /* ⑤ 地面塵環（前排會被告白框吃掉，只做非常短的一瞬） */
+  for (let i = 0; i < 2; i++) {
+    const p = Math.max(0, Math.min(1, (k - 0.04 - i * 0.10) / 0.36));
+    if (p <= 0 || p >= 1) continue;
+    const R = (26 + p * 130) * s;
+    _fxRing(hx, gy - 3 * s, R, R * 0.26, (8 * (1 - p) + 2) * s, ink, (1 - p) * 0.52);
+  }
+  /* ⑥ 橫向速度線（後段主力） */
+  if (k > 0.26) {
+    const pin = Math.min(1, (k - 0.26) / 0.20);
+    const fade = Math.min(1, Math.max(0, 1 - (k - 0.92) / 0.08));
+    ctx.save();
+    ctx.globalAlpha = 0.50 * pin * fade;
+    ctx.fillStyle = ink;
+    for (let i = 0; i < 13; i++) {
+      const yy = H * (0.13 + i * 0.052) + Math.sin(i * 3.1) * 4 * s;
+      const len = (44 + 90 * Math.abs(Math.sin(i * 2.1))) * pin * s;
+      const xx = W * 0.02 + (i % 2 ? W * 0.50 : 0) + i * W * 0.034;
+      if (xx > W - 12 || yy > gy - 8 * s) continue;
+      ctx.fillRect(xx, yy, len, (1.5 + 1.3 * Math.abs(Math.cos(i))) * s);
+    }
+    ctx.restore();
+    /* 殘留：腳邊一圈未散的氣（收尾不空） */
+    const rt = Math.min(1, Math.max(0, (k - 0.62) / 0.38));
+    if (rt > 0) {
+      _fxRing(hx, cy + hgt * 0.10, hgt * 0.30, hgt * 0.30, 2.0 * s, ink, 0.30 * Math.sin(Math.PI * rt));
+    }
+  }
+}
+
+/* ★ v420 日車·領域展延＋質詢
+   分鏡（1.25s）：① 無術式領域自下而上纏身（白金薄紗 + 三層金環 + 金格 + 底部翻捲）
+                 ② 宿儺「解」黑斬打上膜 → 金環中和（白芯光點）
+                 ③ 左肩小天平隨質詢傾斜 ④ 收束：白金弧掠過膜面 + 上升金屑
+   原作依據：領域展延＝把未賦予術式的領域纏在身上，讓對手术式流入中和，不必中斷生得術式。
+   環境：常開在「法廷」黑白高密度線稿上 ⇒ 金環帶白邊、膜面用白色薄紗才讀得到。 */
+function drawFxHiguExtend(f) {
+  const TAU = Math.PI * 2;
+  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.25)));
+  const s = SC, hx = GX(), gy = GY, hgt = itaHeight();
+  const gold = '#c9a227', lime = '#fff6d8', wht = '#ffffff', ink = '#17181c';
+  const cy = gy - hgt * 0.50;
+  /* ① 白金薄膜自下而上纏身 */
+  const fp = Math.min(1, Math.max(0, (k - 0.02) / 0.30));
+  if (fp > 0) {
+    const fade = Math.min(1, Math.max(0, 1 - (k - 0.90) / 0.10));
+    const e = fp * fp * (3 - 2 * fp);
+    const RH = hgt * 0.55 * e;
+    const RW = (hgt * 0.198) * (0.74 + 0.26 * e);
+    const myc = gy - RH * 0.96;
+    /* 膜面：淡白霧（低透明度，不霧臉）+ 環帶厚度 */
+    ctx.save();
+    ctx.globalAlpha = 0.10 * fade * Math.min(1, e * 1.8);
+    const gg = ctx.createLinearGradient(hx, myc - RH, hx, gy);
+    gg.addColorStop(0, 'rgba(255,255,255,.95)');
+    gg.addColorStop(0.55, 'rgba(255,252,236,.60)');
+    gg.addColorStop(1, 'rgba(255,255,255,.15)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.ellipse(hx, myc, RW, RH, 0, 0, TAU, false); ctx.fill();
+    ctx.restore();
+    /* 膜的厚度：外緣 30% 寬的白金環帶（讀作「纏身的膜」） */
+    _fxRing(hx, myc, RW, RH, RW * 0.26, wht, 0.26 * fade);
+    _fxRing(hx, myc, RW * 0.88, RH * 0.88, RW * 0.09, gold, 0.20 * fade);
+    /* 三層金環（外圈自帶白邊） */
+    _fxRing(hx, myc, RW + 2.6 * s, RH + 1.8 * s, 2.6 * s, wht, 0.70 * fade);
+    _fxRing(hx, myc, RW, RH, 4.4 * s, gold, 0.95 * fade);
+    _fxRing(hx, myc, RW * 0.80, RH * 0.82, 2.4 * s, gold, 0.62 * fade);
+    _fxRing(hx, myc, RW * 0.58, RH * 0.60, 1.6 * s, gold, 0.44 * fade);
+    /* 金格（橫 5 / 經 6），線更細、避免像籠子 */
+    for (let i = -2; i <= 2; i++) {
+      const yy = myc + i * RH * 0.33;
+      const w2 = RW * Math.sqrt(Math.max(0.06, 1 - Math.pow(i * 0.33, 2)));
+      _fxBar(hx - w2, yy, hx + w2, yy, 1.5 * s, gold, 0.42 * fade);
+    }
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI * 0.76 + i * (Math.PI * 1.52 / 5);
+      _fxBar(hx + Math.cos(a) * RW * 0.34, myc + Math.sin(a) * RH * 0.34,
+             hx + Math.cos(a) * RW * 0.995, myc + Math.sin(a) * RH * 0.995, 1.4 * s, gold, 0.44 * fade);
+    }
+    /* 底部翻捲：兩道短弧（膜的「下擺」） */
+    const pb = Math.min(1, Math.max(0, (k - 0.18) / 0.30));
+    if (pb > 0) {
+      const aa = -Math.PI * 0.30 + pb * Math.PI * 0.6;
+      _fxRing(hx, gy - RH * 0.12, RW * 1.02, RH * 0.30, 3.0 * s, gold, 0.62 * fade, aa - 0.5, aa + 0.5);
+      _fxRing(hx, gy - RH * 0.12, RW * 1.02, RH * 0.30, 1.4 * s, wht, 0.80 * fade, aa - 0.5, aa + 0.5);
+    }
+    /* 上升金屑 */
+    if (k > 0.22) {
+      for (let i = 0; i < 7; i++) {
+        const q = ((k - 0.22) * 0.85 + i * 0.14) % 1;
+        const al = Math.sin(Math.PI * q) * 0.85 * fade;
+        if (al <= 0.03) continue;
+        const gx2 = hx + Math.sin(i * 2.1 + q * 4) * RW * 0.92;
+        const gy2 = gy - 8 * s - q * RH * 1.55;
+        _fxDot(gx2, gy2, (1.8 + 1.6 * Math.abs(Math.sin(i))) * s, gold, al);
+      }
+    }
+  }
+  /* ② 「解」黑斬打上膜被中和 */
+  for (let i = 0; i < 3; i++) {
+    const p = Math.max(0, Math.min(1, (k - 0.12 - i * 0.07) / 0.28));
+    if (p <= 0) continue;
+    const S0 = { x: SX() - 40 * s, y: gy - hgt * (0.92 - i * 0.15) };
+    const C0 = { x: hx + hgt * 0.20, y: gy - hgt * (0.40 + i * 0.11) };
+    if (p < 1) {
+      const x = S0.x + (C0.x - S0.x) * p, y = S0.y + (C0.y - S0.y) * p;
+      _fxBarW(S0.x, S0.y, x, y, 6.4 * s, ink, 0.90 * (1 - p * 0.35), 3.0);
+    } else {
+      const q = Math.min(1, Math.max(0, (k - (0.44 + i * 0.07)) / 0.30));
+      if (q < 1) {
+        const al = 1 - q, RR = (12 + 30 * q) * s;
+        _fxRing(C0.x, C0.y, RR, RR, 3.4 * s, gold, 0.95 * al);
+        _fxRing(C0.x, C0.y, RR, RR, 1.3 * s, wht, 0.85 * al);
+        _fxDot(C0.x, C0.y, (4.4 * (1 - q) + 1.2) * s, lime, al);
+      }
+    }
+  }
+  /* ③ 左肩小天平 */
+  if (k > 0.09 && k < 0.99) {
+    const pin = Math.min(1, (k - 0.09) / 0.15);
+    const fade = Math.min(1, Math.max(0, 1 - (k - 0.82) / 0.17));
+    const tilt = 0.30 * Math.min(1, Math.max(0, (k - 0.22) / 0.30)) - 0.05;
+    const bx = hx - hgt * 0.21, by = gy - hgt * 0.74, RW = 16 * s;
+    const ca = Math.cos(tilt), sa = Math.sin(tilt);
+    const pp = (dx, dy) => [bx + dx * ca - dy * sa, by + dx * sa + dy * ca];
+    const p1 = pp(-RW, 0), p2 = pp(RW, 0);
+    _fxBarW(p1[0], p1[1], p2[0], p2[1], 3.0 * s, ink, 0.95 * pin * fade, 2.6);
+    const p3 = pp(0, -7 * s), p4 = pp(0, 10 * s);
+    _fxBarW(p3[0], p3[1], p4[0], p4[1], 2.6 * s, ink, 0.95 * pin * fade, 2.4);
+    for (const sd of [-1, 1]) {
+      const a1 = pp(sd * RW, 0), a2 = pp(sd * RW, 8 * s);
+      _fxBarW(a1[0], a1[1], a2[0], a2[1], 1.9 * s, ink, 0.90 * pin * fade, 2.0);
+      const a3 = pp(sd * RW, 11 * s);
+      _fxDot(a3[0], a3[1], 4.2 * s, gold, 0.95 * pin * fade);
+      _fxDot(a3[0], a3[1], 1.8 * s, wht, 0.85 * pin * fade);
+    }
+  }
+  /* ④ 收束：白金弧掠過膜面 */
+  if (k > 0.46 && k < 1) {
+    const p = Math.min(1, (k - 0.46) / 0.50);
+    const al = Math.sin(Math.PI * p);
+    const a0 = -Math.PI * 0.62 + p * Math.PI * 1.24;
+    _fxRing(hx, cy, hgt * 0.30, hgt * 0.44, 6.0 * s, wht, 0.90 * al, a0 - 0.34, a0 + 0.34);
+    _fxRing(hx, cy, hgt * 0.30, hgt * 0.44, 2.4 * s, gold, 1.0 * al, a0 - 0.34, a0 + 0.34);
+  }
+}
+
+/* ★ v420 虎杖·簡易領域（新·陰流）
+   分鏡（1.30s）：① 地面咒紋環亮起 ② 半球結界升起（墨線 + 白內襯 + 玻璃高光 + 經線）
+                 ③ 宿儺「解」打上壁面被彈開（墨爆星 + 白芯 + 沿壁外彈）④ 壁面裂紋 → 自癒
+   排版原則：結界只畫上半球，底環壓成極扁的橢圓並快速淡出，避免「閉合蛋」觀感。
+   原作依據：簡易領域＝以自身為中心的簡易結界，抵銷領域的必中效果。 */
+function drawFxItaSimpleDom(f) {
+  const TAU = Math.PI * 2;
+  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.30)));
+  const s = SC, hx = GX(), gy = GY - 2 * s, hgt = itaHeight();
+  const ink = '#17181c', wht = '#ffffff';
+  const grow = Math.min(1, k / 0.20);
+  const R = (40 + 96 * grow) * s;
+  const Hd = (hgt * 0.78) * Math.min(1, Math.max(0, (k - 0.03) / 0.26));
+  const fade = Math.min(1, Math.max(0, 1 - (k - 0.94) / 0.06));
+  /* ① 地面咒紋（極扁、快速淡出，只當「起陣」提示） */
+  const gAl = Math.max(0, 1 - k / 0.34) * fade;
+  if (gAl > 0.02) {
+    _fxRing(hx, gy, R, R * 0.20, 4.0 * s, ink, 0.65 * gAl);
+    _fxRing(hx, gy, R * 0.64, R * 0.128, 1.8 * s, ink, 0.45 * gAl);
+    for (let i = 0; i < 10; i++) {
+      const a = i / 10 * TAU + 0.26;
+      _fxBar(hx + Math.cos(a) * R * 0.42, gy + Math.sin(a) * R * 0.084,
+             hx + Math.cos(a) * R * 0.94, gy + Math.sin(a) * R * 0.188, 1.6 * s, ink, 0.34 * gAl);
+    }
+  }
+  /* ② 半球結界：白內襯 → 墨線 → 玻璃高光 */
+  if (Hd > 3) {
+    ctx.save();
+    ctx.globalAlpha = 0.16 * fade;
+    const g2 = ctx.createLinearGradient(hx, gy - Hd, hx, gy);
+    g2.addColorStop(0, 'rgba(255,255,255,.95)');
+    g2.addColorStop(0.66, 'rgba(255,255,255,.34)');
+    g2.addColorStop(1, 'rgba(255,255,255,.06)');
+    ctx.fillStyle = g2;
+    ctx.beginPath();
+    ctx.ellipse(hx, gy, R, Hd, 0, Math.PI, TAU, false);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    /* 壁線：白粗底 → 墨黑主線 → 內襯第二道（做出「壁厚」） → 內側白高光 */
+    _fxRing(hx, gy, R, Hd, 10.0 * s, wht, 0.85 * fade, Math.PI, TAU);
+    _fxRing(hx, gy, R, Hd, 5.4 * s, ink, 0.95 * fade, Math.PI, TAU);
+    _fxRing(hx, gy, R - 11 * s, Hd - 9 * s, 1.8 * s, ink, 0.42 * fade, Math.PI, TAU);
+    _fxRing(hx, gy, R - 3.0 * s, Hd - 3.0 * s, 1.6 * s, wht, 0.60 * fade, Math.PI * 1.06, Math.PI * 1.94);
+    /* 壁上斜紋（短斜線帶，做出玻璃厚度） */
+    for (let i = 0; i < 9; i++) {
+      const a = Math.PI * 1.05 + i * (Math.PI * 0.90 / 8);
+      const px3 = hx + Math.cos(a) * (R - 4 * s), py3 = gy + Math.sin(a) * (Hd - 4 * s);
+      _fxBar(px3, py3, px3 + Math.cos(a) * 13 * s, py3 + Math.sin(a) * 13 * s, 2.0 * s, wht, 0.45 * fade);
+    }
+    /* 經線 5 道（細）+ 一道中緯環 */
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI * 0.10 + i * (Math.PI * 0.20);
+      _fxBar(hx + Math.cos(a) * R * 0.985, gy,
+             hx + Math.cos(a) * R * 0.34, gy - Hd * 0.94, 1.5 * s, ink, 0.26 * fade);
+    }
+    _fxRing(hx, gy - Hd * 0.44, R * 0.895, Hd * 0.58, 1.4 * s, ink, 0.24 * fade, Math.PI * 1.03, Math.PI * 1.97);
+    /* 頂點白點 + 弧面高光（讓它看起來是「罩」不是「圈」） */
+    _fxDot(hx, gy - Hd, 4.0 * s, wht, 0.95 * fade);
+    _fxRing(hx, gy, R * 1.0, Hd * 1.0, 7.0 * s, wht, 0.30 * fade, Math.PI * 1.10, Math.PI * 1.36);
+    _fxRing(hx, gy, R * 1.0, Hd * 1.0, 7.0 * s, wht, 0.22 * fade, Math.PI * 1.62, Math.PI * 1.86);
+  }
+  /* ③ 斬擊撞壁被彈開 */
+  for (let i = 0; i < 3; i++) {
+    const p = Math.max(0, Math.min(1, (k - 0.20 - i * 0.13) / 0.30));
+    if (p <= 0 || p >= 1) continue;
+    const al = Math.sin(Math.PI * p);
+    const ang = -0.58 + i * 0.30;
+    const bxx = hx + Math.cos(ang) * R * 0.955;
+    const byy = gy - Hd * 0.50 + Math.sin(ang) * Hd * 0.26;
+    const sx0 = bxx + 84 * s, sy0 = byy - 66 * s;
+    _fxBarW(sx0, sy0, bxx, byy, 6.6 * s, ink, al * 0.88, 3.2);
+    _fxImpact(bxx, byy, (15 + 19 * p) * s, al);
+    _fxBar(bxx, byy, bxx + Math.cos(ang + 1.0) * 30 * s * p, byy + Math.sin(ang + 1.0) * 30 * s * p, 2.6 * s, wht, al);
+    _fxRing(bxx, byy, (8 + 26 * p) * s, (8 + 26 * p) * s, 2.2 * s, ink, al * 0.50);
+  }
+  /* ④ 裂紋 → 自癒 */
+  if (k > 0.32 && k < 0.99) {
+    const pin = Math.min(1, (k - 0.32) / 0.14);
+    const heal = Math.min(1, Math.max(0, (k - 0.62) / 0.34));
+    const al = pin * (1 - heal * 0.92);
+    for (let i = 0; i < 5; i++) {
+      const a = -0.95 + i * 0.42;
+      const x0 = hx + Math.cos(a) * R * 0.975, y0 = gy - Hd * 0.42 + Math.sin(a) * Hd * 0.24;
+      _fxBar(x0, y0, x0 - Math.cos(a) * 8 * s, y0 - 16 * s, 2.2 * s, ink, 0.50 * al);
+      _fxBar(x0 - Math.cos(a) * 8 * s, y0 - 16 * s, x0 - Math.cos(a) * 15 * s, y0 - 32 * s, 1.8 * s, ink, 0.38 * al);
+    }
+    if (heal > 0 && heal < 1) {
+      const aA = Math.PI + heal * Math.PI * 0.94;
+      _fxRing(hx, gy, R * 1.004, Hd * 1.004, 3.6 * s, wht, 0.85 * (1 - heal), aA - 0.30, aA + 0.30);
+      _fxRing(hx, gy, R * 1.004, Hd * 1.004, 1.4 * s, ink, 0.55 * (1 - heal), aA - 0.30, aA + 0.30);
+    }
+  }
+}
 function drawFx(){
   try{ const _bq=window.__bsFxCtx; if(_bq) _bq.clearRect(0,0,W,H); }catch(e){}
   for(const f of S.fx){
@@ -12348,8 +12864,12 @@ else if(f.type==='lightPillar'){
         const bx1=ex+Math.cos(angB+Math.PI/2)*7*s2, by1=ey+Math.sin(angB+Math.PI/2)*7*s2;
         const bx2=ex+Math.cos(angB-Math.PI/2)*7*s2, by2=ey+Math.sin(angB-Math.PI/2)*7*s2;
         const tx2=ex+Math.cos(angB)*20*s2, ty2=ey+Math.sin(angB)*20*s2;
-        ctx.fillStyle='#ffffff'; ctx.beginPath();
+        /* ★ v419 處刑劍的鋒尖改朱紅（判詞色）並帶紅暈 —— 與普通白劍一眼分開 */
+        try{ ctx.shadowColor='rgba(200,38,48,.92)'; ctx.shadowBlur=16*s2; }catch(e){}
+        ctx.fillStyle='#c22f38'; ctx.beginPath();
         ctx.moveTo(bx1,by1); ctx.lineTo(bx2,by2); ctx.lineTo(tx2,ty2); ctx.closePath(); ctx.fill();
+        try{ ctx.shadowBlur=0; }catch(e){}
+        ctx.strokeStyle='rgba(24,16,18,.85)'; ctx.lineWidth=1.8*s2; ctx.stroke();
         if(hitP<=0){
           const g=ctx.createRadialGradient(ex,ey,0,ex,ey,34*s2);
           g.addColorStop(0,'rgba(255,255,255,.96)'); g.addColorStop(0.45,'rgba(255,244,200,.55)');
@@ -12358,6 +12878,8 @@ else if(f.type==='lightPillar'){
         }
         ctx.restore();
         if(hitP>0){
+          /* ★ v419 處刑劍命中瞬間只觸發一次：白閃 + 比平常更重的震屏 */
+          if(!f.__hit){ f.__hit=1; try{ flash('fWhite'); shake(1.45); }catch(e){} }
           const q=Math.min(1,hitP/0.35);
           const dx=px-ox, dy=py-oy, dl=Math.hypot(dx,dy)||1;
           const ux=dx/dl, uy=dy/dl, L=dl*(0.62+0.60*q);
@@ -12535,9 +13057,10 @@ else if(f.type==='lightPillar'){
       /* ★ v396 用戶指定：領域名大字「誅伏賜死」—— 黑字白邊，字樣式比照無量空處（豎排・貼角色外側・緩慢沉浮）。 */
       const k=f.t/f.dur;
       const aIn=Math.min(1,k/0.14), aOut=Math.min(1,(1-k)/0.20);
-      const fs=H*0.104, ch='誅伏賜死';
+      /* ★ v419 用戶指定：領域名加上豎排引號「」、整體再縮小一檔（0.104H → 0.094H）。 */
+      const fs=H*0.094, ch='誅伏賜死', step=fs*1.06;
       const x=GX()-W*0.125;
-      const y0=H*0.50-ch.length*fs*1.06*0.5+Math.sin(k*Math.PI)*(-7*SC);
+      const y0=H*0.50-ch.length*step*0.5+Math.sin(k*Math.PI)*(-7*SC);
       ctx.save();
       ctx.globalAlpha=Math.max(0,Math.min(aIn,aOut));
       ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -12545,10 +13068,25 @@ else if(f.type==='lightPillar'){
       ctx.lineJoin='round'; ctx.miterLimit=2;
       ctx.lineWidth=fs*0.16; ctx.strokeStyle='#ffffff';
       ctx.shadowColor='rgba(255,255,255,.55)'; ctx.shadowBlur=12*SC;
-      for(let i=0;i<ch.length;i++) ctx.strokeText(ch[i],x,y0+i*fs*1.06);
+      for(let i=0;i<ch.length;i++) ctx.strokeText(ch[i],x,y0+i*step);
       ctx.shadowBlur=0;
       ctx.fillStyle='#141414';
-      for(let i=0;i<ch.length;i++) ctx.fillText(ch[i],x,y0+i*fs*1.06);
+      for(let i=0;i<ch.length;i++) ctx.fillText(ch[i],x,y0+i*step);
+      /* 豎排引號：左「＝豎線＋底橫向右；右」＝豎線＋頂橫向左。先粗白後細黑，與字同款白邊。 */
+      const qGap=fs*0.62, qTick=fs*0.40;
+      const qT=y0-step*0.50, qB=y0+step*(ch.length-1)+step*0.50;
+      const qx1=x-qGap, qx2=x+qGap;
+      for(let pass=0;pass<2;pass++){
+        ctx.strokeStyle=pass?'#141414':'#ffffff';
+        ctx.lineWidth=pass?fs*0.095:fs*0.205;
+        ctx.lineCap='round'; ctx.lineJoin='round';
+        try{ ctx.shadowBlur=pass?0:12*SC; }catch(e){}
+        ctx.beginPath();
+        ctx.moveTo(qx1,qT); ctx.lineTo(qx1,qB); ctx.lineTo(qx1+qTick,qB);
+        ctx.moveTo(qx2,qB); ctx.lineTo(qx2,qT); ctx.lineTo(qx2-qTick,qT);
+        ctx.stroke();
+      }
+      try{ ctx.shadowBlur=0; }catch(e){}
       ctx.restore();
     }
     else if(f.type==='rakka'){
@@ -13517,9 +14055,9 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
             ctx.save();
             ctx.globalAlpha=a*0.85;
             const rg=ctx.createRadialGradient(ax,gy-hh*0.5,0,ax,gy-hh*0.5,hh*0.62);
-            rg.addColorStop(0,'rgba(63,191,114,.55)');
-            rg.addColorStop(0.6,'rgba(47,158,94,.26)');
-            rg.addColorStop(1,'rgba(30,110,64,0)');
+            rg.addColorStop(0,'rgba(72,77,84,.55)');
+            rg.addColorStop(0.6,'rgba(52,56,62,.26)');
+            rg.addColorStop(1,'rgba(26,29,33,0)');
             ctx.fillStyle=rg;
             ctx.beginPath(); ctx.ellipse(ax,gy-hh*0.5,hh*0.30,hh*0.62,0,0,Math.PI*2); ctx.fill();
             ctx.restore();
@@ -13546,8 +14084,8 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         const tx=SX()-18*s, ty=GY-132*s, L=300*s;
         ctx.save();
         ctx.globalAlpha=Math.max(0,1-Math.abs(q-0.16)/0.32)*0.95;
-        ctx.strokeStyle='rgba(232,255,244,.98)'; ctx.lineCap='round';
-        ctx.shadowColor='rgba(63,191,114,.95)'; ctx.shadowBlur=20*s;
+        ctx.strokeStyle='rgba(240,242,245,.98)'; ctx.lineCap='round';
+        ctx.shadowColor='rgba(58,63,69,.95)'; ctx.shadowBlur=20*s;
         ctx.lineWidth=(3.4-q*1.6)*s;
         ctx.beginPath();
         ctx.moveTo(tx-Math.cos(-0.62)*L*0.5, ty-Math.sin(-0.62)*L*0.5);
@@ -13558,7 +14096,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         ctx.beginPath();
         ctx.moveTo(tx-46*s, ty-30*s); ctx.lineTo(tx-46*s+96*s*open, ty-30*s+70*s*open);
         ctx.stroke();
-        ctx.strokeStyle='rgba(63,191,114,.9)'; ctx.lineWidth=1.6*s;
+        ctx.strokeStyle='rgba(58,63,69,.9)'; ctx.lineWidth=1.6*s;
         ctx.beginPath();
         ctx.moveTo(tx-40*s, ty-22*s); ctx.lineTo(tx-40*s+92*s*open, ty-22*s+74*s*open);
         ctx.stroke();
@@ -13570,9 +14108,9 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         ctx.save();
         ctx.globalAlpha=Math.max(0,1-q)*0.85;
         g=ctx.createRadialGradient(bx,by,0,bx,by,W*0.13);
-        g.addColorStop(0,'rgba(226,255,242,.85)');
-        g.addColorStop(0.5,'rgba(63,191,114,.42)');
-        g.addColorStop(1,'rgba(20,90,50,0)');
+        g.addColorStop(0,'rgba(236,238,242,.85)');
+        g.addColorStop(0.5,'rgba(58,63,69,.42)');
+        g.addColorStop(1,'rgba(20,22,26,0)');
         ctx.fillStyle=g; ctx.beginPath(); ctx.arc(bx,by,W*0.13*(0.7+q*0.5),0,Math.PI*2); ctx.fill();
         for(let i=0;i<18;i++){
           const ang=-Math.PI/2+(i/18-0.5)*Math.PI*1.25;
@@ -13580,7 +14118,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
           const px=bx+Math.cos(ang)*dist*1.15;
           const py=by+Math.sin(ang)*dist-q*q*90*s*(0.4+(i%3)*0.3);
           ctx.globalAlpha=Math.max(0,1-q)*0.8*(0.5+(i%4)*0.14);
-          ctx.fillStyle=(i%3===0)?'#eafff4':'#3fbf72';
+          ctx.fillStyle=(i%3===0)?'#f0f2f5':'#3a3f45';
           ctx.beginPath(); ctx.arc(px,py,(1.2+(i%3)*0.9)*s,0,Math.PI*2); ctx.fill();
         }
         ctx.restore();
@@ -13590,7 +14128,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         const q=(k-0.66)/0.34;
         ctx.save();
         ctx.globalAlpha=(1-q)*0.5;
-        ctx.strokeStyle='rgba(63,191,114,.85)'; ctx.lineWidth=1.6*s;
+        ctx.strokeStyle='rgba(58,63,69,.85)'; ctx.lineWidth=1.6*s;
         ctx.beginPath();
         ctx.moveTo(GX()-120*s, GY-150*s); ctx.lineTo(xOut-60*s, GY-150*s); ctx.stroke();
         ctx.restore();
@@ -13716,7 +14254,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
          ★ v131 用戶再反饋：① 特效整體加大；② 綠色（魂絲）加亮、不透明度加高；
             ③ 長條不要封閉圖形、兩端做出開口；④ 加邊緣虛化。
            ⇒ 斬痕改用「沿線性漸層」描邊：兩端 alpha→0（自然開口），中段實心，配 shadowBlur 邊緣虛化；
-              整體尺度 ×1.25；魂絲增至 11 條、加粗加亮（#7dffbe）、alpha 拉滿並加綠輝光。 */
+              整體尺度 ×1.25；魂絲增至 11 條、加粗加亮（#c8ced5）、alpha 拉滿並加綠輝光。 */
       const k=f.t/f.dur, s=SC*1.25;                    /* ★ v131 整體尺度放大 */
       const x0=GX()+30*s, x1=SX()-26*s, yy=GY-150*s;
       ctx.save();
@@ -13809,8 +14347,8 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
           /* 亮綠芯：alpha 滿值 + 綠輝光（邊緣虛化） */
           ctx.globalAlpha=a;
           ctx.save();
-          ctx.strokeStyle='#7dffbe';
-          ctx.shadowColor='rgba(90,255,175,.95)'; ctx.shadowBlur=11*s;
+          ctx.strokeStyle='#c8ced5';
+          ctx.shadowColor='rgba(176,182,190,.95)'; ctx.shadowBlur=11*s;
           ctx.lineWidth=2.6*s;
           ctx.beginPath(); ctx.moveTo(wx,wy); ctx.quadraticCurveTo(cx,cy,ex,ey); ctx.stroke();
           ctx.restore();
@@ -14383,6 +14921,10 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       ctx.restore();
     }
     
+    else if(f.type==='makiStance'){ drawFxMakiStance(f); }
+    else if(f.type==='makiAwaken'){ drawFxMakiAwaken(f); }
+    else if(f.type==='higuExtend'){ drawFxHiguExtend(f); }
+    else if(f.type==='itaSimpleDom'){ drawFxItaSimpleDom(f); }
     else if(f.type==='higuDomIntro'){
       /* ★ v387 日車寬見「領域展開・誅伏賜死」登場演出（2.4s，登場即自動展開）。
          五拍：集中線墨幕 → 法庭柵欄與天平 → 法槌落下「開廷」朱印
@@ -14461,8 +15003,10 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       const tIn=Math.min(1,k/0.18);
       const eIn=1-Math.pow(1-tIn,3);
       const tOut=Math.max(0,(k-0.70)/0.30);
-      const size=(f.big?26:17)*SC;
-      const pop=0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn));
+      const size=(f.big?26:17)*SC*(f.sz||1);   /* ★ v419 可按招式放大／縮小 */
+      /* ★ v419 stamp：印章式落地 —— 從 1.62 倍砸回 1.0，比原本的彈入更「重」 */
+      const pop=f.stamp?(1.62-0.62*eIn)
+                      :(0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn)));
       const y=f.y-(_d?k*8*SC:k*30*SC)-tOut*tOut*(_d?0:22*SC);
       const x=f.x+_d*k*62*SC;
       ctx.save();
@@ -14473,6 +15017,13 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       ctx.lineWidth=size*0.30; ctx.strokeStyle='rgba(14,12,14,.92)'; ctx.strokeText(f.txt,0,0);
       ctx.lineWidth=size*0.13; ctx.strokeStyle='rgba(255,255,255,.92)'; ctx.strokeText(f.txt,0,0);
       ctx.fillStyle=f.col; ctx.fillText(f.txt,0,0);
+      /* ★ v419 印章式：朱紅細框收在字外，落地瞬間由粗到細 */
+      if(f.stamp){
+        const _tw=ctx.measureText(f.txt).width;
+        ctx.globalAlpha=Math.max(0,Math.min(Math.min(1,k/0.09),1-tOut*tOut))*Math.min(1,tIn*2.2);
+        ctx.strokeStyle='rgba(180,35,43,.90)'; ctx.lineWidth=Math.max(1.2,size*0.052);
+        ctx.strokeRect(-_tw/2-size*0.30,-size*0.84,_tw+size*0.60,size*1.60);
+      }
       ctx.restore();
     }
     else if(f.type==='misago'){
@@ -15089,6 +15640,11 @@ function syncHud(){
     }
   }catch(e){}
   try{ syncSukLost(); }catch(e){}
+  /* ★ v419 對拼期間鎖技能欄：狀態每幀同步，對拼一結束自動解鎖 */
+  try{
+    const _pd=document.getElementById('pad');
+    if(_pd){ const _lk=!!S.domClash; if(_pd.__lk!==_lk){ _pd.__lk=_lk; _pd.classList.toggle('locked',_lk); } }
+  }catch(e){}
   try{ syncMakiMeter(); }catch(e){}
   /* ★ v266 續戰存檔：戰鬥中每 1.5s 節流保存 */
   if(S.phase==='fight' && !S.paused){
@@ -15365,6 +15921,8 @@ $('dmPad').addEventListener('touchstart',e=>{
 },{passive:false});
 function padAct(a){
   if(S.phase==='yujiDom'){ return; }   /* ★ v66：展開動畫期間不接收操作 */
+  /* ★ v419 用戶指定：領域對拼期間整條技能欄鎖死（觸控／滑鼠三路事件都收斂到這裡） */
+  if(S.domClash) return;
   if(a==='atk'){ if(QTE.active) qtePress(); else actAtk(); }
   else if(a==='guard'){ if(!QTE.active) actGuard(); }
   else if(a==='vow'){ if(!QTE.active) actVow(); }
@@ -15975,8 +16533,9 @@ function higurumaAutoDomain(){
   if(S.phase!=='fight'||S.hero!=='higuruma'||S.higuDom>0) return;
   S.higuDom=1;
   try{ armDomainAnnounce(); domainAnnounceArmedCall(); }catch(e){}
-  addFx({type:'higuDomIntro',dur:2.4});
-  addFx({type:'higuDomWord',dur:4.6});   /* ★ v396 領域名「誅伏賜死」黑字白邊大字（比照無量空處樣式） */
+  /* ★ v419 用戶指定：登場的領域展開動畫整體放慢（2.4s → 3.25s），領域名同步延長停留。 */
+  addFx({type:'higuDomIntro',dur:3.25});
+  addFx({type:'higuDomWord',dur:5.80});   /* ★ v396 領域名「誅伏賜死」黑字白邊大字（比照無量空處樣式） */
   flash('fWhite'); shake(); SFX.hollow();
   say('higu','「——開廷。被告，兩面宿儺。」');
   say('judge','「THE COURT IS NOW IN SESSION.」');
@@ -15996,7 +16555,7 @@ function higuAtk(){
   const _n=(S.higuDom>0)?Math.min(_evi?2:1,3-_ev0):0;
   addFx({type:'higuEvidence',dur:1.04,ev0:_ev0,add:Math.max(0,_n)});
   SFX.atk();
-  setTimeout(function(){ if(S.phase!=='fight') return; fxManga('法槌・開廷',GX()+96*SC,GY-238*SC,false,'#2b6cb0',false,true,0,1);   /* ★ v412 去掉判決書色塊底板，改純刀痕字 */ },210);   /* ★ v407 左右消散 */
+  setTimeout(function(){ if(S.phase!=='fight') return; fxManga('法槌・開廷',GX()+96*SC,GY-238*SC,false,'#FCCC8B',false,true,0,1);   /* ★ v419 用戶指定：一技能字色改 #FCCC8B */   /* ★ v412 去掉判決書色塊底板，改純刀痕字 */ },210);   /* ★ v407 左右消散 */
   say('higu','「開廷——被告，兩面宿儺。」');
   /* ★ v389 原作向「舉證」：審判者通曉被告一切罪行，但只共享證據給日車。
      宿儺上回合動用術式 ⇒ 這一回合多取 1 條（證據確鑿）。證據本身不是罪狀，
@@ -16024,10 +16583,11 @@ function higuGuard(){
   if(S.acted) return;
   if(S.gojo.ce<12){ say('sys','咒力不足 12%，無法展開領域展延！'); return; }
   S.gojo.ce-=12;
-  S.blockT=0.9; S.guardFx=0.9; S.guardUp=true;
+  S.blockT=0.9; S.guardUp=true;   /* ★ v420 環由 higuExtend 動畫呈現 */
   S.gojo.pose='guard'; S.gojo.poseT=0.5;
   markActed('guard');
-  fxGuard(); SFX.block();
+  addFx({type:'higuExtend',dur:1.25});   /* ★ v420 領域展延＋質詢動畫重做 */
+  SFX.block();
   if(perfectWindowOpen()) perfectPayoff();
   /* ★ v388 展延中和：原作「讓對手術式流入中和」⇒ 宿儺下一擊傷害 −30% */
   S.higuExtend=1;
@@ -16073,11 +16633,21 @@ function higuUlt(){
   /* ★ v412 全套新演出：一體化的 higuTrial（1.95s），不再拆成 judge／guillotine／execCutin 三層 */
   addFx({type:'higuTrial',dur:1.95,death:_death});
   S.hitStop=Math.max(S.hitStop,0.10);
-  skillBeat({charge:330,cast:1.0,stop:0.12,flash:'fWhite',slow:0.01,word:''});
+  /* ★ v419 用戶指定：處刑那一次的中央大字直接印技能名「處刑人之劍」（原本 word:'' 會被回退成
+     SKILL_FX.higuruma.word＝「审判·下达」）。位置下移到兩人空檔、改朱紅、印章式落地。 */
+  skillBeat({charge:330,cast:1.0,stop:0.12,flash:'fWhite',slow:0.01,
+             word:_death?'處刑人之劍':'审判·下达',
+             wy:_death?H*0.655:null,
+             wsz:_death?0.94:1,
+             wdur:_death?1.58:null,
+             wstamp:_death,
+             color:_death?'#b4232b':null});
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     S.higuVerdictN=_n+1;   /* ★ v407 判決落地才計數：第 2 次判完 ⇒ 立繪換成握劍的處刑人 */
-    S.guilt=0;             /* ★ v407 罪狀在判決時清空（每次開庭都要重新累積 3 層） */
+    /* ★ v419 用戶指定：第二次使用三技能（即 _n===1 這一下）判完後保留 1 層罪狀，
+       其餘次數照舊清零 —— 讓第三次開庭不必從 0 重攢。 */
+    S.guilt=(_n===1)?1:0;
     if(_death){
       /* ★ v412 劍與斷頭台改由 higuTrial 統一繪製 */
       if(!S.trueForm && !S.sukuHandLost){
@@ -16098,7 +16668,9 @@ function higuUlt(){
     }else{
       hitSukuna(SUK_MAXHP*0.25,true,'hollow',false,true);
       const _left=Math.max(0,2-(S.higuVerdictN||0));
-      say('sys','★ 审判·下達 ⇒ 沒収刑成立（宿儺被沒收一項能力、吃 25% 傷害）。罪狀清零，需再累積 3 層才能開庭；再下達 '+_left+' 次判決即轉為「處刑人之劍」。');
+      say('sys','★ 审判·下達 ⇒ 沒収刑成立（宿儺被沒收一項能力、吃 25% 傷害）。'
+        +(_n===1?'罪狀保留 1 層（再累積 2 層即可開庭）':'罪狀清零，需再累積 3 層才能開庭')
+        +'；再下達 '+_left+' 次判決即轉為「處刑人之劍」。');
       confiscateNext();
     }
     syncHud();
@@ -16214,7 +16786,7 @@ function okkoDomainClash(){
   /* ★ v141 宿儺領域展開：暫停主 BGM + 停宿儺領域 BGM */
   suspendMainBgm();
   stopSukuBgm();
-  S.domClash={t:0,inDur:1.82,holdDur:1.60,winDur:1.05,phase:'in'}; S.pushV=(S.diff==='hard'?0.50:0.70); S.pushWin=4.30; S.pushTickN=0; S.pushN=0; S.pushHit=0; S.pushPain=0;   /* ★ v417 乙骨也走推擠：起點 70%（困難 50%）、窗口 4.30s */ S.sukuDomArtT=9.6;   /* ★ v396 宿儺立刻換領域姿 */   /* ★ v281 用戶指定：推入放慢 */
+  S.domClash={t:0,inDur:1.82,holdDur:1.60,winDur:1.05,phase:'in'}; S.pushV=(S.diff==='hard'?0.50:0.70); S.pushWin=4.30; S.domClash.pushWin=4.30; S.pushTickN=0; S.pushN=0; S.pushHit=0; S.pushPain=0;   /* ★ v417 乙骨也走推擠：起點 70%（困難 50%）、窗口 4.30s */ S.sukuDomArtT=9.6;   /* ★ v396 宿儺立刻換領域姿 */   /* ★ v281 用戶指定：推入放慢 */
   addFx({type:'sukuDomWord',dur:4.4});   /* ★ v281 字樣停留加長 */
   S.suk.pose='cast'; S.suk.poseT=1.0;
   flash('fWhite'); shake(); SFX.hollow();
@@ -16407,7 +16979,7 @@ function makiAtk(){
   markActed('atk');
   S.gojo.pose='atk'; S.gojo.poseT=0.3;
   addFx({type:'makiSlash',dur:0.6}); SFX.atk();
-  fxManga(W.k,GX()+96*SC,GY-236*SC,false,(W.k==='釋魂刀'?'#7dffbe':'#cfd8dd'),false,true,0,1);   /* ★ v407 左右消散 */   /* ★ v400 真希一技能：純線條刀痕文字 */
+  fxManga(W.k,GX()+96*SC,GY-236*SC,false,(W.k==='釋魂刀'?'#c8ced5':'#cfd8dd'),false,true,0,1);   /* ★ v407 左右消散 */   /* ★ v400 真希一技能：純線條刀痕文字 */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     S.noAdapt=!W.adapt;                 /* 釋魂刀/龍骨屬純物理，魔虛羅無法適應；游雲帶咒力會被適應 */
@@ -16462,7 +17034,7 @@ function makiGuard(){
     S.makiAwaken=1; S.makiFull=0;
     S.gojo.pose='cast'; S.gojo.poseT=0.7;
     flash('fWhite'); shake(); SFX.hollow();
-    addFx({type:'makiSlash',dur:0.6});
+    addFx({type:'makiAwaken',dur:1.45});   /* ★ v420 全開動畫重做 */
     say('maki','「——不必再忍了。天與咒縛，全開。」');
     say('sys','★ 天與咒縛・全開 —— 輸出 +25%（本局常駐）；代價：從此再也擺不出「架勢」，只能靠身法硬吃。');
     syncHud();
@@ -16479,10 +17051,11 @@ function makiGuard(){
   S.makiStance=1;
   S.makiStanceT=S.turnN;   /* ★ v390 回合戳：下一次宿儺回合開頭才失效 */
   S.makiHalf=3;
-  S.guardFx=0.9;
+  /* ★ v420 舊格擋環交由 makiStance 動畫呈現 */
   S.gojo.pose='guard'; S.gojo.poseT=0.5;
   markActed('guard');
-  fxGuard(); SFX.block();
+  addFx({type:'makiStance',dur:1.05});   /* ★ v420 架勢動畫重做 */
+  SFX.block();
   if(perfectWindowOpen()) perfectPayoff();
   say('maki','「架勢——接得住的，才叫斬擊。」');
   say('sys','天與咒縛・架勢：本回合只有宿儺「解」「捌」與領域必中（皆減半）、顎吐「虎葬·碎擊」、魔虛羅「斬擊」傷得到真希，其餘全部架開；★ 每架開一次累積 1 層見切（滿 2 層下一記「無聲突襲」必定要害），回合末自動反擊；★ 後續 2 回合傷害減半。');
