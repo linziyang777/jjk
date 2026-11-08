@@ -1,3 +1,4 @@
+<!-- ★ v421 用戶指定：①真希「天與咒縛・全開」門檻降到 50%、與架勢並存、二技能加切換角標（兩技 CD 獨立、全開一生一次）②切出頁面/鎖屏在首頁·選人·結算同樣停樂 ③宿傩領域 BGM 與領域語音同拍起播 ④誅伏賜死引號縮小 ⑤修鹿紫雲一琥珀紫光殘留 ⑥修虎杖完結後結算 BGM ⑦虎杖領域卡頓 -->
 <!-- ★ v419 用戶指定：①領域對拼期間鎖住底部技能欄（立誓面板不再被推到對拼之後才彈出）②日車「處刑人之劍」那一次的中央大字改印技能名，並改成朱紅印章式落地 + 命中瞬間白閃震屏 -->
 <!-- ★ v417 · 推擠支援乙骨＋槽改 DOM / 選人頭像 / 真希加大 / 解捌區分 / 五條勝利縮放 -->
 <!-- ★ v413 用戶指定：宿儺招式字貼回宿儺身邊 + 日車三技能恢復處刑劍漫畫格（置於最底層）+ 五條數值下修（術式公開 1.35、無限制茈 36~42%） -->
@@ -760,6 +761,19 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 #atkSwap svg{width:13px;height:13px;fill:none;stroke:#7ff0ff;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
 #atkSwap:active{transform:scale(.88);}
 #btnAtk.swapOn #atkSwap{display:flex;animation:swapPulse 1.8s ease-in-out infinite;}
+/* ★ v421 真希二技能切換角標：沿用 1 技角標尺寸，配色改灰黑（配合 v419 真希去綠化） */
+#grdSwap{
+  position:absolute;top:-10px;right:-4px;left:auto;width:23px;height:23px;border-radius:50%;
+  background:#22252a;border:2px solid #b9bfc6;display:none;align-items:center;justify-content:center;
+  cursor:pointer;z-index:6;box-shadow:0 0 10px rgba(58,63,69,.85),0 0 3px rgba(255,255,255,.55) inset;
+  transition:transform .12s ease;
+}
+#grdSwap svg{width:13px;height:13px;fill:none;stroke:#f0f2f5;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
+#grdSwap:active{transform:scale(.88);}
+#btnGuard.swapOn #grdSwap{display:flex;animation:swapPulseG 1.8s ease-in-out infinite;}
+#grdSwap.spin svg{animation:swapSpin .45s ease-out;}
+/* ★ v421 灰黑脈動：swapPulse 的 box-shadow 是青色（1 技專用），直接沿用會把灰黑角標染成青色。 */
+@keyframes swapPulseG{0%,100%{box-shadow:0 0 8px rgba(150,158,168,.55),0 0 3px rgba(255,255,255,.45) inset;}50%{box-shadow:0 0 15px rgba(200,208,218,.95),0 0 3px rgba(255,255,255,.7) inset;}}
 @keyframes swapPulse{0%,100%{box-shadow:0 0 8px rgba(34,211,238,.6);}50%{box-shadow:0 0 16px rgba(34,211,238,1);}}
 #atkSwap.spin svg{animation:swapSpin .45s ease-out;}
 @keyframes swapSpin{from{transform:rotate(0)}to{transform:rotate(180deg)}}
@@ -3388,7 +3402,7 @@ const S={
   target:'sukuna',                    /* 我方攻擊目標：sukuna | maha | agyo */
   agyo:false, agyoHp:0, agyoMax:0, agyoCd:0, agyoPend:0, agyoUsed:false,
   okkoDom:0, misagoT:0, gojoDom:0, gojoVoidT:0, gojoVoidCnt:0, voidMax:1,   /* ★ v306 voidMax：初始 1，每次反轉 +1，封頂 3 */ sukuDom:0, domClash:null, voidMahaT:0, sukuOpenT:0, makiBlinkT:0, higuVerdictN:0,   /* ★ v406 日車三技能判決次數 */   /* ★ v53 乙骨領域是否成立（★ v89 起不再倒數，持續到乙骨退場；場地＝劍林）／★ v77 彌須葛籠倒數／★ v78 五條「無量空處」／★ v244 voidMax＝本局可展開次數上限（初始 1，每次反轉 +1，封頂 3） */
-  sukuBurn:false, gojoBurn:false, okkBurn:false, higuDom:0, higuJudge:0, higuExtend:0, evidence:0, heavyEv:0, heavyLocked:0, sukuHandLost:false, higuRct:false, sukuPhysDry:false, makiRead:0, makiParry:0, makiW:0, makiBrace:0, makiCharge:0, soulWound:0, makiAwaken:0, makiFull:0, makiStanceT:0, makiBraceT:0,   /* ★ v390 makiFull＝全開殘餘回合；makiStanceT／makiBraceT＝架勢與龍骨的回合戳 */   /* ★ v387 日車領域／真希新機制 */    /* ★ v92 領域對拼輸掉方的術式熔斷（除「反轉術式」外無法使用任何術式） */
+  sukuBurn:false, gojoBurn:false, okkBurn:false, higuDom:0, higuJudge:0, higuExtend:0, evidence:0, heavyEv:0, heavyLocked:0, sukuHandLost:false, higuRct:false, sukuPhysDry:false, makiRead:0, makiParry:0, makiW:0, makiBrace:0, makiCharge:0, soulWound:0, makiAwaken:0, makiFull:0, makiUsed:0, makiGSel:null, makiStanceT:0, makiBraceT:0,   /* ★ v390 makiFull＝全開殘餘回合；makiStanceT／makiBraceT＝架勢與龍骨的回合戳 */   /* ★ v387 日車領域／真希新機制 */    /* ★ v92 領域對拼輸掉方的術式熔斷（除「反轉術式」外無法使用任何術式） */
   rika:false, rikaHp:0, rikaMax:0, rikaT:0, rikaCopy:'', ceCap:100, rikaUsed:false, rikaCd:0, rikaCopyCd:0, rikaRevCd:0, okkoRevCd:0, rikaCopyKeep:false,   /* ★ v55 式神・里香 */   /* ★ v212 rikaCopyKeep：里香「時限到」退場 ⇒ 模仿術式仍可用；「血量耗盡」被擊破 ⇒ 不可用 */   /* ★ v46 agyoUsed：一場只召喚一次式神 */
   mahaHp:0, mahaMax:0, mahaSlashCd:0,
   para:0,                             /* ★ v393 我方「麻痺」剩餘回合：1 回合無法行動，不因受傷解除 */
@@ -3447,7 +3461,7 @@ function resetBattle(){
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
   S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false; S.sukuSummonForm=false; S.yujiEndAt=0;   /* ★ v291 換裝／結局背景重置 */
-  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.okkoDom=0; S.okkoDomJust=0; S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaUsed=false; S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重開一局清掉新機制殘留 */
+  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.okkoDom=0; S.okkoDomJust=0; S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false; S.rikaHp=0; S.rikaMax=0; S.rikaT=0; S.rikaCopy=''; S.ceCap=100; S.rikaUsed=false; S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.makiUsed=0; S.makiGSel=null; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重開一局清掉新機制殘留 */
   S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false; S.muBreakIn=0; S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
   S.hollowSkip=0; S.hollowUsedTurn=-1; S.hollowFree=false; S.usedUnlimited=false;
   S.waveCd=9; S.waveWarn=false;
@@ -5408,6 +5422,22 @@ function syncAtkBtn(){
   const fist=gojoFistMode();
   if(b.__sak!==fist){ b.__sak=fist; b.classList.toggle('b-fist',fist); }
 }
+/* ★ v421 用戶指定：真希二技能「架勢 ⇄ 全開」切換角標（全開可用時才出現） */
+function grdCanSwap(){
+  return S.hero==='maki' && !S.makiUsed && S.gojo && S.gojo.hp<=S.maxHp*0.50 && S.phase==='fight';
+}
+function grdSwapSpanHtml(){
+  return '<span id="grdSwap" title="切換「天與咒縛・架勢」／「天與咒縛・全開」"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-13.6-5.6L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 13.6 5.6L20 16"/><path d="M20 20v-4h-4"/></svg></span>';
+}
+/* 每幀只做「該不該有角標」與補回（innerHTML 重建會沖掉節點） */
+function syncGrdBtn(){
+  const b=$('btnGuard'); if(!b) return;
+  const on=grdCanSwap();
+  if(b.__gss!==on){ b.__gss=on; b.classList.toggle('swapOn',on); }
+  if(!on){ const sp=b.querySelector('#grdSwap'); if(sp) sp.remove(); return; }
+  const last=b.lastElementChild;
+  if(!(last && last.id==='grdSwap')) b.insertAdjacentHTML('beforeend',grdSwapSpanHtml());
+}
 /* 角標點擊：捕獲階段攔下，避免冒泡到技能欄觸發出招 */
 document.addEventListener('click',function(e){
   let t=null;
@@ -5435,6 +5465,21 @@ document.addEventListener('click',function(e){
   say('sys', S.fistPick==='cang'
     ? '1 技切換為「術式順轉・蒼」—— 傷害 5~7%，命中可留下引力標記。'
     : '1 技切換為「術式順轉・蒼・拳」—— 傷害 10~14%，但無法留下引力標記。');
+}, true);
+/* ★ v421 真希二技能切換角標（架勢 ⇄ 全開）：切換不消耗行動，按下主按鈕才出招 */
+document.addEventListener('click',function(e){
+  let t=null;
+  try{ t=e.target&&e.target.closest?e.target.closest('#grdSwap'):null; }catch(err){}
+  if(!t) return;
+  e.preventDefault(); e.stopPropagation();
+  if(S.hero!=='maki'||S.acted||!grdCanSwap()) return;
+  const cur=(S.makiGSel==null)?1:(S.makiGSel?1:0);
+  S.makiGSel=cur?0:1;
+  syncHud();
+  const _tm=$('grdSwap');
+  if(_tm){ _tm.classList.remove('spin'); void _tm.offsetWidth; _tm.classList.add('spin'); }
+  if(S.makiGSel) say('sys','二技能切換為「天與咒縛・全開」—— 一生一次，輸出 +25%（架勢仍在，隨時可切回）。');
+  else say('sys','二技能切換為「天與咒縛・架勢」—— 本回合免傷，冷卻 3 回合（與全開互不干涉）。');
 }, true);
 /* ★ v78 「無量空處」按鈕：僅五條悟可見；★ v245 本局上限 S.voidMax 次（初始 1，每用一次反轉術式 +1，最多 2）、咒力 10%、領域中不可重複 */
 function syncVoidBtn(){
@@ -6698,9 +6743,15 @@ function stageReset(){
     const el=$(id); if(!el) return;
     el.classList.remove('on');
     el.style.animation='none'; el.style.opacity='0';
+    /* ★ v421 用戶報「鹿紫雲一下場後畫面仍帶紫光」：flashStage 會改寫 background（內聯 radial-gradient），
+       舊版只復位 opacity，殘留的紫漸層一旦被其它規則重新顯示就會露出來。這裡把 background 一起清掉。 */
+    if(id==='fStage') el.style.background='';
     void el.offsetWidth;                 /* 強制重排，讓下次 add('on') 能重新觸發動畫 */
     el.style.animation=''; el.style.opacity='';
   });
+  /* ★ v421 鹿紫雲一琥珀狀態的清空**不在這裡做**：stageReset 是由 startNext 在換人「之前」呼叫的，
+     此刻 S.hero 仍是 'kashimo'，任何 if(S.hero!=='kashimo') 的守衛都不會成立。
+     真正的清空點在 startNext() 拿到目標角色 h 之後（見該函數內 ★ v421 amber reset）。 */
   /* ② canvas 殘留特效：退場 / 換人瞬間把在播的特效清空，
       否則粒子（kashAura 等）會帶着上一棒的顏色飄到下一棒的畫面裏 */
   if(S.fx && S.fx.length) S.fx.length=0;
@@ -7762,6 +7813,22 @@ function rikaPunch(){
   if(t.k==='sukuna') hitSukuna(d,false,'atk',false,true,'rika_punch',true);
   else if(typeof damageShiki==='function') damageShiki(t.k,d,false);
 }
+/* ★ v421 用戶報「乙骨無限制咒力解放語音播完，背景音樂沒及時恢復」：
+   語音走的是 DOM 音軌、與 BGM 無關，但流程中主 BGM 可能已被 suspend／或領域曲收掉後沒人接回來。
+   這裡做一次統一校音：只有在「確實沒有任何背景樂在響」時才把主 BGM 補起來，不干擾領域曲。 */
+function ensureBgmAfterVoice(){
+  try{
+    if(!S || S.phase!=='fight') return;
+    if(typeof bgmMuted!=='undefined' && bgmMuted) return;
+    if(S.paused || window.__appHidden || document.hidden) return;
+    if(typeof extraBgmKey!=='undefined' && extraBgmKey) return;
+    if(typeof sukuBgmOn!=='undefined' && sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused) return;
+    if(typeof okkoDomBgmOn!=='undefined' && okkoDomBgmOn && domAudioEls.okkoDomain && !domAudioEls.okkoDomain.paused) return;
+    if(bgmEl && !bgmEl.paused) return;
+    bgmSuspendedByDomain=false;
+    resumeMainBgm(0.8);
+  }catch(e){}
+}
 /* 里香立繪：半透明靈體剪影 */
 function drawRika(){
   if(!S.rika) return;
@@ -7771,10 +7838,11 @@ function drawRika(){
     const g=(typeof mahoBodyGeom==='function')?mahoBodyGeom():{h:H*0.6,gap:6*SC};
     let h=g.h, w=h*im.width/im.height;
     /* ★ v62 里香再左移 + 縮小 + 加轉：離開魔虛羅、不遮乙骨（實心內容零重疊，多設備校驗） */
-    const wMax=W*0.18;
+    /* ★ v421 用戶指定：略向右移 + 適當增大；圖層改到乙骨之下（被乙骨擋住 = 不互相遮臉） */
+    const wMax=W*0.205;
     if(w>wMax){ w=wMax; h=w*im.height/im.width; }
-    const x=GX()+gojoW()*0.50;      /* ★ v62 再左移：回到乙骨右上方的空位 */
-    const cy=H*0.20+Math.sin(S.t*1.8)*4*SC;
+    const x=GX()+gojoW()*0.66;
+    const cy=H*0.215+Math.sin(S.t*1.8)*4*SC;
     ctx.save();
     ctx.globalAlpha=0.97;
     ctx.translate(x, cy);
@@ -7805,7 +7873,8 @@ function rikaRelease(){
   if(!S.rika) return;
   S.okkoRelT=3.0;   /* ★ v110 立繪解放版覆蓋「0.45s 延遲 ＋ 2.0s 純愛砲動畫」到命中後復原 */
   /* ★ v148 用戶指定：無限制咒力解放時播「僅此一次」（與動畫同步、音量同其餘音效） */
-  try{ playDomSfx('yutaRelease'); }catch(e){}
+  try{ const _rv=playDomSfx('yutaRelease'); if(_rv&&_rv.then){ _rv.then(function(){ setTimeout(ensureBgmAfterVoice,140); }); } }catch(e){}
+  setTimeout(ensureBgmAfterVoice, 6200);   /* ★ v421 兜底：語音偏長／被 gate 收掉時也補一次 */
   say('rika','「憂太——全部給你。」');
   /* ★ v110 動畫重做（原作核對 2026-10-10）：
      · 劇場版0：乙骨以命爲代價解放里香全部咒力，打出的「紫色咒力衝擊波」與夏油「極之番・渦」正面對消滅；
@@ -8009,7 +8078,11 @@ function sukuCanOpenDomain(ignoreLimit){
   if(!ignoreLimit && (S.sukuDomUsed||0)>=sukuDomMax()) return false;
   if(S.sukuDom>0) return false;                 /* 已在領域中 */
   if(S.sukuBurn) return false;                  /* 術式熔斷 */
-  if(S.higuDom>0 && S.hero==='higuruma') return false;   /* ★ v387 誅伏賜死：庭上禁止展開他者領域 */
+  /* ★ v421 用戶指定（2026-11-08 修訂）：宿儺在「對方領域中」能否展開伏魔御厨子 ——
+     · 五條「無量空處」內：可以，機率與平時相同（領域行動池裡 dom 佔 1 份，≈1/5~1/6，不要太高）；
+     · 乙骨「真贋相愛」內：機制上可以，但對拼敗北會熔斷，實務上很難成立；
+     · ★ 虎杖「新·陰流」、日車「誅伏賜死」：**明確禁止**（本次指定）。 */
+  if(S.hero==='higuruma' && S.higuDom>0) return false;
   /* ★ v210 用戶指定（修 BUG：「虎杖領域中宿儺仍能展開伏魔御厨子」）：
      虎杖領域成立期間（S.itaDom>0 且操縱的是虎杖），宿儺**無法**展開領域 —— 直到虎杖下場；
      其餘技能一律不受影響（只封這一個入口，近身斬擊/斬擊波/灶·開/反轉術式照常）。
@@ -8052,6 +8125,9 @@ function sukunaOpenDomain(){
   S.suk.pose='cast'; S.suk.poseT=1.0;
   S.sukLast='';                          /* 本回合沒有出招：術式複製無從參考 */
   suspendMainBgm();
+  /* ★ v421 用戶報「背景音樂停了、領域音樂卻沒有同時出來」：舊版要等宿儺領域語音講完（約 4.7s）才起播，
+     中間有 4~5 秒完全靜音。現在與語音同拍起播，先把音量壓到 0.13 當墊底，語音結束再升回 0.35。 */
+  try{ startSukuBgm(0,0.13); }catch(e){}
   addFx({type:'sukuDomWord',dur:1.4});
   if(_voidOn){
     /* 破碎動畫後加入 ⇒ 繪製在上層，1.5s 散去後正好露出新成立的伏魔御厨子 */
@@ -8061,8 +8137,8 @@ function sukunaOpenDomain(){
   flash('fWhite'); shake(); SFX.hollow();
   say('suku','「領域展開——伏魔御厨子。」');
   say('sys','★ 伏魔御厨子展開——領域必中「解」「捌」每回合造成 '+Math.round((DOM_KAI_PCT+DOM_SLASH_PCT)*DOM_HIT_MUL*100)+'% 最大生命傷害（本局剩餘可展開 '+Math.max(0,SUKU_DOM_MAX-S.sukuDomUsed)+' 次）。');
-  _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(); });
-  setTimeout(function(){ try{ if(S.phase==='fight'&&S.sukuDom>0&&sukuBgmEl&&sukuBgmEl.paused) startSukuBgm(); }catch(e){} }, 5200);   /* ★ v358 定時兜底 */   /* 語音播完後循環伏魔御厨子 BGM */
+  _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(0,0.35); });   /* ★ v421 語音畢 ⇒ 升回正常音量 */
+  setTimeout(function(){ try{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(0,0.35); }catch(e){} }, 5200);   /* ★ v358 定時兜底 */   /* 語音播完後循環伏魔御厨子 BGM */
   syncHud();
 }
 /* 回合結束：宿儺隨機使出攻擊（含空間斬） */
@@ -9568,14 +9644,38 @@ function showResult(){   /* ★ v372 包一層保底：內部招式報错也要�
 }
 function showResultInternal(){
   /* ★ v395 用戶指定：進入結算頁後，結算曲（SPECIALZ）接著播，不從頭。
-     若中途被任何路徑 pause 過，這裡只 play() 續上，絕不 seek 0。 */
+     若中途被任何路徑 pause 過，這裡只 play() 續上，絕不 seek 0。
+     ★ v421 用戶報「虎杖終結宿儺後結算 BGM 沒正常播放」：
+      舊版只在 extraBgmKey 有值時才補播；而擊殺流程裡 key 可能已被清空/被其它路徑打斷 ⇒ 整段無聲。
+      現在：① key 為空時退回擊殺專屬曲 specialz；② 音量按 trim 表重算；③ play() 失敗掛手勢重試一次。 */
   try{
-    if(typeof extraBgmKey!=='undefined' && extraBgmKey && typeof extraBgmEls!=='undefined' && extraBgmEls[extraBgmKey]){
-      const _be=extraBgmEls[extraBgmKey];
-      if(_be.paused){ try{ _be.volume=BGM_EXTRA_VOL; }catch(_){} const _p=_be.play(); if(_p&&_p.catch) _p.catch(function(){}); }
+    if(!bgmMuted && typeof extraBgmEls!=='undefined'){
+      const _k=(typeof extraBgmKey!=='undefined'&&extraBgmKey)?extraBgmKey:'specialz';
+      const _be=extraBgmEls[_k];
+      if(_be){
+        try{ extraBgmKey=_k; }catch(_){}
+        try{ _be.volume=BGM_EXTRA_VOL*((typeof EXTRA_BGM_TRIM!=='undefined'&&EXTRA_BGM_TRIM[_k])||1); }catch(_){}
+        if(_be.paused){
+          const _p=_be.play();
+          if(_p&&_p.catch) _p.catch(function(){
+            const once=function(){ document.removeEventListener('pointerdown',once,true); try{ const q=_be.play(); if(q&&q.catch) q.catch(function(){}); }catch(_){} };
+            document.addEventListener('pointerdown',once,true);
+          });
+        }
+      }
     }
   }catch(e){}
   /* ★ v306 結算頁改自寫位移滾動（原生滾動在手機 transform 容器裏不可靠） */
+  /* ★ v421：開場補播之後，再等一拍（避開領域語音 promise / 淡出鏈的非同步收尾）校一次 */
+  try{ setTimeout(function(){
+    if(bgmMuted) return;
+    if(typeof extraBgmKey==='undefined'||!extraBgmKey) return;
+    const _e2=extraBgmEls[extraBgmKey];
+    if(_e2 && _e2.paused){
+      try{ _e2.volume=BGM_EXTRA_VOL*((typeof EXTRA_BGM_TRIM!=='undefined'&&EXTRA_BGM_TRIM[extraBgmKey])||1); }catch(_){}
+      const _p2=_e2.play(); if(_p2&&_p2.catch) _p2.catch(function(){});
+    }
+  },1400); }catch(e){}
   try{ rsScrollInit(); }catch(e){}
   /* ★ v266 段位統計欄位保底 */
   S.dmgTaken=S.dmgTaken||0; S.perfectN=S.perfectN||0; S.blackN=S.blackN||0;
@@ -9664,6 +9764,9 @@ let _audioPausedByGame=false;
 function pauseAllAudio(){
   _audioPausedByGame=true;
   if(typeof bgmCtx!=='undefined'&&bgmCtx&&bgmCtx.state==='running'){ try{ bgmCtx.suspend(); }catch(e){} }
+  /* ★ v421 用戶報「手機關屏後音樂還在響」：音效／合成音走的是另一顆 AudioContext（AC），
+     舊版只 suspend 了 bgmCtx ⇒ 長尾合成音（死亡音、領域嗡鳴）在後台繼續。這裡一併掛起。 */
+  try{ if(typeof AC!=='undefined'&&AC&&AC.state==='running'){ AC.suspend(); } }catch(e){}
   const els=[];
   try{ if(bgmEl) els.push(bgmEl); }catch(e){}
   try{ if(sukuBgmEl) els.push(sukuBgmEl); }catch(e){}
@@ -9678,6 +9781,7 @@ function resumeAllAudio(force){
   if(!_audioPausedByGame && !force) return;   /* ★ v396 force=true：暫停後立即恢復用（可重複呼叫） */
   _audioPausedByGame=false;
   if(typeof bgmCtx!=='undefined'&&bgmCtx&&bgmCtx.state==='suspended'){ try{ bgmCtx.resume(); }catch(e){} }
+  try{ if(typeof AC!=='undefined'&&AC&&AC.state==='suspended'){ AC.resume(); } }catch(e){}
   /* 只恢復「遊戲本來就在播」的：主 BGM 未被領域暫停、伏魔御厨子 BGM 處於開啟態 */
   try{ if(bgmEl && !bgmMuted && !bgmSuspendedByDomain){ bgmEl.volume=BGM_VOL; const p=bgmEl.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}
   try{ if(sukuBgmEl && sukuBgmOn){ const p=sukuBgmEl.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}
@@ -9952,37 +10056,59 @@ function speedLines(alpha){
   ctx.restore();
 }
 /* ★ v47 虎杖領域：故鄉的風景（暖色調、回憶感）—— 取代常規戰場背景 */
+/* ★ v421 用戶報「虎杖對宿儺動畫一多就卡」：領域背景每幀都在做「整屏 lighten 混合 + 全屏徑向漸變
+   + 約 4000 次 arc/fill 的半色調網點」——這三件事都是純靜態的，卻每幀重算一次。
+   現改為離屏烘焙一次（同 higuDomBaked 的做法），之後每幀只做一次 drawImage。 */
+let _itaDomBaked=null, _itaDomBakedKey='';
+function itaDomBaked_(){
+  const im=IMGS.itaDomBg; if(!im) return null;
+  const key=W+'|'+H+'|'+SC.toFixed(3)+'|'+GY.toFixed(1)+'|'+PERF+'|'+DPR;
+  if(_itaDomBaked && _itaDomBakedKey===key) return _itaDomBaked;
+  let c, g;
+  try{
+    c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(W*DPR*PERF)); c.height=Math.max(1,Math.round(H*DPR*PERF));
+    g=c.getContext('2d'); if(!g) return null;
+    g.setTransform(DPR*PERF,0,0,DPR*PERF,0,0);
+  }catch(e){ return null; }
+  const ar=im.width/im.height, br=W/H;
+  let dw,dh;
+  if(ar>br){ dh=H; dw=H*ar; } else { dw=W; dh=W/ar; }
+  g.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);
+  /* 提亮一檔（lighten 混合）：最暗處抬到中灰，亮部基本不動 */
+  g.save();
+  g.globalCompositeOperation='lighten';
+  g.globalAlpha=0.40; g.fillStyle='#e9eef4';
+  g.fillRect(0,0,W,H); g.restore();
+  /* 虎杖身後柔光 */
+  g.save();
+  const hy=GY-itaHeight()*0.46, hr=itaHeight()*0.95;
+  const gg=g.createRadialGradient(GX(),hy,0,GX(),hy,hr);
+  gg.addColorStop(0,'rgba(255,252,244,.62)');
+  gg.addColorStop(0.55,'rgba(255,250,240,.24)');
+  gg.addColorStop(1,'rgba(255,250,240,0)');
+  g.fillStyle=gg; g.fillRect(0,0,W,H); g.restore();
+  /* 暖色回憶濾層 */
+  g.save(); g.globalAlpha=0.08; g.fillStyle='#f6c98a';
+  g.fillRect(0,0,W,H); g.restore();
+  /* 半色調網點（只烘焙一次） */
+  const s=SC;
+  g.save(); g.globalAlpha=.05; g.fillStyle='#6b4020';
+  for(let y=0;y<H;y+=9*s) for(let x=(y/9)%2?4:0;x<W;x+=9*s){ g.beginPath(); g.arc(x,y,1.1*s,0,Math.PI*2); g.fill(); }
+  g.restore();
+  _itaDomBaked=c; _itaDomBakedKey=key;
+  return c;
+}
 function drawItaDomBg(){
-  /* ★ v70：領域場景改爲實際場景圖（仙台・雕塑街景），黑白漫畫質感 */
+  const _bk=itaDomBaked_();
+  if(_bk){ ctx.drawImage(_bk,0,0,W,H); return; }
+  /* 烘焙失敗的兜底：直接鋪場景圖 */
   const im=IMGS.itaDomBg;
   if(im){
     const ar=im.width/im.height, br=W/H;
     let dw,dh;
     if(ar>br){ dh=H; dw=H*ar; } else { dw=W; dh=W/ar; }
     ctx.drawImage(im,(W-dw)/2,(H-dh)/2,dw,dh);
-    /* ★ v87 ① 提亮一檔：原圖是偏暗的黑白漫畫街景，虎杖的深色線稿貼上去人物不顯。
-       用 lighten 混合（只提亮、不壓暗）——最暗處被抬到 #e9eef4 的 40%（黑→中灰），
-       亮部基本不動，線條不會被沖掉。 */
-    ctx.save();
-    ctx.globalCompositeOperation='lighten';
-    ctx.globalAlpha=0.40; ctx.fillStyle='#e9eef4';
-    ctx.fillRect(0,0,W,H); ctx.restore();
-    /* ★ v87 ② 虎杖身後打一圈柔光：把深色立繪從淺背景裏「托」出來，輪廓才咬得住 */
-    ctx.save();
-    const hy=GY-itaHeight()*0.46, hr=itaHeight()*0.95;
-    const gg=ctx.createRadialGradient(GX(),hy,0,GX(),hy,hr);
-    gg.addColorStop(0,'rgba(255,252,244,.62)');
-    gg.addColorStop(0.55,'rgba(255,250,240,.24)');
-    gg.addColorStop(1,'rgba(255,250,240,0)');
-    ctx.fillStyle=gg; ctx.fillRect(0,0,W,H); ctx.restore();
-    /* 輕微暖色回憶濾層（保留黑白漫畫質感）—— v87 由 .10 降到 .08，避免把提亮的背景又壓回去 */
-    ctx.save(); ctx.globalAlpha=0.08; ctx.fillStyle='#f6c98a';
-    ctx.fillRect(0,0,W,H); ctx.restore();
-    /* 半色調網點（回憶感）—— v87 壓淡（.08→.05、顏色轉暖棕），網點只做質感不做暗角 */
-    const s=SC;
-    ctx.save(); ctx.globalAlpha=.05; ctx.fillStyle='#6b4020';
-    for(let y=0;y<H;y+=9*s) for(let x=(y/9)%2?4:0;x<W;x+=9*s){ ctx.beginPath(); ctx.arc(x,y,1.1*s,0,Math.PI*2); ctx.fill(); }
-    ctx.restore();
     return;
   }
   const s=SC;
@@ -13073,12 +13199,13 @@ else if(f.type==='lightPillar'){
       ctx.fillStyle='#141414';
       for(let i=0;i<ch.length;i++) ctx.fillText(ch[i],x,y0+i*step);
       /* 豎排引號：左「＝豎線＋底橫向右；右」＝豎線＋頂橫向左。先粗白後細黑，與字同款白邊。 */
-      const qGap=fs*0.62, qTick=fs*0.40;
-      const qT=y0-step*0.50, qB=y0+step*(ch.length-1)+step*0.50;
+      /* ★ v421 用戶指定：引號形式照無量空處 —— 貼近字身、筆畫更細、上下收短，不再是大括號 */
+      const qGap=fs*0.46, qTick=fs*0.22;
+      const qT=y0-step*0.40, qB=y0+step*(ch.length-1)+step*0.40;
       const qx1=x-qGap, qx2=x+qGap;
       for(let pass=0;pass<2;pass++){
         ctx.strokeStyle=pass?'#141414':'#ffffff';
-        ctx.lineWidth=pass?fs*0.095:fs*0.205;
+        ctx.lineWidth=pass?fs*0.062:fs*0.148;
         ctx.lineCap='round'; ctx.lineJoin='round';
         try{ ctx.shadowBlur=pass?0:12*SC; }catch(e){}
         ctx.beginPath();
@@ -15057,7 +15184,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         ctx.globalAlpha=al;
         const w2=f.h*im.width/im.height*pop, h2=f.h*pop;
         /* ★ v306 用戶指定：再略上移（錨點 0.75→0.88），並改用邊緣羽化後的位圖繪製 */
-        ctx.drawImage(bfFeathered(im),f.x-w2/2,f.y-h2*0.88,w2,h2);
+        ctx.drawImage(im,f.x-w2/2,f.y-h2*0.88,w2,h2);   /* ★ v421 im 已是羽化快取，勿再調 bfFeathered（每幀重建離屏 canvas 會卡） */
         ctx.restore();
       }
     }
@@ -15478,6 +15605,7 @@ function render(){
       ctx.translate(_ax,_ay); ctx.rotate(-0.055*_jw); ctx.translate(-_ax,-_ay);
       ctx.translate(-(26*SC)*Math.pow(_jw,0.7)+Math.sin(_jw*40)*4*SC*_jw, 0);
     }
+    if(typeof drawRika==='function') drawRika();   /* ★ v421 里香改畫在乙骨之下（先畫 ⇒ 被乙骨擋住） */
     if(H2==='kashimo') drawKashimo();
     else if(H2==='itadori') drawItadori();
     else if(H2==='okkotsu') drawOkkotsu();
@@ -15487,7 +15615,6 @@ function render(){
     if(_jt>0) ctx.restore();
     drawMahoBody();                    /* 魔虛羅軀幹在宿儺身後 */
     if(typeof drawAgyoBody==='function') drawAgyoBody();   /* ★ v40 顎吐（與魔虛羅同高） */
-    if(typeof drawRika==='function') drawRika();   /* ★ v55 式神・里香 */
     drawSukuna();   /* ★ v191 用戶指定：宿儺頭頂的魔虛羅轉輪已移除（不再呼叫 drawMahoraga） */
     drawMakiBlink();   /* ★ v399 真希釋魂刀瞬身立繪（畫在宿儺之後 ⇒ 壓在宿儺右上側） */
     drawGuardCutin();
@@ -15646,6 +15773,7 @@ function syncHud(){
     if(_pd){ const _lk=!!S.domClash; if(_pd.__lk!==_lk){ _pd.__lk=_lk; _pd.classList.toggle('locked',_lk); } }
   }catch(e){}
   try{ syncMakiMeter(); }catch(e){}
+  try{ syncGrdBtn(); }catch(e){}
   /* ★ v266 續戰存檔：戰鬥中每 1.5s 節流保存 */
   if(S.phase==='fight' && !S.paused){
     const _now=Date.now();
@@ -15771,7 +15899,7 @@ function syncHud(){
       /* ★ v232 五條悟 1 技兩形態：形態要進緩存鍵，切換時整塊重刷（角標由 swapSpanHtml() 一併寫回） */
       const fist=!!(a==='atk' && S.hero==='gojo' && !stg && gojoFistMode());
       /* ★ v60 快取鍵必須含里香狀態：召喚 / 退場後二技能要換名，否則按鈕一直不刷新 */
-      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='maki')?('W'+(S.makiW||0)+'R'+(S.makiRead||0)+'C'+Math.round(S.makiCharge||0)+'F'+(S.makiFull||0)+'S'+(S.soulStack||0)+'X'+((S.gojo&&S.gojo.hp<=S.maxHp*0.35)?1:0)):'')+((S.hero==='higuruma')?('E'+(S.evidence||0)+'H'+(S.heavyEv||0)+'L'+(S.heavyLocked||0)+'P'+(S.heavyPending||0)+'G'+(S.guilt||0)):'')+((S.hero==='kashimo')?('C'+(S.charge||0)+'H'+Math.round(S.kashimo.hp||0)):'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+'c'+(S.rikaCd||0)+(S.rikaCopy||'-')+(S.rikaCopyCd||0)+(S.rikaCopyPend||'-')+(S.rikaCopyNext||'-')+(S.rikaCopyKeep?'K':'')):'');   /* ★ v69 白板態/靈魂·解 也要刷新；★ v212 K＝里香時限到退場（模仿術式保留） */
+      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='maki')?('W'+(S.makiW||0)+'R'+(S.makiRead||0)+'C'+Math.round(S.makiCharge||0)+'F'+(S.makiFull||0)+'S'+(S.soulStack||0)+'X'+((S.gojo&&S.gojo.hp<=S.maxHp*0.50)?1:0)+'U'+(S.makiUsed||0)+'G'+(S.makiGSel==null?'-':S.makiGSel)):'')+((S.hero==='higuruma')?('E'+(S.evidence||0)+'H'+(S.heavyEv||0)+'L'+(S.heavyLocked||0)+'P'+(S.heavyPending||0)+'G'+(S.guilt||0)):'')+((S.hero==='kashimo')?('C'+(S.charge||0)+'H'+Math.round(S.kashimo.hp||0)):'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+'c'+(S.rikaCd||0)+(S.rikaCopy||'-')+(S.rikaCopyCd||0)+(S.rikaCopyPend||'-')+(S.rikaCopyNext||'-')+(S.rikaCopyKeep?'K':'')):'');   /* ★ v69 白板態/靈魂·解 也要刷新；★ v212 K＝里香時限到退場（模仿術式保留） */
       if(b.__lab!==kk){
         b.__lab=kk;
         /* ★ 查表：6 個角色統一走 HERO_BTN（小字支持函數，用來顯示實時進度） */
@@ -15780,8 +15908,11 @@ function syncHud(){
         if(S.hero==='maki'){
           var _WN=['釋魂刀','游雲','龍骨'], _WT=['殺傷 10%・灵魂损伤 '+(S.soulStack||0)+'/3','殺傷 15%・再 '+(4-((S.yunN||0)%4))+' 次多一行動','殺傷 8%・架刀蓄 '+Math.round(S.makiCharge||0)];   /* ★ v408 */
           var _wi=(S.makiW||0)%3;
-          var _gd=(!S.makiAwaken && S.gojo && S.gojo.hp<=S.maxHp*0.35)
-            ? ['spark','天與咒縛・全開','★ 一次性・輸出 +25%／3 回合受傷 +20%']
+          /* ★ v421：全開 ≤50%、一生一次；未手動選擇時預設全開，按下切換角標可切回架勢 */
+          var _canAwk=(!S.makiUsed && S.gojo && S.gojo.hp<=S.maxHp*0.50);
+          var _sel=(S.makiGSel==null)?(_canAwk?1:0):(S.makiGSel?1:0);
+          var _gd=(_sel===1 && _canAwk)
+            ? ['spark','天與咒縛・全開','★ 一生一次・輸出 +25%']
             : D.guard;
           D=Object.assign({},D,{atk:['black',_WN[_wi],_WT[_wi]], guard:_gd});
         }
@@ -15805,7 +15936,7 @@ function syncHud(){
             ? ICO('kai')+'弱點追撃<small>脆弱時間・免費一撃</small>'
             : (fist
                 ? ICO(t0[0])+'蒼・拳<small>10~14%・無標記</small>'+swapSpanHtml()
-                : ICO(t0[0])+t0[1]+'<small>'+(S.hero==='gojo'?'5~7%・可標記':btnLabel(t0[2]))+'</small>'+(S.hero==='gojo'?swapSpanHtml():''));
+                : ICO(t0[0])+t0[1]+'<small>'+(S.hero==='gojo'?'5~7%・可標記':btnLabel(t0[2]))+'</small>'+(S.hero==='gojo'?swapSpanHtml():'')+(S.hero==='maki'&&a==='guard'&&grdCanSwap()?grdSwapSpanHtml():''));
         }
       }
       const stgOn=!!(a==='atk' && S.hero==='gojo' && S.stagger>0 && !S.staggerUsed);
@@ -16356,9 +16487,11 @@ const HERO_BTN={
         ult:['blood','赤血操術・穿血',S=>S.itaUltCd>0?('CD '+S.itaUltCd+' 回合'):'15%~20% ・ 留下血契']},
   maki:{atk:['black','釋魂刀','10% ・ 無視適應'],   /* ★ v389 1 技名由渲染層按玩家選定的咒具覆寫 */
         /* ★ v408：架勢冷卻 3 回合；全開仍只在血量 ≤35% 出現，但按下無視冷卻 */
+        /* ★ v421 用戶指定：全開門檻 ≤50%、與架勢並存、兩技 CD 各自獨立（全開無 CD、一生一次） */
         guard:['guard','天與咒縛',S=>{
-          if(!S.makiAwaken && S.gojo.hp<=S.maxHp*0.35) return '★ 全開：輸出 +25%／永久失去架勢';
-          if(S.makiAwaken) return '全開中・架勢已失去';
+          const _can=(!S.makiUsed && S.gojo && S.gojo.hp<=S.maxHp*0.50);
+          const _sel=(S.makiGSel==null)?(_can?1:0):(S.makiGSel?1:0);
+          if(_sel===1 && _can) return '★ 全開：輸出 +25%・一生一次';
           if((S.makiGcd||0)>0) return '冷卻 '+S.makiGcd+' 回合';
           return '本回合免傷・CD 3';
         }],
@@ -16453,7 +16586,7 @@ function beginNext(h){
   S.hollowCd=0; S.itaUltCd=0; S.blockT=0; S.guardFx=0; S.guardUp=false;
   S.stagger=0; S.perfect=false; S.perfectOn=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.okoCounter=false; S.kashimoDead=0;
-  S.makiRead=0; S.soulWound=0; S.makiAwaken=0; S.makiW=0; S.makiParry=0; S.makiBrace=0; S.makiCharge=0; S.makiFull=0; S.yunN=0; S.makiGcd=0;   /* ★ v387/v388/v390 真希新機制換人重置（咒具回到釋魂刀） */
+  S.makiRead=0; S.soulWound=0; S.makiAwaken=0; S.makiUsed=0; S.makiGSel=null; S.makiW=0; S.makiParry=0; S.makiBrace=0; S.makiCharge=0; S.makiFull=0; S.yunN=0; S.makiGcd=0;   /* ★ v387/v388/v390 真希新機制換人重置（咒具回到釋魂刀） */
   if(h==='higuruma'){ S.evidence=0; S.heavyEv=0; S.heavyLocked=0; S.higuRct=false; S.higuVerdictN=0; setTimeout(function(){ try{ higurumaAutoDomain(); }catch(e){} },460); }
   else { S.higuDom=0; S.higuJudge=0; S.higuExtend=0; }   /* ★ v387/v388 換人收束日車領域（審判者與展延一併清） */
   /* ★ v60 里香是乙骨專屬式神：換人（陣亡 / 世界斬 / 自選接力）一律退場，咒力上限復原 */
@@ -16493,6 +16626,13 @@ function startNext(h){
      在這裏清一次即可覆蓋全部。 */
   clearHeroTimers();
   stageReset();
+  /* ★ v421 用戶報「鹿紫雲一解放幻獸琥珀後、下場換人了全場仍帶紫光」：
+     根因是 S.amberUsed / S.amber 這組狀態只在 kashimo 自己的邏輯裡歸零，換人時沒人清；
+     而琥珀形態的立繪替換、紫粉光環、HUD 標籤都掛在 amberUsed 上 ⇒ 一旦殘留，
+     新角色登場後仍會被判定成「琥珀解放中」。三個登場路徑都經過這裡，按目標角色判一次最穩。 */
+  if(h!=='kashimo'){
+    try{ S.amberUsed=false; S.amber=0; S.amberTagHide=0; S.amberSkip=0; S.charge=0; }catch(e){}
+  }
   /* ★ v64 修復：領域「真贋相愛」的收束必須收進「選人」統一入口 —— 原本只在 beginNext 裏清，
      而鹿紫雲一 / 虎杖走各自的 start 函數（startKashimo / startItadori）會繞過它，
      導致「乙骨開完領域後選鹿紫雲一 / 虎杖 ⇒ 劍林背景殘留不走」。 */
@@ -16702,7 +16842,7 @@ function confiscateNext(){
 /* ★ v53 乙骨領域演出：全屏漫畫頁 → 場地中央浮現「邪去悔の梯子」 → 劍林場地 */
 function okkoDomShow(){
   S.okkoDom=3; S.domLife=0;          /* ★ v295 領域寿命計數歸零 */   /* ★ v89 領域成立（持續到乙骨退場，不再計回合；場地＝劍林） */
-  startOkkoDomainBgm();              /* v161 領域成立 ⇒ 播 AIZO（第 4 秒起、循環）；立繪切換由 drawOkkotsu 依 S.okkoDom 處理 */
+  startOkkoDomainBgm(true);          /* ★ v421 領域成立 ⇒ AIZO 從頭播（循環）；立繪切換由 drawOkkotsu 依 S.okkoDom 處理 */
   S.okkoDomJust=1;
   S.okkoDomIn=0;                     /* ★ v103 場景自左向右展開（update 推進 0→1） */                   /* ★ v71 展開動畫期間不觸發彌須葛籠 */
   setTimeout(function(){ S.okkoDomJust=0; }, 2600);   /* 動畫 2.4s + 緩衝 */
@@ -16814,7 +16954,14 @@ function okkoDomainClash(){
         addFx({type:'domShatter',dur:0.9});
         flash('fWhite');
         S.sukuBurn=true; S.misagoT=2;   /* ★ v99 宿傩熔斷；魔虛羅擊碎邏輯同五條線 */
-        resumeMainBgm();                                 /* ★ v141 乙骨勝 ⇒ 恢復原 BGM */
+        /* ★ v421 用戶指定：對拼勝利後領域音樂要「跟上繼續播放」——
+           舊版這裡 resumeMainBgm() 會把主 BGM 也拉起來，與 AIZO 兩首同響；
+           現在只確保 AIZO 沒被暫停（被暫停就從原位置續播），不碰主 BGM。 */
+        try{
+          okkoDomBgmOn=true;
+          const _oe=domAudioEls.okkoDomain;
+          if(_oe&&_oe.paused){ const _op=_oe.play(); if(_op&&_op.catch)_op.catch(function(){}); }
+        }catch(e){}
         okkoTrapWord();                                  /* ★ v107 對拼勝利 ⇒ 領域成立 → 梯子讖字 */
         if(typeof fxMisago==='function') fxMisago();     /* ★ v107 對拼勝利後宿傩才被葛籠罩 */
         say('sys','★ 術式熔斷——宿傩的術式被對拼衝垮：除「反轉術式」外無法使用任何術式！下一回合宿傩將直接以反轉術式修復（回復 20% 最大生命）。');
@@ -17027,16 +17174,19 @@ function makiAtk(){
 }
 function makiGuard(){
   if(S.acted) return;
-  /* ★ v408 用戶指定：全開仍是「血量 ≤35% 才變按鈕」，但按下去無視架勢冷卻；
-     代價從「3 回合受傷 +20%」改成「永久失去架勢」——開了就只剩往前砍。 */
-  if(!S.makiAwaken && S.gojo.hp<=S.maxHp*0.35){
+  /* ★ v421 用戶指定：全開門檻降到「血量 ≤50%」，且與架勢**並存**（不再吃掉架勢）。
+     兩技 CD 各自獨立：架勢 3 回合冷卻；全開沒有 CD，但一生只能開一次。
+     二技能按鈕右上角有切換角標（全開可用時出現），玩家可隨時在兩者之間切換。 */
+  const _canAwk=(!S.makiUsed && S.gojo.hp<=S.maxHp*0.50);
+  const _sel=(S.makiGSel==null)?(_canAwk?1:0):(S.makiGSel?1:0);
+  if(_sel===1 && _canAwk){
     markActed('guard');
-    S.makiAwaken=1; S.makiFull=0;
+    S.makiAwaken=1; S.makiUsed=1; S.makiFull=0; S.makiGSel=0;
     S.gojo.pose='cast'; S.gojo.poseT=0.7;
     flash('fWhite'); shake(); SFX.hollow();
     addFx({type:'makiAwaken',dur:1.45});   /* ★ v420 全開動畫重做 */
     say('maki','「——不必再忍了。天與咒縛，全開。」');
-    say('sys','★ 天與咒縛・全開 —— 輸出 +25%（本局常駐）；代價：從此再也擺不出「架勢」，只能靠身法硬吃。');
+    say('sys','★ 天與咒縛・全開 —— 輸出 +25%（本局常駐，一生一次）。架勢仍然保留：把二技能右上角切回去，照樣能擺架勢。');
     syncHud();
     return;
   }
@@ -17044,8 +17194,7 @@ function makiGuard(){
      使用後本回合（含宿儺回合的式神行動）只有三類攻擊能穿透：
      ① 宿儺「解」「捌」→ 傷害減半 ② 顎吐「虎葬·碎擊」 ③ 魔虛羅「斬擊」；其餘攻擊一律架開（0 傷害）。
      ★ v388：每架開一次記 1 層「見切」，回合末回敬一記反擊。 */
-  /* ★ v408 全開之後沒有架勢；架勢本身冷卻 3 回合（全開不吃這個 CD） */
-  if(S.makiAwaken){ say('sys','★ 全開之後架勢已經不存在了 —— 只剩往前砍。'); return; }
+  /* ★ v421：全開不再封鎖架勢 —— 兩技並存，各自冷卻 */
   if((S.makiGcd||0)>0){ say('sys','天與咒縛・架勢 冷卻中 —— 還需 '+S.makiGcd+' 回合。'); return; }
   S.makiGcd=3;
   S.makiStance=1;
@@ -17059,6 +17208,7 @@ function makiGuard(){
   if(perfectWindowOpen()) perfectPayoff();
   say('maki','「架勢——接得住的，才叫斬擊。」');
   say('sys','天與咒縛・架勢：本回合只有宿儺「解」「捌」與領域必中（皆減半）、顎吐「虎葬·碎擊」、魔虛羅「斬擊」傷得到真希，其餘全部架開；★ 每架開一次累積 1 層見切（滿 2 層下一記「無聲突襲」必定要害），回合末自動反擊；★ 後續 2 回合傷害減半。');
+  if(S.makiAwaken) say('sys','★ 全開狀態常駐（輸出 +25%）—— 架勢與全開互不干涉，本回合兩者同時生效。');
 }
 function makiUlt(){
   if(S.acted) return;
@@ -17946,9 +18096,13 @@ function stopDomSfx(){
   if(domCur){ try{ domCur.pause(); domCur.currentTime=0; }catch(e){} domCur=null; }
 }
 /* ★ v161 乙骨領域 BGM（AIZO）：領域成立期間循環播放，從第 4 秒起播；領域消失／乙骨下場時停播並恢復原 BGM */
-function startOkkoDomainBgm(){
+function startOkkoDomainBgm(_fromZero){
   prepDomAudio();
-  if(okkoDomBgmOn) return;
+  if(okkoDomBgmOn){
+    /* ★ v421：已在播放態就不重來；若被暫停過（對拼／切出）則續播 */
+    try{ const _e0=domAudioEls.okkoDomain; if(_e0&&_e0.paused){ const _p0=_e0.play(); if(_p0&&_p0.catch)_p0.catch(function(){}); } }catch(e){}
+    return;
+  }
   if(S.paused) return;   /* ★ v199 需求④：暫停中不起播 */
   if(bgmMuted) return;   /* ★ v243 靜音時乙骨領域 BGM 也不起播 */
   const el=domAudioEls.okkoDomain;
@@ -17957,7 +18111,8 @@ function startOkkoDomainBgm(){
   suspendMainBgm();          /* 記錄並暫停原 BGM（乙骨專屬／主 BGM 同一元素） */
   stopSukuBgm();             /* 對拼時可能正在播伏魔御厨子 BGM，先停 */
   stopDomSfx();              /* 避免與領域語音疊加 */
-  try{ el.currentTime=4; }catch(e){}   /* ★ 用戶指定：從音頻第 4 秒開始 */
+  /* ★ v421 用戶指定：領域展開時**從頭播放**（原：從第 4 秒）；對拼勝利續播時不動播放位置 */
+  try{ el.currentTime=(_fromZero?0:4); }catch(e){}
   /* ★ v179 音量對齊：實測 AIZO 响度比「伏魔御厨子 BGM」高約 4dB（3s 窗最大 RMS：-6.6 vs -9.8 dBFS），
      乘 0.65（≈-3.7dB）後兩者聽感一致。 */
   /* ★ v185 隨宿儺 BGM 同步減小：0.52=0.8×0.65（保留 4dB 响度對齊係數，兩者聽感仍一致） */
@@ -17978,6 +18133,8 @@ function stopOkkoDomainBgm(){
 /* ★ v387 修「兩個領域音樂重疊」：起播伏魔御廚子 BGM 前，先把無量空處／虎杖／乙骨等
    追加領域曲全部靜音歸零，並作廢 ujaku 的 9 秒寬限（否則 extraBgmWatch 不會收它）。 */
 function stopAllOtherDomainBgm(){
+  /* ★ v421：擊殺／終幕專屬曲（SPECIALZ / finish）不是領域曲，不能被領域切換清掉 */
+  try{ if(typeof extraBgmKey!=='undefined' && (extraBgmKey==='specialz'||extraBgmKey==='finish')) return; }catch(e){}
   try{ if(typeof extraBgmEls!=='undefined' && extraBgmEls){
         for(const _k in extraBgmEls){ const _e=extraBgmEls[_k];
           if(_e){ try{ _e.pause(); _e.currentTime=0; _e.volume=0; }catch(_){} } } } }catch(_){}
@@ -17985,20 +18142,31 @@ function stopAllOtherDomainBgm(){
   try{ window.__ujakuAt=0; }catch(_){}
   try{ if(typeof stopOkkoDomainBgm==='function') stopOkkoDomainBgm(); }catch(_){}
 }
-function startSukuBgm(_try){
+function startSukuBgm(_try,_vol){
+  /* ★ v421 用戶報「虎杖終結宿儺後結算 BGM 沒正常播放」的真正根因：
+     宿傩領域語音的 promise / 5.2s 兜底定時器在**進入結算之後**才 resolve，
+     它會呼叫 startSukuBgm() → stopAllOtherDomainBgm() 把正在播的 SPECIALZ 直接停掉。
+     這裡加一道硬閘：非 fight 階段一律不起領域曲。 */
+  if(!S || S.phase!=='fight') return;
+  /* ★ v421：防重入 —— startSukuBgm → stopAllOtherDomainBgm → stopOkkoDomainBgm → startSukuBgm
+     在「宿傩領域成立 + 場上是乙骨」時會無限遞歸。 */
+  if(_sukuBgmLock) return;
+  _sukuBgmLock=1;
   try{ stopAllOtherDomainBgm(); }catch(e){}   /* ★ v387 只留宿儺領域曲 */
+  _sukuBgmLock=0;
   if(window.__appHidden && document.hidden) return;
   /* ★ v302 修復「宿儺領域音樂偶爾不播」：
      舊版在 prepDomAudio 還沒把 <audio> 建好時直接 return，之後也不重試 ⇒ 整段領域沒聲音；
      而「開/關音樂」會另路去 play 那個元素，所以點一下就恢復。
      現在：元素未建好 ⇒ 短重試；play 被自動播放策略拦下 ⇒ 等下一次使用者手勢再起播。 */
   prepDomAudio();
+  const _VOL=(_vol==null?0.35:_vol);   /* ★ v421 語音期可先給低音量墊底 */
   if(!sukuBgmEl){
     const n=_try||0;
-    if(n<12 && !bgmMuted && !S.paused) setTimeout(()=>{ try{ startSukuBgm(n+1); }catch(e){} }, 140);
+    if(n<12 && !bgmMuted && !S.paused) setTimeout(()=>{ try{ startSukuBgm(n+1,_vol); }catch(e){} }, 140);
     return;
   }
-  if(sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused) return;
+  if(sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused){ try{ sukuBgmEl.volume=_VOL; }catch(e){} return; }
   if(S.paused) return;   /* ★ v199 需求④：暫停中不起播（避免暫停後異步 promise 回調又把 BGM 放起來） */
   if(bgmMuted){ sukuBgmOn=false; return; }   /* ★ v243 用戶報「關了音樂仍聽到宿傩領域音樂」：靜音時領域 BGM 一律不起播 */
   sukuBgmOn=true;
@@ -18015,7 +18183,7 @@ function startSukuBgm(_try){
     sukuBgmEl.currentTime=0; sukuBgmEl.volume=0;      /* ★ v314 用戶指定：每次都從頭播 */
     /* ★ v306 銜接：0.6s 淡入到 0.35 */
     const _sv=sukuBgmEl, _sv0=Date.now(), _startSeq=_sukuFadeSeq;
-    (function _sukuUp(){ if(_startSeq!==_sukuFadeSeq) return; const _k=Math.min(1,(Date.now()-_sv0)/600); try{ _sv.volume=0.35*_k; }catch(e){} if(_k<1) setTimeout(_sukuUp,40); })();
+    (function _sukuUp(){ if(_startSeq!==_sukuFadeSeq) return; const _k=Math.min(1,(Date.now()-_sv0)/600); try{ _sv.volume=_VOL*_k; }catch(e){} if(_k<1) setTimeout(_sukuUp,40); })();
     const p=sukuBgmEl.play();
     if(p&&p.catch) p.catch(()=>{
       /* 自動播放被拦：不要就此沒聲音，掛一次手勢後重試 */
@@ -18031,6 +18199,7 @@ function startSukuBgm(_try){
   }catch(e){}
 }
 let _sukuFadeSeq=0;   /* ★ v314：新的起播/停止會 +1，打斷上一輪淡入淡出，避免把剛起播的音軌又 pause 掉 */
+let _sukuBgmLock=0;   /* ★ v421 遞歸保護 */
 function stopSukuBgm(){
   if(!sukuBgmEl){ sukuBgmOn=false; return; }
   if(!sukuBgmOn) return;
@@ -18434,6 +18603,10 @@ function autoPauseOnHide(){
      領域語音、WebAudio 音效、開場影片）一起停 —— 不論當下在戰鬥還是選人／結算頁。 */
   if(S.phase==='fight' && !S.paused){ try{ togglePause(); }catch(e){} }
   try{ pauseAllAudio(); }catch(e){}   /* ★ v322 不论戰鬥與否都把聲音全停 */
+  /* ★ v421：有些音源（領域 BGM 淡入鏈、追加 BGM 的 play() promise）比 visibilitychange 晚一拍
+     才真正開始發聲 ⇒ 再補停兩次；同時把「首頁／選人／結算」的 BGM 一併壓住。 */
+  try{ setTimeout(function(){ try{ pauseAllAudio(); }catch(e){} },180); }catch(e){}
+  try{ setTimeout(function(){ try{ pauseAllAudio(); }catch(e){} },620); }catch(e){}
 }
 /* ★ v306 用戶指定：回到頁面時，只要遊戲沒被暫停，音樂就接著播（不打斷戰鬥節奏） */
 function autoResumeOnShow() { try{ const _db=document.getElementById('deathBlack'); if(_db&&_db.classList.contains('on')&&typeof window.__dbNext==='function') setTimeout(window.__dbNext,260); }catch(e){}
