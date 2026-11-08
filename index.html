@@ -1,3 +1,4 @@
+<!-- ★ v427 用戶指定：五條「茈」擊殺 ⇒ 專屬勝利圖＋勝利台詞（終幕動畫僅非茈擊殺播放）／修乙骨領域中擊殺 AIZO 未停就起結算曲／AIZO 再降音量／乙骨勝利圖換新／所有勝利對白立繪四邊虛化 -->
 <!-- ★ v426b 用戶指定：真希「天與咒縛・全開」增加回復自身 15% 最大生命 -->
 <!-- ★ v426 用戶指定：真希「無聲突襲」突進位移拉遠 + 打擊感強化；虎杖「簡易領域」與日車「領域展延」特效外擴、不再貼身 -->
 <!-- ★ v425 用戶指定：五條頭像改用原圖氣泡字且整圖縮小多露畫面／乙骨頭像略微放大／真希頭像換成殘血蹲跪立繪／各角色勝利台詞補第三句旁白 -->
@@ -3079,11 +3080,13 @@ IMG.makiBlinkArt='assets/23b41562cc30.webp';
 /* ★ v398 日車領域・審判者（日車怪）立繪：去綠幕、去水印、1100×845 */
 IMG.higuArt='assets/40a6db578168.webp';
 /* ★ v422 選人頁頭像專用：五條悟＝「會贏的。」正臉＋台詞氣泡（綠幕摳圖、去雜字水印、560×560 透明底）；真希／日車＝替換前的原圖 */
+/* ★ v427 五條悟「虛式・茈」擊敗宿儺專屬勝利圖（綠幕摳圖去水印、含「你才是挑戰者哦」氣泡） */
+IMG.gojoHollowEnd='assets/a7449bffe7e9.webp';
 /* ★ v423 陣亡對白結算立繪：沿用虎杖真結局的 .dbArt（左板邊・漸顯・右緣羽化） */
 IMG.higuEnd='assets/ce9309fafbb5.webp';
 IMG.makiEnd='assets/ab54ed311f92.webp';
 IMG.kashEnd='assets/7e4b44bc0e28.webp';
-IMG.okkoEnd='assets/4f47e12d5bd6.webp';
+IMG.okkoEnd='assets/bc3d9e7feb5f.webp';
 IMG.gojoSel='assets/14461b287c62.webp';
 IMG.makiOld='assets/71df1cf1fbd5.webp';
 IMG.higuOld='assets/0c9d92eceead.webp';
@@ -5062,6 +5065,12 @@ const WIN_TALK={
     ['gojo','「抱歉，讓你們等太久了。」'],
     ['narr','旁白：最強的咒術師，把「會贏的」三個字，留在了新宿的夜裡。']
   ],
+  /* ★ v427 五條用「茈」終結宿儺：台詞取自 236 話「你才是挑戰者哦」 */
+  gojoHollow:[
+    ['gojo','「——你才是挑戰者哦。」'],
+    ['gojo','「所以，贏的是我。」'],
+    ['narr','旁白：虛式・茈把新宿的夜燒成一片白，最強的稱號回到了它的主人手裡。']
+  ],
   kashimo:[
     ['kash','「……這就是最強。」'],
     ['kash','「比四百年攢下的這一擊，還短啊。」'],
@@ -5086,11 +5095,13 @@ const WIN_TALK={
 function heroWinOutro(){
   if(S.phase!=='over') S.phase='over';
   const _h=S.hero;
-  const _lines=WIN_TALK[_h] || [['narr','旁白：詛咒之王，就此消散。']];
-  const _art=WIN_ART[_h]||null;
+  /* ★ v427 用茈擊殺 ⇒ 走專屬台詞與專屬圖（gojoHollowEnd），其餘角色照 WIN_ART */
+  const _byH=!!S.__winByHollow;
+  const _lines=(_byH?WIN_TALK.gojoHollow:WIN_TALK[_h]) || [['narr','旁白：詛咒之王，就此消散。']];
+  const _art=_byH?'gojoHollowEnd':(WIN_ART[_h]||null);
   /* 看門狗：對白層若因任何原因沒收，9s 後仍要進結算 */
   let _done=false;
-  const _finish=function(){ if(_done) return; _done=true; try{ showResult(); }catch(e){} };
+  const _finish=function(){ if(_done) return; _done=true; try{ S.__winByHollow=false; }catch(e){} try{ showResult(); }catch(e){} };
   setTimeout(_finish,9000);
   try{ const _da=document.getElementById('dbArt'); if(_da){ _da.classList.toggle('winArt',!!_art); } }catch(e){}
   try{ deathBlackout(_lines, _finish, _art); }catch(e){ _finish(); }
@@ -5681,7 +5692,7 @@ function actHollow(){
     if(S.phase!=='fight') return;
     let d=rnd(SUK_MAXHP*0.25,SUK_MAXHP*0.30)/HERO_DMG;   /* ★ v394 對齊文案：虛式・茈＝一階段 25~30% 最大生命（150 基準 ⇒ 37.5~45 點；先除 HERO_DMG，hitSukuna 入口再乘回） */
     d=applyPubVow(d);                                  /* ★ v243 術式公開兌現（共用） */
-    hitSukuna(d,true,'hollow');
+    hitSukuna(d,true,'hollow',false,false,'gojo_hollow');   /* ★ v427 標記「虛式・茈」擊殺 */
     say('narr',pick(['旁白：紅與藍相撞，虛構的質量吞沒了整條街。','旁白：茈——不存在於這個世界的衝擊，正面命中。','旁白：硝煙散去，宿儺的半邊身子消失了。']));
   },1040);
   syncHud();
@@ -5730,7 +5741,7 @@ function hollowUnlimited(){
     if(S.agyo) agyoDown();                    /* ★ v52 無限制菈連顎吐一起抹除 */
     let _hd=rnd(SUK_MAXHP*0.36,SUK_MAXHP*0.42)/HERO_DMG;   /* ★ v413 46~55% → 36~42%：配術式公開 1.35 後單發上限 85（一階段 57%），不再一發打空 */   /* ★ v395 用戶指定上調：無限制・茈＝46~55% 最大生命（原 46~58 點在 150 基準下只等於 24.5~30.9%，已被普通茈 25~30% 追平） */
     _hd=applyPubVow(_hd);                     /* ★ v243 修 BUG：無限制・茈同樣吃「術式公開」×1.8 */
-    hitSukuna(_hd,true,'hollow');
+    hitSukuna(_hd,true,'hollow',false,false,'gojo_hollow');   /* ★ v427 標記「無限制・茈」擊殺 */
     /* ★ 代價：解除上限的茈會波及自身 —— ★ v222 用戶要求降低反噬：40% → **20%**（現有生命的） */
     const back=Math.round(S.gojo.hp*0.2);
     S.gojo.hp=Math.max(1,S.gojo.hp-back);
@@ -5944,6 +5955,17 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
   /* ★ v83：信息洪流頁面不再由傷害（茈/普攻等）隨機帶出 —— 舊觸發已刪除，
      頁面只在「無量空處成功成立」時出現（見 gojoVoid 的兩條成立路徑）。 */
   if(S.suk.hp<=0 && S.phase==='fight' && !noKill){   /* 宿儺被擊倒 → 結算（noKill 時留給原身演出） */
+    /* ★ v427 用戶報「乙骨領域中打敗宿儺，領域音樂沒停、勝利結算音樂就開始播」：
+       AIZO 走 domAudioEls.okkoDomain（獨立 <audio>），不在 extraBgmEls，playExtraBgm 停不到它。
+       這裡在切 SPECIALZ 之前先硬停 AIZO，並把 okkoDomBgmOn 歸零（避免淡入看守把它拉回來）。 */
+    try{
+      if(typeof domAudioEls!=='undefined' && domAudioEls && domAudioEls.okkoDomain){
+        const _ae=domAudioEls.okkoDomain; try{ _ae.pause(); _ae.currentTime=0; }catch(_e){}
+      }
+      try{ okkoDomBgmOn=false; }catch(_e){}
+    }catch(e){}
+    /* ★ v427 記錄「用茈收掉宿儺」，供 heroWinOutro 選圖／選台詞；非茈擊殺照舊播終幕 */
+    S.__winByHollow=(S.hero==='gojo' && sid==='gojo_hollow');
     try{ playExtraBgm('specialz',0.5); }catch(e){}   /* ★ v305 宿儚死後立刻換 SPECIALZ */
     /* ★ v222 用戶報「虎杖是最後一棒卻沒出真結局」：原版只有「釘崎連動」那一刀（sid=ita_soul_final）
        才走真結局，虎杖用普通招式收掉宿儺就只算「正面突破」。現在**虎杖親手擊倒 ⇒ 一律走真結局演出**。 */
@@ -5957,7 +5979,9 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     queue.length=0;
     /* ★ v63 最後一擊：停頓 + 變速；五條悟擊敗宿儺 → 終幕黑場 + 立繪演出 */
     finisherSlow();
-    const gzFinGo=S.hero==='gojo';
+    /* ★ v427 用戶指定：五條終幕動畫「保持不變」，但只在用茈以外的技能擊殺時播；
+       用茈收掉 ⇒ 不播終幕，直接進勝利對白（專屬圖＋台詞）。 */
+    const gzFinGo=(S.hero==='gojo' && !S.__winByHollow);
     if(gzFinGo) gojoFinisherShow();
     say('suku','「……不可能。」');
     say('narr','旁白：宿儺——被擊倒了。');
@@ -18191,7 +18215,7 @@ function startOkkoDomainBgm(_fromZero){
      乘 0.65（≈-3.7dB）後兩者聽感一致。 */
   /* ★ v185 隨宿儺 BGM 同步減小：0.52=0.8×0.65（保留 4dB 响度對齊係數，兩者聽感仍一致） */
   /* ★ v187 用戶再次要求降低：0.52 → 0.32（再降約 4.2dB，明顯小於宿儺領域 BGM） */
-  el.loop=true; el.volume=0.22;   /* ★ v240 用戶要求再降：0.32 → 0.22（約 -3.3dB） */
+  el.loop=true; el.volume=0.17;   /* ★ v427 用戶要求再略降：0.22 → 0.17（約 -2.2dB） */
   const p=el.play(); if(p&&p.catch) p.catch(()=>{});
 }
 function stopOkkoDomainBgm(){
@@ -18888,8 +18912,9 @@ const SND_SUKU_BGM='assets/9654f6b813b7.mp3';      /* 伏魔御廚子領域 BGM 
   opacity:0;transform:translateX(-14px);
   transition:opacity 1.1s ease,transform 1.1s ease;
   pointer-events:none;z-index:1;filter:brightness(.92) contrast(1.02);
-  -webkit-mask-image:linear-gradient(90deg,#000 0,#000 58%,rgba(0,0,0,.35) 84%,transparent 100%);
-  mask-image:linear-gradient(90deg,#000 0,#000 58%,rgba(0,0,0,.35) 84%,transparent 100%);
+  /* ★ v427 用戶指定：所有勝利台詞動畫圖案「四邊虛化」 —— 由原本只有右緣羽化改為四周向內漸隱 */
+  -webkit-mask-image:radial-gradient(ellipse 78% 80% at 46% 52%,#000 50%,rgba(0,0,0,.62) 76%,transparent 100%);
+  mask-image:radial-gradient(ellipse 78% 80% at 46% 52%,#000 50%,rgba(0,0,0,.62) 76%,transparent 100%);
 }
 #deathBlack .dbArt.on{opacity:.55;transform:translateX(0);}
 /* ★ v424b 勝利結局：黑底上的深色西裝／咒縛裝看不清，只對勝利對白提亮一檔 */
