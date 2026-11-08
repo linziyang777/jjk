@@ -1,3 +1,6 @@
+<!-- ★ v426b 用戶指定：真希「天與咒縛・全開」增加回復自身 15% 最大生命 -->
+<!-- ★ v426 用戶指定：真希「無聲突襲」突進位移拉遠 + 打擊感強化；虎杖「簡易領域」與日車「領域展延」特效外擴、不再貼身 -->
+<!-- ★ v425 用戶指定：五條頭像改用原圖氣泡字且整圖縮小多露畫面／乙骨頭像略微放大／真希頭像換成殘血蹲跪立繪／各角色勝利台詞補第三句旁白 -->
 <!-- ★ v424 用戶指定：取消四張結算圖掛在陣亡對白，改為各角色「擊敗宿儺」後的勝利結局對白立繪（復用虎杖真結局的 .dbArt 演出）；並補上參考原作的勝利台詞 -->
 <!-- ★ v423 用戶指定：五條勝利圖四邊虛化／五條死亡先出圖再進對白／虎杖終結黑閃與圖案同步／平時黑閃音檔剪前導靜音使之與技能動畫同拍／乙骨領域曲改回第 4 秒起播／日車・真希・鹿紫雲一・乙骨陣亡對白各加結算立繪 -->
 <!-- ★ v422 用戶指定：五條悟選人頁頭像換成「會贏的。」綠幕漫畫圖（綠幕色鍵摳圖 + 去左下雜字／右下 AI 水印 + 560×560 透明底 webp） -->
@@ -1808,6 +1811,8 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 .avaPH.avaPic::before{content:'';position:absolute;inset:3px;background-color:#efece6;
   background-image:inherit;background-size:auto 100%;background-repeat:no-repeat;
   background-position:center bottom;clip-path:var(--pent);}
+/* ★ v425 用戶指定：乙骨頭像略微放大（只作用於乙骨卡，不影響其它角色） */
+.selWrap[data-hero="okkotsu"] .avaPic::before{background-size:auto 112%;background-position:center 96%;}
 /* ★ v45 廢止 avaBig 縮放（統一大小優先）：保留類名以供模板兼容，不再縮放 */
 .avaPH.avaBig{z-index:3;}
 .avaPH{width:calc(var(--selw)*0.68);height:calc(var(--selw)*0.68);
@@ -3079,7 +3084,7 @@ IMG.higuEnd='assets/ce9309fafbb5.webp';
 IMG.makiEnd='assets/ab54ed311f92.webp';
 IMG.kashEnd='assets/7e4b44bc0e28.webp';
 IMG.okkoEnd='assets/4f47e12d5bd6.webp';
-IMG.gojoSel='assets/7f23e6679823.webp';
+IMG.gojoSel='assets/14461b287c62.webp';
 IMG.makiOld='assets/71df1cf1fbd5.webp';
 IMG.higuOld='assets/0c9d92eceead.webp';
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
@@ -5054,23 +5059,28 @@ const WIN_ART={ higuruma:'higuEnd', maki:'makiEnd', kashimo:'kashEnd', okkotsu:'
 const WIN_TALK={
   gojo:[
     ['gojo','「——我說過會贏的吧。」'],
-    ['gojo','「抱歉，讓你們等太久了。」']
+    ['gojo','「抱歉，讓你們等太久了。」'],
+    ['narr','旁白：最強的咒術師，把「會贏的」三個字，留在了新宿的夜裡。']
   ],
   kashimo:[
     ['kash','「……這就是最強。」'],
-    ['kash','「比四百年攢下的這一擊，還短啊。」']
+    ['kash','「比四百年攢下的這一擊，還短啊。」'],
+    ['narr','旁白：追了一生的最強，終於在他面前倒下。']
   ],
   higuruma:[
     ['higu','「判決——死刑，立即執行。」'],
-    ['higu','「……這一次，我總算站在對的一邊。」']
+    ['higu','「……這一次，我總算站在對的一邊。」'],
+    ['narr','旁白：法槌落下，這座法庭終於迎來了閉庭。']
   ],
   okkotsu:[
     ['okko','「老師，我做到了。」'],
-    ['rika','里香：「憂太，辛苦了。」']
+    ['rika','里香：「憂太，辛苦了。」'],
+    ['narr','旁白：里香的身影漸漸淡去，憂太把伸出去的手收了回來。']
   ],
   maki:[
     ['maki','「不靠咒力，也不靠誰給的東西。」'],
-    ['maki','「……這樣就行了吧，真依。」']
+    ['maki','「……這樣就行了吧，真依。」'],
+    ['narr','旁白：天與咒縛的身體，斬斷了詛咒之王。']
   ]
 };
 function heroWinOutro(){
@@ -6724,7 +6734,7 @@ const CANON_POS={gojo:1,kashimo:2,higuruma:3,itadori:4,okkotsu:4,maki:5};   /* �
   row.innerHTML=left.map(h=>{
     const info=HERO_INFO[h];
     /* ★ v417 用戶指定：五條悟頭像改用領域展開立繪；真希・日車用回替換前的原圖 */
-    const _selPic=(h==='gojo'?IMG.gojoSel:(h==='maki'?IMG.makiOld:(h==='higuruma'?IMG.higuOld:null)));
+    const _selPic=(h==='gojo'?IMG.gojoSel:(h==='maki'?IMG.makiLow:(h==='higuruma'?IMG.higuOld:null)));
     const pic=_selPic||IMG[h]||(h==='okkotsu'?IMG.okko:null);   /* ★ 乙骨立繪鍵名是 okko */
     return '<div class="selWrap" data-hero="'+h+'">'
       +'<div class="selCard">'
@@ -11723,8 +11733,9 @@ function drawFxHiguExtend(f) {
   if (fp > 0) {
     const fade = Math.min(1, Math.max(0, 1 - (k - 0.90) / 0.10));
     const e = fp * fp * (3 - 2 * fp);
-    const RH = hgt * 0.55 * e;
-    const RW = (hgt * 0.198) * (0.74 + 0.26 * e);
+    /* ★ v426 用戶指定：膜原本只有 0.198 身高寬、貼在身上 ⇒ 外擴到 0.285、加高到 0.66 */
+    const RH = hgt * 0.66 * e;
+    const RW = (hgt * 0.285) * (0.74 + 0.26 * e);
     const myc = gy - RH * 0.96;
     /* 膜面：淡白霧（低透明度，不霧臉）+ 環帶厚度 */
     ctx.save();
@@ -11834,8 +11845,9 @@ function drawFxItaSimpleDom(f) {
   const s = SC, hx = GX(), gy = GY - 2 * s, hgt = itaHeight();
   const ink = '#17181c', wht = '#ffffff';
   const grow = Math.min(1, k / 0.20);
-  const R = (40 + 96 * grow) * s;
-  const Hd = (hgt * 0.78) * Math.min(1, Math.max(0, (k - 0.03) / 0.26));
+  /* ★ v426 用戶指定：原本半徑只有 136*s，罩子緊貼虎杖 ⇒ 外擴到 205*s、並加高到 0.90 身高 */
+  const R = (60 + 145 * grow) * s;
+  const Hd = (hgt * 0.90) * Math.min(1, Math.max(0, (k - 0.03) / 0.26));
   const fade = Math.min(1, Math.max(0, 1 - (k - 0.94) / 0.06));
   /* ① 地面咒紋（極扁、快速淡出，只當「起陣」提示） */
   const gAl = Math.max(0, 1 - k / 0.34) * fade;
@@ -14193,7 +14205,8 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
                ／ ④ 魂光溢出 0.30~0.82 ／ ⑤ 收尾餘光 0.66~1.0 */
       const k=f.t/f.dur, s=SC;
       let g;
-      const xIn=GX()-40*s, xOut=SX()+92*s, gy=GY;
+      /* ★ v426 用戶指定：突進距離再拉遠 —— 起點更靠左（畫外）、終點越過宿儺更多 */
+      const xIn=GX()-118*s, xOut=SX()+152*s, gy=GY;
       const dashP=Math.max(0,Math.min(1,(k-0.02)/0.26));
       const ease=1-Math.pow(1-dashP,2.4);
       const lead=xIn+(xOut-xIn)*ease;
@@ -14218,17 +14231,17 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
         ctx.save();
         ctx.globalAlpha=0.42*trailA;
         ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineCap='round';
-        for(let i=0;i<7;i++){
-          const sy=GY-24*s-i*22*s;
+        for(let i=0;i<9;i++){
+          const sy=GY-24*s-i*20*s;
           ctx.lineWidth=(0.9+(i%3)*0.6)*s;
           const ln=(40+i*26)*s*ease;
           ctx.beginPath(); ctx.moveTo(lead-ln-70*s, sy); ctx.lineTo(lead-24*s, sy); ctx.stroke();
         }
         ctx.globalAlpha=1;
-        for(let t=4;t>=0;t--){
-          const off=t*54*s*(1-0.35*ease);
+        for(let t=6;t>=0;t--){
+          const off=t*62*s*(1-0.35*ease);
           const ax=lead-off;
-          if(ax < GX()-170*s) continue;
+          if(ax < GX()-260*s) continue;
           const a=(t===0?0.98:(0.42-t*0.065))*trailA;
           if(a<=0.02) continue;
           const tilt=(t===0?-0.10:-0.05-t*0.035);
@@ -17238,11 +17251,14 @@ function makiGuard(){
   if(_sel===1 && _canAwk){
     markActed('guard');
     S.makiAwaken=1; S.makiUsed=1; S.makiFull=0; S.makiGSel=0;
+    /* ★ v426b 用戶指定：全開時肉體極限解放，回復自身 15% 最大生命 */
+    try{ healHero(S.maxHp*0.15); }catch(e){}
+    try{ fxText(GX()+46*SC,GY-238*SC,'+15%','#3a3f45',true,1); }catch(e){}
     S.gojo.pose='cast'; S.gojo.poseT=0.7;
     flash('fWhite'); shake(); SFX.hollow();
     addFx({type:'makiAwaken',dur:1.45});   /* ★ v420 全開動畫重做 */
     say('maki','「——不必再忍了。天與咒縛，全開。」');
-    say('sys','★ 天與咒縛・全開 —— 輸出 +25%（本局常駐，一生一次）。架勢仍然保留：把二技能右上角切回去，照樣能擺架勢。');
+    say('sys','★ 天與咒縛・全開 —— 輸出 +25%（本局常駐，一生一次）＋回復 15% 最大生命。架勢仍然保留：把二技能右上角切回去，照樣能擺架勢。');
     syncHud();
     return;
   }
@@ -17273,7 +17289,7 @@ function makiUlt(){
   markActed('hollow');
   S.gojo.pose='cast'; S.gojo.poseT=0.9;
   say('maki','「——你的胸口，我收下了。」');
-  S.hitStop=Math.max(S.hitStop,0.10);
+  S.hitStop=Math.max(S.hitStop,0.16);   /* ★ v426 打擊感：定格更久一點 */
   /* ★ v86 真希是「聽不見」的斬擊：頓挫最短、餘韻最短（slow 0.32） */
   skillBeat({charge:380,cast:0.9,stop:0.11,flash:'fWhite',slow:0.32,word:''});
   /* ★ v408 用戶指定：取消見切 —— 要害只看灵魂损伤層數：>1 層（即 2 層起）必定要害，
@@ -17285,6 +17301,8 @@ function makiUlt(){
     if(S.phase!=='fight') return;
     S.noAdapt=true;
     addFx({type:'silentSlash',dur:0.78});
+    /* ★ v426 打擊感：命中同幀補一次震屏 + 胸口白爆 + 墨色衝擊環 */
+    try{ shake(1.35); fxImpact(SX()-24*SC, GY-150*SC, true); }catch(e){}
     let _d=Math.round(SUK_MAXHP*0.20/HERO_DMG*10)/10;   /* ★ v408 用戶指定：無聲突襲固定 20%（要害再 ×1+0.2×層數） */
     if(_crit){ _d=Math.round(_d*_critMul); flash('fWhite'); shake(); }
     hitSukuna(_d,true,'hollow');
