@@ -1,3 +1,5 @@
+<!-- ★ v424 用戶指定：取消四張結算圖掛在陣亡對白，改為各角色「擊敗宿儺」後的勝利結局對白立繪（復用虎杖真結局的 .dbArt 演出）；並補上參考原作的勝利台詞 -->
+<!-- ★ v423 用戶指定：五條勝利圖四邊虛化／五條死亡先出圖再進對白／虎杖終結黑閃與圖案同步／平時黑閃音檔剪前導靜音使之與技能動畫同拍／乙骨領域曲改回第 4 秒起播／日車・真希・鹿紫雲一・乙骨陣亡對白各加結算立繪 -->
 <!-- ★ v422 用戶指定：五條悟選人頁頭像換成「會贏的。」綠幕漫畫圖（綠幕色鍵摳圖 + 去左下雜字／右下 AI 水印 + 560×560 透明底 webp） -->
 <!-- ★ v421 用戶指定：①真希「天與咒縛・全開」門檻降到 50%、與架勢並存、二技能加切換角標（兩技 CD 獨立、全開一生一次）②切出頁面/鎖屏在首頁·選人·結算同樣停樂 ③宿傩領域 BGM 與領域語音同拍起播 ④誅伏賜死引號縮小 ⑤修鹿紫雲一琥珀紫光殘留 ⑥修虎杖完結後結算 BGM ⑦虎杖領域卡頓 -->
 <!-- ★ v419 用戶指定：①領域對拼期間鎖住底部技能欄（立誓面板不再被推到對拼之後才彈出）②日車「處刑人之劍」那一次的中央大字改印技能名，並改成朱紅印章式落地 + 命中瞬間白閃震屏 -->
@@ -1240,7 +1242,10 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v417 用戶指定：先虛影（模糊放大）→ 清晰 → 縮小收進畫面中心 */
 #gzFinPic{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;
   transform-origin:50% 48%;will-change:transform,filter,opacity;
-  animation:gzPicIn 2.05s cubic-bezier(.30,.06,.22,1) .62s forwards, gzKen 12s ease-in-out 2.7s forwards;}
+  animation:gzPicIn 2.05s cubic-bezier(.30,.06,.22,1) .62s forwards, gzKen 12s ease-in-out 2.7s forwards;
+  /* ★ v423 用戶指定：勝利圖案四邊虛化 —— 中央實、四邊漸隱融入黑場 */
+  -webkit-mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 54%,rgba(0,0,0,.62) 80%,transparent 100%);
+  mask-image:radial-gradient(ellipse 76% 74% at 50% 50%,#000 54%,rgba(0,0,0,.62) 80%,transparent 100%);}
 @keyframes gzPicIn{
   0%  {opacity:0;   transform:scale(1.62); filter:blur(26px) saturate(.5) brightness(1.28);}
   26% {opacity:.62; transform:scale(1.34); filter:blur(15px) saturate(.68) brightness(1.12);}
@@ -3069,7 +3074,12 @@ IMG.makiBlinkArt='assets/23b41562cc30.webp';
 /* ★ v398 日車領域・審判者（日車怪）立繪：去綠幕、去水印、1100×845 */
 IMG.higuArt='assets/40a6db578168.webp';
 /* ★ v422 選人頁頭像專用：五條悟＝「會贏的。」正臉＋台詞氣泡（綠幕摳圖、去雜字水印、560×560 透明底）；真希／日車＝替換前的原圖 */
-IMG.gojoSel='assets/30c2007d764e.webp';
+/* ★ v423 陣亡對白結算立繪：沿用虎杖真結局的 .dbArt（左板邊・漸顯・右緣羽化） */
+IMG.higuEnd='assets/ce9309fafbb5.webp';
+IMG.makiEnd='assets/ab54ed311f92.webp';
+IMG.kashEnd='assets/7e4b44bc0e28.webp';
+IMG.okkoEnd='assets/4f47e12d5bd6.webp';
+IMG.gojoSel='assets/7f23e6679823.webp';
 IMG.makiOld='assets/71df1cf1fbd5.webp';
 IMG.higuOld='assets/0c9d92eceead.webp';
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
@@ -4227,7 +4237,7 @@ function fxMisago(){
 /* ★ v243 黑閃專屬音效：獨立 Audio，可連續觸發；統一在「技能打出的瞬間」播放 */
 /* ★ v306 黑閃音效再提早：音檔前 0.186s 是空白（實測 silencedetect）⇒ 起播直接 seek 過去，
    聽感比上一版早約 190ms，跟畫面幾乎同時。 */
-const BF_LEAD=0.186;
+const BF_LEAD=0;   /* ★ v423 音檔前 0.186s 空白已直接剪掉，無需再靠 seek 補償 */
 function prewarmBlackFlashSfx(){
   try{
     if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH && !window.__bfEl){
@@ -4241,7 +4251,7 @@ function playBlackFlashSfx(){
   try{
     if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH){
       if(!window.__bfEl){ prewarmBlackFlashSfx(); }
-      try{ window.__bfEl.currentTime=(window.__bfEl.readyState>=2)?BF_LEAD:0; }catch(err){}
+      try{ window.__bfEl.currentTime=0; }catch(err){}   /* ★ v423 起播即出聲，與技能動畫同拍 */
       const p=window.__bfEl.play(); if(p&&p.catch) p.catch(()=>{});
       window.__bfSfxAt=performance.now();
     }
@@ -4278,7 +4288,7 @@ function fxBlackCrack(){
     window.__bfFxT=setTimeout(function(){ window.__bfFxT=0; addFx({type:'blackcrack',dur:0.8,x:_bx,y:_by,h:hh*1.30}); },120);   /* ★ v147 時長 0.55→0.8s */   /* ★ v72 補 y：同上 */
   /* ★ v243 音效已提前到「技能打出的瞬間」（playBlackFlashSfx）——此處僅作兜底：
      若 0.8 秒內尚未播過（如完美格擋等非 QTE 路徑），才在此補播一次。 */
-  if(!window.__bfSfxAt || performance.now()-window.__bfSfxAt>800) playBlackFlashSfx();
+  if(!window.__bfSfxAt || performance.now()-window.__bfSfxAt>80) playBlackFlashSfx();   /* ★ v423 判定成立即補播，不再等 800ms */
 }
 function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v412 停留時間拉長：小字 1.0s（原 0.7）、大字 1.30s（原 1.0），配合入場/停留/退場三段 */
@@ -5035,6 +5045,46 @@ function yujiFinisherCut(){
   box.classList.remove('on'); void box.offsetWidth; box.classList.add('on');
   setTimeout(function(){ try{ box.classList.remove('on'); }catch(e){} }, 3600);   /* ★ v318 停留 2.6s→3.6s */
 }
+/* ============================================================
+   ★ v424 擊敗宿儺後的勝利結局對白（參考原作語氣）
+   虎杖悠仁走既有 yujiWin() 八句真結局，不進這裡。
+   立繪復用虎杖真結局的 .dbArt：左板邊・1.1s 漸顯・右緣羽化。
+   ============================================================ */
+const WIN_ART={ higuruma:'higuEnd', maki:'makiEnd', kashimo:'kashEnd', okkotsu:'okkoEnd' };
+const WIN_TALK={
+  gojo:[
+    ['gojo','「——我說過會贏的吧。」'],
+    ['gojo','「抱歉，讓你們等太久了。」']
+  ],
+  kashimo:[
+    ['kash','「……這就是最強。」'],
+    ['kash','「比四百年攢下的這一擊，還短啊。」']
+  ],
+  higuruma:[
+    ['higu','「判決——死刑，立即執行。」'],
+    ['higu','「……這一次，我總算站在對的一邊。」']
+  ],
+  okkotsu:[
+    ['okko','「老師，我做到了。」'],
+    ['rika','里香：「憂太，辛苦了。」']
+  ],
+  maki:[
+    ['maki','「不靠咒力，也不靠誰給的東西。」'],
+    ['maki','「……這樣就行了吧，真依。」']
+  ]
+};
+function heroWinOutro(){
+  if(S.phase!=='over') S.phase='over';
+  const _h=S.hero;
+  const _lines=WIN_TALK[_h] || [['narr','旁白：詛咒之王，就此消散。']];
+  const _art=WIN_ART[_h]||null;
+  /* 看門狗：對白層若因任何原因沒收，9s 後仍要進結算 */
+  let _done=false;
+  const _finish=function(){ if(_done) return; _done=true; try{ showResult(); }catch(e){} };
+  setTimeout(_finish,9000);
+  try{ const _da=document.getElementById('dbArt'); if(_da){ _da.classList.toggle('winArt',!!_art); } }catch(e){}
+  try{ deathBlackout(_lines, _finish, _art); }catch(e){ _finish(); }
+}
 function yujiWin(){
   /* ★ v66：真結局「宿儺討伐」由釘崎連動秒殺觸發（不再限 yujiDom） */
   if(S.phase==='over') return;
@@ -5067,8 +5117,8 @@ function yujiWin(){
   }
   /* ★ v307 用户指定：钉崎演出（1500+2000ms）收完 ⇒ 終結立繪演出 */
   const _finAt=_nbPending?3700:1400;
-  /* ★ v417 用戶指定：黑閃音效提早 0.32s —— 讓「啪」落在圖案白爆之前，打擊更貼臉 */
-  setTimeout(function(){ if(S.phase!=='over') return; try{ playBlackFlashSfx(); }catch(e){} }, Math.max(0,_finAt-320));
+  /* ★ v423 用戶指定：黑閃音效與終結圖案「同時」出現在 _finAt，不再提前 0.32s。
+     yujiFinisherCut() 內部會在圖案顯現的同一幀呼叫 playBlackFlashSfx()。 */
   setTimeout(function(){ if(S.phase!=='over') return; yujiFinisherCut(); }, _finAt);
   /* ★ v247 用戶指定：虎杖擊殺宿儺 ⇒ 追加「宿儺退場對白」（黑屏逐句播放、可點擊跳過），播完才進結算 */
   setTimeout(()=>{
@@ -5902,9 +5952,9 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     say('suku','「……不可能。」');
     say('narr','旁白：宿儺——被擊倒了。');
     shake(); flash('fWhite');
-    setTimeout(function(){ try{ if(S.phase!=='over') S.phase='over'; }catch(e){} showResult();
-    setTimeout(function(){ try{ var _rs=document.getElementById('resultScreen'); if(_rs){ _rs.classList.remove('hide'); } if(_rs && _rs.classList.contains('hide')){ showResult(); } }catch(e){} }, 700);
-  }, gzFinGo?3600:2200);   /* v363 勝利動畫播完必進結算（含兜底重試） */   /* ★ v244 五條終幕前半段加速 ⇒ 總時長 5.6s → 4.8s */
+    /* ★ v424：勝利動畫播完 ⇒ 先播該角色的勝利結局對白（含立繪），對白收完才進結算。
+       原 700ms 的結算兜底會搶在對白前面，已移除；heroWinOutro 自帶 9s 看門狗。 */
+    setTimeout(function(){ try{ if(S.phase!=='over') S.phase='over'; }catch(e){} heroWinOutro(); }, gzFinGo?3600:2200);   /* v363 勝利動畫播完必進結算（含兜底重試） */   /* ★ v244 五條終幕前半段加速 ⇒ 總時長 5.6s → 4.8s */
     return;
   }
   /* ★ v83 領域對拼/信息洪流的舊傷害觸發已移除 —— 見 gojoVoid 成功路徑 */
@@ -6254,7 +6304,10 @@ const DEATH_LINES={
 /* ★ v243 用戶指定：角色退場對白改為黑屏演出 —— 屏幕由外向內瞬間變黑，只留白色對白居中輪播，
    點擊畫面任意處跳過（畫面最下方一行小字提示）。 */
 let dbTok=0;
-function deathBlackout(lines, done, art){
+function deathBlackout(lines, done, art, leadMs){
+  /* ★ v423 用戶指定：五條悟死亡時先讓腰斬漫畫頁完整播一段，再進黑屏對白。
+     leadMs>0 時只做一次延後重入，不碰原有逐句邏輯。 */
+  if(leadMs>0){ setTimeout(function(){ deathBlackout(lines,done,art,0); },leadMs); return; }
   /* ★ v263 黑屏層挪進 #app：原本掛在 body 上是 fixed，豎屏旋轉（html.rot）不跟隨 ⇒ 手機看到豎屏方向 */
   try{ var _db=$('deathBlack'), _app=$('app'); if(_db && _app && _db.parentElement!==_app) _app.appendChild(_db); }catch(e){}
   const el=document.getElementById('deathBlack');
@@ -6269,7 +6322,7 @@ function deathBlackout(lines, done, art){
     clearT(); dbTok++;
     el.classList.remove('on'); el.style.pointerEvents='none'; el.style.display='none';
     try{ const _m=el.querySelector('.dbMask'); if(_m){ _m.style.webkitMaskImage='none'; _m.style.maskImage='none'; } }catch(e){}   /* ★ v351 回收掩罩 */
-    try{ const _a=document.getElementById('dbArt'); if(_a){ _a.classList.remove('on'); } }catch(e){}
+    try{ const _a=document.getElementById('dbArt'); if(_a){ _a.classList.remove('on'); _a.classList.remove('winArt'); } }catch(e){}
     txt.classList.remove('in'); txt.textContent='';
     setTimeout(function(){ try{ done&&done(); }catch(e){} },16);
     setTimeout(function(){
@@ -6389,6 +6442,7 @@ function heroDownGeneric(h){
   el.querySelector('.kf').textContent=info.nm+'，力盡';
   el.querySelector('.kf2').textContent='但詛咒之王，也已經是強弩之末——';
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  /* ★ v424：陣亡對白不加結算立繪（四張圖改用於勝利結局，見 heroWinOutro） */
   deathBlackout(_dbLines, afterHeroDown);   /* ★ v243 死亡對白黑屏演出 */
 }
 /* 一棒倒下之後：還有下一位就進選擇界面，否則結算。
@@ -9087,7 +9141,7 @@ function castWorldSlash(instant){
       /* ★ v219 原作 236 話：宿儺對五條悟的評價 */
       deathBlackout(GOJO_DEATH_TALK.concat([
         ['suku','「……值得佩服，五條悟。我這一生，都不會忘記你。」']
-      ]), showSelect);   /* ★ v243g 世界斬死亡也補全 236 話走馬燈 */
+      ]), showSelect, null, 2200);   /* ★ v423 先播 2.2s 腰斬圖，再進 236 話走馬燈 */
     }
     else heroDown();
   },2300);
@@ -9137,7 +9191,7 @@ function gojoDown(){
   ].concat(GOJO_DEATH_TALK), function(){
     if(S.hero!=='gojo'){ heroDown(); return; }
     showSelect();
-  });
+  }, null, 2200);   /* ★ v423 先播 2.2s 腰斬圖，再進機場對白 */
 }
 /* ---------- 誓約面板 ---------- */
 /* ★ v61 卡片渲染抽成獨立函數：openVowUI 與 syncHud（面板開著時）共用同一份簽名檢查，
@@ -16844,7 +16898,7 @@ function confiscateNext(){
 /* ★ v53 乙骨領域演出：全屏漫畫頁 → 場地中央浮現「邪去悔の梯子」 → 劍林場地 */
 function okkoDomShow(){
   S.okkoDom=3; S.domLife=0;          /* ★ v295 領域寿命計數歸零 */   /* ★ v89 領域成立（持續到乙骨退場，不再計回合；場地＝劍林） */
-  startOkkoDomainBgm(true);          /* ★ v421 領域成立 ⇒ AIZO 從頭播（循環）；立繪切換由 drawOkkotsu 依 S.okkoDom 處理 */
+  startOkkoDomainBgm();               /* ★ v423 用戶指定：AIZO 從音頻第 4 秒起播（循環）；對拼勝利仍只續播、不 seek */
   S.okkoDomJust=1;
   S.okkoDomIn=0;                     /* ★ v103 場景自左向右展開（update 推進 0→1） */                   /* ★ v71 展開動畫期間不觸發彌須葛籠 */
   setTimeout(function(){ S.okkoDomJust=0; }, 2600);   /* 動畫 2.4s + 緩衝 */
@@ -18755,7 +18809,7 @@ const SND_SUKU_DOMAIN='assets/f51fdb5fa2c5.mp3';   /* 宿儺領域展開 4.75s *
 const SND_YUTA_RIKA="assets/b1b94f90fcbb.mp3";
 const SND_YUTA_RELEASE="assets/dbc8de8bde5e.mp3";
 const SND_GOJO_VOICE2='assets/f500c7dfe7b9.mp3';
-const SND_BLACKFLASH='assets/0780834c80fe.mp3';
+const SND_BLACKFLASH='assets/474131a49fac.mp3';
 const SND_GOJO_CHALLENGE='assets/78ceba990e6f.mp3'; /* 「你是這裡的挑戰者」 5.50s */
 const SND_SUKU_BGM='assets/9654f6b813b7.mp3';      /* 伏魔御廚子領域 BGM 42.41s（循環） */
 
@@ -18820,6 +18874,8 @@ const SND_SUKU_BGM='assets/9654f6b813b7.mp3';      /* 伏魔御廚子領域 BGM 
   mask-image:linear-gradient(90deg,#000 0,#000 58%,rgba(0,0,0,.35) 84%,transparent 100%);
 }
 #deathBlack .dbArt.on{opacity:.55;transform:translateX(0);}
+/* ★ v424b 勝利結局：黑底上的深色西裝／咒縛裝看不清，只對勝利對白提亮一檔 */
+#deathBlack .dbArt.winArt.on{opacity:.80;filter:brightness(1.10) contrast(1.04);}
 #deathBlack .dbTxt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);
   width:min(86vw,980px);text-align:center;color:#fff;font-weight:800;
   font-size:clamp(20px,4.6vw,44px);line-height:1.66;letter-spacing:.02em;
