@@ -2693,6 +2693,10 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
      ① 鹿紫雲一解放「幻獣琥珀」時同 tick 播放專屬原聲（3.22s，-15.24 LUFS）。
      ② 真希「無聲突襲」50% 機率播放專屬原聲（0.74s，-15.23 LUFS）。
      ③ 兩段抽音軌 → 裁首尾靜音 → 增益 + 限峰對齊全站語音 -14.8 LUFS → 128k 單聲道 mp3 → base64。 -->
+<!-- ★ v457（BGM 三態）：
+     ① 常態 BGM 改為 MASATO - REMEMBER（243.33s，-16.38 LUFS，與其餘 BGM 對齊），標題／選人／其他術師在場都播它。
+     ② 原主 BGM 保留為 BGM_GOJO，選人點「五條悟」上場時切過去（BGM_START=52 入點仍跟著它）；五條下場切回常態。
+     ③ 乙骨登場自動切 OKKO_BGM_SRC 的行為完全不變。bgmUrl 新增 gojoObjUrl 快取，三態互不覆蓋。 -->
 <!-- © 2026 老中医 · 新宿決戦（JUJUTSU KAISEN fan game）· All rights reserved. -->
 </head>
 <body>
@@ -6871,6 +6875,8 @@ function heroDown(){
      直接蓋在新角色身上（用戶所見「角色變透明」）。 */
   clearHeroTimers();
   stageReset();
+  /* ★ v457 所有登場路徑統一選曲：五條→原主 BGM、乙骨→專屬曲、其餘→常態新歌 */
+  try{ switchBGM(h==='okkotsu'?'okko':(h==='gojo'?'gojo':'main')); }catch(e){}
   /* ★ v64 修復：乙骨退場 ⇒ 領域即刻崩解 —— 劍林（場地）絕不能殘留到選人 / 下一棒。
      此前收束只在 beginNext 裏，鹿紫雲一 / 虎杖的 start 函數會繞過 ⇒ 背景殘留。 */
   if(S.hero==='okkotsu' && S.okkoDom>0){ S.okkoDom=0; S.misagoT=0; stopOkkoDomainBgm(); }
@@ -6885,6 +6891,7 @@ function heroDown(){
   /* ★ v89 宿傩領域：撐到「玩家操控的這一位」下場（不限五條那一條分支） */
   if(S.hero!=='gojo' && S.sukuDom>0){ S.sukuDom=0; S.domClash=null; say('sys','★ 當前操控的術師退場——伏魔御廚子隨之消散，場景復原。'); }
   stopSukuBgm(); resumeMainBgm();   /* ★ v141 領域收束 ⇒ 停伏魔御廚子 BGM + 恢復原 BGM */
+  try{ switchBGM('main'); }catch(e){}   /* ★ v457 術師下場 ⇒ 回到常態 BGM（死亡語音期間已暫停，不會搶播） */
   /* ★ 退場者在此登記：afterHeroDown 判斷「還有沒有候選」時必須先算上剛倒下的這位，
      否則最後一棒倒下會被誤判爲「還有下一棒」。世界斬殺五條悟不走這裏，由 showSelect 兜底登記。 */
   if(S.usedHeroes.indexOf(S.hero)<0) S.usedHeroes.push(S.hero);
@@ -17485,7 +17492,7 @@ function start(){
      ③ 連靜音播放都不行 → 等首次交互時再正常播放。
    三級都走同一條 1 秒漸入曲線。 */
 let bgmEl=null, bgmMuted=(function(){ try{ return localStorage.getItem('jjk_bgm_muted')==='1'; }catch(e){ return false; } })(), bgmFadeRaf=0;   /* ★ v243 靜音狀態持久化 */
-let bgmTrack='main', okkoObjUrl=null;   /* ★ v29 角色專屬 BGM：當前音軌 / 乙骨音軌緩存 */
+let bgmTrack='main', okkoObjUrl=null, gojoObjUrl=null;   /* ★ v457 gojoObjUrl＝五條專屬曲快取 */   /* ★ v29 角色專屬 BGM：當前音軌 / 乙骨音軌緩存 */
 let bgmObjUrl=null, bgmCtx=null, bgmGain=null, bgmSrcNode=null, bgmGainTried=false, bgmVolW=null;
 /* ★目標音量 0.32（2026-10-06 由 0.5 下調 ≈−4dB：原音量蓋過打擊音效與人聲臺詞，
    壓到 0.32 後 BGM 退爲底噪層，SFX 聽得清）。元素音量與 Web Audio 增益共用此常量，
@@ -17592,19 +17599,22 @@ function bgmReady(){ return typeof BGM_SRC!=='undefined' && !!BGM_SRC; }
 /* ★ 移動端兼容 1/2：iOS Safari 對 data: URI 音源支持很差（經常整段播不出來），
    必須轉成 Blob URL 再交給 <audio> */
 function bgmUrl(){
-  if(bgmObjUrl) return bgmObjUrl;
+  const _gojo=(bgmTrack==='gojo');   /* ★ v457 五條在場 ⇒ 原主曲；其餘 ⇒ 常態新歌 */
+  if(_gojo){ if(gojoObjUrl) return gojoObjUrl; } else if(bgmObjUrl) return bgmObjUrl;
   if(!bgmReady()) return '';
-  if(BGM_SRC.slice(0,5)!=='data:'){ bgmObjUrl=BGM_SRC; return bgmObjUrl; }
+  const src=_gojo?BGM_GOJO:BGM_SRC;
+  if(src.slice(0,5)!=='data:'){ if(_gojo) gojoObjUrl=src; else bgmObjUrl=src; return src; }
   try{
-    const comma=BGM_SRC.indexOf(',');
-    const mime=(BGM_SRC.slice(5,comma).split(';')[0])||'audio/mpeg';
-    const bin=atob(BGM_SRC.slice(comma+1));
+    const comma=src.indexOf(',');
+    const mime=(src.slice(5,comma).split(';')[0])||'audio/mpeg';
+    const bin=atob(src.slice(comma+1));
     const u8=new Uint8Array(bin.length);
     for(let k=0;k<bin.length;k++) u8[k]=bin.charCodeAt(k);
     const U=window.URL||window.webkitURL;
-    bgmObjUrl=U.createObjectURL(new Blob([u8],{type:mime}));
-  }catch(e){ bgmObjUrl=BGM_SRC; }
-  return bgmObjUrl;
+    const url=U.createObjectURL(new Blob([u8],{type:mime}));
+    if(_gojo) gojoObjUrl=url; else bgmObjUrl=url;
+  }catch(e){ if(_gojo) gojoObjUrl=src; else bgmObjUrl=src; }
+  return _gojo?gojoObjUrl:bgmObjUrl;
 }
 /* ★ v29 乙骨憂太專屬 BGM（OKKO_BGM_SRC）：與主 BGM 同一套引擎，只換 src；音量/漸入策略照舊 */
 function okkoBgmReady(){ return typeof OKKO_BGM_SRC!=='undefined' && !!OKKO_BGM_SRC; }
@@ -17669,7 +17679,7 @@ function ensureBgm(){
   if(!bgmEl && bgmReady()){
     bgmEl=new Audio(bgmTrack==='okko'&&okkoBgmReady()?okkoBgmUrl():bgmUrl());
     bgmEl.loop=true; bgmEl.volume=0; bgmEl.preload='auto';
-        try{ bgmEl.addEventListener('loadedmetadata',function(){ if(bgmTrack==='main' && (bgmEl.currentTime||0)<1 && BGM_START>0 && bgmEl.duration>BGM_START) bgmEl.currentTime=BGM_START;   /* ★ v443 乙骨专属曲从 0 起播 */ },{once:true}); }catch(e){}
+        try{ bgmEl.addEventListener('loadedmetadata',function(){ if(bgmTrack==='gojo' && (bgmEl.currentTime||0)<1 && BGM_START>0   /* ★ v457 52s 入點只屬原主曲 */ && bgmEl.duration>BGM_START) bgmEl.currentTime=BGM_START;   /* ★ v443 乙骨专属曲从 0 起播 */ },{once:true}); }catch(e){}
     bgmEl.setAttribute('playsinline','');
     bgmEl.setAttribute('webkit-playsinline','');
   }
@@ -17893,7 +17903,7 @@ function beginNext(h){
     say('sys','★ 魔虛羅已在場——「適應」開始解析無下限：不可侵還可支撐 2 回合。');
   }
   S.phase='fight';
-  switchBGM(h==='okkotsu'?'okko':'main');   /* ★ v29 乙骨登場切換專屬 BGM */
+  switchBGM(h==='okkotsu'?'okko':(h==='gojo'?'gojo':'main'));   /* ★ v457 乙骨專屬／五條原主曲／其餘常態 BGM */
   /* 與鹿紫雲一/虎杖一致的通用重置（★ v62：舊適應條殘留已刪） */
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 慢動作清零 */
   S.res=0; S.resUsed=false; S.burn=0; S.flameCd=6; S.voidMahaT=0;   /* ★ v243 換人清掉懸掛的領域擊碎計時 */
@@ -18054,6 +18064,8 @@ function startNext(h){
      在這裏清一次即可覆蓋全部。 */
   clearHeroTimers();
   stageReset();
+  /* ★ v457 所有登場路徑統一選曲：五條→原主 BGM、乙骨→專屬曲、其餘→常態新歌 */
+  try{ switchBGM(h==='okkotsu'?'okko':(h==='gojo'?'gojo':'main')); }catch(e){}
   /* ★ v421 用戶報「鹿紫雲一解放幻獸琥珀後、下場換人了全場仍帶紫光」：
      根因是 S.amberUsed / S.amber 這組狀態只在 kashimo 自己的邏輯裡歸零，換人時沒人清；
      而琥珀形態的立繪替換、紫粉光環、HUD 標籤都掛在 amberUsed 上 ⇒ 一旦殘留，
@@ -18070,6 +18082,7 @@ function startNext(h){
   /* ★ v78/v81 換人時一併收束雙方領域（場景不得殘留到下一棒） */
   if(h!=='gojo' && (S.gojoDom>0||S.sukuDom>0)){ S.gojoDom=0; S.sukuDom=0; S.gojoVoidT=0; S.domClash=null; S.voidMahaT=0; say('sys','五條悟退場——雙方的領域一併消散，場景復原。'); }
   stopSukuBgm(); resumeMainBgm();   /* ★ v141 領域收束 ⇒ 停伏魔御廚子 BGM + 恢復原 BGM */
+  try{ switchBGM('main'); }catch(e){}   /* ★ v457 術師下場 ⇒ 回到常態 BGM（死亡語音期間已暫停，不會搶播） */
   const isFirst=(S.usedHeroes.length===0);   /* ★ v32 名單空 = 這一位就是開局第一棒 */
   if(isFirst) setTimeout(function(){ maybeGuide(0); }, 1300);   /* ★ v446 首棒進入戰鬥後彈新手引導 */
   /* ★ v452 用戶指定：五條悟登場播原本領域展開第 2／3 次那句語音 (gojoVoice2)。
@@ -20381,7 +20394,8 @@ if(bgmReady()) bgmBoot();   /* 兜底：bgmData 已解析時立刻起播 */
 window.addEventListener('orientationchange',()=>setTimeout(()=>{ resize(); layoutTitleCrack(); },200));
 })();
 </script>
-<script id="bgmData">const BGM_SRC='assets/8041e0f424ce.mp3';
+<script id="bgmData">const BGM_GOJO='assets/8041e0f424ce.mp3';   /* ★ v457 五條悟上場專用（原主 BGM） */
+const BGM_SRC='assets/44c713f6058d.mp3';   /* ★ v457 常態 BGM：MASATO - REMEMBER */
 const OKKO_BGM_SRC='assets/4d386f02b57e.mp3';   /* ★ v29 乙骨憂太登場專屬 BGM（《心似煙火 DJ》· Penn） */
 /* ★ v141 領域展開聯動音效（四段，已做響度歸一化至同一基準 -9.58 dBFS） */
 const SND_GOJO_DOMAIN='assets/3b4c22944631.mp3';   /* 五條悟領域展開・無量空處 5.46s */
