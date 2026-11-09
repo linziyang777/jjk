@@ -2697,6 +2697,11 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
      ① 常態 BGM 改為 MASATO - REMEMBER（243.33s，-16.38 LUFS，與其餘 BGM 對齊），標題／選人／其他術師在場都播它。
      ② 原主 BGM 保留為 BGM_GOJO，選人點「五條悟」上場時切過去（BGM_START=52 入點仍跟著它）；五條下場切回常態。
      ③ 乙骨登場自動切 OKKO_BGM_SRC 的行為完全不變。bgmUrl 新增 gojoObjUrl 快取，三態互不覆蓋。 -->
+<!-- ★ v458（用戶指定）：
+     乙骨「領域展開」語音改用新素材 output_multi_video_1794238571309_1794238583849_S.mp4：
+     原片 2.09s（前 0.163s 靜音、尾 0.699s 空白、中間兩處台詞氣口），裁靜音後 1.320s；
+     增益 +8.50dB → -14.91 LUFS / TP -1.95，與其餘 16 條角色語音的 -14.8 LUFS 對齊。
+     AIZO 領域曲銜接由 2.05s 改為 1.37s（S.okkoVoiceUntil），避免新語音念完就空等或被人聲蓋住。 -->
 <!-- © 2026 老中医 · 新宿決戦（JUJUTSU KAISEN fan game）· All rights reserved. -->
 </head>
 <body>
@@ -18511,8 +18516,8 @@ function okkoUlt(){
   /* ★ v100 演出重排：白光開場（同五條 voidIn）→ 劍林場景從右向左展開 → 豎排「真贋相愛」粉紫大字；
      漫畫格大字與 skillBeat 中央大字移除，領域名統一走領域豎排字（與無量空處/伏魔御厨子一致） */
   addFx({type:'voidIn',dur:0.95});
-  /* ★ v453 用戶提供原聲：先播「領域展開」前 2 秒；S.okkoVoiceUntil 讓 AIZO 等語音念完才銜接 */
-  try{ S.okkoVoiceUntil=Date.now()+2050; window.playSoloVoice('yutaDomain', 0, 2.1, 0.92); }catch(e){}
+  /* ★ v458 用戶提供新原聲：整段「領域展開」（1.32s，已裁靜音／響度對齊）；S.okkoVoiceUntil 讓 AIZO 等語音念完才銜接 */
+  try{ S.okkoVoiceUntil=Date.now()+1370; window.playSoloVoice('yutaDomain', 0, 1.35, 0.92); /* ★ v458 新原聲 1.32s */ }catch(e){}
   skillBeat({charge:720,cast:1.0,stop:0.20,flash:'fPurple',slow:0.60,word:''});   /* ★ v100 word='' 只保留頓挫 */
   if(typeof okkoDomShow==='function') okkoDomShow();   /* 兼容單函數抽取測試 */
   addFx({type:'swordRain',dur:1.4});   /* ★ v76 劍林破土（掃入期間的動態） */
@@ -19470,7 +19475,7 @@ const AUDIO_CUES={
   yutaRika:   {role:'voice',use:'里香登場語音', scene:'rikaRelease', loop:false, vol:0.9, life:'~3s', stopBy:'stopDomSfx'},
   yutaRelease:{role:'voice',use:'里香「全釋放」語音', scene:'okkotsu ult', loop:false, vol:0.9, life:'~3s', stopBy:'stopDomSfx'},
   yutaStop:   {role:'voice',use:'乙骨「不許動」原聲', scene:'kotodama', loop:false, vol:0.92, life:'1.30s', stopBy:'playSoloVoice 克隆'},
-  yutaDomain: {role:'voice',use:'乙骨「領域展開」原聲（前 2s）', scene:'okkoUlt', loop:false, vol:0.92, life:'2.00s', stopBy:'playSoloVoice 克隆'},
+  yutaDomain: {role:'voice',use:'乙骨「領域展開」原聲（v458 用戶新素材）', scene:'okkoUlt', loop:false, vol:0.92, life:'1.32s', stopBy:'playSoloVoice 克隆'},
   higuDomain: {role:'sfx',  use:'日車登場・領域展開氣場', scene:'higurumaAutoDomain', loop:false, vol:0.92, life:'4.01s', stopBy:'playSoloVoice 克隆'},
   sukuDeathA: {role:'voice',use:'宿儺・玩家倒下語音 A', scene:'heroDown', loop:false, vol:0.92, life:'3.28s'},
   sukuDeathB: {role:'voice',use:'宿儺・玩家倒下語音 B', scene:'heroDown', loop:false, vol:0.92, life:'2.50s'},
@@ -19698,7 +19703,7 @@ function okkoDomSeek4(el){
 }
 /* ★ v161 乙骨領域 BGM（AIZO）：領域成立期間循環播放，從第 4 秒起播；領域消失／乙骨下場時停播並恢復原 BGM */
 function startOkkoDomainBgm(_fromZero){
-  /* ★ v453 用戶指定：乙骨「領域展開」語音念完（約 2.05s）後才銜接 AIZO，避免人聲被領域曲蓋住。 */
+  /* ★ v458：乙骨「領域展開」語音念完（約 1.37s）後才銜接 AIZO，避免人聲被領域曲蓋住。 */
   if(!okkoDomBgmOn && S.okkoVoiceUntil && Date.now()<S.okkoVoiceUntil){
     const _wait=S.okkoVoiceUntil-Date.now();
     setTimeout(function(){ S.okkoVoiceUntil=0; try{ startOkkoDomainBgm(_fromZero); }catch(e){} }, _wait+40);
@@ -20406,7 +20411,7 @@ const SND_YUTA_RIKA="assets/0491b46d044c.mp3";
 const SND_YUTA_RELEASE="assets/4a6d710775fe.mp3";
 const SND_GOJO_VOICE2='assets/bdeae48fd827.mp3';
 const SND_YUTA_STOP='assets/52cd584a7576.mp3';   /* ★ v453 用戶提供：乙骨「不許動」原聲 1.30s */
-const SND_YUTA_DOMAIN='assets/060efcd9dc34.mp3';   /* ★ v453 用戶提供：乙骨「領域展開」原聲，只取前 2.00s */
+const SND_YUTA_DOMAIN='assets/2d56092ae009.mp3';   /* ★ v453 用戶提供：乙骨「領域展開」原聲，只取前 2.00s */
 const SND_HIGU_DOMAIN='assets/2b23ca2db95e.mp3';   /* ★ v453 用戶提供：日車登場領域氣場 4.01s */
 const SND_SUKU_DEATH_A='assets/f39e2b8f6056.mp3';   /* ★ v455 用戶提供宿儺原聲 */
 const SND_SUKU_DEATH_B='assets/51f6c7fbbd92.mp3';   /* ★ v455 用戶提供宿儺原聲 */
