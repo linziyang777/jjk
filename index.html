@@ -1599,6 +1599,12 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 #turnBar{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:30;
   display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;
   pointer-events:none;width:auto;max-width:94%;}
+/* ★ v459 街道崩壞提示：倒計時正下方、黑白、小字、淺顯現，不搶畫面 */
+#streetTip{position:absolute;left:50%;top:100%;transform:translateX(-50%) translateY(3px);
+  white-space:nowrap;font-style:normal;font-size:calc(9px*var(--k));font-weight:800;letter-spacing:1px;
+  color:rgba(255,255,255,.72);text-shadow:0 1px 0 #000,0 0 5px rgba(0,0,0,.95),1px 1px 0 #000;
+  opacity:0;transition:opacity .35s ease;pointer-events:none;}
+#streetTip.on{opacity:1;}
 /* ★ v110 暫停 / 繼續按鈕：沿用其他 HUD 的硬邊框樣式，尺寸隨 --k 自適應手機 */
 #pauseBtn{pointer-events:auto;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
   width:calc(26px*var(--k));height:calc(26px*var(--k));background:#fff;color:var(--ink);
@@ -1780,18 +1786,21 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v138 適當縮小整個面板：邊框內收、卡片行變窄、間距收緊，讓文字更滿地填進框裏 */
 #vowUI{position:absolute;inset:0;z-index:19;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:7px;padding:14px;text-align:center;
-  background:rgba(6,2,3,.9);}
+  background:rgba(3,1,2,.965);}   /* ★ v459 其餘區域再壓暗 */
 #vowUI.on{display:flex;animation:dmIn .22s ease-out;}
-#vowUI:after{content:"";position:absolute;left:11%;right:11%;top:13%;bottom:15%;pointer-events:none;
-  border:3px solid rgba(255,255,255,.14);box-shadow:inset 0 0 70px rgba(215,38,61,.22);}
+/* ★ v459 用戶指定：刪掉三張卡外面的大矩形框，改成四周暗角；非卡片元素一併降亮度 */
+#vowUI:after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 0%,rgba(0,0,0,.30) 62%,rgba(0,0,0,.62) 100%);}
+#vowUI .vwTitle,#vowUI .vwSub,#vowUI .vwWarn,#vowUI .vwFoot{opacity:.72;}
 #vowUI .vwTitle{position:relative;font-size:clamp(14px,3.8vw,23px);font-weight:900;letter-spacing:7px;color:#fff;
   text-shadow:3px 3px 0 #7a0a12,0 0 24px rgba(215,38,61,.9);}
 #vowUI .vwSub{position:relative;font-size:clamp(9.5px,2.2vw,12.5px);font-weight:800;letter-spacing:2px;color:#ffd9d9;
   text-shadow:2px 2px 0 #000;max-width:min(86%,560px);line-height:1.45;}
 #vowUI .vwRow{position:relative;display:flex;gap:clamp(6px,1.5vw,13px);width:min(80%,560px);}
 .vwCard{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 6px 9px;
-  border:3px solid #fff;background:rgba(0,0,0,.55);box-shadow:5px 5px 0 rgba(0,0,0,.6);
-  color:#fff;cursor:pointer;}
+  border:3px solid #fff;background:rgba(0,0,0,.55);
+  box-shadow:5px 5px 0 rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.20),0 0 24px rgba(255,255,255,.13);
+  color:#fff;cursor:pointer;}   /* ★ v459 三張選項卡保持最亮 */
 .vwCard:active{transform:translate(3px,3px);box-shadow:1px 1px 0 rgba(0,0,0,.6);}
 .vwCard .vwIc{display:flex;align-items:center;gap:5px;font-size:clamp(12px,3vw,17px);font-weight:900;letter-spacing:2px;}
 .vwCard .vwIc .ico{width:20px;height:20px;color:#ffd54a;}
@@ -2702,6 +2711,16 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
      原片 2.09s（前 0.163s 靜音、尾 0.699s 空白、中間兩處台詞氣口），裁靜音後 1.320s；
      增益 +8.50dB → -14.91 LUFS / TP -1.95，與其餘 16 條角色語音的 -14.8 LUFS 對齊。
      AIZO 領域曲銜接由 2.05s 改為 1.37s（S.okkoVoiceUntil），避免新語音念完就空等或被人聲蓋住。 -->
+<!-- ★ v459（用戶指定 11 項）：
+     ① 開場影片期間播「五條悟上場」BGM，影片結束／跳過切回常態曲；② 宿儺「解」語音改 30% 觸發；
+     ③ 修五條死亡演出播完卡戰鬥界面、跳過死亡對白不換頁（gojoDown 誤攔 phase=over、leadMs 段沒綁跳過、
+        統一路由 afterHeroDownRoute + 26s 看門狗）；④ 對拼補白熱中線／對撞楔形／火花／微震強化力量感；
+     ⑤ 蒼拳爆點改用立繪實測拳頭座標（圖 14%W / 53%H）；⑥ 街道崩壞改玻璃破碎、文字改黑白小字置於倒計時正下方、
+        領域內打鬥不計入 S.streetDmg；⑦ 宿儺領域曲語音畢才從頭播、單獨展開動畫減速、音量 0.30→0.50；
+     ⑧ 立束縛刪外框、四周壓暗、刪「換棒可再立一條」、底部改「點擊其他地方取消立束縛」並補點擊關閉；
+     ⑨ 修宿儺／乙骨領域曲同時播（stopAllOtherDomainBgm early-return 漏停 AIZO + 互斥硬閘）；
+     ⑩ 乙骨勝利台詞圖案等比放大；⑪ 「伏誅賜死」字號 0.094H→0.072H；
+     ⑫ 黑閃雙資源：特別原聲只給虎杖一技能黑閃與終結宿儺動畫，其餘用普通黑閃。 -->
 <!-- © 2026 老中医 · 新宿決戦（JUJUTSU KAISEN fan game）· All rights reserved. -->
 </head>
 <body>
@@ -2920,7 +2939,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
       <canvas id="cv"></canvas>
       <!-- ★ v266 音樂盒已移除 -->
       <div id="bgmBtn" title="背景音樂開關"><svg aria-hidden="true" class="ico"><use href="#ic-note"></use></svg><i aria-hidden="true" class="ml"></i></div>
-      <div id="turnBar" style="display:none"><div id="pauseBtn" title="暫停 / 繼續"><svg aria-hidden="true" class="ico" viewBox="0 0 24 24"><path class="icPause" d="M7 4h4v16H7zM13 4h4v16h-4z"/><path class="icPlay" d="M8 4l12 8-12 8z"/></svg></div><div class="tb" id="turnTxt">第 1 回合 · 10.0s</div></div>
+      <div id="turnBar" style="display:none"><div id="pauseBtn" title="暫停 / 繼續"><svg aria-hidden="true" class="ico" viewBox="0 0 24 24"><path class="icPause" d="M7 4h4v16H7zM13 4h4v16h-4z"/><path class="icPlay" d="M8 4l12 8-12 8z"/></svg></div><div class="tb" id="turnTxt">第 1 回合 · 10.0s</div><i id="streetTip"></i></div>
       <div id="redAlert"></div>
       <div id="warnMark">！</div>
       <div class="flash" id="fPurple"></div>
@@ -3031,10 +3050,9 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <!-- 立束縛（戰鬥核心） -->
     <div id="vowUI">
       <div class="vwTitle">立束縛</div>
-      <div class="vwSub">一位術師，一局只能自縛一次 —— 立下的束縛在本棒<b>永久生效</b>，代價同樣永久。換棒可再立一條。</div>
+      <div class="vwSub">一位術師，一局只能自縛一次 —— 立下的束縛在本棒<b>永久生效</b>，代價同樣永久。</div>
       <div class="vwRow" id="vowRow"></div>
-      <div class="vwWarn">代價看清楚：生命上限 ／ 永久脆化 ／ 永久衰弱 ／ 每回合自損 ／ 封鎖技能。
-        立錯可「解縛」解除可逆效果，但吃 18% 反噬、這一棒不能再立束縛。</div>
+      <div class="vwWarn">點擊其他地方取消立束縛</div>
       <div class="vwFoot"><button class="vwRevoke" id="vwRevoke">解縛</button>
       <button class="vwClose" id="vwClose">取消</button></div>
     </div>
@@ -3522,14 +3540,27 @@ function isHard(){ return S.diff!=='normal'; }
 function heroTurnCount(){ return Math.max(0,(S.turnN||0)-(S.heroT0==null?(S.turnN||0):S.heroT0)); }
 /* ★ v450 街道破壞度：累計傷害每 50% 單條命（SUK_MAXHP 的一半）升一級，共 4 級（＝打完 2 條命） */
 function streetLv(){ return Math.min(4,Math.max(0,S.streetLv||0)); }
+/* ★ v459 用戶指定：領域中的打鬥不計入街道崩壞。
+   另立 S.streetDmg 只累「非領域狀態」造成的傷害，S.total 仍供結算分數使用，互不干擾。 */
+function inAnyDomain(){
+  try{ return !!(S.sukuDom>0||S.gojoDom>0||S.gojoVoidT>0||S.okkoDom>0||S.higuDom>0||
+    S.higuJudge>0||S.itaDom>0||S.itaSimpleDom>0||S.domClash||S.phase==='domain'); }catch(e){ return false; }
+}
+function streetAdd(d){ try{ if(!inAnyDomain()) S.streetDmg=(S.streetDmg||0)+(d||0); }catch(e){} }
 function streetCheck(){
   try{
-    const lv=Math.min(4,Math.floor((S.total||0)/(SUK_MAXHP*0.5)));
+    const lv=Math.min(4,Math.floor((S.streetDmg||0)/(SUK_MAXHP*0.5)));
     if(lv<=(S.streetLv||0)) return;
     S.streetLv=lv;
-    fxText(W*0.5,H*0.30,'街道崩壞 Lv.'+lv+'/4　雙方傷害 +'+(lv*5)+'%','#e0561c',true);
-    flash('fHit'); shake();
-    say('sys','★ 新宿的街道又塌了一片（破壞度 Lv.'+lv+'/4）—— 塵土與碎玻璃讓雙方更難站穩：此後雙方傷害 +'+(lv*5)+'%。');
+    /* ★ v459 用戶指定：文字改成黑白、字號小、只是「淺淺地」顯現在倒計時正下方，
+       不再用大號漫畫字／橙紅色／閃白／震屏／系統長提示。 */
+    const tip=document.getElementById('streetTip');
+    if(tip){
+      tip.textContent='街道崩壞 Lv.'+lv+'/4 · 雙方傷害 +'+(lv*5)+'%';
+      tip.classList.remove('on'); void tip.offsetWidth; tip.classList.add('on');
+      clearTimeout(window.__streetTipT);
+      window.__streetTipT=setTimeout(function(){ try{ tip.classList.remove('on'); }catch(e){} },2600);
+    }
     syncHud();
   }catch(e){}
 }
@@ -3819,7 +3850,7 @@ function resetBattle(){
   S.guideShown=false;   /* ★ v446 每局第一次進入戰鬥都會走一次引導 */
   (function(){ var b=document.getElementById('pauseBtn'),o=document.getElementById('pauseOv');
     if(b) b.classList.remove('paused'); if(o) o.classList.remove('on'); })();
-  S.phase='fight'; S.t=0; S.total=0;  S.healUsed=false; S.recoverAt=0;
+  S.phase='fight'; S.t=0; S.total=0; S.streetDmg=0; S.streetLv=0;  S.healUsed=false; S.recoverAt=0;
   S.heroT0=S.turnN||0; S.heroSeenDone=false; S.furyShown=0; S.legacyBlock=0; S.legacyAtk=0; S.streetLv=0; S.sukuDown=0;
   S.gojo.hp=100; S.gojo.ce=100; S.gojo.pose='idle'; S.gojo.poseT=0; S.gojo.hurtFx=0; S.gojo.guardT=0;
   S.suk.hp=SUK_MAXHP; S.suk.pose='idle'; S.suk.poseT=0;
@@ -4596,27 +4627,29 @@ function fxMisago(){
 /* ★ v306 黑閃音效再提早：音檔前 0.186s 是空白（實測 silencedetect）⇒ 起播直接 seek 過去，
    聽感比上一版早約 190ms，跟畫面幾乎同時。 */
 const BF_LEAD=0;   /* ★ v423 音檔前 0.186s 空白已直接剪掉，無需再靠 seek 補償 */
-function prewarmBlackFlashSfx(){
+function prewarmBlackFlashSfx(special){
   try{
-    if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH && !window.__bfEl){
-      const el=new Audio(); el.preload='auto'; el.src=sndUrl(SND_BLACKFLASH);
+    const _key=special?'__bfElSp':'__bfEl';
+    const _src=special?((typeof SND_BLACKFLASH_SP!=='undefined'&&SND_BLACKFLASH_SP)?SND_BLACKFLASH_SP:SND_BLACKFLASH):SND_BLACKFLASH;
+    if(_src && !window[_key]){
+      const el=new Audio(); el.preload='auto'; el.src=sndUrl(_src);
       try{ el.load(); }catch(e){}
-      window.__bfEl=el;
+      window[_key]=el;
     }
   }catch(e){}
 }
-function playBlackFlashSfx(force){
+function playBlackFlashSfx(force,special){
   try{
-    if(typeof SND_BLACKFLASH!=='undefined'&&SND_BLACKFLASH){
-      /* ★ v428 用戶報「黑閃音效響兩次」：QTE 命中、必出黑閃、結算補播多條路徑會在同一次黑閃裡各播一次。
-         統一在播放層做 1s 去重，任何路徑重複呼叫都直接忽略。 */
-      const _bn=performance.now();
-      if(!force && window.__bfSfxAt && _bn-window.__bfSfxAt<1000) return;   /* ★ v453 force=true：真結局必播，繞過去重 */
-      if(!window.__bfEl){ prewarmBlackFlashSfx(); }
-      try{ window.__bfEl.currentTime=0; }catch(err){}   /* ★ v423 起播即出聲，與技能動畫同拍 */
-      const p=window.__bfEl.play(); if(p&&p.catch) p.catch(()=>{});
-      window.__bfSfxAt=performance.now();
-    }
+    /* ★ v459：special=true 用「虎杖一技能黑閃／終結動畫」專屬原聲；其餘全用普通黑閃。
+       去重共用 __bfSfxAt，保證同一次黑閃不會一邊特別一邊普通各響一聲。 */
+    const _bn=performance.now();
+    if(!force && window.__bfSfxAt && _bn-window.__bfSfxAt<1000) return;
+    const _key=special?'__bfElSp':'__bfEl';
+    if(!window[_key]) prewarmBlackFlashSfx(special);
+    const el=window[_key]; if(!el) return;
+    try{ el.currentTime=0; }catch(err){}
+    const p=el.play(); if(p&&p.catch) p.catch(()=>{});
+    window.__bfSfxAt=_bn;
   }catch(err){}
 }
 /* ★ v306 黑閃裂紋邊緣虛化：一次性把位圖做成「中心不透明、四邊漸隱」的離屏 canvas，
@@ -5115,7 +5148,7 @@ function gojoVoid(){
           S.gojoDom=0; S.sukuDom=1; S.sukuDomFirst=true;   /* ★ v192 領域成立 ⇒ 當回合解＋捌雙發 */
           S.gojoBurn=true;          /* ★ v92 對拼輸掉 ⇒ 五條悟・術式熔斷 */
           fxText(GX()-20*SC,GY-206*SC,'熔斷','#8b5cf6',true);   /* ★ v131 術式熔斷字樣：僅在五條領域對拼失敗時出現 */
-          addFx({type:'sukuDomWord',dur:1.4});
+          addFx({type:'sukuDomWord',dur:2.4});   /* ★ v459 領域名字樣同步放慢 */
           flash('fRed'===null?'fWhite':'fWhite'); shake();
           say('sys','★ 伏魔御厨子成立：領域內的必中斬擊每回合對五條悟造成 10% 最大生命傷害。');
           say('sys','★ 術式熔斷——五條悟的術式被對拼衝垮：除「反轉術式」外無法使用任何技能！用「反轉術式」治癒後恢復。');
@@ -5443,7 +5476,7 @@ function stopAllMusicForFinisher(){
 function yujiFinisherCut(){
   stopAllMusicForFinisher();
   /* ★ v417 已由 yujiWin 提前觸發過就不再重播（避免兩聲疊在一起） */
-  try{ if(!(window.__bfSfxAt && performance.now()-window.__bfSfxAt<900)) playBlackFlashSfx(); }catch(e){}
+  try{ if(!(window.__bfSfxAt && performance.now()-window.__bfSfxAt<900)) playBlackFlashSfx(false,true); }catch(e){}
   try{ SFX.black(); }catch(e){}
   flash('fWhite');
   shake(); setTimeout(function(){ try{ shake(); }catch(e){} }, 130);
@@ -5518,7 +5551,7 @@ function yujiWin(){
   $('redAlert').classList.remove('on'); $('warnMark').classList.remove('on');
   $('deathCut').classList.remove('on');
   syncHud();
-  try{ playBlackFlashSfx(true); }catch(e){} SFX.die(); flash('fWhite'); shake();   /* ★ v453 用戶指定：終結動畫的黑閃音效改用新原聲 */
+  try{ playBlackFlashSfx(true,true); }catch(e){} SFX.die(); flash('fWhite'); shake();   /* ★ v459 終結動畫＝特別原聲 */
   S.yujiEndAt=S.t-0.01;   /* ★ v291 觸發左側立繪背景漸顯 */
   /* ★ v253 用戶指定：用「靈魂·解」收掉宿儺時不要飄「逕庭拳」字樣（解字已在出招時打過） */
   if(!S.soulKill) fxManga('逕庭拳',W*0.5,GY-210*SC,true,'#c0392b');
@@ -5661,13 +5694,20 @@ function actAtk(allowBlack){
       const _px=SX()-22*SC+_iw*0.32;         /* 圖左側的拳頭正好落在宿儺身上 */
       /* ★ v240 用戶指定：出拳圖整體再上移一檔（0.52 → 0.68 倍圖高），拳頭落在宿儺上半身而非腰部 */
       const _py=GY-_ih*0.68;
-      const _burstY=_py-_ih*0.273;           /* 藍色爆開點綁定圖座標（原寫死 GY-154*SC，圖移動會脫節） */
+      /* ★ v459 用戶指定：爆點必須落在「攻擊立繪的拳頭」上。
+         實測 gojoFist 圖（680×784）拳頭中心約在 (0.14W, 0.53H)，相對圖中心 = (-0.36W, +0.03H)；
+         舊版寫死 SX()-16*SC / _py-0.273*圖高，等於爆在五條臉上（垂直偏高約 80px）。
+         這裡改用「實際繪製尺寸」换算，並補上立繪自帶的 -0.05rad 旋轉帶來的 +0.01 偏移。 */
+      const _dh=_ih*0.90;
+      const _dw=_dh*(IMGS.gojoFist?IMGS.gojoFist.width/IMGS.gojoFist.height:0.87);
+      const _fistX=_px-0.36*_dw;
+      const _burstY=_py+0.04*_dh;
       S.gojoVanish=1;                        /* 立繪瞬身消失 */
       S.hitStop=Math.max(S.hitStop,0.10);
       flash('fWhite'); shake();
       addFx({type:'gojoFist',dur:0.95,x:_px,y:_py,h:_ih*0.90})   /* ★ v323 蒼拳再縮小一點 */;
       setTimeout(()=>{
-        addFx({type:'fistBurst',dur:0.58,x:SX()-16*SC,y:_burstY,r:134*SC,seed:rnd(0,6.28)});
+        addFx({type:'fistBurst',dur:0.58,x:_fistX,y:_burstY,r:118*SC,seed:rnd(0,6.28)});   /* ★ v459 爆點＝拳頭 */
         S.hitStop=Math.max(S.hitStop,0.16);   /* 打擊頓挫 */
         shake(); flash('fWhite');
         /* ★ v240 用戶指定：蒼・拳命中加上沈悶的毆打衝擊音（疊在原有 atk 之上，拳拳到肉） */
@@ -6329,7 +6369,7 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
   }
   const hostBreak = (allowHostBreak || !noKill) && !finisher && !S.trueForm && S.phase==='fight' && (S.suk.hp-d<=0);   /* ★ v49 finisher＝真·秒殺，跳過受肉崩解 ／ ★ v130 allowHostBreak：琥珀可斬破受肉之軀 */
   S.suk.hp=Math.max(noKill||hostBreak?1:0,S.suk.hp-d);  /* ★ noKill/hostBreak：留給原身演出，不直接結算 */
-  S.total+=d;
+  S.total+=d; streetAdd(d);
   try{ streetCheck(); }catch(e){}   /* ★ v450 街道破壞度分級 */
   S.suk.pose='hurt'; S.suk.poseT=0.35;
   /* ★ v408 打擊感五層（全部卡在命中後 0~300ms）：
@@ -6782,7 +6822,22 @@ let dbTok=0;
 function deathBlackout(lines, done, art, leadMs){
   /* ★ v423 用戶指定：五條悟死亡時先讓腰斬漫畫頁完整播一段，再進黑屏對白。
      leadMs>0 時只做一次延後重入，不碰原有逐句邏輯。 */
-  if(leadMs>0){ setTimeout(function(){ deathBlackout(lines,done,art,0); },leadMs); return; }
+  if(leadMs>0){
+    /* ★ v459：腰斬圖播的這 2.2s 裡，點任意處＝跳過整段死亡演出（舊版此時尚未綁 onpointerdown，
+       點了沒反應，之後又沒有任何路徑把頁面帶走 ⇒ 用戶所見「跳過後卡在戰鬥界面」）。 */
+    let _skipFn=null;
+    const _leadT=setTimeout(function(){ try{ document.removeEventListener('pointerdown',_skipFn,true); }catch(e){} deathBlackout(lines,done,art,0); },leadMs);
+    _skipFn=function(ev){
+      try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+      try{ document.removeEventListener('pointerdown',_skipFn,true); }catch(e){}
+      clearTimeout(_leadT);
+      try{ const _db=document.getElementById('deathBlack'); if(_db){ _db.classList.remove('on'); _db.style.display='none'; _db.style.pointerEvents='none'; _db.onpointerdown=null; } }catch(e){}
+      try{ const _dc=document.getElementById('deathCut'); if(_dc) _dc.classList.remove('on'); }catch(e){}
+      try{ done&&done(); }catch(e){}
+    };
+    try{ document.addEventListener('pointerdown',_skipFn,true); }catch(e){}
+    return;
+  }
   /* ★ v263 黑屏層挪進 #app：原本掛在 body 上是 fixed，豎屏旋轉（html.rot）不跟隨 ⇒ 手機看到豎屏方向 */
   try{ var _db=$('deathBlack'), _app=$('app'); if(_db && _app && _db.parentElement!==_app) _app.appendChild(_db); }catch(e){}
   const el=document.getElementById('deathBlack');
@@ -6935,11 +6990,27 @@ function heroDownGeneric(h){
 /* 一棒倒下之後：還有下一位就進選擇界面，否則結算。
    ★ 用 token 作廢過期回調：中途重開一局 / 已經進入下一棒時，舊的 2.6 秒定時器不能再跳回來。 */
 let downTok=0;
+/* ★ v459 統一的退場後路由：確認選人／結算至少有一層可見，否則強制拉起來。
+   showSelect() 自己會在「沒有下一棒」時轉 showResult()，所以這裡不必重複判斷。 */
+function deathScreenVisible(){
+  try{
+    const vis=function(el){ if(!el) return false; if(el.classList.contains('hide')) return false;
+      const st=getComputedStyle(el); return st.display!=='none'&&st.visibility!=='hidden'&&parseFloat(st.opacity||'1')>0.01; };
+    return vis(document.getElementById('selectUI'))||vis(document.getElementById('resultScreen'));
+  }catch(e){ return false; }
+}
+function afterHeroDownRoute(){
+  try{
+    if(deathScreenVisible()) return;
+    if(typeof allGone==='function' && allGone()){ showResult(); return; }
+    showSelect();
+  }catch(e){ try{ showSelect(); }catch(_e){} }
+}
 function afterHeroDown(){
   const tok=++downTok;
   setTimeout(()=>{
     if(tok!==downTok) return;              /* 已被新的退場/新一局作廢 */
-    if(heroesLeft().length) showSelect(); else showResult();
+    afterHeroDownRoute();
   },2600);
 }
 function itadoriDeath(){
@@ -7950,7 +8021,8 @@ function fxSukuMelee(){
 }
 function sukunaAttack(){
   /* ★ v455 近身斬擊同樣是「解／捌」 */
-  try{ if(!window.__kaiVoiceAt||performance.now()-window.__kaiVoiceAt>500){ window.__kaiVoiceAt=performance.now(); window.playSoloVoice('sukuKai', 0, 0.7, 0.92); } }catch(e){}
+  /* ★ v459 用戶指定：每次「解」只有 30% 機率喊語音，連續出解不再每下都喊 */
+  try{ if(Math.random()<0.30 && (!window.__kaiVoiceAt||performance.now()-window.__kaiVoiceAt>500)){ window.__kaiVoiceAt=performance.now(); window.playSoloVoice('sukuKai', 0, 0.7, 0.92); } }catch(e){}
   $('redAlert').classList.remove('on','perfect');
   $('warnMark').classList.remove('on','perfect');
   S.suk.pose='atk'; S.suk.poseT=0.4;
@@ -7964,7 +8036,7 @@ function sukunaAttack(){
       if(S.okoCounter){                     /* ★ 里香・防壁反傷 */
         S.okoCounter=false;
         const bd=SUK_MAXHP*0.03;                 /* ★v39：3% 最大生命（原 4 點） */
-        S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd;
+        S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd; streetAdd(bd);
         fxText(GX()+40*SC,GY-226*SC,'-'+sukPct(bd),'#7c3aed',false);
         say('sys','里香・防壁反擊——宿儺受到 '+sukPct(bd)+' 最大生命反傷。');
       }
@@ -8095,7 +8167,8 @@ function qtePress(){
   endQTE();
   /* ★ v204 需求：黃條點中的瞬間就播黑閃音效（原先在各技能結算段纔播 —— 虎杖線延遲 160ms）；
      音量已對齊音樂盒 BGM（見 SFX.black）。未點中不播。 */
-  if(hit){ SFX.black(); playBlackFlashSfx(); }   /* ★ v243 黃條點中＝技能打出瞬間，黑閃音效同步 */
+  /* ★ v459：只有虎杖一技能（itaAtk）預先掛了 __bfSpecialQTE 才用特別黑閃原聲 */
+  if(hit){ SFX.black(); playBlackFlashSfx(false, !!window.__bfSpecialQTE); try{ window.__bfSpecialQTE=false; }catch(e){} }
   if(cb){ cb(hit); return; }                /* ★ v140 新路徑：交回當前技能的結算回調 */
   /* 舊路徑兜底（完美格擋必出黑閃，無回調）：沿用原本的五條悟演出 */
   S.gojo.pose='atk'; S.gojo.poseT=0.35;
@@ -8572,7 +8645,8 @@ function summonMaha(withLog){
 /* 二階段起：遠程斬擊波「解」 */
 function fireWave(){
   /* ★ v455 用戶提供原聲：「解」同 tick 起播（0.5s 去重防同回合重複） */
-  try{ if(!window.__kaiVoiceAt||performance.now()-window.__kaiVoiceAt>500){ window.__kaiVoiceAt=performance.now(); window.playSoloVoice('sukuKai', 0, 0.7, 0.92); } }catch(e){}
+  /* ★ v459 用戶指定：每次「解」只有 30% 機率喊語音，連續出解不再每下都喊 */
+  try{ if(Math.random()<0.30 && (!window.__kaiVoiceAt||performance.now()-window.__kaiVoiceAt>500)){ window.__kaiVoiceAt=performance.now(); window.playSoloVoice('sukuKai', 0, 0.7, 0.92); } }catch(e){}
   /* ★ v86 宿儺「解」：無形斬擊波 —— 命中瞬間讓被斬的空間「錯位」再彈回，做出看不見的斬擊該有的頓挫 */
   fxJieInk(SX()-104*SC,GY-244*SC);   /* ★ v134 解特效：黑墨勾边赤红大字（参考解特效图风格，程序化复刻） */
   /* ★ v443 用戶指定：刪掉「自右刮到左」的巨型月牙斬擊波（type:'wave'） */
@@ -8689,16 +8763,14 @@ function sukunaOpenDomain(force){
      避免 suspendMainBgm 與一連串 DOM 操作把第一拍吃掉。 */
   const _sfx=window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.15), 4.78, 0.92)   /* ★ v224 已做人聲分離，不再掐尾 */;
   S.sukuDomUsed=(S.sukuDomUsed||0)+1;
-  S.sukuDom=1; S.sukuDomFirst=true; S.sukuOpenT=3.4;   /* ★ v399 展開演出 3.4s 內用結印特寫 */
+  S.sukuDom=1; S.sukuDomFirst=true; S.sukuOpenT=5.0;   /* ★ v459 用戶指定：單獨展開動畫放慢 3.4 → 5.0s */
   /* ★ v273 用戶指定：宿儺單獨展開伏魔御厨子時同樣播「領域展開」大字（純文字版，無結印圖） */
   try{ window.__sukuAnnOnce=true; window.__sukuSlowAnn=true; armDomainAnnounce(); domainAnnounceArmedCall(); }catch(e){}
   S.suk.pose='cast'; S.suk.poseT=1.0;
   S.sukLast='';                          /* 本回合沒有出招：術式複製無從參考 */
   suspendMainBgm();
-  /* ★ v421 用戶報「背景音樂停了、領域音樂卻沒有同時出來」：舊版要等宿儺領域語音講完（約 4.7s）才起播，
-     中間有 4~5 秒完全靜音。現在與語音同拍起播，先把音量壓到 0.13 當墊底，語音結束再升回 0.35。 */
-  try{ startSukuBgm(0,0.13); }catch(e){}
-  try{ sukuBgmWatchStart(); }catch(e){}   /* ★ v432 看門狗：領域期間保證一定有聲 */
+  /* ★ v459 用戶指定：領域音樂要等「領域展開」語音念完才「從頭」開始播。
+     語音期間完全安靜（不再 0.13 墊底），看門狗也延到語音結束後才啟動，否則會提前把曲子拉起來。 */
   addFx({type:'sukuDomWord',dur:1.4});
   if(_voidOn){
     /* 破碎動畫後加入 ⇒ 繪製在上層，1.5s 散去後正好露出新成立的伏魔御厨子 */
@@ -8708,8 +8780,15 @@ function sukunaOpenDomain(force){
   flash('fWhite'); shake(); SFX.hollow();
   say('suku','「領域展開——伏魔御厨子。」');
   say('sys','★ 伏魔御厨子展開——領域必中「解」「捌」每回合造成 '+Math.round((DOM_KAI_PCT+DOM_SLASH_PCT)*DOM_HIT_MUL*100)+'% 最大生命傷害（本局剩餘可展開 '+Math.max(0,SUKU_DOM_MAX-S.sukuDomUsed)+' 次）。');
-  _sfx.then(()=>{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(0,0.30); });   /* ★ v428 語音畢升回 0.30 */   /* ★ v421 語音畢 ⇒ 升回正常音量 */
-  setTimeout(function(){ try{ if(S.phase==='fight'&&S.sukuDom>0) startSukuBgm(0,0.35); }catch(e){} }, 5200);   /* ★ v358 定時兜底 */   /* 語音播完後循環伏魔御厨子 BGM */
+  /* ★ v459 startSukuBgm 內部一律 currentTime=0，故此處即「語音畢 → 從頭播」；
+     音量 0.30/0.35 → 0.50（約 +4dB），用戶要求提高一些。 */
+  const _sukuDomBgmStart=function(){
+    if(S.phase!=='fight'||S.sukuDom<=0) return;
+    try{ startSukuBgm(0,0.50); }catch(e){}
+    try{ sukuBgmWatchStart(); }catch(e){}
+  };
+  _sfx.then(_sukuDomBgmStart);
+  setTimeout(function(){ try{ if(!sukuBgmOn) _sukuDomBgmStart(); }catch(e){} }, 5200);   /* ★ 兜底補播 */
   syncHud();
 }
 /* 回合結束：宿儺隨機使出攻擊（含空間斬） */
@@ -8975,7 +9054,7 @@ function sukunaTurn(){
     }
     /* ★ v81 信息洪流侵蝕：宿傩每回合 -5% 最大生命 */
     const vd=SUK_MAXHP*0.05;
-    S.suk.hp=Math.max(0,S.suk.hp-vd); S.total+=vd;
+    S.suk.hp=Math.max(0,S.suk.hp-vd); S.total+=vd; streetAdd(vd);
     fxText(SX()+rnd(-16,16),GY-170*SC,'-'+sukPct(vd), ISOKKO?'#c9a6ff':'#9fb4ff');
     say('sys', ISOKKO
       ? ('★ 真贋相愛 —— 無盡劍林絞殺，宿儺受到 '+sukPct(vd)+' 最大生命侵蝕。')
@@ -9043,7 +9122,7 @@ function sukunaTurn(){
   /* 血契侵蝕（虎杖的穿血殘留） */
   if(S.blood>0 && S.phase==='fight'){
     const bd=S.blood*3;
-    S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd;
+    S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd; streetAdd(bd);
     fxText(SX()+rnd(-16,16),GY-158*SC,'-'+sukPct(bd),'#c0392b');
     say('sys','血契侵蝕——宿儺受到 '+sukPct(bd)+' 最大生命持續傷害（血契 ×'+S.blood+'）');
     syncHud();
@@ -9356,7 +9435,7 @@ function endDomain(){
   S.gojo.pose='cast'; S.gojo.poseT=0.6;
   if(c>=DOM_N){
     const d=SUK_MAXHP*0.15;                /* ★v38：15% 最大生命 */
-    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d;
+    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d; streetAdd(d);
     flash('fWhite'); shake(); SFX.black();
     fxText(W*0.5,H*0.32,'無量空處 · 完全壓制','#2b6cb0',true);
     fxImpact(SX()-30*SC,GY-140*SC,true);
@@ -9366,7 +9445,7 @@ function endDomain(){
     say('sys',c+'/'+DOM_N+' 全中！宿儺 -15% 最大生命。');
   }else if(c>=DOM_GOOD){
     const d=SUK_MAXHP*0.08;                /* ★v38：8% 最大生命 */
-    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d;
+    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d; streetAdd(d);
     flash('fPurple'); shake(); SFX.hollow();
     say('gojo','「……撐住了。」');
     say('sys','命中 '+c+'/'+DOM_N+'：宿儺 -8% 最大生命。');
@@ -9713,7 +9792,10 @@ const GOJO_DEATH_TALK=[
   ['narr','旁白：冥冥留下的那句話——想成爲新的自己，就往北走；想回到過去的自己，就往南走。']
 ];
 function gojoDown(){
-  if(S.phase==='over'||S.phase==='select') return;
+  /* ★ v459 修「五條死亡動畫播完卡在戰鬥界面」：世界斬等路徑會先把 phase 置 'over'，
+     舊版在這裡連 'over' 一起攔掉 ⇒ 整段退場演出被吞、再也沒人切頁。
+     防重入統一交給 heroDown() 的 S.downDone，這裡只攔已經進過選人／結算的情況。 */
+  if(S.phase==='select') return;
   S.phase='over';
   endQTE(); closeVowUI();
   $('redAlert').classList.remove('on');
@@ -9733,9 +9815,14 @@ function gojoDown(){
     ['narr','旁白：五條悟的咒力，見底了。'],
     ['gojo','「……抱歉，接下來，交給你們了。」']
   ].concat(GOJO_DEATH_TALK), function(){
-    if(S.hero!=='gojo'){ heroDown(); return; }
-    showSelect();
+    try{ afterHeroDownRoute(); }catch(e){}
+    /* ★ v459 跳過／定時器競態補刀：900ms 後還沒換頁就再路由一次（冪等） */
+    setTimeout(function(){ try{ if(S.phase!=='select' && !deathScreenVisible()) afterHeroDownRoute(); }catch(e){} },900);
   }, null, 2200);   /* ★ v423 先播 2.2s 腰斬圖，再進機場對白 */
+  /* ★ v459 看門狗：腰斬 2.2s + 對白最長約 21s，26s 後若仍停在戰鬥畫面就強制換頁 */
+  setTimeout(function(){
+    try{ if(S.phase==='select') return; if(deathScreenVisible()) return; afterHeroDownRoute(); }catch(e){}
+  },26000);
 }
 /* ---------- 束縛面板 ---------- */
 /* ★ v61 卡片渲染抽成獨立函數：openVowUI 與 syncHud（面板開著時）共用同一份簽名檢查，
@@ -9775,6 +9862,16 @@ function openVowUI(){
   renderVowCards();                       /* ★ v61 簽名含 S.rika（里香在場 ⇒ 第二卡換「無限制咒力解放」） */
   syncVowRevoke();                        /* ★ v448 解縛按鈕顯隱 */
   const el=$('vowUI');
+  /* ★ v459 用戶指定：點三張選項卡／按鈕以外的地方＝取消立束縛 */
+  if(el && !el.__vowOutside){
+    el.__vowOutside=true;
+    el.addEventListener('pointerdown',function(e){
+      try{
+        if(e.target.closest('.vwCard')||e.target.closest('button')) return;
+        e.preventDefault(); closeVowUI(); say('sys','已取消立束縛。');
+      }catch(_e){}
+    });
+  }
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   S.vowOpen=true;                        /* ★ v34 面板打開 → 凍結回合倒計時，直到選定條款或點「取消」 */
   say('sys','立束縛（'+(HERO_INFO[S.hero]||{nm:'術師'}).nm+'）：捨棄一項性能，換取另一項的爆發 —— 看清每條條款的代價再立束縛。');
@@ -11370,6 +11467,51 @@ function drawClashAirflow(cx,d,a){
       ctx.restore();
     }
   }
+  /* ★ v459 用戶反饋「加了氣流反而失去力量感」：氣流是柔的，得補回「兩面結界硬碰硬」的剛性。
+     ① 中線白熱加粗＋13.5Hz 爆閃  ② 兩側對撞楔形（不是對稱鏡射，長度／相位錯開）
+     ③ 沿中線的撞擊火花  ④ 整層高頻微震 —— 只作用於氣流層，不改任何判定、不碰 HUD。 */
+  const _ct=S.t, _pulse=0.5+0.5*Math.sin(_ct*13.5);
+  ctx.save();
+  ctx.translate((Math.sin(_ct*61)+Math.sin(_ct*97))*0.9*SC*(0.4+0.6*_pulse),0);
+  ctx.globalCompositeOperation='lighter';
+  const _lg=ctx.createLinearGradient(cx-13*SC,0,cx+13*SC,0);
+  _lg.addColorStop(0,'rgba(255,255,255,0)');
+  _lg.addColorStop(0.42,'rgba(255,255,255,'+(0.28+0.32*_pulse).toFixed(3)+')');
+  _lg.addColorStop(0.50,'rgba(255,255,255,'+(0.72+0.26*_pulse).toFixed(3)+')');
+  _lg.addColorStop(0.58,'rgba(255,255,255,'+(0.28+0.32*_pulse).toFixed(3)+')');
+  _lg.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=_lg; ctx.fillRect(cx-13*SC,0,26*SC,H);
+  ctx.fillStyle='rgba(255,255,255,'+(0.55+0.40*_pulse).toFixed(3)+')';
+  ctx.fillRect(cx-(1.2+1.3*_pulse)*SC,0,(2.4+2.6*_pulse)*SC,H);
+  for(let _side=-1;_side<=1;_side+=2){
+    for(let _i=0;_i<3;_i++){
+      const _ph=(_ct*1.7+_i*0.37+(_side>0?0.21:0))%1;
+      const _yy=H*(0.14+0.72*((_i+0.5)/3))+Math.sin(_ct*4+_i*2.1)*H*0.018;
+      const _L=(0.055+0.15*_ph)*W*(_side<0?0.92:1.08);
+      const _hh=(0.020+0.045*(1-_ph))*H;
+      ctx.globalAlpha=(1-_ph)*(0.20+0.24*_pulse);
+      ctx.fillStyle=_side<0?'#ffffff':'#f6f2ea';
+      ctx.beginPath();
+      ctx.moveTo(cx+_side*3*SC,_yy-_hh*0.5);
+      ctx.lineTo(cx+_side*_L,_yy-_hh*0.16);
+      ctx.lineTo(cx+_side*_L*0.72,_yy);
+      ctx.lineTo(cx+_side*_L,_yy+_hh*0.16);
+      ctx.lineTo(cx+_side*3*SC,_yy+_hh*0.5);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+  for(let _i=0;_i<7;_i++){
+    const _ph=(_ct*2.3+_i*0.618)%1;
+    const _yy=H*(0.06+0.88*((_i*0.618+_ct*0.42)%1));
+    const _sz=(3+9*(1-_ph))*(0.5+0.8*_pulse)*SC;
+    ctx.fillStyle='rgba(255,255,255,'+(0.16+0.62*(1-_ph)).toFixed(3)+')';
+    ctx.beginPath();
+    ctx.moveTo(cx,_yy-_sz*2.2); ctx.lineTo(cx+_sz,_yy);
+    ctx.lineTo(cx,_yy+_sz*2.2); ctx.lineTo(cx-_sz,_yy);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
   ctx.restore();
 }
 function drawBg(){
@@ -11434,6 +11576,9 @@ function drawBg(){
 /* ★ v450 街道破壞度：4 個等級的裂縫一次性烘焙，之後每幀只做 drawImage */
 let _streetBake=null,_streetBakeKey='';
 function streetBake_(){
+  /* ★ v459 玻璃破碎：用戶指定把「紙面折線刮痕」改成玻璃碎裂 ——
+     撞擊點 → 放射主裂（帶折角）＋分叉 → 三段同心蛛網弧（斷續）→ 三角碎片高光。
+     4 個等級各烘焙一次，之後每幀只 drawImage，零額外開銷。 */
   const key=W+'|'+H+'|'+SC.toFixed(3)+'|'+PERF+'|'+DPR;
   if(_streetBake && _streetBakeKey===key) return _streetBake;
   let c,g;
@@ -11445,46 +11590,60 @@ function streetBake_(){
   }catch(e){ return null; }
   const k=SC;
   const mk=function(seed){ let v=seed; return function(){ v=(v*9301+49297)%233280; return v/233280; }; };
+  const web=function(g2,cx,cy,R,r,L){
+    const n=10+Math.floor(r()*5), base=r()*Math.PI*2;
+    /* 同心蛛網弧：三圈、每圈斷續，模擬玻璃受擊的同心裂 */
+    for(let ring=1;ring<=3;ring++){
+      const rr=R*(0.30+0.24*ring);
+      g2.lineWidth=Math.max(1,(2.3-ring*0.40)*k);
+      for(let q=0;q<n;q++){
+        const a0=base+q*Math.PI*2/n+r()*0.10;
+        const a1=a0+(Math.PI*2/n)*(0.55+r()*0.35);
+        g2.strokeStyle='rgba(255,255,255,'+(0.10+0.055*L).toFixed(3)+')';
+        g2.beginPath(); g2.arc(cx,cy,rr,a0,a1); g2.stroke();
+        g2.strokeStyle='rgba(14,14,18,'+(0.07+0.035*L).toFixed(3)+')';
+        g2.lineWidth=Math.max(0.8,(1.2-ring*0.18)*k);
+        g2.beginPath(); g2.arc(cx,cy,rr+1.2*k,a0,a1); g2.stroke();
+      }
+    }
+    /* 放射主裂 + 分叉 */
+    for(let q=0;q<n;q++){
+      const ang=base+q*Math.PI*2/n+(r()-0.5)*0.18;
+      const len=R*(0.55+r()*0.55);
+      const pts=[[cx,cy]]; let px=cx,py=cy,a=ang;
+      for(let j=0;j<4;j++){
+        a+=(r()-0.5)*0.24;
+        const step=len/4*(0.7+r()*0.6);
+        px+=Math.cos(a)*step; py+=Math.sin(a)*step*0.82;
+        pts.push([px,py]);
+      }
+      streetStroke_(g2,pts,k,0.12+0.05*L,0.20+0.06*L,2.4);
+      if(r()<0.62){
+        const bi=1+Math.floor(r()*3), bx=pts[bi][0], by=pts[bi][1];
+        const ba=a+(r()<0.5?-1:1)*(0.5+r()*0.5);
+        const bl=len*(0.20+r()*0.25);
+        streetStroke_(g2,[[bx,by],[bx+Math.cos(ba)*bl,by+Math.sin(ba)*bl*0.8]],k,0.09+0.04*L,0.13+0.04*L,1.5);
+      }
+    }
+    /* 玻璃碎片高光：細三角，白多黑少，才有「碎玻璃反光」而不是髒刮痕 */
+    for(let q=0;q<8;q++){
+      const a=r()*Math.PI*2, rr=R*(0.22+r()*0.80);
+      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr*0.82;
+      const sz=(2+r()*5)*k;
+      g2.fillStyle='rgba(255,255,255,'+(0.13+0.05*L).toFixed(3)+')';
+      g2.beginPath(); g2.moveTo(x,y-sz); g2.lineTo(x+sz*0.8,y+sz*0.6); g2.lineTo(x-sz*0.7,y+sz*0.5); g2.closePath(); g2.fill();
+      g2.strokeStyle='rgba(20,18,22,'+(0.08+0.03*L).toFixed(3)+')';
+      g2.lineWidth=Math.max(0.7,0.9*k); g2.stroke();
+    }
+  };
   for(let L=1;L<=4;L++){
     const r=mk(L*7919+37);
-    /* 地面裂縫：自地平線往上劈 */
-    for(let i=0;i<6;i++){
-      let x=W*(0.04+r()*0.92), y=H*(0.50+r()*0.36);
-      const dir=r()<0.5?-1:1, len=(36+r()*56)*k*(0.65+0.35*L);
-      const pts=[[x,y]];
-      let px=x,py=y;
-      for(let j=0;j<5;j++){
-        px+=dir*(len/5)*(0.45+r());
-        py-=len/5*(0.55+r()*0.8);
-        pts.push([px,py]);
-      }
-      streetStroke_(g,pts,k,0.12+0.05*L,0.20+0.07*L,3.6);
-      /* 落石碎屑 */
-      for(let j=0;j<3;j++){
-        const rx=W*(0.03+r()*0.94), ry=GY-H*(0.02+r()*0.14);
-        g.fillStyle='rgba(26,22,26,'+(0.16+0.06*L)+')';
-        g.beginPath(); g.arc(rx,ry,(1.2+r()*2.4)*k,0,Math.PI*2); g.fill();
-      }
-    }
-    /* 樓體裂縫：只落在建築高度帶，向下劈 */
-    for(let i=0;i<4;i++){
-      let x=W*(0.05+r()*0.90), y=H*(0.13+r()*0.30);
-      const dir=r()<0.5?-1:1, len=(22+r()*30)*k*(0.7+0.3*L);
-      const pts=[[x,y]];
-      let px=x,py=y;
-      for(let j=0;j<4;j++){
-        px+=dir*(len/4)*(0.4+r()*0.9);
-        py+=len/4*(0.5+r()*0.7);
-        pts.push([px,py]);
-      }
-      streetStroke_(g,pts,k,0.09+0.04*L,0.13+0.05*L,2.4);
+    const cnt=1+L;                       /* 等級越高，碎裂點越多 */
+    for(let w=0;w<cnt;w++){
+      const cx=W*(0.08+r()*0.84), cy=H*(0.14+r()*0.62);
+      web(g,cx,cy,(34+r()*40)*k*(0.70+0.28*L),r,L);
     }
   }
-  /* 底部粉塵：等級越高越厚 */
-  const dg=g.createLinearGradient(0,GY-H*0.22,0,GY+H*0.02);
-  dg.addColorStop(0,'rgba(120,110,104,0)');
-  dg.addColorStop(1,'rgba(120,110,104,0.20)');
-  g.fillStyle=dg; g.fillRect(0,GY-H*0.22,W,H*0.24);
   _streetBake=c; _streetBakeKey=key;
   return c;
 }
@@ -11934,7 +12093,7 @@ function itaAtk(){
   if(S.itaDom>0) return itaSoulCut();   /* ★ v47 領域內：普攻 → 靈魂·解 */
   if(S.acted) return;
   /* ★ v205 用戶指定：黒閃之束縛（必出黑閃）⇒ 點擊技能的瞬間就播黑閃音效（原先到結算點纔播） */
-  if(S.vowBF){ SFX.black(); playBlackFlashSfx(); }   /* ★ v243 必出黑閃：按鍵瞬間出聲 */
+  if(S.vowBF){ SFX.black(); playBlackFlashSfx(false,true); }   /* ★ v459 虎杖一技能黑閃＝特別原聲 */
   markActed('atk');
   S.gojo.pose='atk'; S.gojo.poseT=0.34;
   addRes(6);
@@ -11957,7 +12116,7 @@ function itaAtk(){
     setTimeout(()=>{
       if(S.phase!=='fight') return;
       const d2=Math.round(SUK_MAXHP*rnd(0.0267,0.0467));   /* ★ v395 口徑統一：二段 2.67~4.67%（直接扣血、不經 HERO_DMG） */
-      S.suk.hp=Math.max(0,S.suk.hp-d2); S.total+=d2;
+      S.suk.hp=Math.max(0,S.suk.hp-d2); S.total+=d2; streetAdd(d2);
       S.suk.pose='hurt'; S.suk.poseT=0.2;
       fxImpact(SX()-30*SC,GY-itaHeight()*0.62,false);   /* ★ v202 二段命中衝擊對齊伸出的手 */
       fxText(SX()-10*SC+rnd(-12,12),GY-166*SC,'二段 -'+d2,'#c0392b');
@@ -11965,7 +12124,8 @@ function itaAtk(){
       shake(); syncHud();
     },400);
   };
-  if(black) blackGate(itaApply); else itaApply(false);
+  /* ★ v459：標記給 QTE 命中處，讓這一發黑閃用特別原聲 */
+  if(black){ try{ window.__bfSpecialQTE=true; }catch(e){} blackGate(itaApply); } else { try{ window.__bfSpecialQTE=false; }catch(e){} itaApply(false); }
 }
 /* 簡易領域（新·陰流）：中和必中效果
    ★ v193 需求②：**一旦展開就常駐** —— 之後宿儺「伏魔御厨子」的領域必中斬擊不再傷到虎杖
@@ -14271,7 +14431,7 @@ else if(f.type==='lightPillar'){
       const k=f.t/f.dur;
       const aIn=Math.min(1,k/0.14), aOut=Math.min(1,(1-k)/0.20);
       /* ★ v419 用戶指定：領域名加上豎排引號「」、整體再縮小一檔（0.104H → 0.094H）。 */
-      const fs=H*0.094, ch='伏誅賜死', step=fs*1.06;   /* ★ v428 用戶指定：領域展開文字改「伏誅賜死」（v429 統一繁體字形） */
+      const fs=H*0.072, ch='伏誅賜死', step=fs*1.06;   /* ★ v459 用戶指定：字號再小一檔 0.094H → 0.072H */   /* ★ v428 用戶指定：領域展開文字改「伏誅賜死」（v429 統一繁體字形） */
       const x=GX()-W*0.125;
       const y0=H*0.50-ch.length*step*0.5+Math.sin(k*Math.PI)*(-7*SC);
       ctx.save();
@@ -17604,7 +17764,7 @@ function bgmReady(){ return typeof BGM_SRC!=='undefined' && !!BGM_SRC; }
 /* ★ 移動端兼容 1/2：iOS Safari 對 data: URI 音源支持很差（經常整段播不出來），
    必須轉成 Blob URL 再交給 <audio> */
 function bgmUrl(){
-  const _gojo=(bgmTrack==='gojo');   /* ★ v457 五條在場 ⇒ 原主曲；其餘 ⇒ 常態新歌 */
+  const _gojo=(bgmTrack==='gojo'||!!window.__bootBgmGojo);   /* ★ v459 開場影片也用五條曲 */
   if(_gojo){ if(gojoObjUrl) return gojoObjUrl; } else if(bgmObjUrl) return bgmObjUrl;
   if(!bgmReady()) return '';
   const src=_gojo?BGM_GOJO:BGM_SRC;
@@ -18808,7 +18968,7 @@ function staggerStrike(){
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     const d=14;                              /* ≈9% 最大生命 */
-    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d;
+    S.suk.hp=Math.max(0,S.suk.hp-d); S.total+=d; streetAdd(d);
     fxText(SX()-30*SC,GY-170*SC,'-'+sukPct(d),'#f5c542',true);
     fxImpact(SX()-30*SC,GY-140*SC,true);
     shake(); flash('fWhite');
@@ -19721,7 +19881,7 @@ function startOkkoDomainBgm(_fromZero){
   if(!el) return;
   okkoDomBgmOn=true;
   suspendMainBgm();          /* 記錄並暫停原 BGM（乙骨專屬／主 BGM 同一元素） */
-  stopSukuBgm();             /* 對拼時可能正在播伏魔御厨子 BGM，先停 */
+  killSukuBgm();             /* ★ v459 立即硬停宿儺領域曲，杜絕兩首同播 */
   stopDomSfx();              /* 避免與領域語音疊加 */
   /* ★ v421 用戶指定：領域展開時**從頭播放**（原：從第 4 秒）；對拼勝利續播時不動播放位置 */
   try{ el.currentTime=4; }catch(e){}   /* ★ v443 一律第 4 秒（原 _fromZero?0:4 會被對拼路徑帶成 0） */
@@ -19746,15 +19906,38 @@ function stopOkkoDomainBgm(){
 /* ★ v387 修「兩個領域音樂重疊」：起播伏魔御廚子 BGM 前，先把無量空處／虎杖／乙骨等
    追加領域曲全部靜音歸零，並作廢 ujaku 的 9 秒寬限（否則 extraBgmWatch 不會收它）。 */
 function stopAllOtherDomainBgm(){
-  /* ★ v421：擊殺／終幕專屬曲（SPECIALZ / finish）不是領域曲，不能被領域切換清掉 */
-  try{ if(typeof extraBgmKey!=='undefined' && (extraBgmKey==='specialz'||extraBgmKey==='finish')) return; }catch(e){}
-  try{ if(typeof extraBgmEls!=='undefined' && extraBgmEls){
-        for(const _k in extraBgmEls){ const _e=extraBgmEls[_k];
-          if(_e){ try{ _e.pause(); _e.currentTime=0; _e.volume=0; }catch(_){} } } } }catch(_){}
-  try{ extraBgmKey=''; }catch(_){}
-  try{ window.__ujakuAt=0; }catch(_){}
-  try{ if(typeof stopOkkoDomainBgm==='function') stopOkkoDomainBgm(); }catch(_){}
+  /* ★ v459 修「宿儺與乙骨領域音樂同時播」：舊版在 extraBgmKey==='specialz'/'finish' 時
+     整個函數 early-return，連 stopOkkoDomainBgm() 都沒跑到 ⇒ 乙骨 AIZO 一直留著，
+     而 sukuBgmWatchStart 每 700ms 又把伏魔御廚子拉起來，兩首長時間重疊。
+     改為：終幕曲只豁免自己的清理，乙骨領域曲照樣停。 */
+  let _keep=false;
+  try{ _keep=(typeof extraBgmKey!=='undefined' && (extraBgmKey==='specialz'||extraBgmKey==='finish')); }catch(e){}
+  if(!_keep){
+    try{ if(typeof extraBgmEls!=='undefined' && extraBgmEls){
+          for(const _k in extraBgmEls){ const _e=extraBgmEls[_k];
+            if(_e){ try{ _e.pause(); _e.currentTime=0; _e.volume=0; }catch(_){} } } } }catch(_){}
+    try{ extraBgmKey=''; }catch(_){}
+    try{ window.__ujakuAt=0; }catch(_){}
+  }
+  try{ killOkkoBgm(); }catch(_){}
 }
+/* ★ v459 立即硬停（不走 500ms 淡出，避免兩首領域曲在淡出窗口內重疊） */
+function killOkkoBgm(){
+  try{ okkoDomBgmOn=false; const e=domAudioEls.okkoDomain;
+    if(e){ e.pause(); e.currentTime=0; e.__s4=0; } }catch(e){}
+}
+function killSukuBgm(){
+  try{ sukuBgmOn=false; ++_sukuFadeSeq; const e=sukuBgmEl;
+    if(e){ e.pause(); e.volume=0; } }catch(e){}
+}
+/* ★ v459 互斥巡檢：任何時刻 sukuBgmOn 與 okkoDomBgmOn 不得同時為真 */
+setInterval(function(){
+  try{
+    if(!sukuBgmOn || !okkoDomBgmOn) return;
+    if(S.sukuDom>0) killOkkoBgm(); else killSukuBgm();
+    console.warn('[bgm] domain overlap resolved');
+  }catch(e){}
+},400);
 
 /* ★ v432 用戶報「宿傩開領域（不對拼）沒有領域音樂，暫停後再繼續又有了」。
    根因：v302 的補播只有 12×140ms ≈ 1.7s 的重試，而手機上 prepDomAudio 要把 base64 解成 blob
@@ -19788,6 +19971,7 @@ function startSukuBgm(_try,_vol){
      在「宿傩領域成立 + 場上是乙骨」時會無限遞歸。 */
   if(_sukuBgmLock) return;
   _sukuBgmLock=1;
+  try{ killOkkoBgm(); }catch(e){}   /* ★ v459 起宿儺曲前先硬停乙骨曲 */
   try{ stopAllOtherDomainBgm(); }catch(e){}   /* ★ v387 只留宿儺領域曲 */
   _sukuBgmLock=0;
   if(window.__appHidden && document.hidden) return;
@@ -20079,6 +20263,8 @@ function playTitleOpen(){
   const v=$('bootVideoEl'); if(!v){ playTitleOpen(); return; }
   const cv=$('bootVideoCv');
   window.__bootPlaying=true;
+  /* ★ v459 用戶指定：開場影片期間播「五條悟上場」那首 BGM；影片結束／跳過後切回常態曲 */
+  try{ window.__bootBgmGojo=true; if(typeof switchBGM==='function') switchBGM('gojo'); }catch(e){}
   let opened=false, soundOn=false;
   const open=function(){ if(opened) return; opened=true; window.__bootPlaying=false;
     /* ★ v178 跳過 / 播完後 600ms 內，殘留的 click / tap 一律吞掉（全域攔截見 document 那段）：
@@ -20093,6 +20279,13 @@ function playTitleOpen(){
     try{ if(cv){ cv.width=0; cv.height=0; cv.style.display='none'; } }catch(e){}
     ov.classList.add('hide');
     try{ ov.innerHTML=''; ov.style.display='none'; if(ov.parentNode) ov.parentNode.removeChild(ov); }catch(e){}
+    try{ window.__bootBgmGojo=false; if(typeof switchBGM==='function') switchBGM('main');
+      /* 強制換源：開場若因作用域／時序沒切成 gojo，switchBGM('main') 會直接 return，這裡補一刀 */
+      if(typeof bgmUrl==='function' && typeof bgmEl!=='undefined' && bgmEl){
+        const _u=bgmUrl(); if(_u && bgmEl.src!==_u){ bgmEl.pause(); bgmEl.src=_u; bgmEl.loop=true;
+          try{ bgmEl.currentTime=0; }catch(_e2){}
+          if(typeof startBGM==='function' && !bgmMuted) startBGM(0.8); } }
+    }catch(e){}
     playTitleOpen(); };
   v.addEventListener('ended',open);
   v.addEventListener('error',function(){ open(); });   /* 影片載入失敗直接進標題 */
@@ -20420,7 +20613,9 @@ const SND_SUKU_OPEN='assets/963544693801.mp3';   /* ★ v455 用戶提供宿儺�
 const SND_SUKU_KAI='assets/1cedc4490ec3.mp3';   /* ★ v455 用戶提供宿儺原聲 */
 const SND_KASH_AMBER='assets/a5db5fb24063.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
 const SND_MAKI_SNEAK='assets/15960bebe896.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
-const SND_BLACKFLASH='assets/7b816af91dbf.mp3';   /* ★ v453 用戶提供：黑閃音效替換（2.59s，響度對齊舊檔） */
+const SND_BLACKFLASH='assets/d72b07661681.mp3';
+/* ★ v459 用戶指定：特別黑閃原聲只給「虎杖一技能黑閃」與「終結宿儺動畫」，其餘一律用上面的普通黑閃。 */
+const SND_BLACKFLASH_SP='assets/7b816af91dbf.mp3';   /* ★ v453 用戶提供：黑閃音效替換（2.59s，響度對齊舊檔） */
 const SND_GOJO_CHALLENGE='assets/ed55fd63c45e.mp3'; /* 「你是這裡的挑戰者」 5.50s */
 const SND_SUKU_BGM='assets/ecee6d093cb2.mp3';      /* 伏魔御廚子領域 BGM 42.41s（循環） */
 
@@ -20502,7 +20697,7 @@ const SND_SUKU_BGM='assets/ecee6d093cb2.mp3';      /* 伏魔御廚子領域 BGM 
 #deathBlack .dbArt.winArt{height:auto;width:auto;max-height:78%;max-width:36%;object-fit:contain;}
 /* ★ v432 用戶指定：五條悟勝利圖案上移、左半略裁（貼左板邊的空白太多） */
 #deathBlack .dbArt.winArt[data-art="gojoHollowEnd"]{left:-6%;bottom:9%;max-width:33%;max-height:72%;}
-#deathBlack .dbArt.winArt[data-art="okkoEnd"]{max-width:29%;max-height:70%;}   /* ★ v428 乙骨：適當縮小、不形變 */
+#deathBlack .dbArt.winArt[data-art="okkoEnd"]{max-width:34%;max-height:80%;}   /* ★ v459 用戶指定：適當放大，仍靠 max-width/max-height + object-fit:contain 等比不形變 */
 #deathBlack .dbArt.winArt[data-art="higuEnd"]{max-width:44%;max-height:90%;bottom:7%;}   /* ★ v428 日車：放大 + 上移 */
 #deathBlack .dbTxt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) translateY(12px);
   width:min(86vw,980px);text-align:center;color:#fff;font-weight:800;
@@ -20949,7 +21144,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
 }
 
 /* ═══ ★ v305 宿儚單獨開領域：大字放慢（2.1s → 3.6s） ═══ */
-#itaDomIn.slow.on.txtOnly .idiTxt{animation-duration:3.6s;}
+#itaDomIn.slow.on.txtOnly .idiTxt{animation-duration:4.8s;}   /* ★ v459 宿儺單獨展開的大字再放慢 */
 
 /* ★ v417 領域對拼・推擠：整層吃點擊；z-index 24 遠高於旁述條（#logbox z9），
    任何尺寸／任何字數都不會被底部文字蓋掉（v416 畫在 canvas 上 ⇒ 手機完全看不見）。 */
