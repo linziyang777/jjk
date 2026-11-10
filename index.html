@@ -561,6 +561,37 @@
      ④ 選人頁：玩法提示（無下限…）與「原作第 N 棒」兩行下移，讓開五邊形斜切底邊與投影。
      ⑤ APK 落地頁手機端畫幅：卡片鎖定六邊形框格同比例（1868/656）不再被拉變形；版本信息窄屏兩行。 -->
 <head>
+<script>/* v464 資源容錯（CDN 換源重試） */
+(function(){
+  var CDN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/', ALT='https://gcore.jsdelivr.net/gh/linziyang777/jjk@main/';
+  function alt(u,n){
+    if(!u) return null;
+    if(u.indexOf(CDN)===0){ var r=u.slice(CDN.length); return n===1?(ALT+r):r; }
+    if(u.indexOf(ALT)===0){ return u.slice(ALT.length); }
+    return null;
+  }
+  try{
+    var D=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
+    if(D&&D.set){
+      Object.defineProperty(HTMLImageElement.prototype,'src',{configurable:true,enumerable:true,
+        get:function(){ return D.get.call(this); },
+        set:function(u){
+          try{ if(!this.__rt){ this.__t=0; this.__u=u; } this.__rt=0; }catch(e){}
+          D.set.call(this,u);
+        }});
+    }
+  }catch(e){}
+  window.addEventListener('error',function(e){
+    var t=e.target; if(!t) return;
+    var tag=t.tagName;
+    if(tag!=='IMG' && tag!=='AUDIO' && tag!=='VIDEO' && tag!=='SOURCE') return;
+    var n=t.__t||0; if(n>=2) return;
+    var nx=alt(t.__u,n+1); if(!nx) return;
+    t.__t=n+1; t.__rt=1;
+    try{ t.src=nx; }catch(e2){}
+  },true);
+})();</script>
+
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
@@ -2596,7 +2627,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 #resultScreen::before{
   content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
   background:
-    url(assets/508ff2d2f03b.webp) no-repeat -40px calc(100% + 46px)/470px 520px,
+    url(https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/508ff2d2f03b.webp) no-repeat -40px calc(100% + 46px)/470px 520px,
     radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%);
 }
 #resultScreen > *{ position:relative; z-index:1; }
@@ -2675,7 +2706,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 .dexRow .dd{font-size:10.5px;font-weight:700;opacity:.66;line-height:1.5;margin-top:2px;}
 
 </style>
-<link href="assets/cc93d28a4795.png" rel="icon" type="image/png">
+<link href="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/cc93d28a4795.png" rel="icon" type="image/png">
 <!-- ★ v447 結算頁版式重排（用戶指定：左上角「戦果報告」被卡片遮擋、給作者的話搬到右欄留白）：
      ① 桌面端結算頁由 grid（固定列高，實測把 #rCols 排到 37px、壓在黑帶 22~70px 上）改為 flex 縱排，與手機端同一套流式，結構上不可能再重疊；
      ② 「給作者的話」整卡搬到右欄（本局解鎖之下），左欄只留結局卡／全服戰況／分享＋世界線跳躍；
@@ -3159,14 +3190,14 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 
   <!-- ★ v160 開場影片：全屏蓋在標題頁前，播完（或點擊跳過）才觸發標題「兩圖拼合」動畫 -->
   <div aria-label="開場動畫，點擊畫面開啟聲音，右下角可跳過" id="bootVideo" role="button" tabindex="0">
-    <video autoplay disableremoteplayback id="bootVideoEl" muted playsinline preload="auto" src="assets/213b053ab0a7.mp4" webkit-playsinline></video>
+    <video autoplay disableremoteplayback id="bootVideoEl" muted playsinline preload="auto" src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/213b053ab0a7.mp4" webkit-playsinline></video>
     <script>/* ★ v316 手機瀏覽器開場影片黑屏修復：把 assets/ 的 mp4 先 fetch 成 blob 再交給 <video>，
        繞開 Range / 緩存殘片 / 原生播放器接管等問題；單文件版（src 是 data:）自動跳過。 */
 (function(){
   try{
     var v=document.getElementById("bootVideoEl"); if(!v) return;
     var raw=v.getAttribute("src")||"";
-    if(raw.indexOf("assets/")<0) return;
+    if(raw.indexOf("https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/")<0) return;
     /* 本地副本：file:// 下 fetch 會被 CORS 擋，直接走原生 src 播放 */
     if(location.protocol==="file:") return;
     fetch(raw,{cache:"force-cache"}).then(function(r){ return r.ok?r.blob():null; }).then(function(b){
@@ -3218,7 +3249,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <!-- ★ v444 結算頁新頭部：黑斜帶「戦果報告」＋右側朱印（與選人頁「術師名簿」同一套語言） -->
     <div id="rsHead"><div class="rsBig">戦果報告<em>SHINJUKU BATTLE REPORT</em></div><i class="rsSeal" id="rsSeal">終</i></div>
     <div id="rsDiff"><em>難易度 / DIFFICULTY</em><b id="rsDiffV">原作</b></div>
-    <div aria-hidden="true" id="rLogo"><img alt src="assets/d703cad70897.webp"></div>
+    <div aria-hidden="true" id="rLogo"><img alt src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d703cad70897.webp"></div>
     <div id="rCoreWrap"><div id="rGrade">C</div><div id="rRing"></div><div id="rCore">你已掌握咒力的核心</div></div>
     <!-- ★ v240 左右排布容器：showResult 會把各區塊搬到左右兩欄（見 buildResultCols） -->
     <div id="rCols"><div class="resCol" id="rColL"></div><div class="resCol" id="rColR"></div></div>
@@ -3366,120 +3397,120 @@ const PAPER='#ffffff';
    0.5 內嵌圖片（構建時注入 base64）
    ========================================================= */
 const IMG={
-  clashAir:'assets/f1934b11d081.webp',
-  makiLow:'assets/c5c31a0a7c46.webp',
-  yujiFin:'assets/027b75a14a42.webp',
-  itaLow:'assets/5e450dbdb77f.webp',
-  okkoCut:'assets/aa0a1ce30bd2.webp',
-  okkoLow:'assets/8f83d6109270.webp',
-  bsCut:'assets/9ebafcc9e59b.webp',
-  itaMid:'assets/a875c0a242b4.webp',
-  sukuDom1:'assets/18d6efdad799.webp',   /* ★ v305 宿儚一階段領域姿 */
-  sukuDom2:'assets/d0df20fe886b.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
+  clashAir:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f1934b11d081.webp',
+  makiLow:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c5c31a0a7c46.webp',
+  yujiFin:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/027b75a14a42.webp',
+  itaLow:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/5e450dbdb77f.webp',
+  okkoCut:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/aa0a1ce30bd2.webp',
+  okkoLow:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/8f83d6109270.webp',
+  bsCut:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/9ebafcc9e59b.webp',
+  itaMid:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a875c0a242b4.webp',
+  sukuDom1:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/18d6efdad799.webp',   /* ★ v305 宿儚一階段領域姿 */
+  sukuDom2:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d0df20fe886b.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
   /* ★ v231 五條悟「蒼・拳」瞬身出拳：漫畫線稿（已摳圖去水印、邊緣羽化、逆時針旋轉 30°、La+alpha 203KB） */
-  gojoFist:'assets/c24be6dddbc0.webp',
+  gojoFist:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c24be6dddbc0.webp',
   /* ★ v140 徑庭拳：參考圖（徑庭拳參考1/2）摳出的青藍焰實拍圖，邊緣已羽化 */
-  fistFlame1:'assets/39f97def03fb.webp',
-  fistFlame2:'assets/e2538c6f9011.webp',
-  jieInk:'assets/eb7952c07c40.webp',   /* ★ v136 「解」特效参考图：黑墨勾边十字斩（去水印、白底透明化、裁外框） */
-  okkoDomBg:'assets/cac51767277d.webp',
-  okkoDomWord:'assets/e0b6822eafa9.png',
-  itaSeal:'assets/600e2d6c3d36.webp',   /* ★ v66 虎杖結印圖（去水印/摳圖/邊緣模糊後內嵌，由注入腳本填 base64） */
-  rikaArt:'assets/e339b58c7bb2.webp',
-fugaFlame:'assets/42e2d64aea07.webp',   /* ★ v75 宿傩「開」火焰圖（去水印+白底摳圖） */
-  okkoRel:'assets/2bad2553da20.webp', misago:'assets/d48664b2f6e5.webp', blackCrack:'assets/f209c2634544.webp', itaDomBg:'assets/89166b8c5ca3.webp',itaDomArt:'assets/d555eef809e7.webp',
-  okkoDom1:'assets/c40b07a8274b.webp',
-  okkoDom2:'assets/c4ebdce9f52e.webp',
-  okkoDom3:'assets/33dbf165b23a.webp',
-  nobara1:'assets/03d0ccf63447.webp',
-  nobara2:'assets/af54110387b3.webp',
-  agyo:'assets/54d3dcd0903a.webp',
-  title:'assets/459f59ed0a09.webp',
-  hollow:'assets/2905cf0901a3.webp',
-  gojo:'assets/63c8c6665932.webp',
-  suku:'assets/9611cb037040.webp',
-  gojoGuard:'assets/9682cdbfa82b.webp',
-  sukuSummon:'assets/b097501748df.webp',
-  yujiEnd:'assets/0c2f8f1e5929.webp',
-  kotodama:'assets/2f892100a5a4.webp',
-  death:'assets/c071e872a8ca.webp',
-  wheel:'assets/553fc9e4df55.webp',
-  maho:'assets/7a58ef900177.webp',
-  eight:'assets/93b6a72726bd.webp',
-  kashimo:'assets/bd4e783a10e0.webp',
-  kashAmber:'assets/87957513db75.webp',
-  kashBeast:'assets/adc227491bcc.webp',   /* ★v39 幻獣琥珀形態：亮度摳圖+反解混色+白逆光暈，水印已抹 */
-  kashIn:'assets/a797fb9fe322.webp',
-  okko:'assets/659664e8a4a4.webp',
-  itadori:'assets/3fbf6c93e9c8.webp',
-  maki:'assets/117333431bea.webp',
-  higuruma:'assets/f27fdffc9c4c.webp',
-  sukuTrue:'assets/3695d5cb7a20.webp'
+  fistFlame1:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/39f97def03fb.webp',
+  fistFlame2:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/e2538c6f9011.webp',
+  jieInk:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/eb7952c07c40.webp',   /* ★ v136 「解」特效参考图：黑墨勾边十字斩（去水印、白底透明化、裁外框） */
+  okkoDomBg:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/cac51767277d.webp',
+  okkoDomWord:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/e0b6822eafa9.png',
+  itaSeal:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/600e2d6c3d36.webp',   /* ★ v66 虎杖結印圖（去水印/摳圖/邊緣模糊後內嵌，由注入腳本填 base64） */
+  rikaArt:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/e339b58c7bb2.webp',
+fugaFlame:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/42e2d64aea07.webp',   /* ★ v75 宿傩「開」火焰圖（去水印+白底摳圖） */
+  okkoRel:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2bad2553da20.webp', misago:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d48664b2f6e5.webp', blackCrack:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f209c2634544.webp', itaDomBg:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/89166b8c5ca3.webp',itaDomArt:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d555eef809e7.webp',
+  okkoDom1:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c40b07a8274b.webp',
+  okkoDom2:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c4ebdce9f52e.webp',
+  okkoDom3:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/33dbf165b23a.webp',
+  nobara1:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/03d0ccf63447.webp',
+  nobara2:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/af54110387b3.webp',
+  agyo:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/54d3dcd0903a.webp',
+  title:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/459f59ed0a09.webp',
+  hollow:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2905cf0901a3.webp',
+  gojo:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/63c8c6665932.webp',
+  suku:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/9611cb037040.webp',
+  gojoGuard:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/9682cdbfa82b.webp',
+  sukuSummon:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/b097501748df.webp',
+  yujiEnd:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/0c2f8f1e5929.webp',
+  kotodama:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2f892100a5a4.webp',
+  death:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c071e872a8ca.webp',
+  wheel:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/553fc9e4df55.webp',
+  maho:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/7a58ef900177.webp',
+  eight:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/93b6a72726bd.webp',
+  kashimo:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/bd4e783a10e0.webp',
+  kashAmber:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/87957513db75.webp',
+  kashBeast:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/adc227491bcc.webp',   /* ★v39 幻獣琥珀形態：亮度摳圖+反解混色+白逆光暈，水印已抹 */
+  kashIn:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a797fb9fe322.webp',
+  okko:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/659664e8a4a4.webp',
+  itadori:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/3fbf6c93e9c8.webp',
+  maki:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/117333431bea.webp',
+  higuruma:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f27fdffc9c4c.webp',
+  sukuTrue:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/3695d5cb7a20.webp'
 ,
-  gojoVoidSign:'assets/b29ca5fdf759.webp'
-  ,gojoCang:'assets/05686d2ada40.webp'   /* ★ v296 五條悟「倉」形態立繪（綠幕摸圖，900x1275） */
-  ,gojoFistPose:'assets/d2476d5e6dc9.webp'   /* ★ v296 五條悟「倉・拳」受傷態立繪（藍色呪力，1100x1101） */
-  ,gojoVoidPose:'assets/3ec0c1bcbe7e.webp'
-  ,gojoVoidWord:'assets/c873cb80e2de.png'
-  ,gojoVoidBg:'assets/2d773a2606b1.webp'
+  gojoVoidSign:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/b29ca5fdf759.webp'
+  ,gojoCang:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/05686d2ada40.webp'   /* ★ v296 五條悟「倉」形態立繪（綠幕摸圖，900x1275） */
+  ,gojoFistPose:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d2476d5e6dc9.webp'   /* ★ v296 五條悟「倉・拳」受傷態立繪（藍色呪力，1100x1101） */
+  ,gojoVoidPose:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/3ec0c1bcbe7e.webp'
+  ,gojoVoidWord:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c873cb80e2de.png'
+  ,gojoVoidBg:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2d773a2606b1.webp'
 ,
-  sukuDomBg:'assets/aad139aa5143.webp'
-  ,sukuDomWord:'assets/f4c69a955b44.png'
+  sukuDomBg:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/aad139aa5143.webp'
+  ,sukuDomWord:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f4c69a955b44.png'
 };
 
 /* ★ v156 登場動畫專用：乙骨立繪已用連通域 floodfill 摳淨白底（74.9% 透明） */
-const IMG_OKKO_CUT='assets/9694d440594a.webp';
+const IMG_OKKO_CUT='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/9694d440594a.webp';
 /* ★ v35 全角色出場頁：構建期渲染（白底漫畫頁 = 網點 + 集中線 + 立繪 + 豎排名 + 朱印 + 稱號），
    6 張 webp 內嵌，運行時只負責「全屏白底 + 居中播映」——離線單文件約束不變。
    立繪白底已在構建期用連通域 floodfill 摳淨（人物內部的白襯衫/高光不在連通域內，保留）。 */
 const INTRO_PANEL={
-  gojo:'assets/86682150b7a2.webp',
-  kashimo:'assets/6aed1371971e.webp',
-  higuruma:'assets/8b9072652273.webp',
-  itadori:'assets/f7b44323a658.webp',
-  okkotsu:'assets/8a929e66b79c.webp',
-  maki:'assets/643ed7bd81bd.webp'
+  gojo:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/86682150b7a2.webp',
+  kashimo:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/6aed1371971e.webp',
+  higuruma:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/8b9072652273.webp',
+  itadori:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f7b44323a658.webp',
+  okkotsu:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/8a929e66b79c.webp',
+  maki:'https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/643ed7bd81bd.webp'
 };
-IMG.okkoDomArt='assets/17d08bd4834e.webp';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
+IMG.okkoDomArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/17d08bd4834e.webp';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
 /* ★ v396 日車寬見領域「誅伏賜死」場景圖（法庭木柵・黑白漫畫，已裁掉原圖右下角水印） */
-IMG.higuDomBg='assets/da769707939b.webp';
+IMG.higuDomBg='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/da769707939b.webp';
 /* ★ v440 五條悟登場立繪（用戶上傳圖，綠幕＋「豆包AI生成」水印已去除，1549×1692） */
-  IMG.gojoIntroArt='assets/aa4f65d7a8e7.webp',
+  IMG.gojoIntroArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/aa4f65d7a8e7.webp',
 /* ★ v399 宿儺領域展開・結印特寫（去綠幕・去水印） */
-  IMG.sukuOpenArt='assets/4b3f8cc76fef.webp';
+  IMG.sukuOpenArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/4b3f8cc76fef.webp';
 /* ★ v399 宿儺領域內・一階段全身姿 */
-IMG.sukuDomInArt='assets/50376cc3b6a6.webp';
+IMG.sukuDomInArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/50376cc3b6a6.webp';
 /* ★ v399 領域對拼・五條悟 */
-IMG.clashGojoArt='assets/4d7441b0c69d.webp';
+IMG.clashGojoArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/4d7441b0c69d.webp';
 /* ★ v399 領域對拼・宿儺 */
-IMG.clashSukuArt='assets/75303397bff0.webp';
+IMG.clashSukuArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/75303397bff0.webp';
 /* ★ v399 真希・釋魂刀瞬身 */
-IMG.makiBlinkArt='assets/69eacb1a42ec.webp';
+IMG.makiBlinkArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/69eacb1a42ec.webp';
 /* ★ v398 日車領域・審判者（日車怪）立繪：去綠幕、去水印、1100×845 */
-IMG.higuArt='assets/7d4916213991.webp';
+IMG.higuArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/7d4916213991.webp';
 /* ★ v422 選人頁頭像專用：五條悟＝「會贏的。」正臉＋台詞氣泡（綠幕摳圖、去雜字水印、560×560 透明底）；真希／日車＝替換前的原圖 */
 /* ★ v428 鹿紫雲一選人頁頭像：綠幕摳圖 + 去右下 AI 水印 + 裁上部方形（雙髻・臉・圍巾） */
-IMG.kashSel='assets/7d6c7d3eaa3d.webp';
+IMG.kashSel='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/7d6c7d3eaa3d.webp';
 /* ★ v427 五條悟「虛式・茈」擊敗宿儺專屬勝利圖（綠幕摳圖去水印、含「你才是挑戰者哦」氣泡） */
-IMG.gojoHollowEnd='assets/2bbb457bd04e.webp';
+IMG.gojoHollowEnd='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2bbb457bd04e.webp';
 /* ★ v423 陣亡對白結算立繪：沿用虎杖真結局的 .dbArt（左板邊・漸顯・右緣羽化） */
-IMG.higuEnd='assets/155e0f34e10b.webp';
-IMG.makiEnd='assets/86e3956aa29e.webp';
-IMG.kashEnd='assets/235f062004ef.webp';
-IMG.okkoEnd='assets/fccb4b7c52e4.webp';
-IMG.gojoSel='assets/49e4ce9404c5.webp';
-IMG.makiOld='assets/996dc7265270.webp';
-IMG.higuOld='assets/530c54c1b3c9.webp';
+IMG.higuEnd='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/155e0f34e10b.webp';
+IMG.makiEnd='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/86e3956aa29e.webp';
+IMG.kashEnd='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/235f062004ef.webp';
+IMG.okkoEnd='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/fccb4b7c52e4.webp';
+IMG.gojoSel='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/49e4ce9404c5.webp';
+IMG.makiOld='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/996dc7265270.webp';
+IMG.higuOld='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/530c54c1b3c9.webp';
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
-const GOJO_WIN_IMG='assets/83de9f6b9d66.webp';
+const GOJO_WIN_IMG='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/83de9f6b9d66.webp';
 /* ★ v407 日車握劍立繪（剑.png 去綠幕、760×1825）與處刑人之劍中心圖（900×870） */
-IMG.higuSword='assets/eb155e89de0e.webp';
-IMG.higuExecArt='assets/c5fd30bc607b.webp';
+IMG.higuSword='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/eb155e89de0e.webp';
+IMG.higuExecArt='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c5fd30bc607b.webp';
 /* ★ v409 普通場景背景：1600×998 webp（AI 生成、裁切壓淡） */
-IMG.bgCity='assets/456a4d30b7fd.webp';
-IMG.impactInk='assets/c8612fd4d5dd.webp';   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha） */
+IMG.bgCity='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/456a4d30b7fd.webp';
+IMG.impactInk='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c8612fd4d5dd.webp';   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha） */
 /* ★ v463 街道破碎 V3：瓦礫帶貼圖（NANO AI 生成，白底轉 alpha） */
-IMG.streetRubble='assets/d16a9959ff36.webp';
+IMG.streetRubble='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d16a9959ff36.webp';
 const IMGS={gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null,streetRubble:null};
 
 /* =========================================================
@@ -7369,7 +7400,7 @@ function showSelect(isFirst){
    卡片角標顯示「第 N 棒」= 這次選擇後的登場序數；小字標註原作順位。 */
 const CANON_POS={gojo:1,kashimo:2,higuruma:3,itadori:4,okkotsu:4,maki:5};   /* ★ v180 虎杖 3→4（用戶指定） */
   /* ★ v101 名字框線素材（構建期自用戶截圖摳出：抹字保框，同「總則」框樣式） */
-  const NM_PLATE_B64='assets/a5c15b16a90e.webp';
+  const NM_PLATE_B64='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a5c15b16a90e.webp';
   $('selTitle').textContent = isFirst
     ? '12 月 24 日 · 新宿 —— 請選擇第一位登場的術師'
     : ('請選擇下一位登場的術師 —— 順序由你決定' + recTxt);
@@ -17857,9 +17888,9 @@ const DOMAIN_BGM_LEAD={ujaku:0, yuji:0, itadori:0, specialz:0, finish:0};
    ★ v305 追加 BGM 軌道：SPECIALZ（宿儚討伐）／虚式「薙」（五條領域）／虎杖vs乙骨（虎杖領域）
    音量一律對齊主 BGM（BGM_VOL）；切出頁面時 pauseAllAudio 會一併暫停。
    ========================================================= */
-const BGM_SPECIALZ='assets/a21b6f5a31b7.mp3';
-const BGM_UJAKU='assets/37a32f054b38.mp3';
-const BGM_YUJI='assets/f7adefe6df11.mp3';
+const BGM_SPECIALZ='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a21b6f5a31b7.mp3';
+const BGM_UJAKU='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/37a32f054b38.mp3';
+const BGM_YUJI='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f7adefe6df11.mp3';
 const extraBgmEls={};
 const extraBgmUrls={};
 let extraBgmKey='';
@@ -19751,7 +19782,7 @@ let sukuBgmEl=null;               /* 伏魔御厨子 BGM（循環） */
 let sukuBgmOn=false;
 let bgmSuspendedByDomain=false;   /* 記錄「本 BGM 是被領域演出暫停的」，恢復時才復播 */
 let okkoDomBgmOn=false;           /* v161 乙骨領域 BGM（AIZO）播放中標記 */
-const SND_OKKO_DOMAIN_BGM='assets/d3c6c7b12403.mp3';   /* v161 乙骨領域 BGM：King Gnu - AIZO（python 注入 base64） */
+const SND_OKKO_DOMAIN_BGM='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d3c6c7b12403.mp3';   /* v161 乙骨領域 BGM：King Gnu - AIZO（python 注入 base64） */
 
 /* data URI → Blob URL（iOS Safari 對 data: 音源支持很差，沿用主 BGM 的兼容策略） */
 function sndUrl(dataUri, cache){
@@ -20348,7 +20379,7 @@ $('btnPauseJump').addEventListener('click',function(){
 if($('pauseBtn')) $('pauseBtn').addEventListener('click',e=>{ e.stopPropagation(); togglePause(); });
 
 /* 開場圖與角色圖注入 */
-IMG.kaiScrape='assets/d26bb1cd29fe.png';   /* ★ v181 「解」墨痕（摳圖·去水印·840 寬） */
+IMG.kaiScrape='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d26bb1cd29fe.png';   /* ★ v181 「解」墨痕（摳圖·去水印·840 寬） */
 $('bgL').style.backgroundImage='url('+IMG.title+')';
 $('bgR').style.backgroundImage='url('+IMG.title+')';
 $('hollowCut').style.backgroundImage='url('+IMG.hollow+')';
@@ -20367,9 +20398,9 @@ window.__imgQ=[]; window.__flushImgQ=function(){ var q=window.__imgQ; window.__i
   if((_tt&&_tt.classList.contains('open'))||_n>120){ clearInterval(_t); setTimeout(function(){ try{ window.__flushImgQ(); }catch(e){} },300); } },250); })();
 ['wheel','maho','eight','agyo','okkoDom2','rikaArt','blackCrack','itaDomBg','itaDomArt','gojoVoidSign','gojoVoidPose','gojoVoidWord','gojoVoidBg','sukuDomBg','sukuDomWord','okkoDomBg','okkoDomWord','okkoDomArt','jieInk','kaiScrape','kashArc','batsuStar'].forEach(k=>{ const im=new Image(); im.onload=()=>{ IMGS[k]=im; }; window.__imgQ.push(()=>{ im.src=IMG[k]; }); });   /* ★ v185 補預載 kaiScrape —— 此前 IMG.kaiScrape 只注入常量、未進預載列表，IMGS.kaiScrape 永遠為 undefined，「解」的墨痕線上從未顯示過 */
 /* ★ v431 特效貼圖（nanoAI 生成 → 亮度摳底）：洋紅電弧 1400×427、赤斬芒 720×720 */
-IMG.kashArc='assets/45a04d5d79f8.webp';
-IMG.batsuStar='assets/570c6bce9851.webp';
-IMG.itaDash='assets/2c0d9eaf42fd.webp';   /* ★ v200 虎杖逕庭拳虛影：衝刺姿勢漫畫抠圖 684x720 */
+IMG.kashArc='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/45a04d5d79f8.webp';
+IMG.batsuStar='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/570c6bce9851.webp';
+IMG.itaDash='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2c0d9eaf42fd.webp';   /* ★ v200 虎杖逕庭拳虛影：衝刺姿勢漫畫抠圖 684x720 */
 loadRGBA('gojo',IMG.gojo);
 /* ★ v231 蒼・拳出拳圖：直接用 Image（帶 alpha 的 La PNG，無需摳圖/染色處理） */
 (function(){ try{ const im=new Image(); im.onload=function(){ IMGS.gojoFist=im; }; window.__imgQ.push(()=>{ im.src=IMG.gojoFist; }); }catch(e){} })();   /* 新立繪：彩色線稿 + 藍色咒力，保留原色 */
@@ -20813,32 +20844,32 @@ if(bgmReady()) bgmBoot();   /* 兜底：bgmData 已解析時立刻起播 */
 window.addEventListener('orientationchange',()=>setTimeout(()=>{ resize(); layoutTitleCrack(); },200));
 })();
 </script>
-<script id="bgmData">const BGM_GOJO='assets/a4d9d0d88a7b.mp3';   /* ★ v457 五條悟上場專用（原主 BGM） */
-const BGM_SRC='assets/ed9229674efe.mp3';   /* ★ v457 常態 BGM：MASATO - REMEMBER */
-const OKKO_BGM_SRC='assets/317c4646e39a.mp3';   /* ★ v29 乙骨憂太登場專屬 BGM（《心似煙火 DJ》· Penn） */
+<script id="bgmData">const BGM_GOJO='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a4d9d0d88a7b.mp3';   /* ★ v457 五條悟上場專用（原主 BGM） */
+const BGM_SRC='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/ed9229674efe.mp3';   /* ★ v457 常態 BGM：MASATO - REMEMBER */
+const OKKO_BGM_SRC='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/317c4646e39a.mp3';   /* ★ v29 乙骨憂太登場專屬 BGM（《心似煙火 DJ》· Penn） */
 /* ★ v141 領域展開聯動音效（四段，已做響度歸一化至同一基準 -9.58 dBFS） */
-const SND_GOJO_DOMAIN='assets/3b4c22944631.mp3';   /* 五條悟領域展開・無量空處 5.46s */
-const SND_SUKU_DOMAIN='assets/11f8813438e8.mp3';   /* ★ v454 用戶提供原聲（4.41s，-17.38 LUFS）；前導靜音已在構建期裁掉 */   /* 宿儺領域展開 4.75s */
+const SND_GOJO_DOMAIN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/3b4c22944631.mp3';   /* 五條悟領域展開・無量空處 5.46s */
+const SND_SUKU_DOMAIN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/11f8813438e8.mp3';   /* ★ v454 用戶提供原聲（4.41s，-17.38 LUFS）；前導靜音已在構建期裁掉 */   /* 宿儺領域展開 4.75s */
 /* ★ v145 新增：五條語音二選一（領域展開）＋ 黑閃音效（全角色通用） */
 /* v148 乙骨忧太新增音效：召唤里香 / 无限制咒力解放（与既有音效同链路归一化 -13.5dBFS） */
-const SND_YUTA_RIKA="assets/0491b46d044c.mp3";
-const SND_YUTA_RELEASE="assets/4a6d710775fe.mp3";
-const SND_GOJO_VOICE2='assets/bdeae48fd827.mp3';
-const SND_YUTA_STOP='assets/52cd584a7576.mp3';   /* ★ v453 用戶提供：乙骨「不許動」原聲 1.30s */
-const SND_YUTA_DOMAIN='assets/2d56092ae009.mp3';   /* ★ v453 用戶提供：乙骨「領域展開」原聲，只取前 2.00s */
-const SND_HIGU_DOMAIN='assets/2b23ca2db95e.mp3';   /* ★ v453 用戶提供：日車登場領域氣場 4.01s */
-const SND_SUKU_DEATH_A='assets/f39e2b8f6056.mp3';   /* ★ v455 用戶提供宿儺原聲 */
-const SND_SUKU_DEATH_B='assets/51f6c7fbbd92.mp3';   /* ★ v455 用戶提供宿儺原聲 */
-const SND_SUKU_DEATH_C='assets/fae47191ce31.mp3';   /* ★ v455 用戶提供宿儺原聲 */
-const SND_SUKU_OPEN='assets/963544693801.mp3';   /* ★ v455 用戶提供宿儺原聲 */
-const SND_SUKU_KAI='assets/1cedc4490ec3.mp3';   /* ★ v455 用戶提供宿儺原聲 */
-const SND_KASH_AMBER='assets/a5db5fb24063.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
-const SND_MAKI_SNEAK='assets/15960bebe896.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
-const SND_BLACKFLASH='assets/d72b07661681.mp3';
+const SND_YUTA_RIKA="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/0491b46d044c.mp3";
+const SND_YUTA_RELEASE="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/4a6d710775fe.mp3";
+const SND_GOJO_VOICE2='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/bdeae48fd827.mp3';
+const SND_YUTA_STOP='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/52cd584a7576.mp3';   /* ★ v453 用戶提供：乙骨「不許動」原聲 1.30s */
+const SND_YUTA_DOMAIN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2d56092ae009.mp3';   /* ★ v453 用戶提供：乙骨「領域展開」原聲，只取前 2.00s */
+const SND_HIGU_DOMAIN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2b23ca2db95e.mp3';   /* ★ v453 用戶提供：日車登場領域氣場 4.01s */
+const SND_SUKU_DEATH_A='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/f39e2b8f6056.mp3';   /* ★ v455 用戶提供宿儺原聲 */
+const SND_SUKU_DEATH_B='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/51f6c7fbbd92.mp3';   /* ★ v455 用戶提供宿儺原聲 */
+const SND_SUKU_DEATH_C='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/fae47191ce31.mp3';   /* ★ v455 用戶提供宿儺原聲 */
+const SND_SUKU_OPEN='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/963544693801.mp3';   /* ★ v455 用戶提供宿儺原聲 */
+const SND_SUKU_KAI='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/1cedc4490ec3.mp3';   /* ★ v455 用戶提供宿儺原聲 */
+const SND_KASH_AMBER='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a5db5fb24063.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
+const SND_MAKI_SNEAK='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/15960bebe896.mp3';   /* ★ v456 用戶提供原聲，與全站語音同響度 */
+const SND_BLACKFLASH='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/d72b07661681.mp3';
 /* ★ v459 用戶指定：特別黑閃原聲只給「虎杖一技能黑閃」與「終結宿儺動畫」，其餘一律用上面的普通黑閃。 */
-const SND_BLACKFLASH_SP='assets/7b816af91dbf.mp3';   /* ★ v453 用戶提供：黑閃音效替換（2.59s，響度對齊舊檔） */
-const SND_GOJO_CHALLENGE='assets/ed55fd63c45e.mp3'; /* 「你是這裡的挑戰者」 5.50s */
-const SND_SUKU_BGM='assets/ecee6d093cb2.mp3';      /* 伏魔御廚子領域 BGM 42.41s（循環） */
+const SND_BLACKFLASH_SP='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/7b816af91dbf.mp3';   /* ★ v453 用戶提供：黑閃音效替換（2.59s，響度對齊舊檔） */
+const SND_GOJO_CHALLENGE='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/ed55fd63c45e.mp3'; /* 「你是這裡的挑戰者」 5.50s */
+const SND_SUKU_BGM='https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/ecee6d093cb2.mp3';      /* 伏魔御廚子領域 BGM 42.41s（循環） */
 
 </script>
 <!-- ===== v98 iOS「加入主畫面」引導浮層 ===== -->
@@ -21428,7 +21459,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
       rgba(244,241,234,.26) 0%, rgba(244,241,234,.60) 8%, rgba(244,241,234,.87) 17%,
       rgba(244,241,234,.99) 27%, #f4f1ea 38%, #f4f1ea 72%,
       rgba(244,241,234,.99) 82%, rgba(244,241,234,.78) 92%, rgba(244,241,234,.52) 100%),
-    url("assets/599f217d6ad2.webp");
+    url("https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/599f217d6ad2.webp");
   background-size:100% 100%, cover;
   background-position:center center, center top;
   background-repeat:no-repeat, no-repeat;}
@@ -21510,7 +21541,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
       rgba(244,241,234,.24) 0%, rgba(244,241,234,.58) 6%, rgba(244,241,234,.86) 14%,
       rgba(244,241,234,.99) 22%, #f4f1ea 31%, #f4f1ea 79%,
       rgba(244,241,234,.99) 86%, rgba(244,241,234,.80) 93%, rgba(244,241,234,.54) 100%),
-    url("assets/37eea27324cf.webp");
+    url("https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/37eea27324cf.webp");
   background-size:100% 100%, cover;
   background-position:center center, center top;
   background-repeat:no-repeat, no-repeat;
