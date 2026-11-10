@@ -591,6 +591,34 @@
     try{ t.src=nx; }catch(e2){}
   },true);
 })();</script>
+<script>/* v464 音頻閘門：先讓圖片下載，再放語音 */
+(function(){
+  var T0=Date.now(), gate=false, pend=[];
+  var L=HTMLMediaElement.prototype.load;
+  HTMLMediaElement.prototype.load=function(){
+    if(!gate && this.tagName==='AUDIO'){
+      try{ this.preload='none'; }catch(e){}
+      if(pend.indexOf(this)<0) pend.push(this);
+      return;
+    }
+    return L.apply(this,arguments);
+  };
+  function open(){
+    gate=true;
+    for(var i=0;i<pend.length;i++){
+      var a=pend[i];
+      try{ a.preload='auto'; L.call(a); }catch(e){}
+    }
+    pend=[]; window.__audioGateOpen=true;
+  }
+  window.__audioGateNow=open;
+  var t=setInterval(function(){
+    var ts=document.getElementById('titleScreen');
+    if((ts&&ts.classList.contains('open')) || Date.now()-T0>18000){
+      clearInterval(t); setTimeout(open,6000);
+    }
+  },300);
+})();</script>
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
