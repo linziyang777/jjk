@@ -1,3 +1,7 @@
+<!-- ★ v460 六項（用戶指定）：① 新手引導 02 標題改「血量 · 咒力／體力」（真希用體力條）② 引導 03 最右技能改稱「立下束縛」
+     ③ 立束縛面板去掉殘留矩形（縮放/手機下 inset:0 沒鋪滿 ⇒ 外擴陰影補滿、撤掉四角暗角），文案改「只能立一次束縛」
+     ④ 真希灵魂损伤三格：2 層不再三格全金（砍一刀只加一格，滿 3 層才全亮）⑤ 真希要害 ×(1＋0.12×層數)（原 0.2）
+     ⑥ 鹿紫雲幻獣琥珀門檻 生命 ≤35% → ≤45%，全部說明/資訊卡/按鈕提示同步。 -->
 <!-- ★ v440 八項（用戶指定）：① 五條悟登場動畫立繪改用用戶上傳圖（綠幕＋「豆包AI生成」水印已去，1549×1692 webp；因新圖比例 0.915（舊 0.754）偏寬，artH 0.99／左移 84／下移 16，避免壓住右側縱排「無下限」）；② 領域對拼畫面左側同步豎排「無量空處」（與右側「伏魔御厨子」對稱）；③ 宿儺「神武解：電撃」起點自腰胯上移到手臂／指尖（GY-sukHeight()×0.70）；④ 鹿紫雲一電荷上限 4→5、幻獣琥珀門檻 4→3 層（限界放電同步封頂 5）；⑤ 回合條去掉「×N行動」、右側行動力膠囊的「行動力」加粗（描邊補字重）；⑥ 真希龍骨蓄力條數字改百分比（100% ＝宿儺一階段 150 點）；⑦ 虎杖定位「穩健」→「容器」；⑧ 「術式公開」規則面板與選人資訊全量對齊現行數值（五條茈 20~25%、鹿紫雲上限 5、日車三階段判決、真希龍骨 % 等） -->
 <!-- ★ v441b 選人頁重構（用戶指定，調用 NANO AI 生圖）：把 3×2 候選卡改成「術師名簿」漫畫分格版——
      ① 底圖：AI 生成的新宿廢墟黑白網點背景（1536×1000 webp，右下「AI生成」水印已用軟遮罩＋暗角吃掉），
@@ -1786,11 +1790,14 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v138 適當縮小整個面板：邊框內收、卡片行變窄、間距收緊，讓文字更滿地填進框裏 */
 #vowUI{position:absolute;inset:0;z-index:19;display:none;flex-direction:column;
   align-items:center;justify-content:center;gap:7px;padding:14px;text-align:center;
-  background:rgba(3,1,2,.965);}   /* ★ v459 其餘區域再壓暗 */
+  background:rgba(3,1,2,.965);
+  /* ★ v460 用戶指定「還有一個矩形」：手機／縮放（zoom）環境下 inset:0 只鋪到 #stage 的佈局盒，
+     外圈露出亮着的場景 ⇒ 看起來就是一個大矩形。用同色外擴陰影把四周補滿，邊界徹底消失。 */
+  box-shadow:0 0 0 100vmax rgba(3,1,2,.965);}
 #vowUI.on{display:flex;animation:dmIn .22s ease-out;}
-/* ★ v459 用戶指定：刪掉三張卡外面的大矩形框，改成四周暗角；非卡片元素一併降亮度 */
-#vowUI:after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 0%,rgba(0,0,0,.30) 62%,rgba(0,0,0,.62) 100%);}
+/* ★ v460：v459 的四角暗角在縮放環境下反而勾出矩形邊，改為純平鋪（外擴陰影見上），
+   只保留非卡片元素降亮度。 */
+#vowUI:after{content:none;}
 #vowUI .vwTitle,#vowUI .vwSub,#vowUI .vwWarn,#vowUI .vwFoot{opacity:.72;}
 #vowUI .vwTitle{position:relative;font-size:clamp(14px,3.8vw,23px);font-weight:900;letter-spacing:7px;color:#fff;
   text-shadow:3px 3px 0 #7a0a12,0 0 24px rgba(215,38,61,.9);}
@@ -2872,7 +2879,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <p><b>帶電體・反噬</b>　「幻獣琥珀」解放後才生效：每回合結束電自己一下 —— 2 層 −5%、3 層以上 −7%。想留住高電荷，就得一路被自己的雷燒。</p>
     <p><b>無防禦</b>　鹿紫雲一<b>沒有格擋、沒有治療</b> —— 二技能「電荷放出」也不是防禦，是拿電荷換一回合的電場。</p>
     <p><b>電荷放出（2 技・25% 咒力）</b>　<b>最多耗 2 層</b>電荷，打出 <b>7.5% × 層數</b> 的必中雷擊（無視魔虛羅適應），本回合受到的傷害再 −(15% + 15%×層數)。在<b>完美格擋窗口</b>（最後 0.5 秒）按下 ⇒ 電流回沖，<b>返還 1 層</b>電荷。</p>
-    <p><b>幻獣琥珀・解放</b>　一生一次，解鎖條件兩條，缺一不可：<b>電荷 ≥3 層</b> ＋ <b>自身生命 ≤35%</b>。傷害 <b>50% 最大生命</b>（75 點），無視適應、無視減傷。<b>但它不跳過「受肉・崩壊」</b>：打在受肉之軀上，軀體崩解、原身滿血站起來，這張牌就白扔了。留到原身才是它該去的地方。解放後<b>常駐</b>、不再倒數消散。</p>
+    <p><b>幻獣琥珀・解放</b>　一生一次，解鎖條件兩條，缺一不可：<b>電荷 ≥3 層</b> ＋ <b>自身生命 ≤45%</b>。傷害 <b>50% 最大生命</b>（75 點），無視適應、無視減傷。<b>但它不跳過「受肉・崩壊」</b>：打在受肉之軀上，軀體崩解、原身滿血站起來，這張牌就白扔了。留到原身才是它該去的地方。解放後<b>常駐</b>、不再倒數消散。</p>
     <p><b>滿電荷・二段雷</b>　電荷 ≥4 層時，一次「雷」會追加第二段（0.6 倍、無視適應）——這是他在世界斬預警回合裡唯一能把血條打空的東西。</p>
     <p><b>束縛</b>　雷神之軀（3 回合傷害 ×1.5／受傷 ×1.3）・魔眼・透視（魔虛羅適應清零、2 回合無法適應／電荷 −1 層）・限界放電（電荷 +1 層、下一擊 ×2／自身體力 −15%）。</p>
     <h3 style="--hc:#2b6cb0">日車寬見<small>HIGURUMA · 領域「誅伏賜死」</small></h3>
@@ -2901,7 +2908,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <p><b>咒具切換</b>　1 技右上角角標可自由換刀（不消耗行動）：<b>釋魂刀</b>（<b>10%</b> 最大生命・灵魂损伤・無視適應）／<b>游雲</b>（<b>15%</b> 最大生命・用滿 4 次本回合多一次行動，帶咒力可被適應）／<b>龍骨</b>（<b>8%</b> 最大生命・架刀受傷 −35%，吸收的衝擊蓄進下一擊）。</p>
     <p><b>灵魂损伤（釋魂刀專屬）</b>　釋魂刀切的是靈魂，<b>傷口不會癒合</b>：每命中一次累積 1 層灵魂损伤（上限 3，本局永久、換人也不消）。每層 ⇒ 宿儺受到的傷害 +4%、反轉術式回復 −34%；<b>滿 3 層</b> ⇒ 宿儺下一個回合無法行動（反轉術式也完全無效）；3 層狀態下再打中一次 ⇒ 層數歸零。這是真希一個人能留給整隊的最大遺產。</p>
     <p><b>天與咒縛・架勢</b>　不耗咒力，<b>CD 3 回合</b>：本回合只有宿儺「解」「捌」與伏魔御厨子的「領域必中」（皆傷害減半）、顎吐「虎葬·碎擊」、魔虛羅「斬擊」傷得到真希，其餘攻擊一律架開。</p>
-    <p><b>無聲突襲</b>　<b>20%</b> 最大生命・無視適應，CD 2 回合；灵魂损伤 ≥2 層時必定要害：<b>×(1＋0.2×層數)</b>（3 層 ⇒ ×1.6）。這是她在世界斬預警回合裡打空血條的唯一手段。</p>
+    <p><b>無聲突襲</b>　<b>20%</b> 最大生命・無視適應，CD 2 回合；灵魂损伤 ≥2 層時必定要害：<b>×(1＋0.12×層數)</b>（3 層 ⇒ ×1.36）。這是她在世界斬預警回合裡打空血條的唯一手段。</p>
     <p><b>龍骨・蓄（HUD 儀表）</b>　血條下方左邊三格是「灵魂损伤」，右邊一條是「龍骨・蓄」——<b>數字為百分比，100% ＝宿儺一階段的整條血（150 點）</b>，滿蓄（20%）時轉金，這一擊會把積蓄的衝擊一次吐出。</p>
     <p><b>天與咒縛・全開</b>　生命 ≤50%（或未手動選擇時的預設）⇒ 2 技變為「天與咒縛・全開」。按下後輸出 +25%（本局常駐），代價是<b>永久失去架勢</b>、那一刻起再也架不開任何攻擊。一生一次。</p>
     <p><b>束縛</b>　天與呪縛・極致（3 回合傷害 ×1.6／無法使用 2 技能【天與咒縛】）・魂斬・一閃（下一刀 ×2 且無視適應／2 回合受傷 ×1.3）・靜寂（2 回合受傷 ×0.4／輸出 ×0.8）。</p>
@@ -3049,7 +3056,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <!-- 立束縛（戰鬥核心） -->
     <div id="vowUI">
       <div class="vwTitle">立束縛</div>
-      <div class="vwSub">一位術師，一局只能自縛一次 —— 立下的束縛在本棒<b>永久生效</b>，代價同樣永久。</div>
+      <div class="vwSub">一位術師，只能立一次束縛 —— 立下的束縛在本棒<b>永久生效</b>，代價同樣永久。</div>
       <div class="vwRow" id="vowRow"></div>
       <div class="vwWarn">點擊其他地方取消立束縛</div>
       <div class="vwFoot"><button class="vwRevoke" id="vwRevoke">解縛</button>
@@ -6496,7 +6503,7 @@ function kashAtk(){
     }
     say('sys','呪力電撃・雷 —— 電荷 '+(S.charge||0)+'/5（每層輸出 +15%、受到傷害 −10%；4 層起附贈二段雷）'
       +(_evi?'；宿儺上回合動用術式，殘留咒力一併吸來 +1 層':'')+'。'
-      +((S.charge||0)>=5?'★ 電荷已滿。':((S.charge||0)>=3?'★ 電荷 ≥3 層 —— 生命壓到 35% 以下即可解放「幻獣琥珀」。':'')));
+      +((S.charge||0)>=5?'★ 電荷已滿。':((S.charge||0)>=3?'★ 電荷 ≥3 層 —— 生命壓到 45% 以下即可解放「幻獣琥珀」。':'')));
     syncHud();
   },170);
 }
@@ -6535,7 +6542,7 @@ function kashDischarge(){
 function kashUlt(){
   if(S.acted) return;                                       /* 本回合已出招 */
   /* ★ v391 原作向：幻獣琥珀是「一生一次」的術式，代價是把四百年積下的電一次放完。
-     解鎖條件三條，缺一不可：① 電荷滿 3 層 ② 自己的生命 ≤35%（把命壓上去）③ 本局沒用過。
+     解鎖條件三條，缺一不可：① 電荷滿 3 層 ② 自己的生命 ≤45%（★v460 35%→45%）③ 本局沒用過。
      ＊ 這一擊不斬肉體，燒的是神經與靈魂 —— 宿儺即使捨棄伏黑惠的肉體，也換不掉這一刀。 */
   if(S.amberUsed){ say('sys','幻獣琥珀已經解放過了 —— 術式解放，一生只有一次。'); return; }
   if(S.amber<=0) return;
@@ -6543,8 +6550,8 @@ function kashUlt(){
     say('sys','電荷不足（'+(S.charge||0)+'/3）—— 幻獣琥珀需要 3 層以上的電荷，先用「雷」蓄電。');
     return;
   }
-  if(S.kashimo.hp>S.maxHp*0.35){
-    say('sys','生命還有 '+Math.round(S.kashimo.hp)+'%（需 ≤35%）—— 這一擊要拿命去換，還沒到時候。');
+  if(S.kashimo.hp>S.maxHp*0.45){
+    say('sys','生命還有 '+Math.round(S.kashimo.hp)+'%（需 ≤45%）—— 這一擊要拿命去換，還沒到時候。');
     return;
   }
   S.amberUsed=true;
@@ -6573,7 +6580,7 @@ function kashUlt(){
     fxManga('必中',SX()-30*SC,GY-262*SC,true,'#e030c8');
     addFx({type:'amberBolt',dur:0.68});   /* ★ v115 0.85→0.68 */   /* ★ v113 咒力波贯穿：加长演出 */   /* ★ v76 雷光貫穿 */
     /* ★ v391 finisher=true：這一擊跳過「受肉・崩壊」——電燒的是靈魂，換一具身體也躲不掉。
-       這是鹿紫雲一唯一能單獨打穿宿儺的路，代價是必須在沒有防禦的情況下活到滿電荷、且血量 ≤35%。 */
+       這是鹿紫雲一唯一能單獨打穿宿儺的路，代價是必須在沒有防禦的情況下活到滿電荷、且血量 ≤45%。 */
     const _wasTrue=S.trueForm;
     /* ★ v392 定案：琥珀**不跳過受肉崩壊**。它就是很大的一擊（45% 最大生命、無視適應與減傷）：
        打在受肉之軀上 ⇒ 軀體崩解、原身滿血站起來，這張牌等於白扔；留到原身才是它該去的地方。 */
@@ -10734,7 +10741,16 @@ function resumeAllAudio(force){
   try{ if(sukuBgmEl && sukuBgmOn){ const p=sukuBgmEl.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}
   try{ if(musEl && musWant){ const p=musEl.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){}   /* ★ v151 自訂歌單：只恢復本來在播的 */
   try{ if(typeof extraBgmKey!=='undefined' && extraBgmKey){ const _x=extraBgmEls[extraBgmKey]; if(_x){ const _p=_x.play(); if(_p&&_p.catch)_p.catch(()=>{}); } } }catch(e){}   /* ★ v305 恢復追加 BGM */
-  try{ _audioResumeEls.forEach(function(a){ try{ if(a&&a.paused&&!a.ended){ const p=a.play(); if(p&&p.catch)p.catch(function(){}); } }catch(e){} }); }catch(e){}
+  /* ★ v460 修「切出去再回來宿儺領域曲疊到後面的音樂上」：這份清單是「暫停那一刻正在播」
+     的快照，回來時不能無腦全部 play —— 領域曲要確認旗標與領域是否還在，主 BGM 要確認沒被領域壓住。
+     舊版把已經停掉的伏魔御廚子曲照樣拉起來，而旗標早已是 false ⇒ 再沒有路徑去停它，整局疊着放。 */
+  try{ _audioResumeEls.forEach(function(a){ try{ if(!a||!a.paused||a.ended) return;
+    if(typeof sukuBgmEl!=='undefined' && a===sukuBgmEl && !(sukuBgmOn && S && S.sukuDom>0)) return;
+    try{ const _oe=domAudioEls&&domAudioEls.okkoDomain; if(_oe && a===_oe && !(okkoDomBgmOn && S && S.okkoDom>0)) return; }catch(_){}
+    if(typeof bgmEl!=='undefined' && a===bgmEl && (bgmMuted||bgmSuspendedByDomain)) return;
+    if(typeof musEl!=='undefined' && a===musEl && !musWant) return;
+    const p=a.play(); if(p&&p.catch)p.catch(function(){});
+  }catch(e){} }); }catch(e){}
   /* 40/240ms 的 force 重試共用同一份清單，700ms 後才清空 */
   try{ setTimeout(function(){ _audioResumeEls=[]; },700); }catch(e){}
 }
@@ -17213,7 +17229,8 @@ function syncMakiMeter(){
   const pips=box.querySelectorAll('.mmPips i');
   for(let i=0;i<pips.length;i++){
     pips[i].classList.toggle('on', i<rd);
-    pips[i].classList.toggle('full', rd>=2);
+    /* ★ v460 用戶指定：砍一刀只加一格 —— 三格全金只屬於「滿 3 層」，2 層時第三格保持空白 */
+    pips[i].classList.toggle('full', rd>=3);
   }
   /* ★ v408 灵魂损伤滿 3 層：三格全亮（宿傩下回合動不了，再打中一次就歸零） */
   const bar=box.querySelector('#mmCharge');
@@ -17473,7 +17490,7 @@ function syncHud(){
 /* ★ v135 提示條按當前操控角色顯示（舊版寫死五條悟三招，虎杖/鹿紫等登場後出現無關文字） */
 const HERO_HINTS={
   gojo:    '點擊下方按鈕：術式順轉·蒼 ／ 反轉術式 ／ 虛式·茈（選定後本回合技能欄變灰）',
-  kashimo: '點擊下方按鈕：雷（蓄電荷，滿 4 層附贈二段）／ 電荷放出（最多耗 2 層換減傷）／ 幻獣琥珀（4 層＋生命 ≤35%・一生一次必殺）',
+  kashimo: '點擊下方按鈕：雷（蓄電荷，滿 4 層附贈二段）／ 電荷放出（最多耗 2 層換減傷）／ 幻獣琥珀（3 層＋生命 ≤45%・一生一次必殺）',
   itadori: '點擊下方按鈕：逕庭拳 ／ 簡易領域 ／ 赤血操術·穿血（瀕死時解鎖領域展開）',
   higuruma:'點擊下方按鈕：法槌・開廷（舉證）／ 領域展延（質詢鎖罪狀）／ 审判·下达（罪狀 ≥3 才能發動；第 1、2 次沒収，第 3 次起變「處刑人之劍」直接死刑）',
   okkotsu: '點擊下方按鈕：複製術式 ／ 里香・全力 ／ 魂之絆（領域：真贋相愛）',
@@ -17886,7 +17903,7 @@ const SEL_INFO={
     ['電荷放出','最多耗 2 層換必中雷擊（每層 7.5%，2 層 15%）＋ 本回合電場減傷 15%+15%×層；完美時機返還 1 層'],
     ['電擊反噬','僅在「幻獣琥珀」解放後生效：回合結束電荷 ≥2 層自損（2 層 −5%、3 層以上 −7%）'],
     ['無防禦','沒有格擋技，也沒有治療 —— 所有「防禦」都要用電荷買'],
-    ['幻獣琥珀・解放','電荷 ≥3 層＋生命 ≤35%：50% 最大生命，一生一次；解放後常駐、不再倒計時'],
+    ['幻獣琥珀・解放','電荷 ≥3 層＋生命 ≤45%：50% 最大生命，一生一次；解放後常駐、不再倒計時'],
     ['束縛','雷神之軀／魔眼・透視／限界放電']]},
   higuruma:{role:'審判型，靠舉證與質詢下判決',rows:[
     ['法槌・開廷','8~12% 傷害；舉證 +1（宿儺用過術式 ⇒ +2），證據上限 3'],
@@ -17918,7 +17935,7 @@ const SEL_INFO={
     ['龍骨','殺傷 8%・架刀受傷 −35%，吸收的衝擊蓄進下一擊'],
     ['灵魂损伤','釋魂刀每命中 +1 層（上限 3）：宿儺受傷 +4%／反轉 −34%／滿 3 層 ⇒ 宿儺下一回合動不了；3 層時再打中一次就歸零'],
     ['天與咒縛','架勢（CD 3）只讓解／捌／領域必中／虎葬／魔虛羅斬擊造成傷害；血量 ≤50% 可「全開」：輸出 +25% 常駐，代價是永久失去架勢'],
-    ['無聲突襲','20%・CD 2・無視適應；灵魂损伤 ≥2 層時必定要害 ×(1+0.2×層數)']]}
+    ['無聲突襲','20%・CD 2・無視適應；灵魂损伤 ≥2 層時必定要害 ×(1+0.12×層數)']]}
 };
 let _siT=0;
 function siFill(h){
@@ -17966,7 +17983,7 @@ const HERO_BTN={
         guard:['spark','反轉術式',S=>S.revCd>0?('CD '+S.revCd+' 回合'):'回復 30% 最大生命']},   /* ★ v80 還原原著 */
   kashimo:{atk:['bolt','呪力電撃・雷',S=>'電荷 '+(S.charge||0)+'/5 ・ 每層 +15%'],
         guard:['spark','電荷放出',S=>{ const c=Math.min(2,S.charge||0); return c>0?('放出 '+c+' 層 ・ 傷害 '+(7.5*c)+'% ・ 減傷 '+Math.round((0.15+0.15*c)*100)+'%'):'沒有電荷 ・ 先用雷蓄電'; }],
-        ult:['bolt','幻獣琥珀・解放',S=>S.amberUsed?'已解放 ・ 常駐':(((S.charge||0)<3)?('電荷 '+(S.charge||0)+'/3 ・ 未滿'):((S.kashimo.hp>S.maxHp*0.35)?'★ 待命 ・ 生命需 ≤35%':'★ 電荷足夠 ・ 50% 一擊'))]},
+        ult:['bolt','幻獣琥珀・解放',S=>S.amberUsed?'已解放 ・ 常駐':(((S.charge||0)<3)?('電荷 '+(S.charge||0)+'/3 ・ 未滿'):((S.kashimo.hp>S.maxHp*0.45)?'★ 待命 ・ 生命需 ≤45%':'★ 電荷足夠 ・ 50% 一擊'))]},
   higuruma:{atk:['kai','法槌・開廷',S=>'舉證：證據 '+(S.evidence||0)+'/3'+'・罪狀 '+(S.guilt||0)+'/3'],
         guard:['guard','領域展延',S=>'質詢鎖定・格擋 −30%'+(((S.evidence||0)>0)?'・可鎖 '+(S.evidence||0)+' 條':'')],
         ult:['melt','审判·下达',S=>{ const n=S.higuVerdictN||0, g=S.guilt||0;
@@ -17989,7 +18006,7 @@ const HERO_BTN={
           if((S.makiGcd||0)>0) return '冷卻 '+S.makiGcd+' 回合';
           return '本回合免傷・CD 3';
         }],
-        ult:['blood','無聲突襲',S=>S.makiCd>0?('CD '+S.makiCd+' 回合'):((S.soulStack||0)>=2?('灵魂损伤 '+S.soulStack+' 層・要害 ×'+(1+0.2*Math.min(3,S.soulStack||0)).toFixed(1)):'20% ・ 無視適應')],}
+        ult:['blood','無聲突襲',S=>S.makiCd>0?('CD '+S.makiCd+' 回合'):((S.soulStack||0)>=2?('灵魂损伤 '+S.soulStack+' 層・要害 ×'+(1+0.12*Math.min(3,S.soulStack||0)).toFixed(2)):'20% ・ 無視適應')],}
 };
 /* ★ v25：登場順序由玩家自由選擇 —— nextHero 不再是固定順序鏈。
    heroesLeft() 返回還沒登過場的角色；nextHero 保留爲「第一個剩餘角色」的兼容入口。 */
@@ -18117,8 +18134,8 @@ function beginNext(h){
    只在每局第一次進戰鬥觸發；點「跳過」只跳本局，不寫 localStorage（下一局仍會提示一次）。 */
 const GUIDE_STEPS=[
   {sel:'#turnBar', t:'回合 / TURN', d:'每回合 10 秒。讀秒歸零，宿儺就會出手，所以別把時間耗光。用不完的行動力不會累積到下一回合。'},
-  {sel:'#heroRow', t:'血量 · 咒力', d:'左邊是你的血條與咒力。咒力每回合固定回復，出招前先看右側的數字夠不夠。'},
-  {sel:'#pad',   t:'出招 / SKILL', d:'三個技能各有冷卻與咒力消耗，變灰就是現在用不了。最右是「領域展開」——代價大，但能把局面整個翻過來。'},
+  {sel:'#heroRow', t:'血量 · 咒力／體力', d:'左邊是你的血條與咒力（真希沒有咒力，用的是體力條）。每回合固定回復，出招前先看右側的數字夠不夠。'},
+  {sel:'#pad',   t:'出招 / SKILL', d:'三個技能各有冷卻與咒力消耗，變灰就是現在用不了。最右是「立下束縛」——代價大，但能把局面整個翻過來。'},
   {sel:'#skRow', t:'宿儺 / SUKUNA', d:'打空這條血，他會進入「原身」第二階段。上方的小圖示是他這一局還能用的術式，被沒收的會劃掉。'}
 ];
 let GUIDE_I=0, GUIDE_ON=false, __gdBound=false;
@@ -18843,10 +18860,10 @@ function makiUlt(){
   /* ★ v86 真希是「聽不見」的斬擊：頓挫最短、餘韻最短（slow 0.32） */
   skillBeat({charge:380,cast:0.9,stop:0.11,flash:'fWhite',slow:0.32,word:''});
   /* ★ v408 用戶指定：取消見切 —— 要害只看灵魂损伤層數：>1 層（即 2 層起）必定要害，
-     傷害 ×(1 + 0.2×層數)：2 層 ×1.4、3 層 ×1.6。 */
+     傷害 ×(1 + 0.12×層數)：2 層 ×1.24、3 層 ×1.36。 */
   const _ss=Math.min(3,S.soulStack||0);
   const _crit=_ss>=2;
-  const _critMul=1+0.2*_ss;
+  const _critMul=1+0.12*_ss;   /* ★ v460 用戶指定：要害改 ×(1＋0.12×層數) —— 2 層 ×1.24、3 層 ×1.36 */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     S.noAdapt=true;
@@ -19929,12 +19946,28 @@ function killSukuBgm(){
   try{ sukuBgmOn=false; ++_sukuFadeSeq; const e=sukuBgmEl;
     if(e){ e.pause(); e.volume=0; } }catch(e){}
 }
-/* ★ v459 互斥巡檢：任何時刻 sukuBgmOn 與 okkoDomBgmOn 不得同時為真 */
+/* ★ v459 互斥巡檢：任何時刻 sukuBgmOn 與 okkoDomBgmOn 不得同時為真
+   ★ v460 追加：旗標已關、音軌卻還在放（切頁/暫停恢復留下的鬼影）⇒ 直接硬停。
+   放行 0.9s 的淡出窗口，避免把 stopSukuBgm 的正常淡出切斷。 */
 setInterval(function(){
   try{
-    if(!sukuBgmOn || !okkoDomBgmOn) return;
-    if(S.sukuDom>0) killOkkoBgm(); else killSukuBgm();
-    console.warn('[bgm] domain overlap resolved');
+    if(sukuBgmOn && okkoDomBgmOn){
+      if(S.sukuDom>0) killOkkoBgm(); else killSukuBgm();
+      console.warn('[bgm] domain overlap resolved');
+    }
+  }catch(e){}
+  try{
+    if(!sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused && Date.now()-(window.__sukuFadeAt||0)>900){
+      sukuBgmEl.pause(); sukuBgmEl.volume=0; sukuBgmEl.currentTime=0;
+      console.warn('[bgm] stale suku domain track force-stopped');
+    }
+  }catch(e){}
+  try{
+    const _oe=domAudioEls&&domAudioEls.okkoDomain;
+    if(!okkoDomBgmOn && _oe && !_oe.paused){
+      _oe.pause(); _oe.currentTime=0;
+      console.warn('[bgm] stale okko domain track force-stopped');
+    }
   }catch(e){}
 },400);
 
@@ -20024,6 +20057,7 @@ function stopSukuBgm(){
   if(!sukuBgmOn) return;
   sukuBgmOn=false;
   /* ★ v306 銜接：0.5s 淡出再停 */
+  try{ window.__sukuFadeAt=Date.now(); }catch(e){}   /* ★ v460：巡檢據此放行淡出窗口 */
   const _seq=++_sukuFadeSeq;
   const _el=sukuBgmEl, _v0=_el.volume||0.35, _t0=Date.now();
   (function _sukuDown(){
@@ -20462,6 +20496,9 @@ window.__appHidden=0;
   if(document.hidden) return;
   if(S.paused) return;
   try{ resumeAllAudio(); }catch(e){}
+  /* ★ v460 兜底：領域已經結束的領域曲一律硬停，避免疊在後面的音樂上 */
+  try{ if(!(S && S.sukuDom>0)) killSukuBgm(); }catch(e){}
+  try{ if(!(S && S.okkoDom>0)) killOkkoBgm(); }catch(e){}
   /* ★ v404 切回頁面補播主 BGM（resumeAllAudio 在 _audioPausedByGame=false 時會直接 return） */
   try{ if(!bgmMuted && !isDomainBgmPlaying() && !(typeof extraBgmKey!=='undefined'&&extraBgmKey) && (!bgmEl||bgmEl.paused)){ bgmSuspendedByDomain=false; startBGM(0.6); } }catch(e){}
 }
