@@ -576,7 +576,17 @@
       Object.defineProperty(HTMLImageElement.prototype,'src',{configurable:true,enumerable:true,
         get:function(){ return D.get.call(this); },
         set:function(u){
-          try{ if(!this.__rt){ this.__t=0; this.__u=u; } this.__rt=0; }catch(e){}
+          try{
+            if(!this.__rt){ this.__t=0; this.__u=u; }
+            this.__rt=0;
+            /* ★ 必須：CDN 圖片是跨域的，drawImage 到 canvas 會「污染」畫布，
+               之後 makeCutout 的 getImageData 直接拋 SecurityError ⇒ 返回 null
+               ⇒ IMGS 是空 ⇒ 全場只剩矢量小人（就是用戶看到的「完全沒有原版圖案」）。
+               jsDelivr 返回 access-control-allow-origin:*，加上這個即可解除污染。 */
+            if(typeof u==='string' && /^https?:\/\//i.test(u)){
+              try{ if(this.crossOrigin!=='anonymous') this.crossOrigin='anonymous'; }catch(e){}
+            }
+          }catch(e){}
           D.set.call(this,u);
         }});
     }
