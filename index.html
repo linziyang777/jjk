@@ -2596,7 +2596,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 #resultScreen::before{
   content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
   background:
-    url(assets/9fc63cbe78ef.png) no-repeat -40px calc(100% + 46px)/470px 520px,
+    url(assets/508ff2d2f03b.webp) no-repeat -40px calc(100% + 46px)/470px 520px,
     radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%);
 }
 #resultScreen > *{ position:relative; z-index:1; }
@@ -3218,7 +3218,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
     <!-- ★ v444 結算頁新頭部：黑斜帶「戦果報告」＋右側朱印（與選人頁「術師名簿」同一套語言） -->
     <div id="rsHead"><div class="rsBig">戦果報告<em>SHINJUKU BATTLE REPORT</em></div><i class="rsSeal" id="rsSeal">終</i></div>
     <div id="rsDiff"><em>難易度 / DIFFICULTY</em><b id="rsDiffV">原作</b></div>
-    <div aria-hidden="true" id="rLogo"><img alt src="assets/7c6157605905.png"></div>
+    <div aria-hidden="true" id="rLogo"><img alt src="assets/d703cad70897.webp"></div>
     <div id="rCoreWrap"><div id="rGrade">C</div><div id="rRing"></div><div id="rCore">你已掌握咒力的核心</div></div>
     <!-- ★ v240 左右排布容器：showResult 會把各區塊搬到左右兩欄（見 buildResultCols） -->
     <div id="rCols"><div class="resCol" id="rColL"></div><div class="resCol" id="rColR"></div></div>
@@ -3367,118 +3367,120 @@ const PAPER='#ffffff';
    ========================================================= */
 const IMG={
   clashAir:'assets/f1934b11d081.webp',
-  makiLow:'assets/7239d61228db.webp',
-  yujiFin:'assets/12db99ed213e.webp',
-  itaLow:'assets/0c109a06f197.webp',
-  okkoCut:'assets/9c09f3a8e4fe.webp',
-  okkoLow:'assets/b749b9de046f.webp',
-  bsCut:'assets/bfa71d1872c8.webp',
-  itaMid:'assets/19122cf679da.webp',
-  sukuDom1:'assets/5279d329102e.webp',   /* ★ v305 宿儚一階段領域姿 */
-  sukuDom2:'assets/408fae2ad477.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
+  makiLow:'assets/c5c31a0a7c46.webp',
+  yujiFin:'assets/027b75a14a42.webp',
+  itaLow:'assets/5e450dbdb77f.webp',
+  okkoCut:'assets/aa0a1ce30bd2.webp',
+  okkoLow:'assets/8f83d6109270.webp',
+  bsCut:'assets/9ebafcc9e59b.webp',
+  itaMid:'assets/a875c0a242b4.webp',
+  sukuDom1:'assets/18d6efdad799.webp',   /* ★ v305 宿儚一階段領域姿 */
+  sukuDom2:'assets/d0df20fe886b.webp',   /* ★ v305 宿儚二階段（原身）領域姿 */
   /* ★ v231 五條悟「蒼・拳」瞬身出拳：漫畫線稿（已摳圖去水印、邊緣羽化、逆時針旋轉 30°、La+alpha 203KB） */
-  gojoFist:'assets/7ad21cfe717b.png',
+  gojoFist:'assets/c24be6dddbc0.webp',
   /* ★ v140 徑庭拳：參考圖（徑庭拳參考1/2）摳出的青藍焰實拍圖，邊緣已羽化 */
   fistFlame1:'assets/39f97def03fb.webp',
   fistFlame2:'assets/e2538c6f9011.webp',
   jieInk:'assets/eb7952c07c40.webp',   /* ★ v136 「解」特效参考图：黑墨勾边十字斩（去水印、白底透明化、裁外框） */
-  okkoDomBg:'assets/8c93981cf10a.jpg',
+  okkoDomBg:'assets/cac51767277d.webp',
   okkoDomWord:'assets/e0b6822eafa9.png',
-  itaSeal:'assets/a25d4f95d373.webp',   /* ★ v66 虎杖結印圖（去水印/摳圖/邊緣模糊後內嵌，由注入腳本填 base64） */
+  itaSeal:'assets/600e2d6c3d36.webp',   /* ★ v66 虎杖結印圖（去水印/摳圖/邊緣模糊後內嵌，由注入腳本填 base64） */
   rikaArt:'assets/e339b58c7bb2.webp',
-fugaFlame:'assets/5018beb8dcce.webp',   /* ★ v75 宿傩「開」火焰圖（去水印+白底摳圖） */
-  okkoRel:'assets/604c6a4607e3.webp', misago:'assets/dcb58f839c68.webp', blackCrack:'assets/f209c2634544.webp', itaDomBg:'assets/f8a40ef8e03b.webp',itaDomArt:'assets/c1ff779e0bbf.webp',
-  okkoDom1:'assets/bb8b77b3aaa6.webp',
-  okkoDom2:'assets/2ce369159fd3.webp',
+fugaFlame:'assets/42e2d64aea07.webp',   /* ★ v75 宿傩「開」火焰圖（去水印+白底摳圖） */
+  okkoRel:'assets/2bad2553da20.webp', misago:'assets/d48664b2f6e5.webp', blackCrack:'assets/f209c2634544.webp', itaDomBg:'assets/89166b8c5ca3.webp',itaDomArt:'assets/d555eef809e7.webp',
+  okkoDom1:'assets/c40b07a8274b.webp',
+  okkoDom2:'assets/c4ebdce9f52e.webp',
   okkoDom3:'assets/33dbf165b23a.webp',
   nobara1:'assets/03d0ccf63447.webp',
   nobara2:'assets/af54110387b3.webp',
-  agyo:'assets/e096361f46a8.webp',
-  title:'assets/550c4c423081.jpg',
-  hollow:'assets/eb00c3b7e0f6.webp',
-  gojo:'assets/760c0f1de089.webp',
-  suku:'assets/ad26f389745f.webp',
-  gojoGuard:'assets/7286f0fc521d.webp',
-  sukuSummon:'assets/a65a356c37ee.webp',
-  yujiEnd:'assets/b2fc66307e10.webp',
-  kotodama:'assets/ddd8718f7814.webp',
-  death:'assets/2a2160c7364f.jpg',
+  agyo:'assets/54d3dcd0903a.webp',
+  title:'assets/459f59ed0a09.webp',
+  hollow:'assets/2905cf0901a3.webp',
+  gojo:'assets/63c8c6665932.webp',
+  suku:'assets/9611cb037040.webp',
+  gojoGuard:'assets/9682cdbfa82b.webp',
+  sukuSummon:'assets/b097501748df.webp',
+  yujiEnd:'assets/0c2f8f1e5929.webp',
+  kotodama:'assets/2f892100a5a4.webp',
+  death:'assets/c071e872a8ca.webp',
   wheel:'assets/553fc9e4df55.webp',
-  maho:'assets/888cfb4c5ed5.webp',
+  maho:'assets/7a58ef900177.webp',
   eight:'assets/93b6a72726bd.webp',
-  kashimo:'assets/0ba52cb455d8.webp',
+  kashimo:'assets/bd4e783a10e0.webp',
   kashAmber:'assets/87957513db75.webp',
   kashBeast:'assets/adc227491bcc.webp',   /* ★v39 幻獣琥珀形態：亮度摳圖+反解混色+白逆光暈，水印已抹 */
   kashIn:'assets/a797fb9fe322.webp',
-  okko:'assets/cf7370dddf17.webp',
-  itadori:'assets/f4d4e191cdb4.png',
-  maki:'assets/d896390c0313.webp',
-  higuruma:'assets/23722c7502ea.webp',
-  sukuTrue:'assets/8d6e837ed99a.webp'
+  okko:'assets/659664e8a4a4.webp',
+  itadori:'assets/3fbf6c93e9c8.webp',
+  maki:'assets/117333431bea.webp',
+  higuruma:'assets/f27fdffc9c4c.webp',
+  sukuTrue:'assets/3695d5cb7a20.webp'
 ,
-  gojoVoidSign:'assets/6893ed0bdbe7.webp'
-  ,gojoCang:'assets/374dc84bb7a1.webp'   /* ★ v296 五條悟「倉」形態立繪（綠幕摸圖，900x1275） */
-  ,gojoFistPose:'assets/3e882e94caa2.webp'   /* ★ v296 五條悟「倉・拳」受傷態立繪（藍色呪力，1100x1101） */
-  ,gojoVoidPose:'assets/3b4561d90c37.webp'
+  gojoVoidSign:'assets/b29ca5fdf759.webp'
+  ,gojoCang:'assets/05686d2ada40.webp'   /* ★ v296 五條悟「倉」形態立繪（綠幕摸圖，900x1275） */
+  ,gojoFistPose:'assets/d2476d5e6dc9.webp'   /* ★ v296 五條悟「倉・拳」受傷態立繪（藍色呪力，1100x1101） */
+  ,gojoVoidPose:'assets/3ec0c1bcbe7e.webp'
   ,gojoVoidWord:'assets/c873cb80e2de.png'
   ,gojoVoidBg:'assets/2d773a2606b1.webp'
 ,
-  sukuDomBg:'assets/2d98dbad0acc.webp'
+  sukuDomBg:'assets/aad139aa5143.webp'
   ,sukuDomWord:'assets/f4c69a955b44.png'
 };
 
 /* ★ v156 登場動畫專用：乙骨立繪已用連通域 floodfill 摳淨白底（74.9% 透明） */
-const IMG_OKKO_CUT='assets/ead56b56af0a.png';
+const IMG_OKKO_CUT='assets/9694d440594a.webp';
 /* ★ v35 全角色出場頁：構建期渲染（白底漫畫頁 = 網點 + 集中線 + 立繪 + 豎排名 + 朱印 + 稱號），
    6 張 webp 內嵌，運行時只負責「全屏白底 + 居中播映」——離線單文件約束不變。
    立繪白底已在構建期用連通域 floodfill 摳淨（人物內部的白襯衫/高光不在連通域內，保留）。 */
 const INTRO_PANEL={
-  gojo:'assets/cecd3d240327.webp',
-  kashimo:'assets/a9d297a0614d.webp',
-  higuruma:'assets/f7e2cc93d948.webp',
-  itadori:'assets/e15a59464826.webp',
-  okkotsu:'assets/c85c59512b16.webp',
-  maki:'assets/728186cc0f2a.webp'
+  gojo:'assets/86682150b7a2.webp',
+  kashimo:'assets/6aed1371971e.webp',
+  higuruma:'assets/8b9072652273.webp',
+  itadori:'assets/f7b44323a658.webp',
+  okkotsu:'assets/8a929e66b79c.webp',
+  maki:'assets/643ed7bd81bd.webp'
 };
-IMG.okkoDomArt='assets/bef1a5a155dd.png';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
+IMG.okkoDomArt='assets/17d08bd4834e.webp';   /* v161 乙骨領域期間角色立繪（圖一），python 注入 base64 */
 /* ★ v396 日車寬見領域「誅伏賜死」場景圖（法庭木柵・黑白漫畫，已裁掉原圖右下角水印） */
-IMG.higuDomBg='assets/1d9b59eec7a1.webp';
+IMG.higuDomBg='assets/da769707939b.webp';
 /* ★ v440 五條悟登場立繪（用戶上傳圖，綠幕＋「豆包AI生成」水印已去除，1549×1692） */
-  IMG.gojoIntroArt='assets/c9a79c6089ea.webp',
+  IMG.gojoIntroArt='assets/aa4f65d7a8e7.webp',
 /* ★ v399 宿儺領域展開・結印特寫（去綠幕・去水印） */
-  IMG.sukuOpenArt='assets/4c3bd7177938.webp';
+  IMG.sukuOpenArt='assets/4b3f8cc76fef.webp';
 /* ★ v399 宿儺領域內・一階段全身姿 */
-IMG.sukuDomInArt='assets/0a5d8dbdd2ac.webp';
+IMG.sukuDomInArt='assets/50376cc3b6a6.webp';
 /* ★ v399 領域對拼・五條悟 */
-IMG.clashGojoArt='assets/74a1a238e90c.webp';
+IMG.clashGojoArt='assets/4d7441b0c69d.webp';
 /* ★ v399 領域對拼・宿儺 */
-IMG.clashSukuArt='assets/f5be1c8ce1f6.webp';
+IMG.clashSukuArt='assets/75303397bff0.webp';
 /* ★ v399 真希・釋魂刀瞬身 */
-IMG.makiBlinkArt='assets/23b41562cc30.webp';
+IMG.makiBlinkArt='assets/69eacb1a42ec.webp';
 /* ★ v398 日車領域・審判者（日車怪）立繪：去綠幕、去水印、1100×845 */
-IMG.higuArt='assets/40a6db578168.webp';
+IMG.higuArt='assets/7d4916213991.webp';
 /* ★ v422 選人頁頭像專用：五條悟＝「會贏的。」正臉＋台詞氣泡（綠幕摳圖、去雜字水印、560×560 透明底）；真希／日車＝替換前的原圖 */
 /* ★ v428 鹿紫雲一選人頁頭像：綠幕摳圖 + 去右下 AI 水印 + 裁上部方形（雙髻・臉・圍巾） */
-IMG.kashSel='assets/bb49903d2378.webp';
+IMG.kashSel='assets/7d6c7d3eaa3d.webp';
 /* ★ v427 五條悟「虛式・茈」擊敗宿儺專屬勝利圖（綠幕摳圖去水印、含「你才是挑戰者哦」氣泡） */
-IMG.gojoHollowEnd='assets/a7449bffe7e9.webp';
+IMG.gojoHollowEnd='assets/2bbb457bd04e.webp';
 /* ★ v423 陣亡對白結算立繪：沿用虎杖真結局的 .dbArt（左板邊・漸顯・右緣羽化） */
-IMG.higuEnd='assets/ce9309fafbb5.webp';
-IMG.makiEnd='assets/ab54ed311f92.webp';
-IMG.kashEnd='assets/7e4b44bc0e28.webp';
-IMG.okkoEnd='assets/bc3d9e7feb5f.webp';
-IMG.gojoSel='assets/14461b287c62.webp';
-IMG.makiOld='assets/71df1cf1fbd5.webp';
-IMG.higuOld='assets/0c9d92eceead.webp';
+IMG.higuEnd='assets/155e0f34e10b.webp';
+IMG.makiEnd='assets/86e3956aa29e.webp';
+IMG.kashEnd='assets/235f062004ef.webp';
+IMG.okkoEnd='assets/fccb4b7c52e4.webp';
+IMG.gojoSel='assets/49e4ce9404c5.webp';
+IMG.makiOld='assets/996dc7265270.webp';
+IMG.higuOld='assets/530c54c1b3c9.webp';
 /* ★ v63 五條悟終幕立繪（擊敗宿儩演出用）：獨立常量，不進 IMG/IMGS 摳圖鏈 */
-const GOJO_WIN_IMG='assets/182e8f7e9a0d.webp';
+const GOJO_WIN_IMG='assets/83de9f6b9d66.webp';
 /* ★ v407 日車握劍立繪（剑.png 去綠幕、760×1825）與處刑人之劍中心圖（900×870） */
-IMG.higuSword='assets/9f5895af8237.webp';
-IMG.higuExecArt='assets/4f5e959379c4.webp';
+IMG.higuSword='assets/eb155e89de0e.webp';
+IMG.higuExecArt='assets/c5fd30bc607b.webp';
 /* ★ v409 普通場景背景：1600×998 webp（AI 生成、裁切壓淡） */
-IMG.bgCity='assets/9dececb2870b.webp';
+IMG.bgCity='assets/456a4d30b7fd.webp';
 IMG.impactInk='assets/c8612fd4d5dd.webp';   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底轉 alpha） */
-const IMGS={gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null};
+/* ★ v463 街道破碎 V3：瓦礫帶貼圖（NANO AI 生成，白底轉 alpha） */
+IMG.streetRubble='assets/d16a9959ff36.webp';
+const IMGS={gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null,streetRubble:null};
 
 /* =========================================================
    1. 音效（Web Audio API）
@@ -6695,6 +6697,39 @@ function damageShiki(who,d,big){
   }
   syncHud();
 }
+/* ★ v463 式神「瞬身」：魔虛羅／顎吐／里香 出手前先衝到對方面前，落地瞬間才出傷害文字。
+   時間軸 —— 衝出 0.16s → 定住 0.10s → 回位 0.26s（合計 0.52s）。
+   傷害延後 0.155s 執行（＝剛好落在對方面前），且暫停／切頁時掛住，不在後台掉血。 */
+const LUNGE_OUT=0.16, LUNGE_HOLD=0.10, LUNGE_BACK=0.26;
+function shikLunge(who){
+  if(!S.lunge) S.lunge={};
+  S.lunge[who]=0;
+}
+function lungeK(who){
+  const t=(S.lunge&&S.lunge[who]);
+  if(t==null) return 0;
+  if(t<LUNGE_OUT){ const k=t/LUNGE_OUT; return 1-Math.pow(1-k,3); }
+  if(t<LUNGE_OUT+LUNGE_HOLD) return 1;
+  const k=(t-LUNGE_OUT-LUNGE_HOLD)/LUNGE_BACK;
+  if(k>=1) return 0;
+  return 1-(k*k*(3-2*k));
+}
+function lungeTick(dt){
+  if(!S.lunge) return;
+  for(const k in S.lunge){
+    S.lunge[k]+=dt;
+    if(S.lunge[k]>=LUNGE_OUT+LUNGE_HOLD+LUNGE_BACK) delete S.lunge[k];
+  }
+}
+/* 延遲執行：暫停／切到後台時掛住，回到場上再補跑 */
+function lungeAfter(ms,fn){
+  let guard=0;
+  const run=function(){
+    if((S.paused||document.hidden)&&guard<200){ guard++; setTimeout(run,120); return; }
+    try{ fn(); }catch(e){}
+  };
+  setTimeout(run,ms);
+}
 /* ---------- 式神行動（掛在宿儺回合） ---------- */
 function shikigamiAct(){
   if(S.phase!=='fight') return;
@@ -6707,8 +6742,11 @@ function shikigamiAct(){
       S.agyoCd=2;
       const d=SUK_MAXHP*AGYO_S1_PCT;
       fxManga('鵺鳴·電荷',GX()+96*SC,GY-236*SC,false,'#e030c8');
-      hurtHero(d);
-      fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#e030c8');
+      shikLunge('agyo');
+      lungeAfter(155,function(){
+        hurtHero(d);
+        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#e030c8');
+      });
       say('sys','顎吐「鵺鳴·電荷」——造成 '+sukPct(d)+' 最大生命傷害。');
       if(Math.random()<0.15){   /* ★ v217 用戶指定：顎吐「鵺鳴·電荷」的麻痺概率減半（0.30 → 0.15） */
         S.para=1;
@@ -6717,12 +6755,17 @@ function shikigamiAct(){
     }else{
       S.agyoCd--;
       const d=SUK_MAXHP*AGYO_ATK_PCT;
-      hurtHero(d);
-      fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#e0561c');
+      shikLunge('agyo');
+      lungeAfter(155,function(){
+        hurtHero(d);
+        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#e0561c');
+      });
       if(Math.random()<0.30){
         const d2=SUK_MAXHP*AGYO_S3_PCT;
-        hurtHero(d2,'agyo');          /* ★ v191 顎吐「虎葬·碎擊」（真希架勢下可穿透） */ S.heroVulnT=1;
-        fxManga('虎葬·碎擊',GX()+96*SC,GY-236*SC,false,'#e0561c');
+        lungeAfter(250,function(){
+          hurtHero(d2,'agyo');          /* ★ v191 顎吐「虎葬·碎擊」（真希架勢下可穿透） */ S.heroVulnT=1;
+          fxManga('虎葬·碎擊',GX()+96*SC,GY-236*SC,false,'#e0561c');
+        });
         say('sys','顎吐「虎葬·碎擊」——追加 '+sukPct(d2)+' 傷害，我方防禦力 -10%（1 回合）。');
       }
     }
@@ -6733,8 +6776,11 @@ function shikigamiAct(){
       S.mahaSlashCd=1;
       let d=SUK_MAXHP*MAHO_SLASH_PCT;
       /* ★ v117c 依用戶要求：移除魔虛羅攻擊時畫面中央的「斬擊」大字圖案（保留傷害數字與文字提示）。 */
-      hurtHero(d,'maha');           /* ★ v191 魔虛羅「斬擊」（真希架勢下可穿透） */
-      fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#8b5cf6');
+      shikLunge('maha');
+      lungeAfter(155,function(){
+        hurtHero(d,'maha');           /* ★ v191 魔虛羅「斬擊」（真希架勢下可穿透） */
+        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#8b5cf6');
+      });
       say('sys','魔虛羅「斬擊」——造成 '+sukPct(d)+' 最大生命物理傷害。');
     }else{
       S.mahaSlashCd--;
@@ -6771,8 +6817,20 @@ function drawAgyoBody(){
   const w=h*im.width/im.height;
   /* ★ v47 顎吐固定在宿儺「右側」（原作站位），越界時貼邊收攏 */
   const xR=SX()+sukW()/2+g.gap+w/2-w*MAHO_INTO_SUKU+16*g.s;   /* ★ v288 再往右一點 */
-  const x=xR>W-4*g.s-w/2 ? Math.max(GX()+gojoW()/2+g.gap+w/2, W-4*g.s-w/2) : xR;
-  const cy=H*0.37+Math.sin(S.t*1.6)*3*SC;   /* ★ v288 用戶指定：下移，貼近地面一側 */   /* ★ v50 上移（原 0.38H）：避免下半身被壓住 */
+  let x=xR>W-4*g.s-w/2 ? Math.max(GX()+gojoW()/2+g.gap+w/2, W-4*g.s-w/2) : xR;
+  let cy=H*0.37+Math.sin(S.t*1.6)*3*SC;
+  /* ★ v463 瞬身 */
+  const lk=(typeof lungeK==='function')?lungeK('agyo'):0;
+  let lw=w, lh=h;
+  if(lk>0){
+    const tx=GX()+gojoW()/2+w*0.34;
+    lw=w*(1+0.05*lk); lh=h*(1+0.05*lk);
+    ctx.save(); ctx.globalAlpha=0.20*lk;
+    ctx.drawImage(im, x-lw/2, cy-lh/2, lw, lh);
+    ctx.restore();
+    x+=(tx-x)*lk; cy-=h*0.05*lk;
+    w=lw; h=lh;
+  }   /* ★ v288 用戶指定：下移，貼近地面一側 */   /* ★ v50 上移（原 0.38H）：避免下半身被壓住 */
   ctx.save();
   ctx.globalAlpha=0.97;
   ctx.drawImage(im, x-w/2, cy-h/2, w, h);
@@ -7311,7 +7369,7 @@ function showSelect(isFirst){
    卡片角標顯示「第 N 棒」= 這次選擇後的登場序數；小字標註原作順位。 */
 const CANON_POS={gojo:1,kashimo:2,higuruma:3,itadori:4,okkotsu:4,maki:5};   /* ★ v180 虎杖 3→4（用戶指定） */
   /* ★ v101 名字框線素材（構建期自用戶截圖摳出：抹字保框，同「總則」框樣式） */
-  const NM_PLATE_B64='assets/f5a841066ab3.png';
+  const NM_PLATE_B64='assets/a5c15b16a90e.webp';
   $('selTitle').textContent = isFirst
     ? '12 月 24 日 · 新宿 —— 請選擇第一位登場的術師'
     : ('請選擇下一位登場的術師 —— 順序由你決定' + recTxt);
@@ -8481,10 +8539,13 @@ function rikaPunch(){
   const low=Math.floor(Math.max(0,(S.maxHp-S.gojo.hp))/10);   /* 每滿 10% 記一檔 */
   const mul=1+low*0.10;
   const d=t.max*0.05*mul;
-  fxText(SX()-30*SC,GY-186*SC,'咒力拳 ×'+mul.toFixed(1),'#7c3aed',true);
+  shikLunge('rika');
+  lungeAfter(160,function(){
+    fxText(SX()-30*SC,GY-186*SC,'咒力拳 ×'+mul.toFixed(1),'#7c3aed',true);
   say('sys','里香「咒力拳」——對'+t.nm+'造成 '+(d/t.max*100).toFixed(1)+'% 最大生命傷害（乙骨殘血倍率 ×'+mul.toFixed(1)+'）。');
-  if(t.k==='sukuna') hitSukuna(d,false,'atk',false,true,'rika_punch',true);
-  else if(typeof damageShiki==='function') damageShiki(t.k,d,false);
+    if(t.k==='sukuna') hitSukuna(d,false,'atk',false,true,'rika_punch',true);
+    else if(typeof damageShiki==='function') damageShiki(t.k,d,false);
+  });
 }
 /* ★ v421 用戶報「乙骨無限制咒力解放語音播完，背景音樂沒及時恢復」：
    語音走的是 DOM 音軌、與 BGM 無關，但流程中主 BGM 可能已被 suspend／或領域曲收掉後沒人接回來。
@@ -8514,12 +8575,24 @@ function drawRika(){
     /* ★ v421 用戶指定：略向右移 + 適當增大；圖層改到乙骨之下（被乙骨擋住 = 不互相遮臉） */
     const wMax=W*0.205;
     if(w>wMax){ w=wMax; h=w*im.height/im.width; }
-    const x=GX()+gojoW()*0.66;
-    const cy=H*0.215+Math.sin(S.t*1.8)*4*SC;
+    let x=GX()+gojoW()*0.66;
+    let cy=H*0.215+Math.sin(S.t*1.8)*4*SC;
+    /* ★ v463 瞬身：衝到宿儺身前（順便壓低、轉正） */
+    const lk=(typeof lungeK==='function')?lungeK('rika'):0;
+    let rot=-0.16, lw=w, lh=h;
+    if(lk>0){
+      lw=w*(1+0.06*lk); lh=h*(1+0.06*lk);
+      ctx.save(); ctx.translate(x,cy); ctx.rotate(-0.16); ctx.globalAlpha=0.20*lk;
+      ctx.drawImage(im,-lw/2,-lh/2,lw,lh); ctx.restore();
+      x+=((SX()-sukW()/2-w*0.30)-x)*lk;
+      cy+=((H*0.40)-cy)*lk;
+      rot=-0.16*(1-lk);
+      w=lw; h=lh;
+    }
     ctx.save();
     ctx.globalAlpha=0.97;
     ctx.translate(x, cy);
-    ctx.rotate(-0.16);              /* ★ v62 逆時針傾斜 ~9.2° */
+    ctx.rotate(rot);                /* ★ v62 逆時針傾斜 ~9.2°（v463 瞬身時轉正） */
     ctx.globalAlpha=0.90;           /* ★ v61 靈體半透明：與魔虛羅重疊時不糊 */
     ctx.drawImage(im, -w/2, -h/2, w, h);
     ctx.restore();
@@ -10861,6 +10934,7 @@ function update(dt){
   /* ★ 命中定格：世界暫停（含 S.t，所以動畫也凝固），但 render 仍每幀跑 */
   if(S.hitStop>0){ S.hitStop=Math.max(0,S.hitStop-dt); return; }
   S.t+=dt;
+  try{ lungeTick(dt); }catch(e){}
   /* ★ v408 打擊感第 2 層：命中位移回彈（定格期間保持推開，解凍後 ~70ms 彈回） */
   if(S.sukShove){ S.sukShove+=(0-S.sukShove)*Math.min(1,dt*15); if(Math.abs(S.sukShove)<0.15) S.sukShove=0; }
   if(S.heroShove){ S.heroShove+=(0-S.heroShove)*Math.min(1,dt*15); if(Math.abs(S.heroShove)<0.15) S.heroShove=0; }
@@ -11690,101 +11764,51 @@ function drawBg(){
   speedLines(S.speed);
 }
 
-/* ★ v450 街道破壞度：4 個等級的裂縫一次性烘焙，之後每幀只做 drawImage */
+/* ★ v463 街道破壞度：改用 V3「瓦礫帶」——整條街被砸穿的碎石帶。
+   貼圖一次性烘焙成一條（高度＝最高等級），四級只是「從底往上露出多少」，
+   所以升級時地面特徵不會位移，只會一點一點被掀起來。
+   頂端用 7 條遞減 alpha 的切片做漸隱，避免出現一條硬橫切。 */
+const STREET_FR=[0.14,0.26,0.42,0.58];   /* 各級露出高度（相對畫面高） */
 let _streetBake=null,_streetBakeKey='';
 function streetBake_(){
-  /* ★ v459 玻璃破碎：用戶指定把「紙面折線刮痕」改成玻璃碎裂 ——
-     撞擊點 → 放射主裂（帶折角）＋分叉 → 三段同心蛛網弧（斷續）→ 三角碎片高光。
-     4 個等級各烘焙一次，之後每幀只 drawImage，零額外開銷。 */
-  const key=W+'|'+H+'|'+SC.toFixed(3)+'|'+PERF+'|'+DPR;
+  const tex=(typeof IMGS!=="undefined")?IMGS.streetRubble:null;
+  const key=W+'|'+H+'|'+SC.toFixed(3)+'|'+DPR+'|'+(tex?tex.width+'x'+tex.height:'0');
   if(_streetBake && _streetBakeKey===key) return _streetBake;
+  if(!tex||!tex.width) return null;
+  const bh=Math.max(40,H*STREET_FR[3]);
   let c,g;
   try{
-    c=document.createElement('canvas');
-    c.width=Math.max(1,Math.round(W*DPR*PERF)); c.height=Math.max(1,Math.round(H*DPR*PERF));
-    g=c.getContext('2d'); if(!g) return null;
-    g.setTransform(DPR*PERF,0,0,DPR*PERF,0,0);
+    c=document.createElement("canvas");
+    c.width=Math.max(1,Math.round(W*DPR));
+    c.height=Math.max(1,Math.round(bh*DPR));
+    g=c.getContext("2d"); if(!g) return null;
+    g.setTransform(DPR,0,0,DPR,0,0);
   }catch(e){ return null; }
-  const k=SC;
-  const mk=function(seed){ let v=seed; return function(){ v=(v*9301+49297)%233280; return v/233280; }; };
-  const web=function(g2,cx,cy,R,r,L){
-    const n=10+Math.floor(r()*5), base=r()*Math.PI*2;
-    /* 同心蛛網弧：三圈、每圈斷續，模擬玻璃受擊的同心裂 */
-    for(let ring=1;ring<=3;ring++){
-      const rr=R*(0.30+0.24*ring);
-      g2.lineWidth=Math.max(1,(2.3-ring*0.40)*k);
-      for(let q=0;q<n;q++){
-        const a0=base+q*Math.PI*2/n+r()*0.10;
-        const a1=a0+(Math.PI*2/n)*(0.55+r()*0.35);
-        g2.strokeStyle='rgba(255,255,255,'+(0.10+0.055*L).toFixed(3)+')';
-        g2.beginPath(); g2.arc(cx,cy,rr,a0,a1); g2.stroke();
-        g2.strokeStyle='rgba(14,14,18,'+(0.07+0.035*L).toFixed(3)+')';
-        g2.lineWidth=Math.max(0.8,(1.2-ring*0.18)*k);
-        g2.beginPath(); g2.arc(cx,cy,rr+1.2*k,a0,a1); g2.stroke();
-      }
-    }
-    /* 放射主裂 + 分叉 */
-    for(let q=0;q<n;q++){
-      const ang=base+q*Math.PI*2/n+(r()-0.5)*0.18;
-      const len=R*(0.55+r()*0.55);
-      const pts=[[cx,cy]]; let px=cx,py=cy,a=ang;
-      for(let j=0;j<4;j++){
-        a+=(r()-0.5)*0.24;
-        const step=len/4*(0.7+r()*0.6);
-        px+=Math.cos(a)*step; py+=Math.sin(a)*step*0.82;
-        pts.push([px,py]);
-      }
-      streetStroke_(g2,pts,k,0.12+0.05*L,0.20+0.06*L,2.4);
-      if(r()<0.62){
-        const bi=1+Math.floor(r()*3), bx=pts[bi][0], by=pts[bi][1];
-        const ba=a+(r()<0.5?-1:1)*(0.5+r()*0.5);
-        const bl=len*(0.20+r()*0.25);
-        streetStroke_(g2,[[bx,by],[bx+Math.cos(ba)*bl,by+Math.sin(ba)*bl*0.8]],k,0.09+0.04*L,0.13+0.04*L,1.5);
-      }
-    }
-    /* 玻璃碎片高光：細三角，白多黑少，才有「碎玻璃反光」而不是髒刮痕 */
-    for(let q=0;q<8;q++){
-      const a=r()*Math.PI*2, rr=R*(0.22+r()*0.80);
-      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr*0.82;
-      const sz=(2+r()*5)*k;
-      g2.fillStyle='rgba(255,255,255,'+(0.13+0.05*L).toFixed(3)+')';
-      g2.beginPath(); g2.moveTo(x,y-sz); g2.lineTo(x+sz*0.8,y+sz*0.6); g2.lineTo(x-sz*0.7,y+sz*0.5); g2.closePath(); g2.fill();
-      g2.strokeStyle='rgba(20,18,22,'+(0.08+0.03*L).toFixed(3)+')';
-      g2.lineWidth=Math.max(0.7,0.9*k); g2.stroke();
-    }
-  };
-  for(let L=1;L<=4;L++){
-    const r=mk(L*7919+37);
-    const cnt=1+L;                       /* 等級越高，碎裂點越多 */
-    for(let w=0;w<cnt;w++){
-      const cx=W*(0.08+r()*0.84), cy=H*(0.14+r()*0.62);
-      web(g,cx,cy,(34+r()*40)*k*(0.70+0.28*L),r,L);
-    }
-  }
-  _streetBake=c; _streetBakeKey=key;
-  return c;
-}
-/* 漫畫式裂縫：先白邊、再壓黑芯 */
-function streetStroke_(g,pts,k,aW,aD,wBase){
-  g.lineJoin='round'; g.lineCap='round';
-  g.strokeStyle='rgba(255,255,255,'+aW+')';
-  g.lineWidth=Math.max(1.4,wBase*k); g.beginPath();
-  pts.forEach(function(p,idx){ idx?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); }); g.stroke();
-  g.strokeStyle='rgba(16,14,18,'+aD+')';
-  g.lineWidth=Math.max(1.0,wBase*0.58*k); g.beginPath();
-  pts.forEach(function(p,idx){ idx?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]); }); g.stroke();
+  /* 貼圖按畫面寬等比縮放、底邊貼齊畫面底 */
+  const th=W*tex.height/tex.width;
+  g.drawImage(tex, 0, bh-th, W, th);
+  _streetBake={c:c,h:bh}; _streetBakeKey=key;
+  return _streetBake;
 }
 function drawStreetDamage(){
   const lv=streetLv(); if(!lv) return;
-  const bk=streetBake_();
-  if(!bk) return;
+  const bk=streetBake_(); if(!bk) return;
+  const cH=bk.h;
+  const bh=Math.min(cH,H*STREET_FR[Math.min(4,lv)-1]);
+  const y0=H-bh;
+  const a=Math.min(1,0.55+0.15*(lv-1));
+  const fh=Math.min(bh*0.32,70*SC);
   ctx.save();
-  /* 只露出到當前等級的三分之一檔，讓升級有可見的漸進 */
-  ctx.globalAlpha=Math.min(1,0.42+0.16*lv);
-  ctx.drawImage(bk,0,0,W,H);
+  ctx.globalAlpha=a;
+  if(bh>fh) ctx.drawImage(bk.c, 0, cH-bh+fh, W, bh-fh, 0, y0+fh, W, bh-fh);
+  const N=7;
+  for(let i=0;i<N;i++){
+    const sy=cH-bh+fh*i/N, sh=fh/N+0.75;
+    ctx.globalAlpha=a*(i+1)/N;
+    ctx.drawImage(bk.c, 0, sy, W, sh, 0, y0+fh*i/N, W, sh);
+  }
   ctx.restore();
 }
-
 /* ---------- 五條悟（原圖摳圖 / 未加載時退回剪影） ---------- */
 /* 無下限成功擋下攻擊：五條悟形象切成特寫圖（約 1 秒） */
 function showGuardFace(){ S.gojo.guardT=1.85; }   /* ★ v300 延長特寫 1.05→1.85s */
@@ -17123,8 +17147,20 @@ function drawMahoBody(){
   let h=w*im.height/im.width;
   if(h>H*0.90){ h=H*0.90; w=h*im.width/im.height; }   /* 高度上限（矮畫幅時生效，★v36 0.68→0.72） */
   const bob=Math.sin(S.t*1.3)*4*s;
-  const x=sEdge-gap-w/2+w*MAHO_INTO_SUKU;             /* 右移：右緣壓入宿儺身後，視覺上貼近 */
-  const cy=GY-h*0.58;   /* ★ v288 再上提，配合右移形成「立於宿儺身後」的層疊感（腳仍落在地面附近） */
+  const x0=sEdge-gap-w/2+w*MAHO_INTO_SUKU;             /* 右移：右緣壓入宿儺身後，視覺上貼近 */
+  const cy0=GY-h*0.58;
+  /* ★ v463 瞬身：出手瞬間衝到五條悟身前 */
+  const lk=(typeof lungeK==='function')?lungeK('maha'):0;
+  let x=x0, cy=cy0;
+  if(lk>0){
+    const tx=GX()+gojoW()/2+w*0.34;
+    x+=(tx-x0)*lk;
+    cy-=h*0.05*lk;
+    w*=1+0.05*lk; h*=1+0.05*lk;
+    ctx.save(); ctx.globalAlpha=mahaAlpha()*0.20*lk;
+    ctx.drawImage(im, x0-w/2, cy0-h/2+bob, w, h);
+    ctx.restore();
+  }   /* ★ v288 再上提，配合右移形成「立於宿儺身後」的層疊感（腳仍落在地面附近） */
   /* 純摳圖：不加任何光暈/描邊；被無限制・茈 抹除時整身漸隱 */
   ctx.save(); ctx.globalAlpha=mahaAlpha();
   ctx.drawImage(im, x-w/2, cy-h/2+bob, w, h);
@@ -17821,9 +17857,9 @@ const DOMAIN_BGM_LEAD={ujaku:0, yuji:0, itadori:0, specialz:0, finish:0};
    ★ v305 追加 BGM 軌道：SPECIALZ（宿儚討伐）／虚式「薙」（五條領域）／虎杖vs乙骨（虎杖領域）
    音量一律對齊主 BGM（BGM_VOL）；切出頁面時 pauseAllAudio 會一併暫停。
    ========================================================= */
-const BGM_SPECIALZ='assets/26f6de7dc275.mp3';
-const BGM_UJAKU='assets/f864e3004b53.mp3';
-const BGM_YUJI='assets/6734d5f12f93.mp3';
+const BGM_SPECIALZ='assets/a21b6f5a31b7.mp3';
+const BGM_UJAKU='assets/37a32f054b38.mp3';
+const BGM_YUJI='assets/f7adefe6df11.mp3';
 const extraBgmEls={};
 const extraBgmUrls={};
 let extraBgmKey='';
@@ -19715,7 +19751,7 @@ let sukuBgmEl=null;               /* 伏魔御厨子 BGM（循環） */
 let sukuBgmOn=false;
 let bgmSuspendedByDomain=false;   /* 記錄「本 BGM 是被領域演出暫停的」，恢復時才復播 */
 let okkoDomBgmOn=false;           /* v161 乙骨領域 BGM（AIZO）播放中標記 */
-const SND_OKKO_DOMAIN_BGM='assets/dfb098d5b8fc.mp3';   /* v161 乙骨領域 BGM：King Gnu - AIZO（python 注入 base64） */
+const SND_OKKO_DOMAIN_BGM='assets/d3c6c7b12403.mp3';   /* v161 乙骨領域 BGM：King Gnu - AIZO（python 注入 base64） */
 
 /* data URI → Blob URL（iOS Safari 對 data: 音源支持很差，沿用主 BGM 的兼容策略） */
 function sndUrl(dataUri, cache){
@@ -20331,9 +20367,9 @@ window.__imgQ=[]; window.__flushImgQ=function(){ var q=window.__imgQ; window.__i
   if((_tt&&_tt.classList.contains('open'))||_n>120){ clearInterval(_t); setTimeout(function(){ try{ window.__flushImgQ(); }catch(e){} },300); } },250); })();
 ['wheel','maho','eight','agyo','okkoDom2','rikaArt','blackCrack','itaDomBg','itaDomArt','gojoVoidSign','gojoVoidPose','gojoVoidWord','gojoVoidBg','sukuDomBg','sukuDomWord','okkoDomBg','okkoDomWord','okkoDomArt','jieInk','kaiScrape','kashArc','batsuStar'].forEach(k=>{ const im=new Image(); im.onload=()=>{ IMGS[k]=im; }; window.__imgQ.push(()=>{ im.src=IMG[k]; }); });   /* ★ v185 補預載 kaiScrape —— 此前 IMG.kaiScrape 只注入常量、未進預載列表，IMGS.kaiScrape 永遠為 undefined，「解」的墨痕線上從未顯示過 */
 /* ★ v431 特效貼圖（nanoAI 生成 → 亮度摳底）：洋紅電弧 1400×427、赤斬芒 720×720 */
-IMG.kashArc='assets/c37bddb8172e.webp';
-IMG.batsuStar='assets/03636f728353.webp';
-IMG.itaDash='assets/2b1bd417b140.png';   /* ★ v200 虎杖逕庭拳虛影：衝刺姿勢漫畫抠圖 684x720 */
+IMG.kashArc='assets/45a04d5d79f8.webp';
+IMG.batsuStar='assets/570c6bce9851.webp';
+IMG.itaDash='assets/2c0d9eaf42fd.webp';   /* ★ v200 虎杖逕庭拳虛影：衝刺姿勢漫畫抠圖 684x720 */
 loadRGBA('gojo',IMG.gojo);
 /* ★ v231 蒼・拳出拳圖：直接用 Image（帶 alpha 的 La PNG，無需摳圖/染色處理） */
 (function(){ try{ const im=new Image(); im.onload=function(){ IMGS.gojoFist=im; }; window.__imgQ.push(()=>{ im.src=IMG.gojoFist; }); }catch(e){} })();   /* 新立繪：彩色線稿 + 藍色咒力，保留原色 */
@@ -20366,7 +20402,9 @@ loadRGBA('gojo',IMG.gojo);
   _bc.src=IMG.bgCity;
   IMGS.bgCity=_bc; }
 loadRGBA('suku',IMG.suku);
-loadRGBA('clashAir',IMG.clashAir);   /* ★ v444 對拼氣流貼圖（NANO AI 生成，黑底已轉 alpha） */   /* 新立繪：彩色線稿 + 紅色火焰，保留原色 */
+loadRGBA('clashAir',IMG.clashAir);
+/* ★ v463 街道瓦礫帶：直接掛 Image（不生成紅/粉變體，省記憶體） */
+(function(){ try{ const im=new Image(); im.onload=function(){ IMGS.streetRubble=im; _streetBake=null; _streetBakeKey=''; }; im.src=IMG.streetRubble; }catch(e){} })();   /* ★ v444 對拼氣流貼圖（NANO AI 生成，黑底已轉 alpha） */   /* 新立繪：彩色線稿 + 紅色火焰，保留原色 */
 /* ★ v451 命中墨爆貼圖：黑墨版 + 同形白墨版（深色領域裡看得見） */
 (function(){
   const im=new Image();
@@ -20775,9 +20813,9 @@ if(bgmReady()) bgmBoot();   /* 兜底：bgmData 已解析時立刻起播 */
 window.addEventListener('orientationchange',()=>setTimeout(()=>{ resize(); layoutTitleCrack(); },200));
 })();
 </script>
-<script id="bgmData">const BGM_GOJO='assets/8041e0f424ce.mp3';   /* ★ v457 五條悟上場專用（原主 BGM） */
-const BGM_SRC='assets/44c713f6058d.mp3';   /* ★ v457 常態 BGM：MASATO - REMEMBER */
-const OKKO_BGM_SRC='assets/4d386f02b57e.mp3';   /* ★ v29 乙骨憂太登場專屬 BGM（《心似煙火 DJ》· Penn） */
+<script id="bgmData">const BGM_GOJO='assets/a4d9d0d88a7b.mp3';   /* ★ v457 五條悟上場專用（原主 BGM） */
+const BGM_SRC='assets/ed9229674efe.mp3';   /* ★ v457 常態 BGM：MASATO - REMEMBER */
+const OKKO_BGM_SRC='assets/317c4646e39a.mp3';   /* ★ v29 乙骨憂太登場專屬 BGM（《心似煙火 DJ》· Penn） */
 /* ★ v141 領域展開聯動音效（四段，已做響度歸一化至同一基準 -9.58 dBFS） */
 const SND_GOJO_DOMAIN='assets/3b4c22944631.mp3';   /* 五條悟領域展開・無量空處 5.46s */
 const SND_SUKU_DOMAIN='assets/11f8813438e8.mp3';   /* ★ v454 用戶提供原聲（4.41s，-17.38 LUFS）；前導靜音已在構建期裁掉 */   /* 宿儺領域展開 4.75s */
@@ -21390,7 +21428,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
       rgba(244,241,234,.26) 0%, rgba(244,241,234,.60) 8%, rgba(244,241,234,.87) 17%,
       rgba(244,241,234,.99) 27%, #f4f1ea 38%, #f4f1ea 72%,
       rgba(244,241,234,.99) 82%, rgba(244,241,234,.78) 92%, rgba(244,241,234,.52) 100%),
-    url("assets/00dda14c61c7.webp");
+    url("assets/599f217d6ad2.webp");
   background-size:100% 100%, cover;
   background-position:center center, center top;
   background-repeat:no-repeat, no-repeat;}
@@ -21472,7 +21510,7 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
       rgba(244,241,234,.24) 0%, rgba(244,241,234,.58) 6%, rgba(244,241,234,.86) 14%,
       rgba(244,241,234,.99) 22%, #f4f1ea 31%, #f4f1ea 79%,
       rgba(244,241,234,.99) 86%, rgba(244,241,234,.80) 93%, rgba(244,241,234,.54) 100%),
-    url("assets/3c41e1618063.webp");
+    url("assets/37eea27324cf.webp");
   background-size:100% 100%, cover;
   background-position:center center, center top;
   background-repeat:no-repeat, no-repeat;
@@ -21602,5 +21640,14 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
     <div class="gdRow"><button id="gdSkip">跳過</button><button id="gdNext">下一步</button></div>
   </div>
 </div>
+
+<script>/* GitHub Pages：注册 Service Worker —— 旧版从来没注册过，
+   导致每次打开都要把 20MB+ 资源重下一遍（这就是「打开非常卡」的根因）。 */
+(function(){ if(!('serviceWorker' in navigator)) return;
+  if(location.protocol!=='https:' && location.hostname!=='localhost') return;
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(){});
+  });
+})();</script>
 </body>
 </html>
