@@ -857,6 +857,25 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 #atkSwap svg{width:13px;height:13px;fill:none;stroke:#7ff0ff;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;}
 #atkSwap:active{transform:scale(.88);}
 #btnAtk.swapOn #atkSwap{display:flex;animation:swapPulse 1.8s ease-in-out infinite;}
+/* ★ v462 日車寬見：1 技標題「法槌・開廷」右側的罪狀計數（黃字＋黑勾邊，比標題小一號）
+   .btn 是 flex-column，標題與 <small> 各佔一行 ⇒ 標題＋罪狀要包一層 inline-flex 才並排。 */
+.btn .btnTtl{display:inline-flex;align-items:baseline;justify-content:center;gap:calc(3px*var(--k));
+  white-space:nowrap;line-height:1.1;}
+.btn .guiltTag{
+  font-style:normal;font-weight:900;line-height:1;letter-spacing:0;white-space:nowrap;
+  font-size:calc(10px*var(--k));   /* 標題 calc(16px*var(--k)) ⇒ 小一號 */
+  color:#ffd63a;
+  -webkit-text-stroke:.55px #000;paint-order:stroke fill;
+  text-shadow:
+    -1px 0 0 #000,1px 0 0 #000,0 -1px 0 #000,0 1px 0 #000,
+    -.7px -.7px 0 #000,.7px -.7px 0 #000,-.7px .7px 0 #000,.7px .7px 0 #000,
+    0 1.4px 0 #000;
+  transform:translateY(-1px);
+}
+.btn .guiltTag.full{color:#ffe680;}
+.btn.dim .guiltTag{opacity:.5;}
+#pad.five .btn .guiltTag{font-size:calc(9.5px*var(--k));}
+#pad .btn .guiltTag{letter-spacing:0;}
 /* ★ v421 真希二技能切換角標：沿用 1 技角標尺寸，配色改灰黑（配合 v419 真希去綠化） */
 #grdSwap{
   position:absolute;top:-10px;right:-4px;left:auto;width:23px;height:23px;border-radius:50%;
@@ -4578,7 +4597,7 @@ function fxHollow(){
   S.speed=1.2;
 }
 function fxSlash(){ addFx({type:'slash',dur:0.4,x:GX(),y:GY-120*SC}); }
-function fxImpact(x,y,big){ addFx({type:'impact',dur:big?0.5:0.32,x:x,y:y,big:!!big,rot:rnd(0,Math.PI*2)}); }
+function fxImpact(x,y,big,soft){ addFx({type:'impact',dur:big?0.5:0.32,x:x,y:y,big:!!big,soft:!!soft,rot:rnd(0,Math.PI*2)}); }
 /* 漫畫格：集中線 + 招式大字 */
 function fxManga(txt,x,y,big,col,inv,noblob,dur,hd){   /* ★ v407 第 9 參數 hd：文字改「左右消散」（+1 往右、−1 往左） */   /* ★ v403 新增可選 dur，其餘呼叫不傳 ⇒ 走原值 */
   if(txt&&(txt.indexOf('逕庭')>=0||txt.indexOf('径庭')>=0)){ window.__fxStyle=null; return; }  /* ★ v384 */
@@ -4886,6 +4905,9 @@ function markActed(a){
    只有 actsLeft>1（多行動力）時才留在本回合繼續出招。 */
 function handOverToSukuna(){
   if(!S.turnCtl || S.phase!=='fight'){ S.actsLeft=0; return; }
+  /* ★ v462 幂等：已經有交棒定時器在跑就不再重排（不能用 turnWait 判斷 ——
+     那是「演出等待」旗標，別的流程也會把它置 1，貿然 return 會讓回合永遠交不出去） */
+  if(S.turnHold) return;
   S.actsLeft=0;
   if(S.turnHold) clearTimeout(S.turnHold);
   S.turnWait=1;                        /* ★ v115 凍結讀秒：演出期間不推進，動畫播完才重開 */
@@ -5622,7 +5644,7 @@ function fireFlame(){
       hurtHero(12);
       S.gojo.pose='hurt'; S.gojo.poseT=0.45; S.gojo.hurtFx=0.55;
       fxText(GX()+rnd(-12,12),GY-170*SC,'-12%','#e0561c');
-      fxImpact(GX()+20*SC,GY-130*SC,false);
+      fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：我方受擊不再糊大墨爆 */
       SFX.hurt(); shake();
       say('narr','旁白：火焰纏上肩頭——那是宿儺的「灶·開」。');
     }
@@ -8106,7 +8128,7 @@ function sukuShinbu(){
     if(S.phase!=='fight'||(S.heroGen||0)!==_hg) return;   /* ★ v243 這段延遲命中若跨過換人 ⇒ 不再把麻痹套到新角色 */
     hurtHero(d);
     fxText(GX()+rnd(-10,10),GY-176*SC,'-'+sukPct(d),'#e030c8',true);
-    fxImpact(GX()+20*SC,GY-130*SC,false);
+    fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：同上 */
     SFX.hurt(); shake();
     S.para=1;                         /* ★ v393 麻痺 1 回合：純粹無法行動，不因受傷解除 */
     say('suku','「神武解——電撃。」');
@@ -10711,12 +10733,74 @@ function togglePause(){
   }
 }
 /* ★ v149 全音訊暫停/恢復：主 BGM、伏魔御厨子 BGM、領域語音、黑閃、全部 WebAudio 音效節點 */
+/* ★ v462 音訊仲裁層（切頁回來「語音音樂亂飛」的根治）
+   ① _audGen：音訊代次。每次暫停/切後台 +1；任何「延遲起播」的回調開頭比對代次，
+      對不上就作廢（積壓在後台的 setTimeout 全部靜默丟棄，不會回前台一齊爆響）。
+   ② play 原型攔截：document.hidden 期間任何自動 play() 直接拒絕，堵住仍在後台排隊的播放入口。
+   ③ isBgmEl / hardStopVoices：切回來只認「BGM 家族」，語音一律硬停不續播。
+   ④ enforceBgmLayer：BGM 層永遠只留一條（領域曲 > 追加曲 > 自訂歌單 > 主 BGM）。 */
+let _audGen=0;
+function _audNow(){ return (window.performance&&performance.now)?performance.now():Date.now(); }
+function _audStale(g){ return g!==_audGen || document.hidden || (typeof S!=='undefined' && S && S.paused); }
+try{
+  const _origPlay=HTMLMediaElement.prototype.play;
+  if(_origPlay && !_origPlay.__v462){
+    const _play462=function(){
+      try{ if(document.hidden && !this.__allowHidden) return Promise.reject(new DOMException('hidden','AbortError')); }catch(e){}
+      return _origPlay.apply(this,arguments);
+    };
+    _play462.__v462=1;
+    HTMLMediaElement.prototype.play=_play462;
+  }
+}catch(e){}
+function isBgmEl(e){
+  if(!e) return false;
+  try{ if(typeof bgmEl!=='undefined' && e===bgmEl) return true; }catch(_){}
+  try{ if(typeof sukuBgmEl!=='undefined' && e===sukuBgmEl) return true; }catch(_){}
+  try{ if(typeof musEl!=='undefined' && e===musEl) return true; }catch(_){}
+  try{ for(const _k in extraBgmEls){ if(extraBgmEls[_k]===e) return true; } }catch(_){}
+  try{ if(domAudioEls && e===domAudioEls.okkoDomain) return true; }catch(_){}
+  try{ if(domAudioEls && e===domAudioEls.sukuBgm) return true; }catch(_){}
+  return false;
+}
+/* 把「語音層」全部硬停：切回來不續播任何一句話，避免三句話同時開講 */
+function hardStopVoices(){
+  try{
+    const els=[];
+    try{ document.querySelectorAll('audio,video').forEach(function(a){ els.push(a); }); }catch(_){}
+    try{ for(const k in domAudioEls){ const e=domAudioEls[k]; if(e&&e.tagName) els.push(e); } }catch(_){}
+    els.forEach(function(a){
+      try{
+        if(!a||isBgmEl(a)) return;
+        if(!a.paused) a.pause();
+        try{ if(a.currentTime>0.02) a.currentTime=0; }catch(_){}
+      }catch(_){}
+    });
+  }catch(e){}
+  try{ domCur=null; }catch(_){}
+  try{ _sfxLive=[]; }catch(_){}
+  try{ window.__lastSoloVoice=null; }catch(_){}
+}
+/* BGM 層互斥：按優先序只保留一條在響，其餘 pause（同時保證該響的那條在響） */
+function enforceBgmLayer(){
+  const list=[];
+  try{ if(typeof sukuBgmEl!=='undefined' && sukuBgmEl && sukuBgmOn && S && S.sukuDom>0) list.push(sukuBgmEl); }catch(_){}
+  try{ if(okkoDomBgmOn && S && S.okkoDom>0 && domAudioEls.okkoDomain) list.push(domAudioEls.okkoDomain); }catch(_){}
+  try{ if(typeof extraBgmKey==='string' && extraBgmKey && extraBgmEls[extraBgmKey]) list.push(extraBgmEls[extraBgmKey]); }catch(_){}
+  try{ if(typeof musEl!=='undefined' && musEl && musWant) list.push(musEl); }catch(_){}
+  try{ if(typeof bgmEl!=='undefined' && bgmEl && !bgmMuted && !bgmSuspendedByDomain) list.push(bgmEl); }catch(_){}
+  if(!list.length) return;
+  const keep=list[0];
+  list.forEach(function(e){ try{ if(e!==keep && !e.paused) e.pause(); }catch(_){} });
+  try{ if(keep.paused && !document.hidden){ const p=keep.play(); if(p&&p.catch) p.catch(function(){}); } }catch(_){}
+}
 let _audioPausedByGame=false;
 /* ★ v428 暫停時記下真正在播的元素（領域語音／獨立語音／領域 BGM／開場影片），
    恢復時只把它們放回去；舊版 resumeAllAudio 漏了 domAudioEls，語音一暫停就整段消失。 */
 let _audioResumeEls=[];
 function pauseAllAudio(){
   _audioPausedByGame=true;
+  _audGen++;                    /* ★ v462 代次 +1：後台排隊的延遲起播全部作廢 */
   if(typeof bgmCtx!=='undefined'&&bgmCtx&&bgmCtx.state==='running'){ try{ bgmCtx.suspend(); }catch(e){} }
   /* ★ v421 用戶報「手機關屏後音樂還在響」：音效／合成音走的是另一顆 AudioContext（AC），
      舊版只 suspend 了 bgmCtx ⇒ 長尾合成音（死亡音、領域嗡鳴）在後台繼續。這裡一併掛起。 */
@@ -10745,6 +10829,8 @@ function resumeAllAudio(force){
      的快照，回來時不能無腦全部 play —— 領域曲要確認旗標與領域是否還在，主 BGM 要確認沒被領域壓住。
      舊版把已經停掉的伏魔御廚子曲照樣拉起來，而旗標早已是 false ⇒ 再沒有路徑去停它，整局疊着放。 */
   try{ _audioResumeEls.forEach(function(a){ try{ if(!a||!a.paused||a.ended) return;
+    /* ★ v462：语音不续播（语境已过），只有 BGM 家族允许被拉回来 */
+    if(!isBgmEl(a)){ try{ a.pause(); }catch(_){} return; }
     if(typeof sukuBgmEl!=='undefined' && a===sukuBgmEl && !(sukuBgmOn && S && S.sukuDom>0)) return;
     try{ const _oe=domAudioEls&&domAudioEls.okkoDomain; if(_oe && a===_oe && !(okkoDomBgmOn && S && S.okkoDom>0)) return; }catch(_){}
     if(typeof bgmEl!=='undefined' && a===bgmEl && (bgmMuted||bgmSuspendedByDomain)) return;
@@ -10753,6 +10839,11 @@ function resumeAllAudio(force){
   }catch(e){} }); }catch(e){}
   /* 40/240ms 的 force 重試共用同一份清單，700ms 後才清空 */
   try{ setTimeout(function(){ _audioResumeEls=[]; },700); }catch(e){}
+  /* ★ v462：恢復後立刻做一次 BGM 層互斥，並在 260/900ms 各複檢一次
+     （淡入鏈與 play() promise 常常比 resume 晚一拍才真正發聲，只查一次會漏） */
+  try{ enforceBgmLayer(); }catch(e){}
+  try{ setTimeout(function(){ try{ enforceBgmLayer(); }catch(e){} },260); }catch(e){}
+  try{ setTimeout(function(){ try{ enforceBgmLayer(); }catch(e){} },900); }catch(e){}
 }
 function update(dt){
   if(S.paused) return;   /* ★ v110 玩家暫停：與命中定格同一套範式，但由按鈕控制 */
@@ -14317,12 +14408,14 @@ else if(f.type==='lightPillar'){
       const q=Math.min(1,p*1.55);
       const im=IMGS.impactInk, imw=IMGS.impactInkWhite;
       const base=(f.big?210:132)*SC;   /* ★ v451b 命中瞬間就該有體量，不能等 r 慢慢長起來 */
-      const size=base*(0.58+q*0.62);
+      /* ★ v461 用戶指定：玩家被打中的那幾處墨爆太搶鏡 ⇒ soft 版縮到 46%、降到 60% 不透明度、不墊白墨 */
+      const _sf=(f.soft?0.46:1);
+      const size=base*(0.58+q*0.62)*_sf;
       const rot=(f.rot==null?0:f.rot)+p*(f.big?0.42:0.30);
       if(size>2){
         ctx.save(); ctx.translate(f.x,f.y); ctx.rotate(rot);
-        if(imw){ ctx.globalAlpha=Math.max(0,(1-p))*0.42; const s2=size*1.07; ctx.drawImage(imw,-s2/2,-s2/2,s2,s2); }
-        if(im){ ctx.globalAlpha=Math.max(0,Math.pow(1-p,0.72)); ctx.drawImage(im,-size/2,-size/2,size,size); }
+        if(imw && !f.soft){ ctx.globalAlpha=Math.max(0,(1-p))*0.42; const s2=size*1.07; ctx.drawImage(imw,-s2/2,-s2/2,s2,s2); }
+        if(im){ ctx.globalAlpha=Math.max(0,Math.pow(1-p,0.72))*(f.soft?0.60:1); ctx.drawImage(im,-size/2,-size/2,size,size); }
         ctx.restore();
       }
       /* 命中核心的一下白閃（打擊感留著，0.1 秒內收乾淨） */
@@ -17259,6 +17352,13 @@ function syncActsChip(){
   }catch(e){}
 }
 function syncHud(){
+  /* ★ v462 回合起點鎖：S.acted 由 true→false（＝新回合開閘）時記下時刻，
+     padAct 據此在 320ms 內忽略輸入 —— 玩家在宿儺回合連點的手指不會順勢打進新回合，
+     「一直點同一個按鈕 → 回合飛速過去」的體感就是這樣被拉回正常節奏的。 */
+  try{
+    if(S.__prevActed===true && S.acted===false && S.phase==="fight") window.__turnOpenT=_audNow();
+    S.__prevActed=S.acted;
+  }catch(e){}
   try{ syncActsChip(); }catch(e){}
   /* ★ v323 用戶反饋「宿儺儀式條擋住倒計時」：儀式條一出現就把回合條整體下移 */
   try{
@@ -17434,11 +17534,15 @@ function syncHud(){
         }else if(!(a==='guard' && S.hero==='gojo')){
           /* ★ v232 五條悟 2 技交給 syncGuardBtn 全權處理（此處寫「反轉術式」會與無下限形態打架：
              revCd 變動時本段會把按鈕刷回反轉術式，而 syncGuardBtn 的緩存鍵沒變就不再糾正） */
+          /* ★ v462 日車：罪狀數量掛在標題右側（.btn 是 flex-column，必須包一層 .btnTtl 才排得成一行） */
+          const _ttl=(S.hero==='higuruma' && a==='atk')
+            ? '<span class="btnTtl">'+t0[1]+'<i class="guiltTag'+(Math.min(3,S.guilt||0)>=3?' full':'')+'">罪狀 '+(S.guilt||0)+'/3</i></span>'
+            : t0[1];
           b.innerHTML= stg
             ? ICO('kai')+'弱點追撃<small>脆弱時間・免費一撃</small>'
             : (fist
                 ? ICO(t0[0])+'蒼・拳<small>10~14%・無標記</small>'+swapSpanHtml()
-                : ICO(t0[0])+t0[1]+'<small>'+(S.hero==='gojo'?'5~7%・可標記':btnLabel(t0[2]))+'</small>'+(S.hero==='gojo'?swapSpanHtml():'')+(S.hero==='maki'&&a==='guard'&&grdCanSwap()?grdSwapSpanHtml():''));
+                : ICO(t0[0])+_ttl+'<small>'+(S.hero==='gojo'?'5~7%・可標記':btnLabel(t0[2]))+'</small>'+(S.hero==='gojo'?swapSpanHtml():'')+(S.hero==='maki'&&a==='guard'&&grdCanSwap()?grdSwapSpanHtml():''));
         }
       }
       const stgOn=!!(a==='atk' && S.hero==='gojo' && S.stagger>0 && !S.staggerUsed);
@@ -17557,6 +17661,19 @@ function padAct(a){
   if(S.phase==='yujiDom'){ return; }   /* ★ v66：展開動畫期間不接收操作 */
   /* ★ v419 用戶指定：領域對拼期間整條技能欄鎖死（觸控／滑鼠三路事件都收斂到這裡） */
   if(S.domClash) return;
+  /* ★ v462 連點閘門（用戶報「一直點一個按鈕，回合飛快就沒了」）
+     · 本回合已出手（按鈕本來就置灰）⇒ 事件層也一併擋掉，不再重複 markActed；
+     · 同一波點擊：觸控裝置上 touchstart 與合成 click 會各派發一次，相隔通常 <120ms，
+       這裡用 260ms 同波去抖（正常兩次出招至少隔 900ms，不受影響）；
+     · QTE 進行中不套用（黑閃連點是玩法本身）。 */
+  if(!QTE.active){
+    /* 注意：這裡不能加 S.acted 硬擋 —— 五條「脆弱時間追撃」與虎杖領域内「靈魂·解」
+       在程式碼裡是刻意繞過 S.acted 的（見 actAtk 開頭），硬擋會廢掉這兩招。 */
+    const _now=_audNow();
+    if(window.__padLastT && _now-window.__padLastT<260) return;
+    if(window.__turnOpenT && _now-window.__turnOpenT<320) return;   /* 新回合剛開閘的 320ms：吃掉上一波連點 */
+    window.__padLastT=_now;
+  }
   if(a==='atk'){ if(QTE.active) qtePress(); else actAtk(); }
   else if(a==='guard'){ if(!QTE.active) actGuard(); }
   else if(a==='vow'){ if(!QTE.active) actVow(); }
@@ -17984,7 +18101,8 @@ const HERO_BTN={
   kashimo:{atk:['bolt','呪力電撃・雷',S=>'電荷 '+(S.charge||0)+'/5 ・ 每層 +15%'],
         guard:['spark','電荷放出',S=>{ const c=Math.min(2,S.charge||0); return c>0?('放出 '+c+' 層 ・ 傷害 '+(7.5*c)+'% ・ 減傷 '+Math.round((0.15+0.15*c)*100)+'%'):'沒有電荷 ・ 先用雷蓄電'; }],
         ult:['bolt','幻獣琥珀・解放',S=>S.amberUsed?'已解放 ・ 常駐':(((S.charge||0)<3)?('電荷 '+(S.charge||0)+'/3 ・ 未滿'):((S.kashimo.hp>S.maxHp*0.45)?'★ 待命 ・ 生命需 ≤45%':'★ 電荷足夠 ・ 50% 一擊'))]},
-  higuruma:{atk:['kai','法槌・開廷',S=>'舉證：證據 '+(S.evidence||0)+'/3'+'・罪狀 '+(S.guilt||0)+'/3'],
+  /* ★ v462 用戶指定：罪狀數量移到 1 技標題右側（黃字黑勾邊、小一號），小字只留舉證進度 */
+  higuruma:{atk:['kai','法槌・開廷',S=>'舉證：證據 '+(S.evidence||0)+'/3'],
         guard:['guard','領域展延',S=>'質詢鎖定・格擋 −30%'+(((S.evidence||0)>0)?'・可鎖 '+(S.evidence||0)+' 條':'')],
         ult:['melt','审判·下达',S=>{ const n=S.higuVerdictN||0, g=S.guilt||0;
           if(g<3) return '罪狀 '+g+'/3・不足不可下達';
@@ -19758,7 +19876,10 @@ function _sfxGate(el){
    這裡改用 cloneNode 複用已解碼元素（不重複 atob 大音源）、不寫 domCur，並註冊到
    domAudioEls 讓 pauseAllAudio / resumeAllAudio 一併接管。回傳 Promise 保持既有 .then 鏈。 */
 function playSoloVoice(key, lead, fallbackSec, vol){
+  const _ag=_audGen;   /* ★ v462 本次请求的音訊代次 */
   if(bgmMuted) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
+  /* ★ v462：切在後台/暫停時只保留時間線，不出聲（否則回前台會一齊爆響） */
+  if(document.hidden || (typeof S!=='undefined' && S && S.paused)) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
   let el=null, src='';
   try{
     prepDomAudio();
@@ -19794,18 +19915,23 @@ function playSoloVoice(key, lead, fallbackSec, vol){
       const p=el.play();
       if(p&&p.catch) p.catch(function(){
         const once=function(){ document.removeEventListener('pointerdown',once,true); document.removeEventListener('touchstart',once,true);
+          if(_audStale(_ag)) return;   /* ★ v462：等交互補播的這一份也受代次管 */
           try{ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){} };
         document.addEventListener('pointerdown',once,true); document.addEventListener('touchstart',once,true);
       });
     }catch(e){}
-    setTimeout(function(){ try{ if(el.paused&&!done&&!S.paused){ const q=el.play(); if(q&&q.catch) q.catch(function(){}); } }catch(e){} },150);
+    setTimeout(function(){ try{ if(_audStale(_ag)) return;   /* ★ v462：跨了暫停/切頁就作廢，別回來補播 */
+      if(el.paused&&!done&&!S.paused){ const q=el.play(); if(q&&q.catch) q.catch(function(){}); } }catch(e){} },150);
   });
 }
 try{ window.playSoloVoice=playSoloVoice; }catch(e){}
 /* 播放單段領域音效；返回 Promise（ended 或超時兜底 resolve），保證流程不被卡死 */
 function playDomSfx(key, fallbackSec, lead, _retry, trim){
   prepDomAudio();
+  const _ag=_audGen;   /* ★ v462 */
   if(bgmMuted){ return new Promise(function(res){ setTimeout(res,(fallbackSec||0)*1000); }); }   /* ★ v243 靜音時領域語音一併靜音（保留原時長） */
+  /* ★ v462：後台/暫停期間不出聲，也不註冊 ended（否則流程會被後台積壓的語音拖亂） */
+  if(document.hidden || (typeof S!=='undefined' && S && S.paused)) return new Promise(function(res){ setTimeout(res,(fallbackSec||0)*1000); });
   /* ★ v143 用戶指定：不再打断正在播的領域語音 —— 五條展開的語音在宿傩對拼展開播放宿傩語音時繼續（兩音疊放） */
   const el0=domAudioEls[key];
   if(!el0){
@@ -19826,7 +19952,7 @@ function playDomSfx(key, fallbackSec, lead, _retry, trim){
     if(!domAudioEls[key]){
       const n=_retry||0;
       if(n<20 && !domAudioEls.__ready){
-        return new Promise(res=>setTimeout(res,120)).then(()=>playDomSfx(key,fallbackSec,lead,n+1,trim));
+        return new Promise(res=>setTimeout(res,120)).then(()=>{ if(_audStale(_ag)) return new Promise(r=>setTimeout(r,(fallbackSec||0)*1000)); return playDomSfx(key,fallbackSec,lead,n+1,trim); });
       }
       return new Promise(res=>setTimeout(res, (fallbackSec||0)*1000));
     }
@@ -19851,6 +19977,7 @@ function playDomSfx(key, fallbackSec, lead, _retry, trim){
     const dur=isFinite(el.duration)&&el.duration>0?el.duration:(fallbackSec||0);
     const remain=Math.max(0.3, dur-(lead?lead:0)-(trim?trim:0));
     const t=setTimeout(fin, Math.max(300,(remain+0.25)*1000));
+    if(_audStale(_ag)){ try{ res(); }catch(e){} return; }   /* ★ v462：起播前最後一道代次閘 */
     _sfxGate(el);
     domCur=el;
     try{ domVoiceUntil=Date.now()+Math.max(800,remain*1000); }catch(e){}   /* ★ v411 */
@@ -19946,6 +20073,10 @@ function killSukuBgm(){
   try{ sukuBgmOn=false; ++_sukuFadeSeq; const e=sukuBgmEl;
     if(e){ e.pause(); e.volume=0; } }catch(e){}
 }
+/* ★ v462 BGM 層互斥巡檢：任何時刻只允許一條 BGM 在響（切頁回來最常見的「兩首曲子打架」） */
+setInterval(function(){
+  try{ if(document.hidden) return; enforceBgmLayer(); }catch(e){}
+},700);
 /* ★ v459 互斥巡檢：任何時刻 sukuBgmOn 與 okkoDomBgmOn 不得同時為真
    ★ v460 追加：旗標已關、音軌卻還在放（切頁/暫停恢復留下的鬼影）⇒ 直接硬停。
    放行 0.9s 的淡出窗口，避免把 stopSukuBgm 的正常淡出切斷。 */
@@ -20495,7 +20626,12 @@ function autoResumeOnShow() { try{ const _db=document.getElementById('deathBlack
 window.__appHidden=0;
   if(document.hidden) return;
   if(S.paused) return;
+  /* ★ v462：先硬停所有语音（切走时正在念的对白不该回来续播/叠播），再恢复 BGM */
+  try{ hardStopVoices(); }catch(e){}
   try{ resumeAllAudio(); }catch(e){}
+  try{ enforceBgmLayer(); }catch(e){}
+  try{ setTimeout(function(){ try{ enforceBgmLayer(); }catch(e){} },320); }catch(e){}
+  try{ setTimeout(function(){ try{ hardStopVoices(); enforceBgmLayer(); }catch(e){} },1200); }catch(e){}
   /* ★ v460 兜底：領域已經結束的領域曲一律硬停，避免疊在後面的音樂上 */
   try{ if(!(S && S.sukuDom>0)) killSukuBgm(); }catch(e){}
   try{ if(!(S && S.okkoDom>0)) killOkkoBgm(); }catch(e){}
