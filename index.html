@@ -2819,6 +2819,40 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 <!-- © 2026 老中医 · 新宿決戦（JUJUTSU KAISEN fan game）· All rights reserved. -->
 </head>
 <body>
+<div id="ghLoad" aria-hidden="true">
+<div class="gl-h">人外魔境<span>新宿決戦</span></div>
+<div class="gl-bar"><i></i></div>
+<div class="gl-s">正在載入資源…（首次約 10 秒，之後走快取）</div>
+</div>
+<style>
+#ghLoad{position:fixed;inset:0;z-index:999999;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:18px;background:#08080a;
+ color:#d8d2c8;font-family:"Noto Serif JP","Songti SC",serif;
+ transition:opacity .55s ease;pointer-events:none;}
+#ghLoad .gl-h{font-size:22px;letter-spacing:.42em;opacity:.92;text-indent:.42em;
+ text-align:center;line-height:2.1;}
+#ghLoad .gl-h span{display:block;font-size:13px;letter-spacing:.62em;opacity:.55;text-indent:.62em;}
+#ghLoad .gl-bar{width:132px;height:2px;background:rgba(255,255,255,.12);overflow:hidden;}
+#ghLoad .gl-bar i{display:block;width:44%;height:100%;background:#c8102e;
+ animation:glSlide 1.15s ease-in-out infinite;}
+@keyframes glSlide{0%{transform:translateX(-105%)}100%{transform:translateX(330%)}}
+#ghLoad .gl-s{font-size:11px;letter-spacing:.14em;opacity:.42;}
+</style>
+<script>(function(){
+  var t0=Date.now(), done=false;
+  function off(){
+    if(done) return; done=true;
+    var e=document.getElementById('ghLoad');
+    if(!e) return;
+    e.style.opacity='0';
+    setTimeout(function(){ if(e.parentNode) e.parentNode.removeChild(e); },620);
+  }
+  var iv=setInterval(function(){
+    var ts=document.getElementById('titleScreen');
+    var v=document.getElementById('bootVideoEl');
+    if((ts&&ts.classList.contains('open')) || (v&&v.readyState>=3) || Date.now()-t0>25000){ clearInterval(iv); off(); }
+  },250);
+})();</script>
 
 <script>
 /* ★ v450 版權與出處：© 2026 老中医 · 新宿決戦 */
@@ -3218,7 +3252,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 
   <!-- ★ v160 開場影片：全屏蓋在標題頁前，播完（或點擊跳過）才觸發標題「兩圖拼合」動畫 -->
   <div aria-label="開場動畫，點擊畫面開啟聲音，右下角可跳過" id="bootVideo" role="button" tabindex="0">
-    <video autoplay disableremoteplayback id="bootVideoEl" muted playsinline preload="auto" src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/213b053ab0a7.mp4" webkit-playsinline></video>
+    <video autoplay disableremoteplayback id="bootVideoEl" muted playsinline preload="auto" src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/036311795fca.mp4" webkit-playsinline></video>
     <script>/* ★ v316 手機瀏覽器開場影片黑屏修復：把 assets/ 的 mp4 先 fetch 成 blob 再交給 <video>，
        繞開 Range / 緩存殘片 / 原生播放器接管等問題；單文件版（src 是 data:）自動跳過。 */
 (function(){
