@@ -2847,7 +2847,7 @@ html.rot #lsWrap{width:min(72dvh,560px);height:auto;aspect-ratio:1100/780;max-wi
 <!-- ★ v449（用戶指定）：
      ① 日車「處刑人之劍」取消「斬手換劍・只吃 20%」——劍觸及即判死：
         一階段（受肉之軀）＝ **100% 最大生命**（直接處刑，當場崩解現原身）；二階段（原身）＝ **60% 最大生命**。
-        處刑之劍改走獨立 sid「higuExec」，不再吃魔虛羅的適應減半／免疫。
+        處刑之劍改走獨立 sid「higuExec」，不再吃魔虛羅的適應減傷。
      ② 全站字眼統一：舊稱（立誓／誓約／契約／違誓）一律改為「**立束縛**／束縛／**解縛**」，介面上不再出現舊字眼。 -->
 <!-- ★ v450（用戶指定）：
      ① 虎杖「靈魂·解・共鳴」：一階段只打穿受肉之軀（並令宿儺下一回合完全無法行動），真結局只留給原身。
@@ -3063,8 +3063,9 @@ html.rot #lsWrap{width:min(72dvh,560px);height:auto;aspect-ratio:1100/780;max-wi
     <p><b>回合制・行動力</b>　每回合基本 1 次行動（選定後本回合技能欄變灰）；宿儺每回合行動一次。<b>多 1 點行動力＝這一回合能多出一次招</b>：完美格擋 ⇒ 下回合 +1；五條悟展開領域、乙骨領域成立、游雲用滿 4 次 ⇒ 當回合追加 1 次。行動力 &gt;1 時右上角出現「行動力 ×N」膠囊，出招後仍留在本回合，用完才交棒宿儺。</p>
     <p><b>黑閃</b>　五條悟「蒼／蒼・拳」8%／虎杖「逕庭拳」14%／乙骨「太刀・呪斬」8% 起（鹿紫雲一、日車寬見、真希不會自發黑閃）；<b>每引發一次 +5%，上限 +15%</b>。引發時時間凍結、畫面轉暗並出現金色計量條（1.5 秒內點擊，虎杖的條更長）——點中 ⇒ 該擊傷害 ×2；沒點中 ⇒ 普通傷害。完美格擋必定引發黑閃（追擊黑閃 ×3）；立束縛「黑閃之束縛」可讓下一擊必出黑閃。</p>
     <p><b>立束縛</b>　每回合可立一道束縛：捨棄自身一項性能，換取另一項爆發 —— 條款見各角色。</p>
-    <p><b>適應</b>　魔虛羅在場時，同一技能第 1 次正常／第 2 次傷害減半／第 3 次起完全免疫 —— 必須輪換技能。</p>
-    <p><b>式神</b>　魔虛羅：宿儺生命首次跌破 90% 後的回合結束時召喚，可切目標「集火」擊破（死後宿儺失去適應）；顎吐：宿儺生命 &lt;85% 後的下一回合自動召喚。</p>
+    <p><b>適應</b>　魔虛羅<b>在場時</b>宿儺才具適應能力與適應條：同一技能第 1 次正常／第 2 次 <b>80%</b>／第 3 次起 <b>50%</b>（<b>最低 50% 傷害</b>，只減傷、不會失效）。<b>魔虛羅死亡時適應條歸零，但已被適應的技能仍保留減傷。</b></p>
+    <p><b>解析（魔虛羅死後）</b>　宿儺改以「適應」解析對手：適應條從 <b>0</b> 起，<b>對手為同一位術師時每回合 +10%</b>；每增長 10%，宿儺<b>所有攻擊傷害 +3%</b>（滿 100% ⇒ +30%）。換人則重新解析。</p>
+    <p><b>式神</b>　魔虛羅：宿儺生命首次跌破 90% 後的回合結束時召喚，可切目標「集火」擊破（死後適應條歸零，已適應的招式仍減傷，並開始解析對手）；顎吐：宿儺生命 &lt;85% 後的下一回合自動召喚。</p>
     <p><b>接力・遺志</b>　每位術師倒下後，下一位登場即繼承遺志：<b>1 次受擊免傷</b>（只擋 ≥5% 最大生命的實質打擊）＋<b>首次攻擊 +10%</b>。輪換不再是純損失。</p>
     <p><b>看破（宿儺）</b>　同一位術師在場<b>超過 10 回合</b> ⇒ 宿儺看破其術式：你對它的傷害 <b>−10%</b>（不累加，換棒即解除）。</p>
     <p><b>激怒（宿儺）</b>　同一位術師在場<b>每 10 回合</b>，宿儺對其傷害 <b>+10%</b>（2 層封頂 +20%）；換棒全部清零。</p>
@@ -3842,33 +3843,74 @@ const AGYO_PCT={hp:.18,atk:.45,def:.70,spd:.85,cost:.20};
 const MAHO_PCT={hp:.30,atk:.70,def:.90,spd:.70,cost:.35};
 const RIKA_TURNS=5;      /* ★ v60 式神・里香的存在回合數（與魔虛羅同生命） */
 const SHIK_TAKEN={agyo:.85, maha:.65};   /* 式神喫到的傷害係數（防禦力折算） */
-/* ★ v40 適應系統重做 —— 按「技能 ID」記錄：
-     同一技能第 1 次 → 正常傷害；第 2 次 → 傷害減半；第 3 次起 → 完全免疫（該類型永久失效）。
-     ★ v480：魔虛羅一旦登場，適應本局常駐（擊破不清零）；第三檔「绝境」開局即常駐。 */
-function adaptLive(){ return !!(S.maha || S.mahaDead || (typeof DF==='function' && DF().adapt)); }   /* ★ v480 魔虛羅登場後常駐；第三檔開局即常駐 */
+/* ★ v40 適應系統 —— 按「技能 ID」記錄。
+     ★ v483：只減傷不廢招；泛用招按「角色:類型」分桶，不再全隊共用。
+     ★ v484 用戶指定四條：
+       ① 減傷曲線統一 1 / 0.8 / 0.5（最低 50% 傷害）；「免疫」字樣一律改稱「適應」。
+       ② 魔虛羅「在場」時宿儺才有適應能力與適應條；死亡時適應條歸零，
+          但 adaptMap 層數保留 ⇒ 已被適應的技能仍吃減傷。
+       ③ 死亡後宿儺改以「適應」解析對手：條從 0 起，對手為同一位術師時每回合 +10%，
+          每增長 10% 讓宿儺「所有攻擊傷害」+3%（滿 100% ⇒ +30%）。
+       ④ 絕境檔 (DF().adapt) 開局即具適應（v480 保留）。 */
+const ADAPT_CURVE={
+  normal:[1, 0.80, 0.50],   /* ★ v484 第 2 發 80%、第 3 發起 50% */
+  hard:  [1, 0.80, 0.50],
+  void:  [1, 0.80, 0.50]
+};
+function adaptCurve(){ return ADAPT_CURVE[S.diff]||ADAPT_CURVE.normal; }
+/* 適應「活躍」＝還在累積層數、條顯示適應進度（在場，或絕境檔開局即常駐） */
+function adaptActive(){ return !!(S.maha && !S.mahaDead) || !!(typeof DF==='function' && DF().adapt); }
+function adaptLive(){ return adaptActive() || !!S.mahaDead; }   /* 相容舊呼叫 */
+/* 條目前所處階段：適應 / 解析 / 關閉 */
+function adaptPhase(){
+  if(S.mahaDead) return 'analyze';
+  if(adaptActive()) return 'adapt';
+  return 'off';
+}
 function adaptMult(sid){
-  if(!adaptLive()||!sid||(S.noAdaptT||0)>0) return 1;   /* ★ v62 修復：魔眼・透視的「適應封印」真正生效（v40 重構時漏接） */
-  const n=S.suk.adaptMap[sid]||0;
-  if(n>=2) return 0;        /* 第 3 次起：完全免疫 */
-  if(n===1) return 0.5;     /* 第 2 次：傷害減半 */
+  if(!sid||(S.noAdaptT||0)>0) return 1;   /* ★ v62 適應封印 */
+  /* ★ v484 不看 adaptLive：魔虛羅死後 adaptMap 仍有效，已適應的招式照樣減傷 */
+  const n=S.suk.adaptMap[sid]||0, c=adaptCurve();
+  if(n>=2) return c[2];      /* 第 3 發起：最低 50% 傷害 */
+  if(n===1) return c[1];     /* 第 2 發：80% */
   return 1;
 }
+/* ★ v484 魔虛羅死後的「解析」進度 */
+function analyzePct(){ return Math.max(0,Math.min(100,S.anaPct||0)); }
+function analyzeMul(){ return 1+0.03*Math.floor(analyzePct()/10); }   /* 每 10% ⇒ 所有攻擊 +3% */
+function analyzeTick(){
+  if(!S.mahaDead) return;
+  if(S.anaHero!==S.hero){ S.anaHero=S.hero; S.anaPct=0; syncAdaptBar(); return; }  /* 換人 ⇒ 重新解析 */
+  if((S.anaPct||0)<100){ S.anaPct=Math.min(100,(S.anaPct||0)+10); syncAdaptBar(); }
+}
+/* ★ v484 擊破／抹除魔虛羅：條歸零、層數保留、轉入解析 */
+function adaptOnMahaDown(){
+  S.anaPct=0; S.anaHero=S.hero;
+  if(typeof syncAdaptBar==='function') syncAdaptBar();
+}
 function adaptTick(sid){
-  if(!adaptLive()||!sid||(S.noAdaptT||0)>0) return;   /* ★ v62 封印期間不再累積 */
+  if(adaptPhase()!=='adapt'||!sid||(S.noAdaptT||0)>0) return;   /* 解析階段不再累積技能適應 */
   S.suk.adaptMap[sid]=Math.min(3,(S.suk.adaptMap[sid]||0)+1);
   syncAdaptBar();
 }
 function adaptLevel(){
-  if(!adaptLive()) return 0;
+  if(adaptPhase()!=='adapt') return 0;   /* ★ v484 死亡 ⇒ 適應條歸零 */
   let mx=0; const m=S.suk.adaptMap||{};
   for(const k in m) if(m[k]>mx) mx=m[k];
   return Math.min(3,mx);
 }
 function syncAdaptBar(){
-  const live=adaptLive();
-  setAdaptBar(live);
+  const ph=adaptPhase();
+  setAdaptBar(ph!=='off');
+  const pct=(ph==='analyze')?analyzePct():(ph==='adapt'?(adaptLevel()/3*100):0);
   const bar=$('adaptBar');
-  if(bar&&bar.firstElementChild) bar.firstElementChild.style.width=(adaptLevel()/3*100).toFixed(0)+'%';
+  if(bar&&bar.firstElementChild) bar.firstElementChild.style.width=pct.toFixed(0)+'%';
+  const txt=$('skAdTxt'); if(txt) txt.textContent=Math.round(pct)+'%';
+  const tag=$('adaptTag');
+  if(tag){
+    const tn=tag.firstChild; if(tn&&tn.nodeType===3) tn.nodeValue=(ph==='analyze'?'適應・解析':'適應');
+    const sm=tag.querySelector('small'); if(sm) sm.textContent=(ph==='analyze'?'ANALYZE':'ADAPT');
+  }
 }
 const AGYO_S1_PCT=.05;    /* 鵺鳴·電荷：5% 最大生命 */
 const AGYO_S3_PCT=.02;    /* 虎葬·碎擊：追加 2% 最大生命 + 降防 10% */
@@ -4123,6 +4165,7 @@ function resetBattle(){
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.makiCd=0; S.sukLast='';
   S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false; S.sukuSummonForm=false; S.yujiEndAt=0;   /* ★ v291 換裝／結局背景重置 */
+  S.anaPct=0; S.anaHero='';               /* ★ v484 魔虛羅死後的解析進度 */
   S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.yugyoBonus=0; S.kanju=false; S.kanjuHp=0; S.kanjuMax=0; S.kanjuPhase=''; S.kanjuUsed=false; S.okkoDom=0;  S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.voidDomBroken=false; S.okkoVoiceUntil=0; S.deathVoiceUntil=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.higuDomVerdict=0; S.shikWait=0; S.higuExecUsed=false; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 對拼狀態一併清空／★ v92 熔斷狀態重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false;   S.rikaT=0; S.rikaCopy=''; S.ceCap=100;  S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.makiUsed=0; S.makiGSel=null; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重開一局清掉新機制殘留 */
   S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false;  S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null;   /* ★ v80 反轉術式 CD */
   S.hollowSkip=0; S.hollowUsedTurn=-1; S.hollowFree=false; S.usedUnlimited=false;
@@ -5565,6 +5608,7 @@ function hurtHero(d,kind){
     fxText(GX()+60*SC,GY-236*SC,'里香分擔','#7c3aed',false);
   }
   d=d*diffDmg();                       /* ★ 難度係數只作用在「角色受傷」這一處 */
+  if(S.mahaDead && d>0) d*=analyzeMul();   /* ★ v484 解析：每 10% ⇒ 宿儺所有攻擊 +3% */
   d*=1+0.10*Math.min(2,Math.floor(heroTurnCount()/10));   /* ★ v450 激怒：每 10 回合 +10%，2 層封頂 */
   d*=1+0.05*streetLv();                                   /* ★ v450 街道破壞度：雙方傷害 +5%/級 */
   if(S.higuDom>0) d*=0.85;              /* ★ v387 誅伏賜死：領域內禁止暴力 ⇒ 宿儺輸出 −15% */
@@ -6491,12 +6535,12 @@ function killMaha(){
   if(!S.maha) return;
   S.mahaFade=MAHA_FADE;      /* 剩餘漸隱時長：>0 即表示正在淡出 */
   S.mahaDead=true;                            /* 本局不再召喚 */
-  if(typeof syncAdaptBar==='function') syncAdaptBar();   /* ★ v480 適應已常駐：擊破也不清零、指示不下線 */
+  adaptOnMahaDown();                       /* ★ v484 條歸零、適應層數保留、轉入解析 */
   if(S.target==='maha') S.target='sukuna';
   fxText(SX()-150*SC,GY-206*SC,'魔虛羅・消滅','#8b5cf6',true);
   say('suku','「——什麼？」');
   say('suku','「……它被『抹除』了。」');
-  say('sys','無限制・茈 命中——魔虛羅被抹除：宿儺失去「適應」、本體停止回血，且不會再召喚。');
+  say('sys','無限制・茈 命中——魔虛羅被抹除：本體停止回血、不再召喚；適應條歸零，但已被適應的招式仍會減傷。');
   syncHud();
 }
 /* 魔虛羅當前透明度：未在漸隱時爲 1，漸隱中按剩餘時長線性淡出 */
@@ -6513,7 +6557,26 @@ const KIND_BY_HERO={
   maki:    {atk:'釋魂刀',      hollow:'無聲突襲',     black:'黑閃'}
 };
 const KIND_NAME={atk:'術式順轉·蒼',hollow:'虛式·茈',black:'黑閃'};   /* 五條悟（兼容舊引用） */
-function kindName(k){ const t=KIND_BY_HERO[S.hero]||KIND_BY_HERO.gojo; return t[k]||KIND_NAME[k]||k||''; }
+/* ★ v483 顯式 sid 中文名：避免適應提示直接噴出 gojo_cang 這類英文 key */
+const SID_NAME={
+  gojo_cang:'蒼・拳', gojo_black:'黑閃', gojo_he:'術式反轉·赫', gojo_hollow:'虛式·茈',
+  kash_2:'二段雷', kash_discharge:'電荷放出', kash_amber:'幻獣琥珀',
+  rika_copy_blood:'赤血操術', rika_copy_kai:'解', rika_copy_hatsu:'捌',
+  rika_copy_tenrai:'邪去侮天梯', okko_dom_tenrai:'邪去侮天梯',
+  rika_punch:'里香・拳', rika_release:'無限制咒力解放', higuExec:'處刑人之劍',
+  ita_soul:'靈魂·解', ita_soul_final:'靈魂·解・共鳴'
+};
+function kindName(k){
+  const t0=KIND_BY_HERO[S.hero]||KIND_BY_HERO.gojo;
+  if(typeof k!=='string') return '';
+  const hit=SID_NAME[k]||t0[k]||KIND_NAME[k]; if(hit) return hit;
+  const ci=k.indexOf(':');
+  if(ci>=0){                       /* ★ v483 前綴自帶角色：用前綴的角色表，不要用當前在場角色 */
+    const h=k.slice(0,ci), cut=k.slice(ci+1), t=KIND_BY_HERO[h]||t0;
+    return t[cut]||KIND_NAME[cut]||SID_NAME[cut]||cut||'';
+  }
+  return k;
+}
 function kindLabel(k){ const n=kindName(k); return n.length>6?n.slice(0,6):n; }
 /* ★ v393 用戶指定：刪除「同一招連用第 3 次起 ×0.62」的遞減機制。
    （原 meltFactor／meltTick 一併移除，招式不再因連用而衰減。）
@@ -6628,18 +6691,17 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     }
     S.target='sukuna';
   }
-  /* ★ v40 適應：按技能 ID 記錄 —— 1 次正常 / 2 次減半 / 3 次起完全免疫 */
-  const useSid=sid||kind;
+  /* ★ v484 適應：按技能 ID 記錄 —— 1 次正常 / 2 次 80% / 3 次起 50%（最低 50% 傷害） */
+  /* ★ v483 沒傳 sid 的泛用招按「角色:類型」分桶，不再全隊共用同一個 atk 桶 */
+  const useSid=sid||((S.hero||'?')+':'+(kind||'atk'));
   let adaptAmt=1;
   if(argPierce) pierce=true;
   if(!pierce && !S.noAdapt && typeof adaptMult==='function') adaptAmt=adaptMult(useSid);
-  if(adaptAmt===0){
-    S.suk.pose='hurt'; S.suk.poseT=0.2;
-    fxText(SX()-20*SC,GY-170*SC,'免疫','#8b5cf6',true);
-    say('sys','魔虛羅已完全適應「'+kindName(useSid)+'」——該技能永久失效，換招！');
-    syncHud(); return;
+  /* ★ v484 適應不再讓招式「永久失效」：傷害照常結算，只乘上減傷係數（最低 50%） */
+  if(adaptAmt<1){
+    d*=adaptAmt;
+    if(adaptAmt<=0.5) fxText(SX()-20*SC,GY-196*SC,'適應','#8b5cf6',false);   /* 舊「免疫」字樣改稱「適應」 */
   }
-  if(adaptAmt<1) d*=adaptAmt;
   d=Math.round(d*10)/10;
                                 /* 本回合累計輸出（用於打斷儀式） */
   /* ★ v27：宿儺仍寄宿在伏黑惠的肉體裏（未現原身）時被擊倒 —— 死的是「受肉之軀」，
@@ -6682,7 +6744,7 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     fxText(SX()-20*SC+rnd(-14,14),GY-170*SC,'-'+sukPct(d),
       (adaptAmt<1)?'#8b5cf6':(big?'#f5c542':'#d7263d'),!!big);
   }
-  if(adaptAmt<1) say('sys','魔虛羅已適應「'+kindName(useSid)+'」——該招傷害減半。');
+  if(adaptAmt<1) say('sys','魔虛羅已適應「'+kindName(useSid)+'」——該招傷害降至 '+Math.round(adaptAmt*100)+'%。');
   if(typeof adaptTick==='function') adaptTick(useSid);
   /* ★ v131 用戶要求：連招威力下降不再飄「熔斷」字樣（該字樣僅屬領域對拼失敗，見 sukuBurn/gojoBurn） */
   shake();
@@ -6926,10 +6988,10 @@ function agyoDown(){
 function mahaSlain(){
   if(!S.maha&&S.mahaFade<=0) return;
   S.mahaFade=MAHA_FADE; S.mahaDead=true;
-  if(typeof syncAdaptBar==='function') syncAdaptBar();   /* ★ v480 適應常駐 */
+  adaptOnMahaDown();                       /* ★ v484 */
   if(S.target==='maha') S.target='sukuna';
   fxShikFade('魔虛羅・擊破',SX()-102*SC,GY-258*SC,24);   /* ★ v468 統一樣式：黑字白描邊・小字・漸隱 */
-  say('sys','★ 魔虛羅被擊破——但適應已刻進宿儺體內，依舊生效！');
+  say('sys','★ 魔虛羅被擊破——適應條歸零，已被適應的招式仍減傷；宿儺開始解析對手！');
   syncHud();
 }
 /* ---------- 式神受擊 ---------- */
@@ -9164,7 +9226,7 @@ function summonMaha(withLog){
     flash('fPurple'); shake();
     if(withLog){
       say('suku','「布瑠部由良由良——八握劍·異戒神將·魔虛羅。」');
-      say('sys','魔虛羅登場：同一技能第 1 次正常、第 2 次減半、第 3 次起完全免疫——必須輪換不同招式；擊破它，宿儺就會失去適應。');
+      say('sys','魔虛羅登場：同一技能第 2 次傷害 80%、第 3 次起 50%——輪換招式更划算；擊破它後適應條歸零，但已適應的招式仍減傷。');
     }
   };
   setTimeout(landMaha,640);
@@ -9788,6 +9850,7 @@ function sukunaTurn(){
     }
   }
   S.turnN++;
+  try{ analyzeTick(); }catch(e){}   /* ★ v484 魔虛羅死後：解析進度每回合 +10%（同一術師） */
   /* ★ v450 看破 / 激怒：同一術師在場超過 10 回合 ⇒ 宿儺看破其術式（對其減傷 10%，不累加）；
      每 10 回合 ⇒ 宿儺對其傷害 +10%（2 層封頂 20%）。換棒全部清零。 */
   try{
@@ -11263,7 +11326,9 @@ function showResultInternal(){
   /* ★ v266 段位印章（S/A/B/C，顯示在「掌握咒力核心」左側；D 併入 C 顯示） */
   const _g=document.getElementById('rGrade');
   if(_g){ const _r=(S.rank==='D')?'C':S.rank; _g.textContent=_r;
-    _g.className=(_r==='S')?'':(_r==='A')?'gA':(_r==='B')?'gB':'gC'; }
+    _g.className=(_r==='S')?'':(_r==='A')?'gA':(_r==='B')?'gB':'gC';
+    /* ★ v483 同一頁連玩兩局時 CSS 動畫不會自動重啟 ⇒ 強制重播漸顯 */
+    _g.style.animation='none'; void _g.offsetWidth; _g.style.animation=''; }
   try{ localStorage.removeItem('jjk_shinjuku_save'); }catch(e){}   /* 本局結束 ⇒ 清除續戰存檔 */
   refreshResumeBtn();
   /* ===== v84 新結算主體：結局卡 → 接力鏈 → 挑戰紀錄 → 結局圖鑑 → 彩蛋 ===== */
@@ -19618,7 +19683,7 @@ function btnLabel(v){ return (typeof v==='function')?v(S):v; }
 const OPENING=[
   ['narr','旁白：時間來到十二月二十四日。史上最強咒術師五條悟，與詛咒之王兩面宿儺的決戰，在新宿正式拉開序幕。'],
   ['suku','「來吧——讓我看看，你們能撐到第幾棒。」'],
-  ['sys','宿儺將於第 2 回合召喚魔虛羅——同一技能打第 1 次正常、第 2 次減半、第 3 次起完全免疫，必須輪換技能；擊破魔虛羅可讓宿儺失去適應。']
+  ['sys','宿儺將於第 2 回合召喚魔虛羅——同一技能第 2 次傷害 80%、第 3 次起 50%（最低五成）；擊破後適應條歸零，但已適應的招式仍減傷，宿儺改為解析對手、越打越疼。']
 ];
 let FIRST_OPEN=false;
 function firstOpen(){ if(!FIRST_OPEN) return []; FIRST_OPEN=false; return OPENING; }
@@ -19996,7 +20061,7 @@ function higuUlt(){
       /* ★ v412 劍與斷頭台改由 higuTrial 統一繪製 */
       /* ★ v449 用戶指定：不再有「斬手換劍」。劍觸及即判死 ——
          一階段（受肉之軀）＝ 100% 最大生命（當場處刑、直接現原身）；二階段（原身）＝ 60% 最大生命。
-         sid 用獨立的 'higuExec'：處刑之劍不吃魔虛羅的「適應減半／免疫」。 */
+         sid 用獨立的 'higuExec'：處刑之劍不吃魔虛羅的「適應減傷」。 */
       const _wasTrue=S.trueForm;
       S.higuExecUsed=true;   /* ★ v448 每局一次 */
       hitSukuna(SUK_MAXHP*(_wasTrue?0.60:1.00),true,'hollow',false,true,'higuExec');
@@ -23314,6 +23379,16 @@ html.rot #rsNavDown.on,html.rot #rsNavUp.on{display:flex;}
 #resultScreen .recBox{padding:3px 8px !important;}
 #resultScreen .recBox .rv{font-size:12px !important;}
 #resultScreen .recBox .rk,#resultScreen .recBox .rb{font-size:9px !important;}
+
+/* ═════════════ ★ v483 結算評級字母：墨跡漸顯（淡入 + 落印回彈） ═════════════ */
+@keyframes inkGradeIn{
+  0%{opacity:0;transform:translateY(-50%) skewX(-8deg) rotate(-8deg) scale(.62);}
+  45%{opacity:.55;transform:translateY(-50%) skewX(-8deg) rotate(-8deg) scale(1.10);}
+  72%{opacity:.88;transform:translateY(-50%) skewX(-8deg) rotate(-8deg) scale(.97);}
+  100%{opacity:1;transform:translateY(-50%) skewX(-8deg) rotate(-8deg) scale(1);}
+}
+#resultScreen #rGrade{animation:inkGradeIn 1.15s cubic-bezier(.18,.82,.26,1) .22s both;}
+@media (prefers-reduced-motion:reduce){#resultScreen #rGrade{animation:none;}}
 </style>
 <!-- ★ v307 虎杖終結一擊：钉崎演出結束後全屏白爆 + 立繪 -->
 <div aria-hidden="true" id="yujiFin"><div class="yfBurst"></div><img alt id="yfImg"></div>
