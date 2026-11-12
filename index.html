@@ -2968,6 +2968,12 @@ html.rot #lsWrap{width:min(72dvh,560px);height:auto;aspect-ratio:1100/780;max-wi
 
 <svg aria-hidden="true" id="sprite">
 <defs>
+<!-- ★ v482 評級字母墨跡毛邊：低頻噪聲位移 + 極輕高斯，模擬濃墨落紙的毛鋒 -->
+<filter id="inkGradeEdge" x="-25%" y="-25%" width="150%" height="150%">
+  <feTurbulence type="fractalNoise" baseFrequency="1.05" numOctaves="3" seed="9" result="n"/>
+  <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G" result="d"/>
+  <feGaussianBlur in="d" stdDeviation="0.35"/>
+</filter>
 <!-- 術式順轉・蒼：引力奇點 -->
 <symbol id="ic-kai" viewBox="0 0 24 24">
   <path d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 6.1a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z" fill-rule="evenodd"/>
@@ -3427,32 +3433,36 @@ html.rot #lsWrap{width:min(72dvh,560px);height:auto;aspect-ratio:1100/780;max-wi
     <div class="secTitle">結局圖鑑 <span class="dexCnt" id="rDexCnt">0/8</span></div>
     <div class="dex" id="rDex"></div>
     <div id="achBlock">
-      <div class="secTitle" id="achTitle">本局解鎖 · 隱藏彩蛋</div>
-      <div id="achWrap"></div>
+      <div class="secTitle" id="achTitle"><span class="achCap">本局解鎖 · 隱藏彩蛋</span><span class="achCnt" id="achCnt"></span></div>
+      <div id="achMarquee"><div id="achWrap"></div></div>
     </div>
     <div class="srvCard" id="rSrv">
       <div class="srvHd">全服戰況<small>LIVE</small></div>
       <div class="srvBody" id="rSrvBody">正在讀取…</div>
     </div>
     <div class="srvCard" id="rFb">
-      <div class="srvHd">給作者的話<small>MESSAGE</small></div>
       <div class="fbRow">
         <button class="fbBtn" data-fb="2"><b>神作</b><i>大滿足</i></button>
         <button class="fbBtn" data-fb="1"><b>好評</b><i>還不錯</i></button>
         <button class="fbBtn" data-fb="0"><b>一般</b><i>可改進</i></button>
       </div>
       <div class="fbEdit">
-        <textarea id="rFbText" maxlength="240" rows="2" placeholder="想對作者說的話……（選填，最多 240 字）"></textarea>
+        <textarea id="rFbText" maxlength="240" rows="2" placeholder="想對作者說的話……（選填）"></textarea>
         <button id="rFbSend">送出</button>
       </div>
-      <div class="fbFoot">
-        <div class="fbOk" id="rFbOk">選一個評價，或直接寫幾句都行。</div>
-      </div>
+      <div class="fbOk" id="rFbOk"></div>
     </div>
     <button class="cta ctaShare" id="btnShare">分享戰績<span class="ctaSub">存成一張圖，發給朋友</span></button>
     <button class="cta" id="btnAgain">世界線跳躍<span class="ctaSub">再來一局</span></button>
     <div class="resDisc">同人粉絲向非官方作品 · 無任何收費與商業用途 · 僅供個人學習交流；角色、名稱、圖像與音樂之權利均歸原作者及權利方所有，侵權即刪。</div>
   </div>
+  <!-- ★ v481 手機端結算頁浮動滾動鈕（放在 #resultScreen 之外，才不會隨內容滾走） -->
+  <button type="button" id="rsNavDown" aria-label="滑到頁面底部">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/><path d="M12 15.5V4.2" opacity=".55"/></svg>
+  </button>
+  <button type="button" id="rsNavUp" aria-label="回到頁面頂部">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6"/><path d="M12 8.5v11.3" opacity=".55"/></svg>
+  </button>
   <!-- ★ v153 音樂盒面板移入 #app：隨自動橫屏一起旋轉，方向與遊戲一致 -->
 <!-- ★ v266 音樂盒面板已移除 -->
 
@@ -10801,11 +10811,18 @@ function renderAch(){
   window.__lastAch=got; window.__freshAch=fresh;   /* ★ v446 供戰績卡讀取 */
   if(changed) putSave(SAVE);
   const total=ACH.length, gotAll=Object.keys(SAVE.ach).length;
-  wrap.innerHTML = got.length
-    ? got.map(id=>{ const a=ACH.find(x=>x[0]===id);
-        return '<div class="ach'+(fresh.indexOf(id)>=0?' new':'')+'">'+ICO(a[0])+'<span>'+a[1]+'<small>'+a[2]+'</small></span></div>'; }).join('')
-    : '';
-  wrap.innerHTML += '<span class="achNone">'+(got.length?'本局 '+got.length+' 項 · ':'本局未解鎖 · ')+'累計 '+gotAll+'/'+total+'</span>';
+  /* ★ v482 用戶指定：彩蛋改單列「從右向左」自動滾動；計數搬到標題右側，去掉重複的「本局」。 */
+  const _cnt=$('achCnt');
+  if(_cnt) _cnt.textContent = got.length ? (got.length+' 項 · 累計 '+gotAll+'/'+total) : ('累計 '+gotAll+'/'+total);
+  if(got.length){
+    const one=got.map(id=>{ const a=ACH.find(x=>x[0]===id);
+        return '<div class="ach'+(fresh.indexOf(id)>=0?' new':'')+'">'+ICO(a[0])+'<span>'+a[1]+'<small>'+a[2]+'</small></span></div>'; }).join('');
+    wrap.innerHTML = one+one;          /* 複製一份 ⇒ 位移 -50% 時無縫接回 */
+    wrap.classList.add('run');
+  }else{
+    wrap.innerHTML = '<span class="achNone">尚無解鎖 · 累計 '+gotAll+'/'+total+'</span>';
+    wrap.classList.remove('run');
+  }
 }
 /* ===== ★ v239 全服戰況 + 手感反饋 =====
    每局結算上報一次（w=1 通關），拿回累計數據展示；玩家可點三檔手感並留言（≤80 字）。
@@ -10925,7 +10942,11 @@ function sendFb(){
   if(box && box.__sent) return;
   const r=(box && box.__pick!==undefined)?box.__pick:-1;
   const m=((txt&&txt.value)||'').replace(/[<>]/g,'').replace(/\s+$/,'').slice(0,240);
-  if(r<0 && !m){ if(ok) ok.textContent='先選個評價，或寫幾句話再送出。'; return; }
+  if(r<0 && !m){
+    if(ok) ok.textContent='先選個評價，或寫幾句話再送出。';
+    if(box){ box.classList.add('warn'); clearTimeout(box.__w); box.__w=setTimeout(function(){ box.classList.remove('warn'); },1100); }
+    if(btn){ btn.textContent='先選評價'; clearTimeout(btn.__r); btn.__r=setTimeout(function(){ btn.textContent='送出'; },1500); }
+    return; }
   if(btn) btn.disabled=true;
   if(ok) ok.textContent='送出中…';
   fetch(apiBase()+'/api/msg?r='+r+'&s='+encodeURIComponent(jjkSid())+'&m='+encodeURIComponent(m),{cache:'no-store'})
@@ -10938,12 +10959,12 @@ function sendFb(){
         if(txt) txt.disabled=true;
       } else {
         if(ok) ok.textContent='送出失敗，稍後再試。';
-        if(btn) btn.disabled=false;
+        if(btn){ btn.disabled=false; btn.textContent='重試'; }
       }
     })
     .catch(function(){
       if(ok) ok.textContent='離線 · 沒送出去，連上網後再按一次。';
-      if(btn) btn.disabled=false;
+      if(btn){ btn.disabled=false; btn.textContent='重試'; }
     });
 }
 
@@ -11117,6 +11138,44 @@ function rsScrollInit(){
   }
   rsMeasure();
 }
+/* ═══ ★ v481 結算頁浮動滾動鈕：底部向下 → 一鍵到底；到底後頂部向上 → 一鍵回頂 ═══ */
+(function(){
+  const _dn=$('rsNavDown'), _up=$('rsNavUp'), _rs=$('resultScreen');
+  if(!_dn||!_up||!_rs) return;
+  let _raf=0;
+  function _mob(){ const h=document.documentElement; return h.classList.contains('land')||h.classList.contains('rot'); }
+  function _sync(){
+    if(!_mob() || _rs.classList.contains('hide')){ _dn.classList.remove('on'); _up.classList.remove('on'); return; }
+    const sh=_rs.scrollHeight, ch=_rs.clientHeight, st=_rs.scrollTop;
+    const can=(sh-ch)>56;
+    const bottom=(st+ch)>=(sh-16);
+    _dn.classList.toggle('on', can && !bottom);
+    _up.classList.toggle('on', can && bottom);
+  }
+  function _glide(to){
+    const from=_rs.scrollTop, dist=to-from;
+    if(Math.abs(dist)<2){ _rs.scrollTop=to; _sync(); return; }
+    const dur=Math.min(700, 280+Math.abs(dist)*0.5);
+    const now=function(){ return (window.performance&&performance.now)?performance.now():(new Date().getTime()); };
+    const t0=now();
+    if(_raf) cancelAnimationFrame(_raf);
+    function step(){
+      const p=Math.min(1,(now()-t0)/dur), e=1-Math.pow(1-p,3);
+      _rs.scrollTop=from+dist*e;
+      if(p<1){ _raf=requestAnimationFrame(step); }
+      else { _raf=0; _rs.scrollTop=to; _sync(); }
+    }
+    step();
+  }
+  _dn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); _glide(_rs.scrollHeight); });
+  _up.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); _glide(0); });
+  _rs.addEventListener('scroll',_sync,{passive:true});
+  window.addEventListener('resize',_sync);
+  try{ new MutationObserver(_sync).observe(_rs,{attributes:true,attributeFilter:['class','style']}); }catch(e){}
+  setInterval(function(){ if(!_rs.classList.contains('hide')) _sync(); },900);
+  _sync();
+})();
+
 function showResult(){   /* ★ v372 包一層保底：內部招式報错也要把結算層顯示出來 */
   /* ★ v411 用戶報「擊敗宿儺後跳過勝利動畫進結算，點『世界線跳躍』又冒出五條勝利動畫」：
      #gzFin 的 .on 從未被摘掉 —— 結算層一收起，底下那層終幕演出就整個露出來。
@@ -11180,11 +11239,27 @@ function showResultInternal(){
   $('yujiDomain').classList.remove('on');
   closeVowUI();
   /* ★ S.rank 仍要算：成就「呪術師の鑑」依賴它；但結算頁不再展示這類單局數值 */
-  const heroBonus=(S.hero==='itadori'?8:(S.hero==='kashimo'?5:0));
-  const score=S.total*0.55*(100/SUK_MAXHP) + S.blackN*8 + (100-Math.max(0,S.suk.hp)/SUK_MAXHP*100)*0.35
-              + (S.whatIf?8:0) + heroBonus + (S.domainUsed?4:0) + (S.trueWin?30:0)
-              + (S.usedUnlimited?12:0);
-  S.rank = score>=95?'S':(score>=78?'A':(score>=58?'B':(score>=36?'C':'D')));
+  /* ★ v482 評級重算（玩家反饋「幾乎人人 S」）：
+     舊公式把「打完兩管血」直接折算成 ~110 分，而 S 門檻只要 95 ⇒ 只要通關就保底 S。
+     改為 0~100 正規化分制，五項表現各自計權：
+       ① 輸出完成度（打掉的血量 / 兩管血）  45 分
+       ② 收尾時場上角色的剩餘血量          22 分
+       ③ 承受傷害越少越高                  12 分
+       ④ 黑閃次數                          10 分
+       ⑤ 完美格擋次數                      11 分
+     真結局 +4、無量空處成立 +2（總分封頂 100）。S 只留給「打得乾淨又漂亮」的局。 */
+  const _sukHp=(S.suk&&Number.isFinite(S.suk.hp))?S.suk.hp:0;
+  const _myHp =(typeof curHp==='function'&&Number.isFinite(curHp()))?curHp():0;
+  const _prog=Math.max(0,Math.min(1,(SUK_MAXHP*2-Math.max(0,_sukHp))/(SUK_MAXHP*2)));
+  const _hpR =Math.max(0,Math.min(1,Math.max(0,_myHp)/Math.max(1,S.maxHp||100)));
+  const _blk =Math.min(1,(S.blackN||0)/5);
+  const _perf=Math.min(1,(S.perfectN||0)/4);
+  const _take=Math.max(0,Math.min(1,1-(S.dmgTaken||0)/180));
+  let score=_prog*45 + _hpR*22 + _take*12 + _blk*10 + _perf*11;
+  if(S.trueWin) score+=4; else if(S.whatIf) score+=2;
+  if(S.usedUnlimited) score+=2;
+  score=Math.min(100,score);
+  S.rank = score>=88?'S':(score>=65?'A':(score>=45?'B':(score>=28?'C':'D')));
   /* ★ v266 段位印章（S/A/B/C，顯示在「掌握咒力核心」左側；D 併入 C 顯示） */
   const _g=document.getElementById('rGrade');
   if(_g){ const _r=(S.rank==='D')?'C':S.rank; _g.textContent=_r;
@@ -18199,7 +18274,11 @@ function drawHiguruma(){
     {h:()=>itaHeight()*0.78,sink:()=>-itaHeight()*0.105,shadowGy:()=>GY,glow:'rgba(43,108,176,.55)'}); }   /* ★ v415 半身持槌立繪：下緣（膝）浮在地面線上方 */   /* ★ v274 日車立繪縮小 */   /* 日車：全身立繪 + 審判藍光環 */
 /* ★ v224 用戶指定：在「真贋相愛」領域內使用「無限制咒力解放」時，立繪也要切換 ——
    原判斷是領域圖優先（okkoDomArt），解放立繪永遠看不到；現改為**解放立繪優先**。 */
-function drawOkkotsu(){ const _k=((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((S.okkoDom>0&&IMGS.okkoDomArt)?'okkoDomArt':((curHp()<70&&IMGS.okkoLow)?'okkoLow':'okko'));
+function drawOkkotsu(){
+  /* ★ v482 用戶指定：按下領域展開的「當下」立繪立刻換成領域姿（含整段展開演出），
+     領域完全展開（okkoDomIn 走到 1）之後就換回普通／殘血立繪。 */
+  const _castDom=(S.okkoDom>0 && (S.okkoDomIn==null || S.okkoDomIn<0.995) && IMGS.okkoDomArt);
+  const _k=_castDom?'okkoDomArt':(((S.okkoRelT>0)&&IMGS.okkoRel)?'okkoRel':((curHp()<70&&IMGS.okkoLow)?'okkoLow':'okko'));
   return drawCutHero(_k,
   {glow:'rgba(124,58,237,.9)', ring:'#a78bfa', bob:2.0, rot:(_k==='okko'?Math.PI/18:0), h:((_k==='okkoLow')?function(){return H*0.42;}:((_k==='okkoDomArt')?function(){return H*0.51;}:((_k==='okkoRel')?function(){return H*0.50;}:null)))})||drawFighter(); }   /* ★ v243 只旋轉普通立繪；領域/解放立繪不轉 */
 /* ★ v298 用戶指定：虎杖立繪下緣恰好卡在數值條上沿（讀底部 HUD 位置，600ms 緩存） */
@@ -23149,6 +23228,92 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
   #resultScreen #rFb .fbBtn b{font-size:12.5px;letter-spacing:1px;}
   #resultScreen #rFb .fbBtn i{font-size:9.5px;}
 }
+
+/* ═══ ★ v481 手機端結算頁浮動滾動鈕：底部中間「向下」、到底後頂部中間「向上」 ═══ */
+#rsNavDown,#rsNavUp{
+  position:absolute;left:50%;width:46px;height:46px;border-radius:50%;
+  display:none;align-items:center;justify-content:center;padding:0;margin:0;
+  background:rgba(21,18,16,.82);color:#f7f3ea;
+  border:2px solid rgba(247,243,234,.92);
+  box-shadow:0 5px 16px rgba(0,0,0,.34),0 0 0 3px rgba(21,18,16,.10);
+  z-index:74;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;
+  transition:opacity .16s ease,transform .16s ease;opacity:.95;font-family:inherit;
+}
+#rsNavDown{bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);}
+#rsNavUp{top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);}
+#rsNavDown:active,#rsNavUp:active{transform:translateX(-50%) scale(.9);opacity:1;}
+#rsNavDown svg,#rsNavUp svg{width:23px;height:23px;fill:none;stroke:currentColor;
+  stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round;}
+html:not(.land):not(.rot) #rsNavDown.on,html:not(.land):not(.rot) #rsNavUp.on{display:none;}
+html.land #rsNavDown.on,html.land #rsNavUp.on,
+html.rot #rsNavDown.on,html.rot #rsNavUp.on{display:flex;}
+
+/* ═════════════ ★ v482 結算頁精修（用戶指定） ═════════════ */
+/* ① 評級字母改毛筆墨水風：Ma Shan Zheng 子集（僅 S/A/B/C 四字形，~1.9KB）內嵌，
+      手機/離線/TOY/APK 全端同一套字形；再疊 SVG 墨跡濾鏡做出筆鋒毛邊。 */
+@font-face{font-family:'InkGrade';src:url(https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/a19a4052d367.woff2) format('woff2');
+  font-weight:400;font-style:normal;font-display:block;}
+#resultScreen #rGrade{font-family:'InkGrade','STXingkai','KaiTi','Songti SC',serif !important;
+  font-weight:400 !important;font-size:clamp(54px,12.5vw,96px) !important;line-height:.9 !important;
+  filter:url(#inkGradeEdge);color:#b3161f !important;
+  text-shadow:1px 1px 0 rgba(255,255,255,.55) !important;}
+#resultScreen #rGrade.gA{color:#151210 !important;}
+#resultScreen #rGrade.gB{color:#6b6b6b !important;}
+#resultScreen #rGrade.gC{color:#9a9a9a !important;}
+
+/* ③ 留言卡：上下兩條（標題條 / 提示條）整條拿掉，只留「三檔評價 + 輸入框」 */
+#resultScreen #rFb{grid-template-areas:"row" "edit" !important;gap:4px !important;
+  padding:4px 7px 4px !important;position:relative;}
+#resultScreen #rFb .srvHd{display:none !important;}
+#resultScreen #rFb .fbFoot{display:none !important;}
+#resultScreen #rFb .fbOk{display:none !important;}
+#resultScreen #rFb .fbRow{gap:8px !important;}
+#resultScreen #rFb .fbBtn{padding:3px 4px 2px !important;}
+#resultScreen #rFb .fbBtn b{font-size:clamp(11.5px,2.2vw,13px) !important;line-height:1 !important;}
+#resultScreen #rFb .fbBtn i{font-size:9.5px !important;line-height:1.1 !important;}
+#resultScreen #rFb textarea{min-height:28px !important;padding:3px 7px !important;line-height:1.25 !important;}
+#resultScreen #rFb #rFbSend{font-size:12px !important;letter-spacing:2px !important;padding:0 12px !important;}
+#resultScreen #rFb.warn{border-color:#b3261e !important;
+  box-shadow:4px 4px 0 rgba(215,38,61,.55),0 0 0 2px rgba(179,38,30,.35) inset !important;}
+
+/* ④ 彩蛋塊：黑框拿掉、重複的「本局」badge 拿掉，標題回到白框左上角，成就改單列右→左輪播 */
+#achBlock{padding:5px 8px 6px !important;margin:0 0 6px !important;}
+#achBlock #achTitle{background:none !important;color:#151210 !important;box-shadow:none !important;
+  font-size:10px !important;letter-spacing:2px !important;padding:0 0 4px !important;margin:0 !important;
+  display:flex !important;align-items:baseline !important;gap:8px !important;opacity:1 !important;}
+#achBlock #achTitle::before,#achBlock #achTitle::after{content:none !important;display:none !important;}
+#achBlock #achTitle .achCnt{margin-left:auto;font-size:9px;letter-spacing:.4px;color:#8a8378;font-weight:800;}
+#achMarquee{width:100%;overflow:hidden;position:relative;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 12px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 12px),transparent 100%);}
+#achBlock #achWrap{display:flex !important;flex-wrap:nowrap !important;justify-content:flex-start !important;
+  width:max-content !important;max-width:none !important;gap:6px !important;}
+#achBlock #achWrap.run{animation:achMarq 24s linear infinite;}
+@keyframes achMarq{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@media (prefers-reduced-motion:reduce){#achBlock #achWrap.run{animation:none;}}
+
+/* ⑥ ★ v482b 把「結局圖鑑」盡量上移：實測左欄（全服戰況＋兩顆按鈕 = 278px）比右欄（173px）高，
+   只壓右欄不會動到圖鑑；這裡同步收緊左欄、欄間距與圖鑑標題的上邊距。 */
+#resultScreen #rCols{gap:8px !important;}
+#resultScreen #rCols > .resCol{gap:7px !important;}
+#resultScreen #rSrv{padding:5px 9px 6px !important;}
+#resultScreen .srvBody{line-height:1.35 !important;}
+#resultScreen .cta{padding:4px 10px !important;font-size:clamp(14px,2.6vw,17px) !important;letter-spacing:3px !important;}
+#resultScreen .cta .ctaSub{font-size:9px !important;letter-spacing:1px !important;}
+#resultScreen #dexWrap{margin-top:0 !important;gap:5px !important;}
+#resultScreen #dexWrap .secTitle{margin:2px 0 0 !important;padding:2px 6px 3px !important;font-size:11px !important;}
+
+/* ⑦ ★ v482c 再壓一檔：左欄 .srvRow（全服戰況＋挑戰紀錄）實測仍有 125px，
+   桌面放大版的字級先收回來；頁頂留白與區塊間距一併收緊，圖鑑才能真的上移。 */
+#resultScreen:not(.hide){padding-top:10px !important;gap:6px !important;}
+#resultScreen #rCoreWrap{padding:2px 0 4px !important;}
+#resultScreen .srvRow{gap:5px !important;}
+#resultScreen #rSrv .srvHd{font-size:12px !important;padding-bottom:2px !important;}
+#resultScreen #rSrv .srvBody{font-size:12px !important;line-height:1.35 !important;}
+#resultScreen .recRow{gap:4px !important;}
+#resultScreen .recBox{padding:3px 8px !important;}
+#resultScreen .recBox .rv{font-size:12px !important;}
+#resultScreen .recBox .rk,#resultScreen .recBox .rb{font-size:9px !important;}
 </style>
 <!-- ★ v307 虎杖終結一擊：钉崎演出結束後全屏白爆 + 立繪 -->
 <div aria-hidden="true" id="yujiFin"><div class="yfBurst"></div><img alt id="yfImg"></div>
