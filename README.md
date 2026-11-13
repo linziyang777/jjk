@@ -2,7 +2,11 @@
 
 **五条悟 vs 宿傩。回合制，可以自己上手打。在线版即开即玩。**
 
-[▶ 在线试玩（GitHub Pages）](https://linziyang777.github.io/jjk/)　·　零依赖　·　无需安装
+[▶ 在线试玩（GitHub Pages 镜像）](https://linziyang777.github.io/jjk/)　·　零依赖　·　无需安装
+
+> **国内直连（推荐，腾讯云节点、无第三方跳转）**：`https://jjk-shinjuku-battle-83982.app.workbuddy.host/?sharecode=HV2H7J6CIV`
+> 方便转发的短链（走 Cloudflare，境内偶发连不上）：`https://tinyurl.com/jjk-shinjuku`
+> 该沙箱节点会休眠，打开慢或报连接失败时**刷新一次**（冷启动约 3–8 秒）即可；长期不稳就用 GitHub Pages 镜像。
 
 > 在线版已做资源拆分：HTML 仅 1.3 MB，图片 / 语音 / 影片拆到 **jsDelivr CDN** 上的 `assets/` 并行加载，首屏秒开、运行更顺，画质音质零压缩。
 >
@@ -64,7 +68,7 @@
 - 在线版首屏只需下载 1.3 MB 的 HTML，图片 / 音频 / 影片走 CDN 并行拉取并落浏览器缓存（jsDelivr 单文件缓存 7 天，资源名是内容哈希，永不脏读）。资源加载失败会自动换 CDN 节点、再回退同源，不会出现「白屏没有立绘」。
 - 性能上做了自动降载：帧率掉下来、或场上特效超过 16 个时，自动关掉最贵的 `shadowBlur`；同时限制同屏特效数量，并按帧率自适应降低渲染分辨率。
 - 网页版额外有一条轻量的战况统计（挑战人次 / 通关人数 / 手感反馈），只发几个数字，不影响单文件本体；下载后离线玩则完全不联网。
-- 安卓端另有一份打包好的 APK（同签名可直接覆盖安装），在[国内预览节点](https://jjk-shinjuku-battle-83982.app.workbuddy.host/download)下载（该节点不定时离线，建议优先用上面的 GitHub Pages 在线版）。
+- 安卓端另有一份打包好的 APK（同签名可直接覆盖安装），在[国内直连节点](https://jjk-shinjuku-battle-83982.app.workbuddy.host/download?sharecode=HV2H7J6CIV)下载。该节点是沙箱容器，会休眠：首页打不开时刷新一次（冷启动 3–8 秒）通常就恢复；长期不稳就用 [GitHub Pages 镜像](https://linziyang777.github.io/jjk/)。
 
 ## 本地打开
 
@@ -77,6 +81,13 @@
 ## 更新记录
 
 对外版本 **v6.5**。近几轮改的东西：
+
+**v489 · 弱网加固（ETag/304）+ 入口说明改口径**
+- **首页加 ETag + Last-Modified**：gzip 后仍有 515 KB，旧版只发 `no-cache` 而没有任何校验器 ⇒ 每次打开（含返回、含微信内打开）都整包重下，移动网络下容易等到超时，表现就是「偶尔打不开」。现在命中即回 **304（0 字节）**，且 304 不计入 PV
+- `/download`、`/preview` 走同一个 `sendHtmlGzip`，一并加上
+- **对外主推直连地址**（腾讯云、无第三方跳转）：`https://jjk-shinjuku-battle-83982.app.workbuddy.host/?sharecode=HV2H7J6CIV`；`tinyurl` 短链降为「方便转发」的备选（走 Cloudflare，境内移动网络偶发连不上）
+- 下载页补「打不开先刷新一次（节点冷启动 3–8 秒）」的提示
+
 
 **v488 · 结算页取消手指滑动 + 分享战绩卡重排**
 - **结算页不再能「一划就动」**：`#resultScreen` 加 `touch-action:none`，手机端同时隐藏滚动条；页面移动只交给 v481 的圆形箭头（向下→到底、到底→回顶），内容不做任何缩放
