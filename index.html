@@ -1,3 +1,9 @@
+<!-- ★ v490 兩項：
+     ① 開場載入動畫（影片之前的黑底字樣）圖案縮小：#lsWrap 46vw/520px → 34vw/390px。
+     ② 修「五條悟死後點選虎杖上場 ⇒ 閃一下退回選人頁、戰鬥被跳過」：
+        gojoDown 的 900ms / 26s 兩道補刀只認 'select'，玩家手快點下角色（phase='fight'）後
+        仍會再路由一次 showSelect()，把剛登場的角色拽回選人頁並白喫一棒。
+        改為僅在退場態 'over' 時補刀。 -->
 <!-- ★ v469 三項（用戶指定）：
      ① 乙骨憂太登場動畫立繪與選人頁頭像改用用戶新圖：綠幕鍵控（圖內殘留的綠色方塊自動補白）
         ＋四邊羽化，縮到 732×1080 webp；HI_CFG.okkotsu 補 artH/artDX，選人卡 asz 1.10。
@@ -2807,7 +2813,11 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 #loadScr::before{content:'';position:absolute;inset:0;
   background:radial-gradient(ellipse 62% 58% at 50% 50%,#121214 0%,#060608 56%,#000 100%);}
 #loadScr.out{opacity:0;pointer-events:none;}
-#lsWrap{position:relative;width:min(46vw,520px);aspect-ratio:1100/780;}
+/* ★ v490 用戶指定：開場載入動畫（影片之前那個字樣）圖案整體縮小 ——
+   46vw / 520px 時桌面端幾乎佔滿畫面中央，收到 34vw / 390px（約 75%）。
+   字樣與「勾邊自下而上」的進度層都是 inset:0 + background-size:100% 100%，
+   縮 #lsWrap 會等比帶動兩層；clip-path 用的是自身百分比，不必另改。 */
+#lsWrap{position:relative;width:min(34vw,390px);aspect-ratio:1100/780;}
 #lsWrap i{position:absolute;inset:0;background-position:center;background-size:100% 100%;background-repeat:no-repeat;}
 #lsGlyph{background-image:url(https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2e49add45ded.webp);
   filter:drop-shadow(0 0 20px rgba(255,255,255,.05));}
@@ -10472,11 +10482,17 @@ function gojoDown(){
   ].concat(GOJO_DEATH_TALK), function(){
     try{ afterHeroDownRoute(); }catch(e){}
     /* ★ v459 跳過／定時器競態補刀：900ms 後還沒換頁就再路由一次（冪等） */
-    setTimeout(function(){ try{ if(S.phase!=='select' && !deathScreenVisible()) afterHeroDownRoute(); }catch(e){} },900);
+    /* ★ v490 修「選了角色又被拽回選人頁」：這裡原本只排除 'select'，
+       玩家手快在選人頁出現後立刻點下角色 ⇒ phase 已變 'fight'，補刀仍判定「沒換頁」，
+       再跑一次 afterHeroDownRoute() → showSelect()，把剛登場的人踢回去並且白喫一棒。
+       改為只在「仍停在退場態 'over'」時才補刀。 */
+    setTimeout(function(){ try{ if(S.phase==='over' && !deathScreenVisible()) afterHeroDownRoute(); }catch(e){} },900);
   }, null, 2200);   /* ★ v423 先播 2.2s 腰斬圖，再進機場對白 */
   /* ★ v459 看門狗：腰斬 2.2s + 對白最長約 21s，26s 後若仍停在戰鬥畫面就強制換頁 */
   setTimeout(function(){
-    try{ if(S.phase==='select') return; if(deathScreenVisible()) return; afterHeroDownRoute(); }catch(e){}
+    /* ★ v490 同上：26s 看門狗原本只排除 'select'，戰鬥打到一半會被判成「沒換頁」
+       而強制拉回選人頁。改為只在 'over' 時才救。 */
+    try{ if(S.phase!=='over') return; if(deathScreenVisible()) return; afterHeroDownRoute(); }catch(e){}
   },26000);
 }
 /* ---------- 束縛面板 ---------- */
