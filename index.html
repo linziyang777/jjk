@@ -1,3 +1,27 @@
+<!-- ★ v492 四項（用戶指定）：
+     ① 修「世界線跳躍按鈕有時候會失效」：暫停頁 #pauseOv 的 z-index 是 29，難度頁 #diffScreen 只有 25，
+        舊版跳轉時沒收遮罩 ⇒ 難度頁其實已經顯示、卻被整片暫停遮罩蓋住，看起來就是「按了沒反應」。
+        現在按鈕本身與 enterDiff() 都會先收遮罩；showResult() 另清所有殘留的全屏層
+        （#deathBlack z70 / #shareOv z90 / 新手引導 #guideHit z54），避免結算頁按鈕被蓋住；
+        dolly 防連點窗口 1200ms → 800ms，超時強制清理殘留。
+     ② 修「虎杖終結宿儺時的黑閃音效沒正常播放」：終結專屬音軌首次 new Audio() 時 readyState 仍是 0，
+        同步 play() 被靜默丟掉。改為開局就把普通版與專屬版一起預熱，未就緒時等 canplay（420ms 兜底）；
+        yujiFinisherCut 改用「是否真的在響」判定，第一聲沒響就必定補一聲。
+     ③ 修「結算背景音樂沒正常播放」：SPECIALZ 的 base64 有 5.09MB，舊版要等播放那一刻才同步
+        atob + 逐位元組轉 Uint8Array（手機 1~3 秒主執行緒阻塞），play() 因此被拖掉。
+        改為首次手勢後分片預熱（每 256KB 一個 setTimeout 切片），並給 playExtraBgm 加 canplay 兜底。
+     ④ 結算頁：「本局解鎖」彩蛋輪播加速（24s→16s）；兩顆 CTA 從左欄抽出、改為圖鑑之後的跨欄一行，
+        左欄縮回與右欄等高，結局圖鑑整體上移 66px、上方空隙由 160px 收到 4px。 -->
+<!-- ★ v491 六項（用戶指定）：
+     ① 手機端「咒術的文字動畫」（開場載入圖案 #lsWrap）再縮小：窄屏 74vw/460 → 46vw/268、旋轉態 72dvh/560 → 42dvh/300。
+     ② 開場影片與 BGM 重載後重播：加 sessionStorage['jjk_boot_seen'] 30 分鐘會話去重。
+     ③ 修「播放召喚動畫時魔虛羅等同時攻擊」：update() 在 S.cine 期間整段凍結（含讀秒、式神、AI），
+        summonMaha 的落地與 _sukDoAction 改為輪詢等待演出結束。
+     ④ 修「鹿紫雲釋放幻獸琥珀後全場泛紫、動畫一多就卡住」：閃層 flash()/flashStage() 強制 opacity:0 +
+        animationend 清 class，stageReset 不再清空 opacity（避免殘留紫光復現）。
+     ⑤ 玉犬影子縮小 15% 並以中心為軸逆時針旋轉 10°。
+     ⑥ 宿儺領域語音播完才切 BGM（fallback 4.78→5.80s + 到點檢測順延），五條線起播再提早 0.15s；
+        虎杖簡易領域文字改藍色 + 黑色勾邊（fxText 新增 inkOnly 選項）。 -->
 <!-- ★ v490 兩項：
      ① 開場載入動畫（影片之前的黑底字樣）圖案縮小：#lsWrap 46vw/520px → 34vw/390px。
      ② 修「五條悟死後點選虎杖上場 ⇒ 閃一下退回選人頁、戰鬥被跳過」：
@@ -2822,10 +2846,12 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
 #lsGlyph{background-image:url(https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/2e49add45ded.webp);
   filter:drop-shadow(0 0 20px rgba(255,255,255,.05));}
 #lsEdge{background-image:url(https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/c59c4ab5e448.webp);clip-path:inset(100% 0 0 0);}
-@media (max-width:900px){#lsWrap{width:min(74vw,460px);}}
+/* ★ v491 用戶指定：手機端「咒術字樣」還是太大 —— 74vw/460px → 46vw/268px（約 58%） */
+@media (max-width:900px){#lsWrap{width:min(46vw,268px);}}
 /* ★ v471 豎屏（html.rot）下載入層跟 #app 一樣旋轉鋪滿橫屏，並放大字樣 */
 html.rot #loadScr{position:fixed;top:0;left:0;right:auto;bottom:auto;width:100dvh;height:100dvw;transform-origin:top left;transform:rotate(90deg) translateY(-100%);}
-html.rot #lsWrap{width:min(72dvh,560px);height:auto;aspect-ratio:1100/780;max-width:none;}
+/* ★ v491 同步縮小：豎屏旋轉態 72dvh/560px → 42dvh/300px */
+html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-width:none;}
 
 /* ★ v470 日車三技能「審判·下達」罪狀充能：浮在三技按鈕上的獨立層（#pad 的子元素）。
    不放按鈕內部的原因：① innerHTML 每次重繪都會洗掉子元素；② .btn.dim 的整體 opacity
@@ -4164,7 +4190,7 @@ const sukW=()=>sukHeight ()*(IMGS.suku?IMGS.suku.width/IMGS.suku.height:0.82);
 const gojoW=()=>gojoHeight()*(IMGS.gojo?IMGS.gojo.width/IMGS.gojo.height:0.71);
 
 function resetBattle(){
-  try{ if(typeof prewarmBlackFlashSfx==='function') prewarmBlackFlashSfx(); }catch(e){}   /* ★ v306 黑閃音效預熱 */
+  try{ if(typeof prewarmBlackFlashSfx==='function'){ prewarmBlackFlashSfx(); prewarmBlackFlashSfx(true); } }catch(e){}   /* ★ v306 黑閃音效預熱（★ v492 終結專屬版一起預熱，避免首次播放時還在建鏈） */
   /* ★ v164 世界線跳躍自暫停頁進入：新局必須解除凍結並收掉暫停遮罩（S 是 const 對象，resetBattle 負責復位） */
   S.paused=false;
   S.guideShown=false;   /* ★ v446 每局第一次進入戰鬥都會走一次引導 */
@@ -4970,9 +4996,18 @@ function playBlackFlashSfx(force,special){
     const _key=special?'__bfElSp':'__bfEl';
     if(!window[_key]) prewarmBlackFlashSfx(special);
     const el=window[_key]; if(!el) return;
-    try{ el.currentTime=0; }catch(err){}
-    const p=el.play(); if(p&&p.catch) p.catch(()=>{});
     window.__bfSfxAt=_bn;
+    /* ★ v492 用戶報「虎杖終結宿儺時的黑閃音效沒正常播放」：
+       終結專屬音軌第一次用時才 new Audio() 建鏈，readyState 還是 0，
+       同步 play() 會被直接丟掉（舊版用 catch 靜默吞了）。未就緒時等 canplay 再播，並留 420ms 兜底。 */
+    const _bfGo=function(){ try{ el.currentTime=0; }catch(err){} var p=el.play(); if(p&&p.catch) p.catch(()=>{}); };
+    if(el.readyState<2){
+      try{ el.load(); }catch(err){}
+      try{ el.addEventListener('canplay',_bfGo,{once:true}); }catch(err){}
+      setTimeout(_bfGo,420);
+      return;
+    }
+    _bfGo();
   }catch(err){}
 }
 /* ★ v306 黑閃裂紋邊緣虛化：一次性把位圖做成「中心不透明、四邊漸隱」的離屏 canvas，
@@ -5012,7 +5047,8 @@ function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v412 停留時間拉長：小字 1.0s（原 0.7）、大字 1.30s（原 1.0），配合入場/停留/退場三段 */
   /* ★ v419 第 7 參 opt：{sz 字號倍數／dur 覆蓋停留時間／stamp 印章式落地（大字用）} */
   opt=opt||{};
-  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp});
+  /* ★ v491 新增 opt.inkOnly：只留黑色粗勾邊（不再加白細邊），供「藍字 + 黑邊」用 */
+  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly});
 }   /* ★ v407 第 6 參數 dir：+1 往右消散、−1 往左消散 */
 function fxRing(x,y,col){ addFx({type:'ring',dur:0.45,x:x,y:y,col:col||'#111'}); }
 function fxShards(x,y,rgb,big){
@@ -5162,7 +5198,16 @@ function shake(power){
   st.classList.remove('shake'); st.classList.remove('shake2'); void st.offsetWidth;
   st.classList.add(power?'shake2':'shake');
 }
-function flash(id){ const e=$(id); e.classList.remove('on'); void e.offsetWidth; e.classList.add('on'); }
+function flash(id){
+  const e=$(id); if(!e) return;
+  /* ★ v491 用戶報「幻獸琥珀後換人仍全場泛紫、動畫一多就卡」：
+     #fPurple 是全屏 radial-gradient 紫色層，靠 CSS 動畫 fl 收尾。
+     移動端動畫被打斷（換人時 stageReset 把 animation 設 none 再還原）時，
+     opacity 會卡在中間值 ⇒ 整屏一直泛紫，並且這層每幀都要合成 ⇒ 卡。
+     這裡統一：觸發前置 opacity=0、animationend 再清一次，並保留內聯 0 當長期底。 */
+  if(!e.__fg){ e.__fg=1; try{ e.addEventListener('animationend',function(){ try{ e.classList.remove('on'); e.style.opacity='0'; }catch(_){} }); }catch(_){} }
+  e.classList.remove('on'); e.style.opacity='0'; void e.offsetWidth; e.classList.add('on');
+}
 
 /* =========================================================
    6. 玩家操作
@@ -5825,8 +5870,14 @@ function stopAllMusicForFinisher(){
 }
 function yujiFinisherCut(){
   stopAllMusicForFinisher();
-  /* ★ v417 已由 yujiWin 提前觸發過就不再重播（避免兩聲疊在一起） */
-  try{ if(!(window.__bfSfxAt && performance.now()-window.__bfSfxAt<900)) playBlackFlashSfx(false,true); }catch(e){}
+  /* ★ v417 已由 yujiWin 提前觸發過就不再重播（避免兩聲疊在一起）
+     ★ v492 改用「是否真的在響」判定：舊版只比時間戳，若第一聲被自動播放策略／未就緒吞掉，
+     900ms 窗口一過就整段沒聲。現在第一聲沒真正進入播放，這一幀必定補響一次（force）。 */
+  try{
+    var _spEl=window.__bfElSp;
+    var _spOn=!!(_spEl && !_spEl.paused && !_spEl.ended && _spEl.currentTime>0.02);
+    if(!_spOn) playBlackFlashSfx(true,true);
+  }catch(e){}
   try{ SFX.black(); }catch(e){}
   flash('fWhite');
   shake(); setTimeout(function(){ try{ shake(); }catch(e){} }, 130);
@@ -5902,6 +5953,8 @@ function yujiWin(){
   $('deathCut').classList.remove('on');
   syncHud();
   try{ playBlackFlashSfx(true,true); }catch(e){} SFX.die(); flash('fWhite'); shake();   /* ★ v459 終結動畫＝特別原聲 */
+  /* ★ v492 終結演出還有 5~7 秒才進結算，先把 SPECIALZ 的分片預熱啟動一次 */
+  try{ if(window.prewarmExtraBgmAsync) window.prewarmExtraBgmAsync('specialz'); }catch(e){}
   S.yujiEndAt=S.t-0.01;   /* ★ v291 觸發左側立繪背景漸顯 */
   /* ★ v253 用戶指定：用「靈魂·解」收掉宿儺時不要飄「逕庭拳」字樣（解字已在出招時打過） */
   if(!S.soulKill) fxManga('逕庭拳',W*0.5,GY-210*SC,true,'#c0392b');
@@ -7896,7 +7949,10 @@ function stageReset(){
        舊版只復位 opacity，殘留的紫漸層一旦被其它規則重新顯示就會露出來。這裡把 background 一起清掉。 */
     if(id==='fStage') el.style.background='';
     void el.offsetWidth;                 /* 強制重排，讓下次 add('on') 能重新觸發動畫 */
-    el.style.animation=''; el.style.opacity='';
+    el.style.animation='';
+    /* ★ v491 關鍵：opacity 不再清空（保持內聯 0）。
+       移動端動畫被打斷後，清空內聯值等於把 opacity 交還給 CSS 基礎值，
+       而部分 WebView 會保留動畫最後一幀 ⇒ 整屏永久泛紫。留著 0 才是最穩的底。 */
   });
   /* ★ v421 鹿紫雲一琥珀狀態的清空**不在這裡做**：stageReset 是由 startNext 在換人「之前」呼叫的，
      此刻 S.hero 仍是 'kashimo'，任何 if(S.hero!=='kashimo') 的守衛都不會成立。
@@ -8730,9 +8786,11 @@ function qtePress(){
    7.6 宿儺四階段
    ========================================================= */
 function flashStage(color){
-  const e=$('fStage');
+  const e=$('fStage'); if(!e) return;
+  /* ★ v491 同 flash()：這層會寫內聯紫色漸層，動畫中斷時更容易留下殘影 */
+  if(!e.__fg){ e.__fg=1; try{ e.addEventListener('animationend',function(){ try{ e.classList.remove('on'); e.style.opacity='0'; }catch(_){} }); }catch(_){} }
   e.style.background='radial-gradient(circle at center,'+color+',rgba(0,0,0,.4) 78%)';
-  e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');
+  e.classList.remove('on'); e.style.opacity='0'; void e.offsetWidth; e.classList.add('on');
 }
 /* ★ v34 適應指示與宿儺血條同處一行：nametag 與 bar 聯動開關（只在狀態真變化時寫 DOM） */
 function setAdaptBar(on){
@@ -9250,8 +9308,21 @@ function summonMaha(withLog){
       say('sys','魔虛羅登場：同一技能第 2 次傷害 80%、第 3 次起 50%——輪換招式更划算；擊破它後適應條歸零，但已適應的招式仍減傷。');
     }
   };
-  setTimeout(landMaha,640);
-  setTimeout(landMaha,2200);   /* ★ v119 看門狗：正常情況早已落地，這條不會產生任何可見效果 */
+  /* ★ v491 用戶指定：召喚演出期間魔虛羅不得「活動」——
+     落地時機（S.maha=true 之後才會被畫出來、才參與結算）一律推到定格演出徹底結束之後。
+     保留原本 640ms 的節奏感，但若演出還在播就等它；2200ms 那道看門狗同樣延後，避免演出中被提前拉上台。 */
+  const _landAfter=function(ms){
+    const _start=performance.now();
+    (function _wait(){
+      try{
+        const _busy=(S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length);
+        if(_busy && performance.now()-_start < 12000){ setTimeout(_wait, 140); return; }
+        landMaha();
+      }catch(e){ landMaha(); }
+    })();
+  };
+  setTimeout(function(){ _landAfter(0); },640);
+  setTimeout(function(){ _landAfter(0); },2200);   /* ★ v119 看門狗：正常情況早已落地，這條不會產生任何可見效果 */
 }
 /* 二階段起：遠程斬擊波「解」 */
 function fireWave(){
@@ -9372,7 +9443,9 @@ function sukunaOpenDomain(force){
   }
   /* ★ v225 用戶要求「宿傩領域語音再提早」：語音提到函數**最前面**（先出聲，再做狀態/畫面/暫停 BGM），
      避免 suspendMainBgm 與一連串 DOM 操作把第一拍吃掉。 */
-  const _sfx=window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.15), 4.78, 0.92)   /* ★ v224 已做人聲分離，不再掐尾 */;
+  /* ★ v491 用戶指定：五條對拼時宿傩領域展開語音「略微提早」——前導跳過量由 0.15 加到 0.30（早約 0.15s）；
+     fallback 4.78 → 5.80，避免時間軸先 resolve 讓後續 BGM 蓋掉語音尾巴。 */
+  const _sfx=window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.30), 5.80, 0.92)   /* ★ v224 已做人聲分離，不再掐尾 */;
   S.sukuDomUsed=(S.sukuDomUsed||0)+1;
   S.sukuDom=1; S.sukuDomFirst=true; S.sukuOpenT=5.0;   /* ★ v459 用戶指定：單獨展開動畫放慢 3.4 → 5.0s */
   /* ★ v273 用戶指定：宿儺單獨展開伏魔御厨子時同樣播「領域展開」大字（純文字版，無結印圖） */
@@ -9764,7 +9837,8 @@ function sukunaTurn(){
     },700);
     /* ★ v193 需求②：虎杖的「簡易領域」常駐 ⇒ 動畫照播，但傷害被中和 */
     const _itaNull=(S.hero==='itadori'&&S.itaSimpleDom>0);
-    if(_itaNull){ fxText(GX()+40*SC,GY-206*SC,'簡易領域','#3fbf72',true,-1); }
+    /* ★ v491 用戶指定：虎杖「簡易領域」的字改用藍色 + 黑色勾邊（原本是綠字 + 白細邊） */
+    if(_itaNull){ fxText(GX()+40*SC,GY-206*SC,'簡易領域','#2f6bff',true,-1,{inkOnly:true}); }
     else { hurtHero(sd,'dom'); }   /* ★ v192 需求④：真希「架勢」下此擊仍會命中（傷害再減半） */
     say('suku',pick(['「解。」','「——在這個範圍裏，你跑不掉的。」']));
     say('sys',_itaNull
@@ -9925,11 +9999,19 @@ function sukunaTurn(){
   setTimeout(()=>{ if(!S.acted){ S.guardUp=false; S.blockT=0; } },1000);
   syncHud();
   };
-  /* ★ v485：召喚定格演出進行中 ⇒ 攻擊段延後（演出結束再打，含領域展開） */
-  const _nowSec=(performance.now()/1000);
-  const _cineLeft=(S.cine && (S.cineEnd||0)>_nowSec) ? ((S.cineEnd-_nowSec)*1000) : 0;
-  if(_cineLeft>0 && S.phase==='fight'){
-    setTimeout(function(){ try{ if(S.phase==='fight') _sukDoAction(); }catch(e){} }, Math.round(_cineLeft)+260);
+  /* ★ v485：召喚定格演出進行中 ⇒ 攻擊段延後（演出結束再打，含領域展開）
+     ★ v491 改為「輪詢到演出徹底結束」：舊版只按第一場演出的剩餘時間延後一次，
+       同回合連續召喚（魔虛羅 + 顎吐，走 _cineQ 佇列）時，第二場還在演就開打了。 */
+  if((S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length)){
+    (function _waitCine(){
+      try{
+        if(S.phase!=='fight') return;
+        if((S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length)){
+          setTimeout(_waitCine, 160); return;
+        }
+        _sukDoAction();
+      }catch(e){ setTimeout(_waitCine, 200); }
+    })();
   }else{
     _sukDoAction();
   }
@@ -11115,12 +11197,15 @@ function buildResultCols(){
   if(_rc) _row.appendChild(_rc);
   /* ★ v446 分享按鈕緊跟世界線跳躍一起放左欄（否則會獨立佔一行、整頁被頂高一截）；
      解鎖塊提到右欄最前，一打開結算就看到「這局拿到了什麼」。 */
-  let _ctaRow=L.querySelector('.ctaRow');
+  /* ★ v492 用戶指定「結局圖鑑上移」：CTA 行不再放左欄（見下方插入位置） */
+  let _ctaRow=rs.querySelector('.ctaRow');
   if(!_ctaRow){ _ctaRow=document.createElement('div'); _ctaRow.className='ctaRow'; }
   if(g('btnShare')) _ctaRow.appendChild(g('btnShare'));
   if(g('btnAgain')) _ctaRow.appendChild(g('btnAgain'));
-  /* ★ v447 用戶指定：「給作者的話」搬到右欄，左欄只留結局卡／全服戰況／兩顆按鈕，左半頁留白 */
-  const left =[g('rEndCard'), _row, _ctaRow];
+  /* ★ v447 用戶指定：「給作者的話」搬到右欄，左欄只留結局卡／全服戰況／兩顆按鈕，左半頁留白
+     ★ v492 兩顆按鈕改為「跨兩欄的獨立一行」，插在 #rCols 與 #dexWrap 之間 ——
+       左欄因此矮 160px，圖鑑上移，右欄下方的空白消失，按鈕也更醒目。 */
+  const left =[g('rEndCard'), _row];
   const right=[(g('achBlock')||g('achWrap')), g('rFb')];
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
@@ -11138,6 +11223,9 @@ function buildResultCols(){
   if(secs[1]) _dexWrap.appendChild(secs[1]);
   if(g('rDex')) _dexWrap.appendChild(g('rDex'));
   _host.insertBefore(_dexWrap, secs[0] || (_ch ? _ch : g('rCols').nextSibling));
+  /* ★ v492 CTA 行插在圖鑑之後：rCols → 圖鑑 → CTA → 接力鏈
+     （CTA 若排在圖鑑前面，它自己 53px 的高度會把圖鑑又推回原位，上移就白做了） */
+  if(_ctaRow && _ctaRow.parentNode!==_host) _host.insertBefore(_ctaRow, _dexWrap.nextSibling);
   L.__built=1;
 }
 
@@ -11267,7 +11355,10 @@ function showResultInternal(){
     const _e2=extraBgmEls[extraBgmKey];
     if(_e2 && _e2.paused){
       try{ _e2.volume=BGM_EXTRA_VOL*((typeof EXTRA_BGM_TRIM!=='undefined'&&EXTRA_BGM_TRIM[extraBgmKey])||1); }catch(_){}
-      const _p2=_e2.play(); if(_p2&&_p2.catch) _p2.catch(function(){});
+      /* ★ v492 未就緒時等 canplay，不再直接丟 play() */
+      const _rk2=function(){ try{ const q=_e2.play(); if(q&&q.catch) q.catch(function(){}); }catch(_){ } };
+      if(_e2.readyState<2){ try{ _e2.addEventListener('canplay',_rk2,{once:true}); }catch(_){ } setTimeout(_rk2,800); }
+      else _rk2();
     }
   },1400); }catch(e){}
   try{ rsScrollInit(); }catch(e){}
@@ -11278,6 +11369,14 @@ function showResultInternal(){
   if($('gzFin')) $('gzFin').classList.remove('on');   /* ★ v63 收起終幕演出層 */
   $('deathCut').classList.remove('on');
   $('kashFall').classList.remove('on');
+  /* ★ v492 用戶報「世界線跳躍按鈕有時候失效」：結算頁 z-index 只有 20，
+     任何殘留的全屏層都會把它連同按鈕一起蓋住（點得到、但點在遮罩上）：
+     #deathBlack（z70，退場黑幕，pointer-events:auto）、#shareOv（z90）、新手引導 #guideHit（z54）。 */
+  try{ var _db=document.getElementById('deathBlack'); if(_db){ _db.classList.remove('on'); _db.style.pointerEvents='none'; } }catch(e){}
+  try{ var _sov=document.getElementById('shareOv'); if(_sov) _sov.classList.add('hide'); }catch(e){}
+  try{ var _gh=document.getElementById('guideHit'); if(_gh) _gh.classList.add('hide');
+       var _gov=document.getElementById('guideOv'); if(_gov) _gov.classList.add('hide'); }catch(e){}
+  try{ var _yf=document.getElementById('yujiFin'); if(_yf) _yf.classList.remove('on'); }catch(e){}
   $('selectUI').classList.add('hide');
   $('split').classList.remove('on','go');
   $('yujiDomain').classList.remove('on');
@@ -11509,6 +11608,10 @@ function resumeAllAudio(force){
 }
 function update(dt){
   if(S.paused) return;   /* ★ v110 玩家暫停：與命中定格同一套範式，但由按鈕控制 */
+  /* ★ v491 用戶指定：召喚定格演出（魔虛羅／顎吐／貫牛）期間「時間要暫停」——
+     直接凍住整個 update（含 S.t、回合讀秒、特效推進），式神與宿儺都不會動，
+     也不會在演出中結算任何攻擊。render 照舊每幀跑，所以 #summonCine 的 DOM 動畫正常播。 */
+  try{ if(S.cine && performance.now()/1000 < (S.cineEnd||0)) return; }catch(e){}
   /* ★ 命中定格：世界暫停（含 S.t，所以動畫也凝固），但 render 仍每幀跑 */
   if(S.hitStop>0){ S.hitStop=Math.max(0,S.hitStop-dt); return; }
   S.t+=dt; if(S.shikWait>0) S.shikWait=Math.max(0,S.shikWait-dt);   /* ★ v466 式神演出計時 */
@@ -14741,11 +14844,16 @@ else if(f.type==='itaPunch'){
       if(im){
         const k2=f.t/f.dur;
         const al=k2<0.30?(k2/0.30):(k2>0.66?Math.max(0,1-(k2-0.66)/0.34):1);
-        const hh=Math.min(H*0.52,330*SC);
+        /* ★ v491 用戶指定：宿儺身邊的影子「減小一些、逆時針轉 10°」 */
+        const hh=Math.min(H*0.44,282*SC);      /* 0.52/330 → 0.44/282（約 -15%） */
         const ww=hh*im.width/im.height;
         const pop=0.94+0.06*(1-Math.pow(1-Math.min(1,k2/0.72),2));
+        const _dw=ww*pop, _dh=hh*pop;
+        const _cx=SX()-ww*0.32+_dw*0.5, _cy=GY-hh*0.94+_dh*0.5;
         ctx.save(); ctx.globalAlpha=al*0.92;
-        ctx.drawImage(im,SX()-ww*0.32,GY-hh*0.94,ww*pop,hh*pop);
+        ctx.translate(_cx,_cy);
+        ctx.rotate(-Math.PI/18);               /* 逆時針 10° */
+        ctx.drawImage(im,-_dw*0.5,-_dh*0.5,_dw,_dh);
         ctx.restore();
       }
     }
@@ -18137,7 +18245,8 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       ctx.font='900 '+size+'px "Noto Sans SC",sans-serif';
       ctx.textAlign='center'; ctx.lineJoin='round';
       ctx.lineWidth=size*0.30; ctx.strokeStyle='rgba(14,12,14,.92)'; ctx.strokeText(f.txt,0,0);
-      ctx.lineWidth=size*0.13; ctx.strokeStyle='rgba(255,255,255,.92)'; ctx.strokeText(f.txt,0,0);
+      /* ★ v491 inkOnly：跳過白色細描邊，保持「純藍字 + 黑勾邊」 */
+      if(!f.inkOnly){ ctx.lineWidth=size*0.13; ctx.strokeStyle='rgba(255,255,255,.92)'; ctx.strokeText(f.txt,0,0); }
       ctx.fillStyle=f.col; ctx.fillText(f.txt,0,0);
       /* ★ v419 印章式：朱紅細框收在字外，落地瞬間由粗到細 */
       if(f.stamp){
@@ -19241,6 +19350,9 @@ function enterDiff(fromId){
     }catch(e){}
   }
   const d=$('diffScreen'); if(!d) return;
+  /* ★ v492 任何路徑進難度頁，都先把暫停遮罩收掉（z-index 29 > 難度頁 25，殘留就永久遮住） */
+  try{ var _po=$('pauseOv'); if(_po && _po.classList.contains('on')) _po.classList.remove('on');
+       var _pb2=$('pauseBtn'); if(_pb2) _pb2.classList.remove('paused'); }catch(e){}
   const src=fromId?$(fromId):null;
   const reveal=function(){
     d.classList.remove('hide');
@@ -19250,7 +19362,9 @@ function enterDiff(fromId){
   if(src && !src.classList.contains('hide')){
     /* ★ v265 防連點帶時間戳：被後台凍結等原因卡住的 dolly 殘留，超過 1.2s 直接放行並清理 */
     if(src.classList.contains('dolly')){
-      if(src.__dollyAt && Date.now()-src.__dollyAt<1200) return;
+      /* ★ v492 1200ms 太長，手機卡頓時連點第二下會被吞掉、看起來像按鈕壞了 → 收窄到 800ms；
+         超時則強制清理殘留的 dolly（推鏡回調若被凍結／丟失會永久卡在這個狀態）。 */
+      if(src.__dollyAt && Date.now()-src.__dollyAt<800) return;
       src.classList.remove('dolly'); src.classList.add('hide');
     }
     src.__dollyAt=Date.now();
@@ -19356,6 +19470,45 @@ function getExtraBgm(k){
   return el;
 }
 const extraBgmPos={};   /* ★ v479 額外 BGM 被打斷時的續播位置（秒） */
+/* ★ v492 用戶報「虎杖終結宿儺後結算背景音樂沒正常播放」：
+   擊殺專屬曲 SPECIALZ 的 base64 有 5.09MB。舊版要等 playExtraBgm 首次呼叫時才臨時
+   atob + 逐位元組轉 Uint8Array（手機實測 1~3 秒主執行緒阻塞），play() 因此被拖到超時或被丟掉。
+   改為「空閒時分片預熱」：atob 一次（~50ms），之後每 256KB 一個 setTimeout 切片填 Uint8Array，
+   不卡幀；真要播時 blob URL 與 <audio> 都已就緒。 */
+function prewarmExtraBgmAsync(k){
+  try{
+    if(!k || extraBgmUrls[k] || extraBgmEls[k]) return;
+    const src=extraBgmSrc(k); if(!src) return;
+    if(src.slice(0,5)!=='data:'){ getExtraBgm(k); return; }
+    const comma=src.indexOf(','); if(comma<0){ getExtraBgm(k); return; }
+    const mime=(src.slice(5,comma).split(';')[0])||'audio/mpeg';
+    const bin=atob(src.slice(comma+1));
+    const n=bin.length, u8=new Uint8Array(n);
+    let off=0;
+    (function chunk(){
+      const end=Math.min(n,off+262144);
+      for(let i=off;i<end;i++) u8[i]=bin.charCodeAt(i);
+      off=end;
+      if(off<n){ setTimeout(chunk,0); return; }
+      try{
+        const U=window.URL||window.webkitURL;
+        extraBgmUrls[k]=U.createObjectURL(new Blob([u8],{type:mime}));
+        getExtraBgm(k);
+      }catch(e){ try{ extraBgmUrls[k]=src; }catch(_e){} }
+    })();
+  }catch(e){}
+}
+try{ window.prewarmExtraBgmAsync=prewarmExtraBgmAsync; }catch(e){}
+try{ window.__extraBgmDbg=function(){ return { key:extraBgmKey, els:Object.keys(extraBgmEls||{}), urls:Object.keys(extraBgmUrls||{}) }; }; }catch(e){}
+/* 首次手勢後 1.2s 開始預熱（此時開場影片多半已播完，不影響首屏）；
+   另留 9s 兜底，沒手勢也要預熱。 */
+(function(){
+  var _done=false;
+  var _kick=function(){ if(_done) return; _done=true;
+    setTimeout(function(){ try{ prewarmExtraBgmAsync('specialz'); prewarmExtraBgmAsync('yuji'); }catch(e){} }, 1200); };
+  try{ document.addEventListener('pointerdown',_kick,{once:true,passive:true}); }catch(e){}
+  try{ setTimeout(_kick,9000); }catch(e){}
+})();
 function playExtraBgm(k,fade){
   try{ const _e0=(extraBgmEls&&extraBgmEls[k]); if(_e0 && extraBgmKey!==k){ _e0.pause(); _e0.currentTime=0; } }catch(e){}   /* v360 領域曲從頭播 */
 if(window.__appHidden && document.hidden) return; /*x*/
@@ -19371,7 +19524,13 @@ if(window.__appHidden && document.hidden) return; /*x*/
   try{ el.volume=0; var _rp=(extraBgmPos[k]||0);
     el.currentTime=(_rp>0.4?_rp:(typeof DOMAIN_BGM_LEAD!=='undefined'?(DOMAIN_BGM_LEAD[k]||0):0));
     extraBgmPos[k]=0; }catch(e){}   /* ★ v479 首次從頭；被打斷過則續播 */
-  const p=el.play(); if(p&&p.catch) p.catch(()=>{});
+  /* ★ v492 未就緒就等 canplay 再播（首次切歌時 blob 剛建好、readyState 還是 0） */
+  const _bgGo=function(){ try{ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){} };
+  if(el.readyState<2){
+    try{ el.load(); }catch(e){}
+    try{ el.addEventListener('canplay',_bgGo,{once:true}); }catch(e){}
+    setTimeout(_bgGo,700);
+  }else{ _bgGo(); }
   const t0=Date.now();
   (function up(){
     const k2=Math.min(1,(Date.now()-t0)/Math.max(60,dur*1000));
@@ -20186,7 +20345,9 @@ function okkoDomainClash(){
   /* ★ v187 修復「乙骨領域對拼時宿儺領域展開語音不播」：根因是 v161 加的
      「AIZO 播放中 ⇒ 不疊加宿儺領域語音」屏蔽 —— 而乙骨領域對拼必然發生在 AIZO 播放中，
      該語音因此永遠被跳過。現改為一律播放，並提到函數最前（提早時機，用戶要求）。 */
-  const _sukuSfx = window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.15), 4.78, 0.92)   /* ★ v224 已做人聲分離，不再掐尾 */;   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
+  /* ★ v491 乙骨這條原本 4.78 就 resolve，而對拼 4.4s 判勝負 ⇒ 宿傩勝時立刻起伏魔御厨子 BGM，
+     語音尾巴被吃。fallback 拉到 5.80，並由 playSoloVoice 的「等真正播完」兜底。 */
+  const _sukuSfx = window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.15), 5.80, 0.92)   /* ★ v224 已做人聲分離，不再掐尾 */;   /* ★ v190 跳過 1.06s 前導靜音 ⇒ 與領域場景圖同時出聲 */
   /* ★ v141 宿儺領域展開：暫停主 BGM + 停宿儺領域 BGM */
   suspendMainBgm();
   stopSukuBgm();
@@ -21442,7 +21603,28 @@ function playSoloVoice(key, lead, fallbackSec, vol){
       if(timer) clearTimeout(timer); res(); };
     try{ el.addEventListener('ended',fin,{once:true}); }catch(e){}
     const _dur=Math.max(0.8,(fallbackSec||4)-(lead||0));
-    timer=setTimeout(fin,Math.max(900,_dur*1000+250));
+    /* ★ v491 用戶報「乙骨對拼時宿儺領域展開語音沒播完」：
+       舊版到 fallback 時間就 resolve，呼叫方立刻起領域 BGM（4.4s 判勝負），
+       語音尾巴被 BGM 蓋掉。現在到點先看音軌是否還在播，還在就順延到真正結束。 */
+    const _armTimer=function(){
+      timer=setTimeout(function(){
+        try{
+          if(el && !el.ended && !el.paused && el.duration && isFinite(el.duration) && el.currentTime < el.duration-0.06){
+            const _left=Math.max(0.25, el.duration-el.currentTime);
+            timer=setTimeout(_armTimer2, Math.min(4000, _left*1000+320));
+            return;
+          }
+        }catch(e){}
+        fin();
+      }, Math.max(900,_dur*1000+250));
+    };
+    const _armTimer2=function(){
+      try{
+        if(el && !el.ended && !el.paused){ timer=setTimeout(_armTimer2, 260); return; }
+      }catch(e){}
+      fin();
+    };
+    _armTimer();
     try{
       const p=el.play();
       if(p&&p.catch) p.catch(function(){
@@ -21894,6 +22076,12 @@ $('btnAgain').addEventListener('click',function(){
 $('btnPauseJump').addEventListener('click',function(){
   /* ★ v475 同結算頁：暫停頁跳世界線時，宿儺領域曲也必須一起停 */
   try{ forceMainBgm(0.7); }catch(e){}
+  /* ★ v492 用戶報「世界線跳躍按鈕有時候會失效」：
+     #pauseOv 的 z-index 是 29，而難度頁 #diffScreen 只有 25 —— 舊版跳轉時沒有收掉遮罩，
+     難度頁其實已經顯示、卻被半透明暫停遮罩整個蓋住，看起來就是「按了沒反應」（尤其在戰鬥中暫停後）。
+     這裡先把遮罩與暫停圖標狀態收掉，再放行推鏡。 */
+  try{ var _po=$('pauseOv'); if(_po) _po.classList.remove('on');
+       var _pb=$('pauseBtn'); if(_pb) _pb.classList.remove('paused'); }catch(e){}
   enterDiff();
 });
   /* ★ v240 用戶指定：點「暫停」字樣（或遮罩空白處）也能繼續 —— 「世界線跳躍」按鈕照舊走自己的邏輯。 */
@@ -22084,6 +22272,24 @@ function playTitleOpen(){
 (function(){
   const ov=$('bootVideo'); if(!ov) return;
   const v=$('bootVideoEl'); if(!v){ playTitleOpen(); return; }
+  /* ★ v491 用戶報「開場影片還是會重播、音樂也重播」：
+     68MB 單檔在手機上很容易被系統回收（tab discard / WebView 記憶體回收），
+     回來時整頁重跑 ⇒ 影片從 0 再播一遍、BGM 也從頭起。
+     這裡用 sessionStorage 做「本會話已播過」去重：30 分鐘內重載直接進標題頁，
+     關掉網頁重開（新 session）才會再看到開場。 */
+  let _seenAt=0;
+  try{ _seenAt=+(sessionStorage.getItem('jjk_boot_seen')||0)||0; }catch(e){}
+  if(_seenAt && Date.now()-_seenAt < 30*60*1000){
+    window.__bootPlaying=false;
+    window.__bootBgmGojo=false;
+    try{ v.pause(); }catch(e){}
+    try{ v.removeAttribute('src'); v.load(); }catch(e){}
+    try{ const _cv0=$('bootVideoCv'); if(_cv0){ _cv0.width=0; _cv0.height=0; _cv0.style.display='none'; } }catch(e){}
+    try{ ov.classList.add('hide'); ov.innerHTML=''; ov.style.display='none'; if(ov.parentNode) ov.parentNode.removeChild(ov); }catch(e){}
+    try{ playTitleOpen(); }catch(e){}
+    return;
+  }
+  try{ sessionStorage.setItem('jjk_boot_seen',''+Date.now()); }catch(e){}
   /* ★ v469：不再靠 autoplay 起播 —— 舊版 68MB 的 HTML 解析期間（腳本還沒跑到）autoplay
      已經把影片「隱形」播掉一段、甚至整段播完（video 是 opacity:0，畫面本應由 canvas 逐幀畫），
      等這裡 startPlay() 再 play() 就從 0 重來，看起來就是「開場動畫播了兩遍」。
@@ -23352,7 +23558,7 @@ html.rot #rsNavDown.on,html.rot #rsNavUp.on{display:flex;}
   mask-image:linear-gradient(90deg,transparent 0,#000 12px,#000 calc(100% - 12px),transparent 100%);}
 #achBlock #achWrap{display:flex !important;flex-wrap:nowrap !important;justify-content:flex-start !important;
   width:max-content !important;max-width:none !important;gap:6px !important;}
-#achBlock #achWrap.run{animation:achMarq 24s linear infinite;}
+#achBlock #achWrap.run{animation:achMarq 16s linear infinite;}   /* ★ v492 用戶指定：滾動適當加快（24s→16s） */
 @keyframes achMarq{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 @media (prefers-reduced-motion:reduce){#achBlock #achWrap.run{animation:none;}}
 
@@ -23378,6 +23584,17 @@ html.rot #rsNavDown.on,html.rot #rsNavUp.on{display:flex;}
 #resultScreen .recBox{padding:3px 8px !important;}
 #resultScreen .recBox .rv{font-size:12px !important;}
 #resultScreen .recBox .rk,#resultScreen .recBox .rb{font-size:9px !important;}
+
+/* ★ v492 用戶指定「減小結局圖鑑上方的空隙、把圖鑑板塊適當上移」：
+   病灶是左欄（全服戰況 + 兩顆 CTA）比右欄（本局解鎖 + 手感反饋）高約 160px，
+   #dexWrap 只能排在左欄底部之後 ⇒ 右欄下方留一大塊空白。
+   現在 CTA 行抽成跨兩欄的獨立一行，左欄縮回與右欄等高，圖鑑整體上移 ~76px；
+   順便把圖鑑標題與列間距再收一檔。 */
+#resultScreen .ctaRow{width:100% !important;}
+#resultScreen #rCols > .resCol{gap:5px !important;}
+#resultScreen #dexWrap{margin-top:-2px !important;}
+#resultScreen #dexWrap .secTitle{margin:0 !important;padding:1px 6px 2px !important;}
+#resultScreen #rDex{gap:6px !important;}
 
 /* ═════════════ ★ v483 結算評級字母：墨跡漸顯（淡入 + 落印回彈） ═════════════ */
 @keyframes inkGradeIn{

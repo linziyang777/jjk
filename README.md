@@ -82,7 +82,20 @@
 
 对外版本 **v6.5**。近几轮改的东西：
 
-**v490 · 开场加载图案缩小 + 修「五条悟死后选虎杖被拽回选人页」**
+**v492 · 世界线跳跃按钮失效修复 + 终结黑闪音效/结算曲 + 结算页图鉴上移**
+- 修「世界线跳跃按钮有时候点了没反应」：暂停遮罩 `#pauseOv` 的 `z-index` 是 29，难度页 `#diffScreen` 只有 25。从暂停页跳世界线时旧版没把遮罩收掉 —— 难度页其实已经打开，却被整片半透明遮罩盖住，看起来就是按钮坏了。现在 `#btnPauseJump` 与 `enterDiff()` 都会先收遮罩；`showResult()` 另外清掉所有残留的全屏层（`#deathBlack` z70 / `#shareOv` z90 / 新手引导 `#guideHit` z54）。dolly 防连点窗口 1200ms → 800ms，超时强制清理残留。
+- 修「虎杖终结宿傩时黑闪音效没正常播放」：终结专属音轨（`__bfElSp`）第一次使用时才 `new Audio()` 建链，`readyState` 还是 0，同步 `play()` 被静默丢掉。改为开局时把普通版与专属版一起预热；`playBlackFlashSfx` 在未就绪时等 `canplay`（420ms 兜底）；`yujiFinisherCut` 改用「是否真的在响」判定，第一声没响就必定补一声。
+- 修「结算背景音乐没正常播放」：SPECIALZ 的 base64 有 5.09MB，旧版要等播放那一刻才同步 `atob` + 逐位元组转 `Uint8Array`（手机实测卡主执行绪 1~3 秒），`play()` 因此被拖掉。改成分片预热（`atob` 一次，之后每 256KB 一个 `setTimeout` 切片），首次手势后 1.2s 启动，结束时 blob 与 `<audio>` 都已就绪；`playExtraBgm` 与结算补播都加了 `canplay` 兜底。
+- 结算页：`#achWrap` 的 `achMarq` 轮播 24s → 16s（适当加快）；两颗 CTA 从 `#rColL` 抽出、改为图鉴之后的跨栏一行，左栏缩回与右栏等高 —— **结局图鉴整体上移 66px**，上方空隙由 160px 收到 4px（1280×800 与 844×390 均实测）。
+
+**v491 · 手机加载图案再缩 + 召唤演出冻结 + 泛紫修复 + 玉犬影子**
+- 手机端 `#lsWrap` 再缩：窄屏 `74vw/460px → 46vw/268px`、旋转态 `72dvh/560px → 42dvh/300px`。
+- 开场影片与 BGM 重载后重播：加 `sessionStorage['jjk_boot_seen']` 30 分钟会话去重。
+- 修「播放召唤动画时魔虚罗等同时攻击」：`update()` 在 `S.cine` 期间整段冻结，`summonMaha` 落地与 `_sukDoAction` 改为轮询等待演出结束。
+- 修「鹿紫云释放幻兽琥珀后全场泛紫、动画一多就卡」：闪层 `flash()/flashStage()` 强制 `opacity:0` + `animationend` 清 class，`stageReset` 不再清空 `opacity`。
+- 玉犬影子缩 15%、以中心为轴逆时针 10°；宿傩领域语音播完才切 BGM（fallback 4.78→5.80s），虎杖简易领域文字改蓝色 + 黑色勾边（`fxText` 新增 `inkOnly`）。
+
+**v490 · **v490 · 开场加载图案缩小 + 修「五条悟死后选虎杖被拽回选人页」**
 - 开场载入动画（开播影片之前那个黑底字样的 `#lsWrap`）图案从 `min(46vw,520px)` 收到 `min(34vw,390px)`，约缩到原来的 75%；字样层与「勾边自下而上」的进度层都是 `inset:0 + background-size:100% 100%`，等比跟随，`clip-path` 用自身百分比，不必另改
 - **BUG：五条悟阵亡后点选虎杖（或任一术师）上场，画面闪一下退回选人页、战斗被跳过。** 根因是 `gojoDown` 里的两道「补刀」定时器只判断 `S.phase!=='select'`：玩家在选人页出现后 900ms 内手快点下术师，`phase` 已变 `'fight'`，补刀仍认定「还没换页」→ 再跑一次 `afterHeroDownRoute()` → `showSelect()`，把刚登场的人拽回去；而该角色在 `startNext` 里已被记进 `usedHeroes`，等于白吃一棒。26s 那道看门狗同理，会在战斗中途把人踢回选人页
 - 修法：补刀只在**仍停在退场态 `phase==='over'`** 时才执行。实测点击后 40 秒（覆盖 26s 看门狗）始终停留在战斗中，调用链只剩 `showSelect → startNext` 一次
