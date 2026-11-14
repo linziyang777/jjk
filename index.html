@@ -1,3 +1,43 @@
+<!-- ★ v499 两项（用户指定：画面比例自适应 + 招式文字过大）：
+     ① 结算页「内容带」自适应 —— 解决「画面比例不同时版面散架」。
+        旧版 #rsHead / #rCols / #dexWrap / #rsDiff 限宽 1040px，但 .ctaRow、接力链标题、
+        底部免责声明都是 width:100%。在 2736×1264（B 站 TV，2.16:1）这类超宽容器里，
+        两个 CTA 被拉成各 1330px 的横贯细条、中间大片空白，视觉完全散架；1280×800 桌面
+        也会把按钮拉成 1228px 宽。
+        改法：所有顶层区块共用 CSS 变量 --rsMax，由新函数 fitResultBand() 按「容器高度」
+        推算 —— band = clamp(W-32, 860, H×1.38)，即宽度跟高度成比例：
+          2736×1264 → 1744（原 2684）｜1920×1080 → 1490｜1280×800 → 1104（原 1228）
+          844×390 → 812（贴满）｜932×430（竖屏旋转）→ 860
+        同时给 <html> 挂两个开关类：
+          · rsWide（宽高比 ≥1.9）：两个 CTA 不再各撑半屏，收成 min(460px,32vw) 居中；
+          · rsSquat（可视高 ≤545）：纵向 gap/padding 收紧，手机横屏少滚一段（502→498px）。
+        fitResultBand() 在 fitResult() 入口调用，后者已由 resize / showResult 两处触发。
+     ② 战斗内招式大字（fxText big）按字长自适应 —— 用户反馈「部分技能文字动画太大」。
+        旧：size=(big?26:17)×SC，1280×800 下大字 39px，长串横压半个屏幕。
+        新：基准降一档（big 26→23、small 17→16），大字再按字数收缩
+            ≤3 字 1.0／4-5 字 0.90／6-7 字 0.82／8 字以上 0.74；小字与咒词不参与收缩。
+        实测 1280×800：39 → 34.5（黑闪）、31.1（6 字）、25.5（「无量空处 · 完全压制」9 字）；
+        844×390：28.2 → 24.9 / 20.9。长串不再压到对位立绘。
+     未做：结算页竖向居中（#resultScreen 的 justify/align-content 会被基础布局吃掉，
+        实测无效；改用 padding 补白又与滚动冲突），竖向保持原样。 -->
+<!-- ★ v498 五项（用户指定，本轮发版）：
+     ① 五条咒词改为「自下而上显现」：旧版 fxChant 传 dir=-1，字会往左上飘再淡出。
+        现在原位从下方 30px 浮起、不横向漂移、不缩放，退场只做透明度渐隐
+        —— fxText 新增第 7 参 opt.rise，渲染分支走独立时间轴（入场 0~0.18 上浮、0.70 后纯淡出）。
+     ② 乙骨「邪去侮的梯子」去掉字图的出现动画：okWord 不再 translateY(14px)+scale(.9)，
+        只留 opacity 淡入淡出；字图高度 clamp(74px,19.5vh,146px) → clamp(62px,16.4vh,122px)，
+        背后白色光晕同比缩 16%（190×420 → 160×353）。
+     ③ 结算页「分享战绩／世界线跳跃」回到「结局图鉴」上方：v492 曾把它们排在图鉴之后
+        （当时为压桌面一屏高度），手机竖屏上与图鉴之间隔着滚动，用户反馈找不到。
+        顺序改为 rCols → CTA 行 → 图鉴 → 接力链，桌面 1280 与手机竖屏均已验证。
+     ④ 全服战况／给作者的话恢复可用：托管域名是「整域按 sharecode 拦截」——
+        不带参数的 /api/world 一律 403「链接不完整」(3174B HTML)，带参才 200。
+        新增 apiSc()，/api/world、/api/result、/api/msg 三处请求统一补 &sharecode=HV2H7J6CIV
+        （实测 200 + 真实数据：累计挑战 716 / 通关 153 / 击败宿傩 25）。
+     ⑤ 绝境档从「数学上不可通」调成「极难但可通」：宿傩伤害 ×2.2 → ×1.85、
+        玩家伤害 ×0.60 → ×0.72。原参数下两人合计只有 8~16 次出手，打空 150 点血需要
+        22~30 次命中，缺口 1.5~3 倍；调整后出手 14~22 次，配合黑闪／领域／处刑人之剑可以打通。
+        难度按钮文案同步改为「宿傩伤害 ×1.85」。 -->
 <!-- ★ v497 全档简体化 + 旁白校订（用户指定，本轮发版）：
      ① 全档中文统一简体：台词／旁白／技能说明／技能名／按钮／图鉴／成就／人名一律简体
         （共 27571 个中文块、20802 块有变，630 组字对、42721 字）。
@@ -1595,15 +1635,15 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 .okDom img{width:100%;height:100%;object-fit:cover;}
 #okkoDomWord{position:absolute;left:0;right:0;top:26%;z-index:20;display:none;
   justify-content:center;pointer-events:none;}
-#okkoDomWord.on{display:flex;animation:okWord 3s ease-out forwards;}
-@keyframes okWord{0%{opacity:0;transform:translateY(14px) scale(.9)}
-  18%{opacity:1;transform:translateY(0) scale(1)}70%{opacity:1}100%{opacity:0}}
+/* ★ v498 用户指定：去掉文字的出现动画（不再位移/缩放），只留纯淡入淡出 */
+#okkoDomWord.on{display:flex;animation:okWord 3s linear forwards;}
+@keyframes okWord{0%{opacity:0}12%{opacity:1}84%{opacity:1}100%{opacity:0}}
 #okkoDomWord::before{content:'';position:absolute;left:50%;top:50%;
-  transform:translate(-50%,-50%);width:clamp(90px,22vw,190px);height:clamp(190px,54vh,420px);
+  transform:translate(-50%,-50%);width:clamp(76px,18.5vw,160px);height:clamp(160px,45.4vh,353px);   /* ★ v498 光晕同步缩 16% */
   border-radius:50%;background:radial-gradient(ellipse at center,#fff 0%,#fff 46%,rgba(255,255,255,.55) 68%,rgba(255,255,255,0) 82%);
   filter:blur(2px);z-index:-1;}
 #okkoDomWord{position:absolute;isolation:isolate;}
-#okkoDomWord img{position:relative;height:clamp(74px,19.5vh,146px);width:auto;   /* ★ v242 邪去侮梯子字图缩小，避免遮住下方技能框 */
+#okkoDomWord img{position:relative;height:clamp(62px,16.4vh,122px);width:auto;   /* ★ v242 邪去侮梯子字图缩小，避免遮住下方技能框；★ v498 再缩 16% */
   filter:drop-shadow(0 0 16px rgba(255,255,255,.55));}
 /* ★ v49 钉崎野蔷薇连动演出层 */
 .nbCut{position:absolute;inset:0;z-index:45;display:none;align-items:center;justify-content:center;
@@ -2825,7 +2865,7 @@ html.rot #resultScreen .cta,html.land #resultScreen .cta{ box-shadow:4px 4px 0 r
   mask-image:linear-gradient(180deg,#000 56%,rgba(0,0,0,.6) 80%,rgba(0,0,0,0) 100%);}
 @media (min-width:900px){
   #resultScreen:not(.hide){ gap:14px; padding:20px 28px 26px; }
-  #rCols{ gap:12px 30px; max-width:1040px; }
+  #rCols{ gap:12px 30px; max-width:var(--rsMax,1040px); }
   #rCols > .resCol{ gap:12px; }
   #resultScreen .secTitle{ font-size:13px; letter-spacing:5px; margin:8px 0 3px; }
   #resultScreen .eCard{ padding:14px 24px 16px; }
@@ -3496,7 +3536,7 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
     <div id="diffRow">
       <button class="diffBtn on" data-diff="normal">原作<small>宿傩伤害 ×1.0 · 6 位术师</small></button>
       <button class="diffBtn" data-diff="hard">苦战<small>宿傩伤害 ×1.4 · 仅 3 位术师</small></button>
-      <button class="diffBtn" data-diff="void">绝境<small>宿傩伤害 ×2.2 · 仅 2 位术师 · 7 秒回合</small></button>
+      <button class="diffBtn" data-diff="void">绝境<small>宿傩伤害 ×1.85 · 仅 2 位术师 · 7 秒回合</small></button>
     </div>
     <div class="dfHint">选定后进入出战顺序编排 · 出战人数依难度而定</div>
   </div>
@@ -3894,8 +3934,11 @@ const TURN_SEC=10;    /* ★ v112 每回合时长（秒，原 7.5）；实际以
 const DIFFS={
   normal:{label:'原作', dmg:1.00, turn:10, lim:6, push:0.70, pushStep:0.045, heroDmg:0.80, adapt:false},
   hard:  {label:'苦战', dmg:1.40, turn:10, lim:3, push:0.50, pushStep:0.075, heroDmg:0.80, adapt:false},
-  void:  {label:'绝境', dmg:2.20, turn:7,  lim:2, push:0.42, pushStep:0.085, heroDmg:0.60, adapt:true }
-};   /* ★ v480 第三档大改：2 人 / dmg 2.2 / heroDmg 0.60 / 适应常驻 / 7 秒回合 */
+  void:  {label:'绝境', dmg:1.85, turn:7,  lim:2, push:0.42, pushStep:0.085, heroDmg:0.72, adapt:true }
+};   /* ★ v480 第三档：2 人 / 适应常驻 / 7 秒回合
+        ★ v498 用户指定「调成极难但可通」：dmg 2.20 → 1.85、heroDmg 0.60 → 0.72。
+        原参数下两人合计仅 8~16 次出手，而打空 150 点需要 22~30 次命中，缺口 1.5~3 倍 ⇒ 数学上不可通。
+        调整后出手 14~22 次，配合黑闪（×2）／领域加成／日车处刑人之剑（60%）可以打通。 */
 /* ★ v446 三档难度取值助手：以前各处写死 isHard()，加上第三档后统一走这里 */
 function DF(){ return DIFFS[S.diff]||DIFFS.normal; }
 function isHard(){ return S.diff!=='normal'; }
@@ -5111,13 +5154,14 @@ function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v419 第 7 参 opt：{sz 字号倍数／dur 覆盖停留时间／stamp 印章式落地（大字用）} */
   opt=opt||{};
   /* ★ v491 新增 opt.inkOnly：只留黑色粗勾边（不再加白细边），供「蓝字 + 黑边」用 */
-  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly});
+  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,rise:!!opt.rise});   /* ★ v498 opt.rise：自下而上显现 */
 }   /* ★ v407 第 6 参数 dir：+1 往右消散、−1 往左消散 */
 /* ★ v496 用户指定：五条的咒词在「释放技能那一刻」显现 —— 立绘上方浮出咏唱（白字＋黑勾边，往左缓飘）。 */
 function fxChant(txt,col){
   const _k=(txt.length>11?0.80:(txt.length>9?0.88:1.0));
   /* 贴在立绘头顶上方：用画面高度定位（GY-270*SC 在窄屏会被推到顶部血条里） */
-  fxText(GX()-8*SC, H*0.125, txt, col||'#e5e7eb', false, -1, {sz:0.92*_k, dur:1.25, inkOnly:true});
+  /* ★ v498 用户指定：不再左上飘 —— 原位自下而上浮起显现，退场只做透明度渐隐。 */
+  fxText(GX()-8*SC, H*0.125, txt, col||'#e5e7eb', false, 0, {sz:0.92*_k, dur:1.35, inkOnly:true, rise:true});
 }
 function fxRing(x,y,col){ addFx({type:'ring',dur:0.45,x:x,y:y,col:col||'#111'}); }
 function fxShards(x,y,rgb,big){
@@ -11166,6 +11210,11 @@ function renderAch(){
    离线 / APK（无服务端）时 fetch 失败 ⇒ 显示「离线」并隐藏反馈块，不抛错、不阻塞结算。 */
 /* ★ v240 APK 也能看战况：App 内是 file:// 加载，同源请求会失败 ⇒ 改用线上域名。
    服务端 /api/result、/api/fb 都返回 Access-Control-Allow-Origin:* ，跨域可用。 */
+/* ★ v498 平台闸门：托管域名下不带 sharecode 的任意请求都返回 403「链接不完整」(3174B 的 HTML)，
+   实测 /api/world 裸请求 403、带 sharecode 才 200。TOY／APK／镜像站全部走 OFF 主机，
+   因此所有接口统一补这个参数。 */
+var API_SC='HV2H7J6CIV';
+function apiSc(){ return '&sharecode='+API_SC; }
 function apiBase(){
   try{
     var OFF='https://jjk-shinjuku-battle-83982.app.workbuddy.host';
@@ -11211,7 +11260,7 @@ function worldPoll(){
   const tick=()=>{
     const rs=$('resultScreen');
     if(!rs || rs.classList.contains('hide')){ worldStop(); return; }
-    fetch(apiBase()+'/api/world?ts='+Date.now(),{cache:'no-store'})
+    fetch(apiBase()+'/api/world?ts='+Date.now()+apiSc(),{cache:'no-store'})
       .then(r=>r.json()).then(j=>{ if(j&&j.ok){ j.rank=_wRank; worldPaint(j, !!S.sukWinFlag); } })
       .catch(()=>{});
   };
@@ -11227,7 +11276,7 @@ function reportResult(kill){
   const q='w='+(kill?1:0)+'&s='+encodeURIComponent(jjkSid())
     +'&r='+Math.max(0,Math.min(999,Math.round(S.turnN||0)))
     +'&g='+encodeURIComponent((S.rank==='D'?'C':(S.rank||'')))+'&ts='+Date.now();
-  fetch(apiBase()+'/api/result?'+q,{cache:'no-store'})
+  fetch(apiBase()+'/api/result?'+q+apiSc(),{cache:'no-store'})
     .then(r=>r.json())
     .then(j=>{
       if(!j||!j.ok) throw new Error('bad');
@@ -11286,7 +11335,7 @@ function sendFb(){
     return; }
   if(btn) btn.disabled=true;
   if(ok) ok.textContent='送出中…';
-  fetch(apiBase()+'/api/msg?r='+r+'&s='+encodeURIComponent(jjkSid())+'&m='+encodeURIComponent(m),{cache:'no-store'})
+  fetch(apiBase()+'/api/msg?r='+r+'&s='+encodeURIComponent(jjkSid())+'&m='+encodeURIComponent(m)+apiSc(),{cache:'no-store'})
     .then(function(x){ return x.json(); })
     .then(function(j){
       if(j && j.ok){
@@ -11347,15 +11396,33 @@ function buildResultCols(){
   if(secs[1]) _dexWrap.appendChild(secs[1]);
   if(g('rDex')) _dexWrap.appendChild(g('rDex'));
   _host.insertBefore(_dexWrap, secs[0] || (_ch ? _ch : g('rCols').nextSibling));
-  /* ★ v492 CTA 行插在图鉴之后：rCols → 图鉴 → CTA → 接力链
-     （CTA 若排在图鉴前面，它自己 53px 的高度会把图鉴又推回原位，上移就白做了） */
-  if(_ctaRow && _ctaRow.parentNode!==_host) _host.insertBefore(_ctaRow, _dexWrap.nextSibling);
+  /* ★ v498 用户指定：两颗按钮必须在「结局图鉴」上方 —— rCols → CTA → 图鉴 → 接力链
+     （v492 曾排在图鉴之后，手机上与图鉴之间隔着滚动，用户反馈找不到） */
+  if(_ctaRow && _ctaRow.parentNode!==_host) _host.insertBefore(_ctaRow, _dexWrap);
   L.__built=1;
 }
 
 /* ★ v240 结算页「一页内」兜底：内容比可视高度高时整页等比缩小（下限 0.55）。
    手机横屏高度只有 ~400px，光靠压字号仍会溢出 —— 这里按实测高度缩放。 */
+/* ★ v499 结算页内容带：宽度跟容器高度成比例，超宽画面不再把区块拉成细条。
+   同时给 <html> 打两个开关类：rsWide（宽高比≥1.9）/ rsSquat（可视高≤545）。
+   只在结算页可见时算，不影响战斗 HUD 与其它页面。 */
+function fitResultBand(){
+  const rs=$('resultScreen');
+  if(!rs) return;
+  const W=rs.clientWidth|0, H=rs.clientHeight|0;
+  if(!W || !H) return;
+  /* 下界 860 保证两列不挤成一条；上界 W-32 保证窄屏仍贴边；
+     中间按 H*1.38 跟随高度 —— 这是「画面比例不同也能自动微调」的核心。 */
+  const band=Math.min(W-32, Math.max(860, Math.round(H*1.38)));
+  rs.style.setProperty('--rsMax', band+'px');
+  const de=document.documentElement;
+  de.classList.toggle('rsWide', (W/H)>=1.9);
+  de.classList.toggle('rsSquat', H<=545);
+}
+
 function fitResult(){
+  try{ fitResultBand(); }catch(e){}
   const rs=$('resultScreen');
   if(!rs || rs.classList.contains('hide')) return;
   rs.style.zoom='';
@@ -18360,17 +18427,27 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       /* ★ v412 三段式：入场弹入（0~0.18）→ 停留（0.18~0.70）→ 上浮/左右推开淡出（0.70~1）。
          字号降一档（30→26 / 19→17），改「墨色外描边 + 白色细描边 + 彩色芯」，浅底深底都读得清。 */
       const _d=f.dir|0;
+      const _rise=!!f.rise;   /* ★ v498 自下而上形态：不横向漂移、不缩放，退场只淡出 */
       const tIn=Math.min(1,k/0.18);
       const eIn=1-Math.pow(1-tIn,3);
       const tOut=Math.max(0,(k-0.70)/0.30);
-      const size=(f.big?26:17)*SC*(f.sz||1);   /* ★ v419 可按招式放大／缩小 */
+      /* ★ v499 用户反馈「部分技能文字动画太大」：
+         ① 基准降一档（大字 26→23、小字 17→16）—— 39px 的黑描边大字在 800 高画面里压住立绘；
+         ② 大字再按字数自动收缩（≤3 字不收、4-5 字 0.90、6-7 字 0.82、8 字以上 0.74），
+            长串招式名不再横压半个屏幕；小字与咒词不受影响，保持可读。 */
+      const _tn=Math.max(1,(f.txt||'').length);
+      const _lf=f.big?(_tn<=3?1:(_tn<=5?0.90:(_tn<=7?0.82:0.74))):1;
+      const size=(f.big?23:16)*SC*(f.sz||1)*_lf;   /* ★ v419 可按招式放大／缩小 */
       /* ★ v419 stamp：印章式落地 —— 从 1.62 倍砸回 1.0，比原本的弹入更「重」 */
-      const pop=f.stamp?(1.62-0.62*eIn)
-                      :(0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn)));
-      const y=f.y-(_d?k*8*SC:k*30*SC)-tOut*tOut*(_d?0:22*SC);
-      const x=f.x+_d*k*62*SC;
+      const pop=_rise?1:(f.stamp?(1.62-0.62*eIn)
+                      :(0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn))));
+      const y=_rise?(f.y+(1-eIn)*30*SC)
+                  :(f.y-(_d?k*8*SC:k*30*SC)-tOut*tOut*(_d?0:22*SC));
+      const x=_rise?f.x:(f.x+_d*k*62*SC);
       ctx.save();
-      ctx.globalAlpha=Math.max(0,Math.min(Math.min(1,k/0.09),1-tOut*tOut));
+      ctx.globalAlpha=_rise
+        ?Math.max(0,Math.min(Math.min(1,k/0.14),1-tOut))
+        :Math.max(0,Math.min(Math.min(1,k/0.09),1-tOut*tOut));
       ctx.translate(x,y); ctx.scale(pop,pop);
       ctx.font='900 '+size+'px "Noto Sans SC",sans-serif';
       ctx.textAlign='center'; ctx.lineJoin='round';
@@ -23596,10 +23673,10 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
      改成 flex 纵排后完全没有重叠可能，且与手机端共用同一套流式规则 */
   #resultScreen:not(.hide){display:flex !important;flex-direction:column;align-items:stretch;
     justify-content:flex-start;gap:9px;padding:16px 26px 18px;overflow-y:auto;overflow-x:hidden;}
-  #rsHead,#resultScreen #rCols,#resultScreen #dexWrap{width:100%;max-width:1040px;}
+  #rsHead,#resultScreen #rCols,#resultScreen #dexWrap{width:100%;max-width:var(--rsMax,1040px);}
   #resultScreen #rCols{margin:0 auto;}
   /* 难易度行原本用 align-self:flex-start，左缘停在内距边（比栏位再靠左 100px）；改成与 1040 容器同宽居中 */
-  #resultScreen #rsDiff{width:100%;max-width:1040px;align-self:stretch;margin:0 auto;}
+  #resultScreen #rsDiff{width:100%;max-width:var(--rsMax,1040px);align-self:stretch;margin:0 auto;}
   /* ★ v447 结局图鉴改为跨两栏的独立一段，4 列铺满（原本挤在右栏要 4 排，把整页顶出视口） */
   #resultScreen #dexWrap{margin:2px auto 0;}
   #resultScreen #dexWrap .dex{max-width:none;width:100%;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
@@ -23762,6 +23839,40 @@ html.land #resultScreen,html.rot #resultScreen{
   scrollbar-width:none;-ms-overflow-style:none;}
 html.land #resultScreen::-webkit-scrollbar,html.rot #resultScreen::-webkit-scrollbar{
   width:0;height:0;display:none;}
+
+
+/* ═════════════ ★ v499 结算页「内容带」自适应 ═════════════
+   问题：以前 #rCols / #dexWrap / #rsHead 限宽 1040，但 .ctaRow 与接力链是 width:100%。
+   在 2736×1264（B 站 TV）这类超宽画面上，两个 CTA 被拉成各 1330px 的横贯细条，
+   中间大片空白，视觉完全散架。
+   做法：所有顶层区块共用 --rsMax；该变量由 fitResultBand() 按「容器高度」推算，
+   于是内容带宽度始终与画面高度成比例 —— 16:10 是 1104、2.16:1 收在 1744、手机横屏贴满。 */
+#resultScreen .ctaRow,
+#resultScreen .chainRow,
+#resultScreen #rCols,
+#resultScreen #dexWrap{
+  width:100%;
+  max-width:var(--rsMax,1040px);
+  margin-left:auto;margin-right:auto;
+}
+/* 接力链标题条 / 底部免责声明同样收进内容带（以前横贯全屏，超宽画面下像断掉的横条） */
+#resultScreen > .secTitle,
+#resultScreen > .resDisc,
+#resultScreen #rChain{
+  width:100%;
+  max-width:var(--rsMax,1040px);
+  margin-left:auto;margin-right:auto;
+}
+/* ★ v499 竖向居中已放弃：实测 #resultScreen 上 justify/align-content 都被
+   基础布局吃掉（内容仍贴顶），改用 padding 补白又与滚动打架。
+   横向内容带已解决主要观感问题；竖向在真实数据下内容会自然铺满。 */
+/* ★ 超宽画面（宽高比 ≥1.9，如 TV / 21:9）：两个 CTA 不再各撑半屏，收成定宽居中 */
+html.rsWide #resultScreen .ctaRow{justify-content:center;gap:22px;}
+html.rsWide #resultScreen .ctaRow .cta{flex:0 1 min(460px,32vw);}
+/* ★ 矮容器（可视高 ≤545px，如手机横屏 390）：纵向间距整体收紧，少滚一段 */
+html.rsSquat #resultScreen:not(.hide){gap:8px;padding:12px 16px 14px;}
+html.rsSquat #resultScreen #rCols{gap:6px 14px;}
+html.rsSquat #resultScreen .ctaRow .cta{padding-top:6px;padding-bottom:6px;}
 </style>
 <!-- ★ v307 虎杖终结一击：钉崎演出结束后全屏白爆 + 立绘 -->
 <div aria-hidden="true" id="yujiFin"><div class="yfBurst"></div><img alt id="yfImg"></div>
