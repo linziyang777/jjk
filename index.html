@@ -1,3 +1,95 @@
+<!-- ★ v503 两项（用户继续反馈的同一组问题）：
+     ① 五条悟登场语音播完没有响起他的背景音乐。
+        根因：v502 的 domainAudio 总线若因上一局领域展开未 seal 就换棒 / 重开，
+        phase 会残留在 'voices'；domainVoicesBusy() 会把 700ms BGM 保活看守一并挡掉，
+        于是登场后 BGM 起播失败也没有任何路径补回来。
+        修法：新增 domainAudioReset()，在 resetBattle()（新局）与五条登场语音结束时调用；
+        登场语音的 Promise 结束后主动复位闸门并补一次 startBGM / switchBGM('gojo')，
+        400ms 后再兜一次。probe504 实测 busy true → false。
+     ② 领域对拼「五条语音被宿傩直接截断」—— 真实 gojoVoid() 全流程实测：
+        两句都完整播到 ended（gojoDom 5.30 / sukuDom 4.41），技术上没有被停，
+        是两条人声以 0.9 / 0.92 同响造成的混音掩蔽，听感就像五条被掐掉。
+        修法：五条提为主声部 1.0，宿傩对拼语音降为第二声部 0.70 并 180ms 渐入，
+        开口那一帧不盖住五条；domainAudioBegin() 提前预热领域音源，
+        避免 160ms 处同步建链把五条卡一拍；gojoVoice2 也纳入 hardStopVoices 守卫。
+        probe504 实测：t=0.3s 五条 vol=1 / 宿傩 vol=0.49（渐入中），
+        t=0.6s 后宿傩稳定 0.70，两句 ct 同步推进到 5.30 / 4.41 才 ended，异常 []。
+     【口径不变】v502 定的领域展开规格继续有效：时间暂停期间战斗逻辑冻结、音频按真实时间轴；
+       对拼＝玩家语音 → 160ms 后宿傩语音 → 两句重叠各自念完 → 胜方领域音乐；
+       不对拼＝一句语音念完起领域音乐。 -->
+<!-- ★ v502（用户重定领域展开音频规格 + 灵魂·解瞬身段 + 统计基线）：
+     【领域展开时时间暂停】战斗逻辑照旧冻结（freezeCine / domainShift），音频按真实时间轴走。
+     规格 1 · 触发对拼：玩家用技能同时起玩家语音 → 160ms 后起宿傩语音 →
+               两句重叠、各自完整念完 → 才响起「胜利方」的领域音乐。
+     规格 2 · 不对拼：玩家用技能同时起语音 → 语音结束后响起领域音乐。
+     实现：新增单点调度总线 window.__domainAudio（token / voices / winner / phase）。
+       · domainAudioBegin() 开批次；domainVoice() 登记每句语音与 Promise；
+         domainAudioSeal() 用 Promise.all + 真实 ended 轮询判定「两句都念完」，
+         再由 domainMusicPlay(winner) 只起胜方一首（suku→startSukuBgm，
+         player→ujaku / AIZO / yuji）。
+       · domainVoicesBusy() 是全局丢弃闸门：语音期间 enforceBgmLayer 的补播、
+         700ms BGM 保活看守、sukuBgmWatch、startSukuBgm、resumeMainBgm、
+         startOkkoDomainBgm、playExtraBgm(ujaku/yuji) 一律 return，
+         彻底取代之前散在六七处、互相抢播的写死 setTimeout。
+       · 胜负分支只调 domainSetWinner()，不再各自起曲；
+         220ms 语音保活看守扩到玩家 + 宿傩两条，误停 220ms 内拉回。
+     【为什么一直音频错乱】语音时长（五条 5.49s / 宿傩 4.41s / 乙骨 1.32s）
+       与演出时间轴（对拼 2.5s 起、5.03s 判胜负）从未绑定，多个看守按各自定时器
+       拉起领域曲 ⇒ 总有一条盖住语音尾巴；v479/v491/v494/v495/v501 都是单分支补丁。
+     【灵魂·解前半段瞬身卡顿】
+       · 根因 A：freezeCine(2.55) 让 update 提前 return，而全档唯一一处 f.t+=dt
+         就在 update 里 ⇒ soulDash / soulDim 完全定格，看起来就是「又卡又慢」。
+         现在 S.cineFx=1 时 cine 分支只推进特效与 hitStop，召唤演出仍全冻。
+       · 根因 B：soulDash 每帧把 2167×1952 大立绘缩放绘制 5~6 次。
+         新增 dashScaled() 预缩放缓存（WeakMap，尺寸变化自动重建），
+         之后每帧只画小图；拖影 5→4 层，辉光剪影也走小图，全程无 shadowBlur。
+     【统计】v499 部署曾把旧 stats.json 覆盖上去，留言明细（用户记得 16 条）与
+       部分通关者名单丢失；本地与线上现均只剩 4 条留言，无 16 条副本可恢复。
+       本版起发版前强制 /admin/export 拉全量写 seed，并在 stats_backup/ 留时间戳快照。
+     probe502 实测：t=1.0/3.0s 两句同时在播且 busy=true、无任何 BGM 起播；
+       t=6.2s 两句 ended（5.30 / 4.41）后 phase=music、extra=ujaku；
+       cine 期间 soulDim.f.t 0.267→0.583 正常推进；JS 异常 []。 -->
+<!-- ★ v501 两项（用户指定）：
+     ① 背景音乐又偶发不响（尤其五条悟那首）—— 三处补强：
+        · switchBGM() 旧版只在「换源前碰巧正在播」时才 startBGM；只要那一瞬被自动播放策略、
+          暂停、切页或 Blob 未就绪挡下，换源后 bgmEl 就永久停在 paused，再没有路径拉起。
+          现在换源后无条件起播 + canplay + 350/1100ms 两次重试；startBGM 的静音兜底也加 300/900ms 重试。
+        · gojo 曲是 <script id="bgmData"> 里的独立常量 BGM_GOJO，旧版却拿 BGM_SRC 判就绪；
+          开场早期会直接 return ⇒ bgmTrack 永远变不成 gojo，进选人时 switchBGM('main') 又因
+          track 相同而 return。现在新增 gojoBgmReady() 单独判。
+        · __bootBgmGojo 残留 true 时，显式切 main 后 bgmUrl() 仍返回五条曲 blob（probe501 实测
+          track=main 但 src 还是 gojo）；现在显式 main 一律以 bgmTrack 为准。
+        · 新增 700ms 保活看守：按与 enforceBgmLayer 相同优先级找出该响的轨，静默补播一次。
+        probe501 实测：开场 track=gojo / paused=false / ct 推进；切 main 后 paused=false、主曲 blob 已建链。
+     ② 领域对拼：宿傩语音提前到玩家语音之后 160ms，且两句各自完整念完。
+        · 旧版五条路径宿傩在 2500+1750=4250ms 才起、乙骨路径在 1500ms 才起（v495 为避免重叠而错开）。
+          现在把这一句抽成单例 startClashSukuVoice()，在 gojoVoid()/okkoUlt() 播完玩家语音后 160ms 起播；
+          两处对拼函数改为复用同一个 Promise，绝不二次起播（二次会把同一 key 的 currentTime 归零
+          ＝用户说的「一个人开始念就截断另一人」）。
+        · playSoloVoice 的 __guardUntil 守卫从 gojoDom 扩展到 gojoDom/sukuDom/yutaDomain，
+          hardStopVoices() 切页巡检不得掐掉这两条；领域曲仍由各自语音的 Promise 驱动，不抢在人声前面。
+        · 台词与画面时序不动，AIZO 仍按原 1.37s 衔接（延后反而会让主 BGM 与两句语音叠播）。
+        probe501 实测 t=1.2s：gojoDom ct=0.83、sukuDom ct=0.62 同时在播；t=2.7s：2.35 / 2.14 都在推进；
+        两句 guard 均剩 4~6s，JS 异常 []。 -->
+<!-- ★ v500 三项（用户指定）：
+     ① 结算页「分享战绩 / 世界线跳跃」移到左上 —— 不再跨两栏居中。
+        v498/v499 把 CTA 作为独立行插在 #rCols 与 #dexWrap 之间，右栏（本局解锁＋给作者的话）
+        比左栏高，CTA 实际被挤到页面下方；2736×1264 超宽屏还被 rsWide 规则居中，
+        看着完全不在左上。现在把 .ctaRow 挂进 #rColL，紧跟「全服战况／回合数」那一行，
+        超宽屏同时去掉居中定宽（justify-content:flex-start、按钮各占半栏）。
+        实测 2736×1264：CTA 从页面下部 y≈408 上移到 y=280、贴左栏左缘 x=496；
+        1280×800 y=487、844×390 y=275，均不与图鉴／接力链重叠。
+     ② 虎杖「灵魂·解」卡顿修复（三处每帧／单次的大开销）：
+        · negOf() 负片：旧版对整张大立绘 getImageData → 逐像素取反 → putImageData，
+          2167×1952 的图实测 95~133ms 主线程冻结，且正好发生在「负片开启」那一帧。
+          改用 canvas 原生 ctx.filter='invert(1)'，实测 12~17ms（约 8 倍）；
+          不支持 filter 的老浏览器才回退逐像素。
+        · soulDash 冲刺：旧版主立绘开 shadowBlur=20，等于每帧对整张大图做高斯模糊，
+          0.42s 连做 25 帧。改为 tintOf() 缓存的淡蓝剪影放大垫底，全程纯 drawImage。
+        · soulCut 白热核心：渐变最外圈本就全透明，旧版却每帧铺满 2736×1264 整块画布。
+          改为只填渐变半径的方形（像素量约 1/4），并缓存 createRadialGradient 对象。
+     ③ 后台统计回退修复（服务端，见 jjk_deploy/stats.seed.json 与 _tmp/guard_stats.js）：
+        发版时把本地 11-11 的旧 stats.json 一起上传，覆盖了线上累计值。 -->
 <!-- ★ v499 两项（用户指定：画面比例自适应 + 招式文字过大）：
      ① 结算页「内容带」自适应 —— 解决「画面比例不同时版面散架」。
         旧版 #rsHead / #rCols / #dexWrap / #rsDiff 限宽 1040px，但 .ctaRow、接力链标题、
@@ -4308,7 +4400,8 @@ function resetBattle(){
   S.suk.hp=SUK_MAXHP; S.suk.pose='idle'; S.suk.poseT=0;
   S.suk.ce=100; S.suk.adaptMap={};
   S.hollowCd=0; S.blockT=0; S.guardFx=0;   
-  S.diff=DIFF_PICK; window.__hardPick=null; S.hitStop=0;   /* ★ v480 换难度重开时重置随机池 */ S.negUntil=0; S.gojoNegUntil=0; S.worldBlack=false;   /* ★ v468 负片旗标 */ S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.nbPlayed=false; S.soulKill=false;   /* ★ v250 钉崎彩蛋是否已播（避免真结局重复播） */ S.heroJolt=0;
+  S.diff=DIFF_PICK; window.__hardPick=null; S.hitStop=0;   /* ★ v480 换难度重开时重置随机池 */ S.negUntil=0; S.gojoNegUntil=0; S.worldBlack=false;
+  try{ domainAudioReset(); }catch(e){}   /* ★ v503 新局清掉上一局残留的音频闸门 */   /* ★ v468 负片旗标 */ S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.nbPlayed=false; S.soulKill=false;   /* ★ v250 钉崎彩蛋是否已播（避免真结局重复播） */ S.heroJolt=0;
   S.sukuShadowUsed=false; S.shadowTurnN=0; S.dmgTaken=0; S.perfectN=0;   /* ★ v266 影法术与段位统计重置 */ S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 清慢动作 */
   S.stagger=0; S.staggerUsed=false;
@@ -5455,6 +5548,7 @@ function gojoVoid(){
     return;
   }
   S.gojo.ce=Math.max(99,S.gojo.ce-1);   /* ★ v80 六眼：极低消耗 */
+  try{ domainAudioBegin(); }catch(e){}   /* ★ v502 本次领域展开的音频批次 */
   try{ suspendMainBgm(); window.__ujakuAt=Date.now(); }catch(e){}
   /* ★ v494 用户报「五条领域展开语音没播完全／后续几次对拼直接没语音」：
      旧版在语音**之前**先读 window.__gojoVoiceP（那其实是上一次的 promise）再挂 then ——
@@ -5470,9 +5564,17 @@ function gojoVoid(){
        旧版走 playDomSfx 共用通道，对拼流程里的 stopDomSfx / 音效抢占会把它掐掉；
        改走 v428 为此加的独立克隆通道 playSoloVoice（不写 domCur、不受 stopDomSfx 影响）。 */
     const _pr=(typeof window.playSoloVoice==='function')
-      ? window.playSoloVoice(_vk, DOM_LEAD[_vk]||0, 5.9, 0.9)   /* ★ v494 fallback 4.6→5.9（实测 5.49s）；走 window 暴露的独立通道，不写 domCur、不受 stopDomSfx 影响 */
+      ? domainVoice(_vk, DOM_LEAD[_vk]||0, 5.9, 1.0)   /* ★ v503 主声部：与宿傩同响时五条要听得清 */
       : playDomSfx(_vk, 4.2, DOM_LEAD[_vk]||0);
     try{ window.__gojoVoiceP=_pr; window.__gojoVoiceUntil=Date.now()+5300; }catch(e){}   /* ★ v494 语音窗口：实测 5.3s，其间 ujaku 一律不许抢播 */
+    /* ★ v501 宿傩那句在五条开口后 160ms 起（原 4.25s）；两条独立音轨各自念完 */
+    /* ★ v502 玩家语音开口后 160ms 起宿傩；不对拼则只记玩家胜，随后 seal 等语音念完 */
+    try{ window.__clashSukuP=null; setTimeout(function(){
+      if(S.phase!=='fight'||S.paused) return;
+      const _willCl=(typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(isHard()));
+      if(_willCl) startClashSukuVoice(); else domainSetWinner('player');
+      domainAudioSeal();
+    },160); }catch(e){}
     /* ★ v494 领域曲等这一句真的念完才起（对拼中、暂停中都不起） */
     try{
       var _goU=function(){
@@ -5553,6 +5655,7 @@ function gojoVoid(){
       say('narr','旁白：伏魔御厨子的结界应声碎裂——无量的情报洪流反过来灌满了这片空间。');
       say('sys','★ 无量空处从内侧击碎伏魔御厨子：场景变为无量空处——宿傩无法发动攻击、每回合受到 5% 最大生命侵蚀。');
       domainShiftResolve();
+      try{ domainSetWinner('player'); }catch(e){}
       playDomSfx('challenge', 5.5); try{ resumeMainBgm(); setTimeout(function(){ try{ resumeMainBgm(); }catch(e){} }, 5600); }catch(e){}   /* ★ v323 用户指定：胜利语音与背景音乐同时播（不再等语音播完才恢复 BGM） */   /* ★ v141 五条从内侧击碎伏魔御厨子 ⇒ 成功展开，播挑战者语音 */
       const mahaOn=!!(S.maha && !S.mahaDead);
       if(mahaOn){
@@ -5579,6 +5682,7 @@ function gojoVoid(){
       say('suku','「……伏魔御厨子——已经用尽了。」');
       say('sys','★ 宿傩的「伏魔御厨子」本局已展开 '+sukuDomMax()+' 次——无法再对拼，无量空处直接成立：宿傩无法发动攻击、每回合受到 5% 最大生命侵蚀。'+((S.maha&&!S.mahaDead)?'（下一回合魔虚罗将从外侧击碎它）':'（魔虚罗已被击破——无人能击碎，持续到五条悟退场）'));
       domainShiftResolve();
+      try{ domainSetWinner('player'); }catch(e){}
       playDomSfx('challenge', 5.5).then(()=>resumeMainBgm());
       syncHud();
       return;
@@ -5596,7 +5700,12 @@ function gojoVoid(){
     const _sukuSfxFire=function(){
       let _p=null;
       if(S.phase!=='fight'){ if(_sukuSfxResolve) _sukuSfxResolve(); return; }   /* ★ v495 这 1.75s 内已退场／换人 ⇒ 不再补播语音与台词 */
-      try{ if(S.phase==='fight'){ _p=window.playSoloVoice('sukuDom', 0, 4.78, 0.92); } }catch(e){}
+      /* ★ v501 复用 160ms 时已起播的那一句；没有才补播，绝不二次起播把前一句掐回 0 秒 */
+      try{ if(S.phase==='fight'){
+        _p=(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0))
+          ? window.__clashSukuP
+          : ((typeof startClashSukuVoice==='function')?startClashSukuVoice():window.playSoloVoice('sukuDom',0,5.80,0.92));
+      } }catch(e){}
       if(_p&&_p.then){ _p.then(function(){ if(_sukuSfxResolve) _sukuSfxResolve(); }, function(){ if(_sukuSfxResolve) _sukuSfxResolve(); }); }
       else { if(_sukuSfxResolve) _sukuSfxResolve(); }
       say('suku','「领域展开——伏魔御厨子。」');
@@ -5618,6 +5727,7 @@ function gojoVoid(){
       if(S.phase!=='fight'){ S.domClash=null; return; }
       const _pv=(S.pushV==null?0.62:S.pushV);   /* ★ v416 用户指定：2.5s 结束时的指针位置就是胜率，不再固定 50%、也不再「过线即胜」 */
       const winner=(Math.random()<_pv)?'gojo':'suku';
+      try{ domainSetWinner(winner==='gojo'?'player':'suku'); }catch(e){}
       if(!S.domClash) return;   /* ★ v246 防御：对拼层已被收走时不再写入 */
       S.domClash.phase=(winner==='gojo')?'gojoWin':'sukuWin';
       flash('fWhite'); shake();
@@ -9385,6 +9495,7 @@ function _cineNext(){ if(_cineQ.length){ const w=_cineQ.shift(); summonCine(w); 
 /* 时间暂停（给其他演出复用；与召唤定格共用 S.cine 闸门） */
 function freezeCine(sec){
   S.cine=1;
+  S.cineFx=0;                       /* ★ v502 默认全冻；只有灵魂·解会显式开 fx 推进 */
   S.cineEnd=(performance.now()/1000)+(sec||2.4);
 }
 function scClear(){
@@ -11398,7 +11509,10 @@ function buildResultCols(){
   _host.insertBefore(_dexWrap, secs[0] || (_ch ? _ch : g('rCols').nextSibling));
   /* ★ v498 用户指定：两颗按钮必须在「结局图鉴」上方 —— rCols → CTA → 图鉴 → 接力链
      （v492 曾排在图鉴之后，手机上与图鉴之间隔着滚动，用户反馈找不到） */
-  if(_ctaRow && _ctaRow.parentNode!==_host) _host.insertBefore(_ctaRow, _dexWrap);
+  /* ★ v500 用户指定：两颗按钮移到「左上」—— 放进左栏、紧跟全服战况那一行。
+     v498/v499 把它们作为跨两栏的独立行插在图鉴之前，右栏较高 ⇒ 实际掉到页面下方，
+     超宽屏又被 rsWide 规则居中，看起来完全不在左上。回到左栏后位置固定贴左上。 */
+  if(_ctaRow && _ctaRow.parentNode!==L) L.appendChild(_ctaRow);
   L.__built=1;
 }
 
@@ -11749,7 +11863,8 @@ function enforceBgmLayer(){
   if(!list.length) return;
   const keep=list[0];
   list.forEach(function(e){ try{ if(e!==keep && !e.paused) e.pause(); }catch(_){} });
-  try{ if(keep.paused && !document.hidden && !(typeof S!=='undefined' && S && S.paused)){ const p=keep.play(); if(p&&p.catch) p.catch(function(){}); } }catch(_){}   /* ★ v477 暂停时不得拉起 BGM */
+  /* ★ v502 领域语音期间不补播任何 BGM（由总线在两句都念完后统一起胜方曲） */
+  try{ if(!domainVoicesBusy() && keep.paused && !document.hidden && !(typeof S!=='undefined' && S && S.paused)){ const p=keep.play(); if(p&&p.catch) p.catch(function(){}); } }catch(_){}
 }
 let _audioPausedByGame=false;
 /* ★ v428 暂停时记下真正在播的元素（领域语音／独立语音／领域 BGM／开场影片），
@@ -11807,7 +11922,16 @@ function update(dt){
   /* ★ v491 用户指定：召唤定格演出（魔虚罗／颚吐／贯牛）期间「时间要暂停」——
      直接冻住整个 update（含 S.t、回合读秒、特效推进），式神与宿傩都不会动，
      也不会在演出中结算任何攻击。render 照旧每帧跑，所以 #summonCine 的 DOM 动画正常播。 */
-  try{ if(S.cine && performance.now()/1000 < (S.cineEnd||0)) return; }catch(e){}
+  try{ if(S.cine && performance.now()/1000 < (S.cineEnd||0)){
+    /* ★ v502 灵魂·解「瞬身攻击非常卡和慢」根因：freezeCine 让整个 update 提前 return，
+       f.t 完全不推进（全档只有这一处 f.t+=dt），soulDash 被定格成静止画面。
+        summonCine（式神召唤）仍全冻；只有 S.cineFx=1 时推进特效与命中定格。 */
+    if(S.cineFx){
+      for(let _fi=S.fx.length-1;_fi>=0;_fi--){ const _ff=S.fx[_fi]; _ff.t+=dt; if(_ff.t>=_ff.dur) S.fx.splice(_fi,1); }
+      if(S.hitStop>0) S.hitStop=Math.max(0,S.hitStop-dt);
+    }
+    return;
+  } }catch(e){}
   /* ★ 命中定格：世界暂停（含 S.t，所以动画也凝固），但 render 仍每帧跑 */
   if(S.hitStop>0){ S.hitStop=Math.max(0,S.hitStop-dt); return; }
   S.t+=dt; if(S.shikWait>0) S.shikWait=Math.max(0,S.shikWait-dt);   /* ★ v466 式神演出计时 */
@@ -12196,7 +12320,7 @@ function itaSoulCut(){
     SFX.atk(); shake();
     /* ★ v468 用户指定：释放时时间暂停 → 聚焦变暗 → 径庭拳冲刺立绘冲到宿傩身前 →
        NANO 斩击图炸在宿傩身上 → 宿傩立绘负片，技能结束才恢复。 */
-    freezeCine(2.55);
+    freezeCine(2.55); S.cineFx=1;   /* ★ v502 战斗逻辑照冻，但演出特效要按真实时间推进 */
     addFx({type:'soulDim',dur:2.55});
     addFx({type:'soulDash',dur:0.42});
     S.hitStop=Math.max(S.hitStop,0.10);
@@ -13205,10 +13329,20 @@ function negOf(src){
     const cv=document.createElement('canvas');
     cv.width=src.width||src.naturalWidth; cv.height=src.height||src.naturalHeight;
     const g=cv.getContext('2d');
-    g.drawImage(src,0,0);
-    const im=g.getImageData(0,0,cv.width,cv.height), d=im.data;
-    for(let i=0;i<d.length;i+=4){ d[i]=255-d[i]; d[i+1]=255-d[i+1]; d[i+2]=255-d[i+2]; }
-    g.putImageData(im,0,0);
+    /* ★ v500 灵魂解卡顿修复：旧版对整张大立绘做 getImageData → 逐像素取反 → putImageData，
+       GPU→CPU 回读 + 百万级循环，命中那一帧主线程冻结 100~400ms，正好落在负片开启瞬间。
+       改用 canvas 原生 filter='invert(1)'，浏览器在合成侧完成，几毫秒；
+       老 Safari 等没有 ctx.filter 的浏览器才回退到原来的逐像素实现。 */
+    if(typeof g.filter==='string'){
+      g.filter='invert(1)';
+      g.drawImage(src,0,0);
+      g.filter='none';
+    }else{
+      g.drawImage(src,0,0);
+      const im=g.getImageData(0,0,cv.width,cv.height), d=im.data;
+      for(let i=0;i<d.length;i+=4){ d[i]=255-d[i]; d[i+1]=255-d[i+1]; d[i+2]=255-d[i+2]; }
+      g.putImageData(im,0,0);
+    }
     _negCache.set(src,cv); return cv;
   }catch(e){ return src; }
 }
@@ -13227,6 +13361,20 @@ function tintOf(src,color){
     g.fillStyle=color; g.fillRect(0,0,cv.width,cv.height);
     if(!m){ m={}; _tintCache.set(src,m); }
     m[key]=cv; return cv;
+  }catch(e){ return src; }
+}
+/* ★ v502 灵魂·解瞬身段：把 2167×1952 的大立绘一次缩到目标尺寸并缓存，
+   之后每帧只 drawImage 这张小图。旧版每帧缩放绘制 5~6 次大图，超宽屏单帧可破 100ms。 */
+function dashScaled(src,w,h){
+  if(!src) return src;
+  const W=Math.max(1,Math.round(w)), H=Math.max(1,Math.round(h));
+  try{
+    if(!window.__dashScaled) window.__dashScaled=new WeakMap();
+    let c=window.__dashScaled.get(src);
+    if(c&&c.width===W&&c.height===H) return c;
+    c=document.createElement('canvas'); c.width=W; c.height=H;
+    const g=c.getContext('2d'); g.drawImage(src,0,0,W,H);
+    window.__dashScaled.set(src,c); return c;
   }catch(e){ return src; }
 }
 function sukuNegOn(){ return !!(S.negUntil && performance.now()<S.negUntil); }
@@ -15111,14 +15259,20 @@ else if(f.type==='itaPunch'){
       const x=x0+(sukEdge-x0)*e;
       if(cut){
         const w=_w0;
-        for(let i=4;i>=0;i--){
+        /* ★ v502 预缩放后的小图：拖影 5→4 层，辉光剪影也只画小图，全程无大图缩放、无 shadowBlur */
+        const art=dashScaled(cut,w,hh);
+        const glow=tintOf(art,'rgba(140,210,255,0.55)');
+        for(let i=3;i>=0;i--){
           const ax=x-i*22*s2*(1-0.18*e);
           if(ax<GX()-140*s2) continue;
           ctx.save();
           ctx.globalAlpha=(i===0?0.98:Math.max(0,0.44-i*0.07));
           ctx.translate(ax,GY); ctx.rotate(i===0?-0.10:-0.04-i*0.02);
-          if(i===0){ ctx.shadowColor='rgba(140,210,255,.55)'; ctx.shadowBlur=20*s2; }
-          ctx.drawImage(cut,-w/2,-hh,w,hh);
+          if(i===0&&glow){
+            ctx.globalAlpha=0.30; ctx.drawImage(glow,-w/2-7*s2,-hh-7*s2,w+14*s2,hh+14*s2);
+            ctx.globalAlpha=0.98;
+          }
+          ctx.drawImage(art,-w/2,-hh,w,hh);
           ctx.restore();
         }
         /* 脚下冲击尘 */
@@ -15155,11 +15309,18 @@ else if(f.type==='itaPunch'){
       if(t<0.30){
         const fa=1-t/0.30;
         ctx.globalAlpha=fa*0.9; ctx.globalCompositeOperation='lighter';
-        const g=ctx.createRadialGradient(cx,cy,2,cx,cy,Math.min(W,H)*0.36);
-        g.addColorStop(0,'rgba(255,255,255,0.95)');
-        g.addColorStop(0.30,'rgba(168,236,255,0.55)');
-        g.addColorStop(1,'rgba(120,200,255,0)');
-        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        /* ★ v500 卡顿修复：渐变最外圈本来就是全透明，旧版却每帧把整块超宽画布
+           （2736×1264 ≈ 346 万像素）铺一遍。改只填渐变半径的方形，像素量降到约 1/4；
+           渐变对象按 (cx,cy,r) 缓存，避免每帧重新 createRadialGradient。 */
+        const r0=Math.min(W,H)*0.36;
+        if(!f._g || f._gr!==r0 || f._gcx!==cx || f._gcy!==cy){
+          const g=ctx.createRadialGradient(cx,cy,2,cx,cy,r0);
+          g.addColorStop(0,'rgba(255,255,255,0.95)');
+          g.addColorStop(0.30,'rgba(168,236,255,0.55)');
+          g.addColorStop(1,'rgba(120,200,255,0)');
+          f._g=g; f._gr=r0; f._gcx=cx; f._gcy=cy;
+        }
+        ctx.fillStyle=f._g; ctx.fillRect(cx-r0,cy-r0,r0*2,r0*2);
       }
       ctx.restore();
     }
@@ -19717,6 +19878,8 @@ try{ window.__extraBgmDbg=function(){ return { key:extraBgmKey, els:Object.keys(
   try{ setTimeout(_kick,9000); }catch(e){}
 })();
 function playExtraBgm(k,fade){
+  /* ★ v502 领域曲（ujaku/yuji）在语音期间不起；结算曲 specialz/finish 不受影响 */
+  if((k==='ujaku'||k==='yuji') && domainVoicesBusy()) return;
   /* ★ v494 用户报「五条开领域时点暂停，领域音乐照样响」：_goUjaku 是语音 promise 的回调，
      暂停只会 pause 既有元素，挡不住之后才发起的 playExtraBgm。暂停中只记下待播，取消暂停再补。 */
   if(typeof S!=='undefined' && S && S.paused){ try{ window.__pendingExtraBgm={k:k,fade:fade}; }catch(e){} return; }
@@ -19781,7 +19944,10 @@ function bgmReady(){ return typeof BGM_SRC!=='undefined' && !!BGM_SRC; }
 /* ★ 移动端兼容 1/2：iOS Safari 对 data: URI 音源支持很差（经常整段播不出来），
    必须转成 Blob URL 再交给 <audio> */
 function bgmUrl(){
-  const _gojo=(bgmTrack==='gojo'||!!window.__bootBgmGojo);   /* ★ v459 开场影片也用五条曲 */
+  /* ★ v501：__bootBgmGojo 在开场未走 start() 复位时会残留 true，
+     旧版导致 switchBGM('main') 之后 bgmTrack 已是 main、音源却仍取五条曲（probe501 实测）。
+     显式切到 main 时一律以 bgmTrack 为准。 */
+  const _gojo=(bgmTrack==='gojo'||(!!window.__bootBgmGojo && bgmTrack!=='main'));   /* ★ v459 开场影片也用五条曲 */
   if(_gojo){ if(gojoObjUrl) return gojoObjUrl; } else if(bgmObjUrl) return bgmObjUrl;
   if(!bgmReady()) return '';
   const src=_gojo?BGM_GOJO:BGM_SRC;
@@ -19816,16 +19982,31 @@ function okkoBgmUrl(){
   return okkoObjUrl;
 }
 /* 切换 BGM 音轨：换角色登场时调用（'main' / 'okko'）。换曲后 1 秒渐入，音量照旧 */
+function gojoBgmReady(){ try{ return typeof BGM_GOJO!=='undefined' && !!BGM_GOJO; }catch(e){ return false; } }
 function switchBGM(track){
   if(track===bgmTrack) return;
-  const ok=(track==='okko')?okkoBgmReady():bgmReady();
+  /* ★ v501：gojo 曲是 <script id="bgmData"> 里的独立常量，旧版却拿 BGM_SRC 判就绪，
+     开场早期（bgmData 尚未解析）会直接 return ⇒ bgmTrack 永远变不成 gojo，
+     进选人时 switchBGM('main') 又因 track 相同而 return，五条曲/常态曲都不换。 */
+  const ok=(track==='okko')?okkoBgmReady():((track==='gojo')?gojoBgmReady():bgmReady());
   if(!ok) return;
   bgmTrack=track;
   if(!bgmEl) return;                    /* 播放器未创建：ensureBgm 起播时按 bgmTrack 取源 */
-  const playing=!bgmEl.paused;
   try{ bgmEl.pause(); bgmEl.src=(track==='okko')?okkoBgmUrl():bgmUrl(); bgmEl.loop=true; }catch(e){ return; }
   try{ if(track==='okko') bgmEl.currentTime=0; }catch(e){}   /* ★ v443 乙骨专属曲从头播 */
-  if(playing) startBGM(1.0);
+  /* ★ v501 修「换曲后偶发整段无声」：旧版只在换源前「碰巧正在播」时才 startBGM。
+     只要那一瞬被自动播放策略 / 暂停 / 切页 / Blob 未就绪挡下，换源后的 bgmEl 就永久
+     停在 paused，后续没有任何路径再拉它。现在换源后无条件尝试起播，并给未就绪的
+     Blob 挂 canplay + 两次延时重试。 */
+  const _kick=function(){
+    try{
+      if(bgmMuted || document.hidden || (typeof S!=='undefined' && S && S.paused)) return;
+      if(bgmEl && bgmEl.paused) startBGM(1.0);
+    }catch(e){}
+  };
+  try{ _kick(); }catch(e){}
+  try{ if(bgmEl && bgmEl.readyState<2) bgmEl.addEventListener('canplay',_kick,{once:true}); }catch(e){}
+  try{ setTimeout(_kick,350); setTimeout(_kick,1100); }catch(e){}
 }
 /* ★ 移动端兼容 2/2：iOS 上 <audio>.volume 是**只读**的 —— 赋值被忽略、恒为 1。
    于是「1 秒渐入」在手机上完全失效、一开始就是满音量。探测不可写就改用 Web Audio 增益。 */
@@ -20272,7 +20453,18 @@ function startNext(h){
   if(isFirst) setTimeout(function(){ maybeGuide(0); }, 1300);   /* ★ v446 首棒进入战斗后弹新手引导 */
   /* ★ v452 用户指定：五条悟登场播原本领域展开第 2／3 次那句语音 (gojoVoice2)。
      走 playSoloVoice 独立克隆通道，不写 domCur，不会被对拼流程的 stopDomSfx 切掉。 */
-  if(h==='gojo'){ setTimeout(function(){ try{ if(typeof window.playSoloVoice==='function') window.playSoloVoice('gojoVoice2', DOM_LEAD.gojoVoice2||0, 2.6, 0.9); }catch(e){} }, 620); }
+  /* ★ v503 登场语音念完 ⇒ 清闸门 + 补一次五条 BGM（用户报「语音播完没响起他的背景音乐」） */
+  if(h==='gojo'){ setTimeout(function(){
+    let _vp=null;
+    try{ if(typeof window.playSoloVoice==='function') _vp=window.playSoloVoice('gojoVoice2', DOM_LEAD.gojoVoice2||0, 2.6, 0.9); }catch(e){}
+    const _after=function(){
+      try{ domainAudioReset(); }catch(e){}
+      try{ if(typeof bgmTrack!=='undefined' && bgmTrack!=='gojo') switchBGM('gojo'); else startBGM(0.8); }catch(e){}
+      /* 700ms 保活看守下一拍会再兜一次，双保险 */
+      try{ setTimeout(function(){ if(!bgmMuted && bgmEl && bgmEl.paused) startBGM(0.6); },400); }catch(e){}
+    };
+    if(_vp&&_vp.then) _vp.then(_after); else setTimeout(_after,2700);
+  }, 620); }
   if(S.usedHeroes.indexOf(h)<0) S.usedHeroes.push(h);   /* 登场即登记 */
   /* ★ v450 看破 / 激怒 的起始回合：换棒即清零重算 */
   S.heroT0=(S.turnN||0); S.heroSeenDone=false; S.furyShown=0;
@@ -20561,7 +20753,10 @@ function okkoDomainClash(){
      该语音因此永远被跳过。现改为一律播放，并提到函数最前（提早时机，用户要求）。 */
   /* ★ v491 乙骨这条原本 4.78 就 resolve，而对拼 4.4s 判胜负 ⇒ 宿傩胜时立刻起伏魔御厨子 BGM，
      语音尾巴被吃。fallback 拉到 5.80，并由 playSoloVoice 的「等真正播完」兜底。 */
-  const _sukuSfx = window.playSoloVoice('sukuDom', Math.max(0, DOM_LEAD.sukuDom - 0.15), 5.80, 0.92)   /* ★ v224 已做人声分离，不再掐尾 */;   /* ★ v190 跳过 1.06s 前导静音 ⇒ 与领域场景图同时出声 */
+  /* ★ v501 复用 okkoUlt 里 160ms 预起的那一句；没有才补播 */
+  const _sukuSfx = (window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0))
+    ? window.__clashSukuP
+    : ((typeof startClashSukuVoice==='function')?startClashSukuVoice():window.playSoloVoice('sukuDom',0,5.80,0.92));   /* ★ v190 跳过 1.06s 前导静音 ⇒ 与领域场景图同时出声 */
   /* ★ v141 宿傩领域展开：暂停主 BGM + 停宿傩领域 BGM */
   suspendMainBgm();
   stopSukuBgm();
@@ -20579,6 +20774,7 @@ function okkoDomainClash(){
     /* ★ v417 乙骨：2.50s 结束时的指针位置即胜率（中过无量空处仍必胜） */
     const _wp=(S.pushV==null?(DF().push):S.pushV);
     const winner=S.sukuVoided ? 'okko' : ((Math.random()<_wp)?'okko':'suku');   /* ★ v452 用户指定：宿傩中过无量空处 ⇒ 乙骨必胜（100%，三档难度皆同） */
+    try{ domainSetWinner(winner==='okko'?'player':'suku'); }catch(e){}
     if(!S.domClash) return;   /* ★ v246 防御：对拼层已被其他流程收走时不再写入，避免 TypeError */
     S.domClash.phase=(winner==='okko')?'gojoWin':'sukuWin';
     flash('fWhite'); shake();
@@ -20694,6 +20890,7 @@ function okkoUlt(){
     S.gojo.ce-=60;   /* ★ v60 里香在场：乙骨所有技能不消耗咒力 */
   }
   S.okoUsed=true;
+  try{ domainAudioBegin(); }catch(e){}   /* ★ v502 */
   /* ★ v486 用户指定：点下「领域展开」的这一刻就切领域立绘，对拼期间同样保持 */
   S.okkoDomCast=true;
   S.voidMahaT=0;   /* ★ v243 乙骨领域展开前清掉残留的魔虚罗击碎计时 */
@@ -20705,7 +20902,15 @@ function okkoUlt(){
      漫画格大字与 skillBeat 中央大字移除，领域名统一走领域竖排字（与无量空处/伏魔御厨子一致） */
   addFx({type:'voidIn',dur:0.95});
   /* ★ v458 用户提供新原声：整段「领域展开」（1.32s，已裁静音／响度对齐）；S.okkoVoiceUntil 让 AIZO 等语音念完才衔接 */
-  try{ S.okkoVoiceUntil=Date.now()+1370; window.playSoloVoice('yutaDomain', 0, 1.35, 0.92); /* ★ v458 新原声 1.32s */ }catch(e){}
+  /* ★ v501：AIZO 仍按原 1.37s 衔接（延后会连带把 suspendMainBgm 推后 3.5s，
+     主 BGM 反而与两句语音叠播）。这里只把宿傩那句提前，保证两条语音各自念完。 */
+  const _clashSoon=(S.suk.hp>0 && typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(true));
+  try{ S.okkoVoiceUntil=Date.now()+1370; domainVoice('yutaDomain', 0, 1.35, 0.92); /* ★ v502 登记到总线 */ }catch(e){}
+  try{ window.__clashSukuP=null; setTimeout(function(){
+    if(S.phase!=='fight'||S.paused) return;
+    if(_clashSoon) startClashSukuVoice(); else domainSetWinner('player');
+    domainAudioSeal();
+  },160); }catch(e){}
   skillBeat({charge:720,cast:1.0,stop:0.20,flash:'fPurple',slow:0.60,word:''});   /* ★ v100 word='' 只保留顿挫 */
   /* ★ v475 用户指定：会触发对拼时不换场景、不换立绘 —— 维持目前立绘直接进入对拼动画，
      剑林场景与领域立绘改到对拼结束后才切（见 okkoDomainClash 胜利分支）。
@@ -21532,6 +21737,14 @@ if(window.__appHidden && document.hidden) return;
         const p2=el.play();
         if(p2&&p2.catch) p2.catch(()=>{});
       }catch(e){}
+      /* ★ v501：静音重播同样可能被 Blob 未就绪 / WebView 策略丢掉 ⇒ 300、900ms 再试；
+         首次用户交互由 bgmGesture 取消静音并渐入 */
+      [300,900].forEach(function(ms){ setTimeout(function(){
+        try{
+          if(bgmMuted||document.hidden||!el.paused) return;
+          const q=el.play(); if(q&&q.catch) q.catch(function(){});
+        }catch(e){}
+      },ms); });
     });
   }else{
     fadeBGM(BGM_VOL,dur);
@@ -21811,7 +22024,11 @@ function playSoloVoice(key, lead, fallbackSec, vol){
     }catch(e){}
   }
   try{ domAudioEls['__solo_'+key]=el; window.__lastSoloVoice=el;
-    if(key==='gojoDom'){ el.__guardUntil=Date.now()+7000; window.__gojoVoiceEl=el; } }catch(e){}
+    /* ★ v501：对拼双方都要完整念完，切页/暂停巡检的 hardStopVoices 不得掐掉这两条 */
+    if(key==='gojoDom'||key==='sukuDom'||key==='yutaDomain'||key==='gojoVoice2'){
+      el.__guardUntil=Date.now()+7000;
+      if(key==='gojoDom') window.__gojoVoiceEl=el;
+    } }catch(e){}
   return new Promise(function(res){
     let done=false, timer=null;
     const fin=function(){ if(done) return; done=true; try{ el.removeEventListener('ended',fin); }catch(e){}
@@ -21854,6 +22071,108 @@ function playSoloVoice(key, lead, fallbackSec, vol){
   });
 }
 try{ window.playSoloVoice=playSoloVoice; }catch(e){}
+/* ★ v501 用户指定：领域对拼时宿傩那句几乎紧接玩家方（五条／乙骨）开口就念，
+   且两句必须各自完整播完。做法：把宿傩语音从「对拼演出 2.5s + 1.75s」之后抽出来，
+   在玩家语音起播 160ms 后就走独立 solo 通道先播；对拼函数复用同一个 Promise，
+   绝不二次起播（二次 playSoloVoice 会把同一 key 的 currentTime 归零＝「一个人开始念就截断另一人」）。 */
+function startClashSukuVoice(){
+  try{
+    if(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0)) return window.__clashSukuP;
+    if(typeof window.playSoloVoice!=='function') return null;
+    /* ★ v503 第二声部：0.92 会把五条整个人声盖住（听感＝被截断），降到 0.70 并渐入 180ms */
+    const p=domainVoice('sukuDom', 0, 5.80, 0.70);
+    window.__clashSukuP=p; window.__clashSukuUntil=Date.now()+6000;
+    const el=window.__lastSoloVoice;
+    try{ if(el) el.__guardUntil=Date.now()+8000; }catch(e){}
+    try{ window.__clashSukuEl=el; }catch(e){}
+    if(el){
+      try{ el.volume=0; }catch(e){}
+      const _t0=Date.now();
+      (function up(){
+        const k=Math.min(1,(Date.now()-_t0)/180);
+        try{ el.volume=0.70*k; }catch(e){}
+        if(k<1) setTimeout(up,30);
+      })();
+    }
+    return p;
+  }catch(e){ return null; }
+}
+try{ window.startClashSukuVoice=startClashSukuVoice; }catch(e){}
+
+/* ═══════════ ★ v502 领域演出音频总线（单点调度） ═══════════
+   之前「什么时候起领域音乐」散在六七处写死 setTimeout，外加 700ms 看守、
+   enforceBgmLayer、resumeMainBgm、startOkkoDomainBgm 各自拉起 ⇒ 总有一条抢在
+   语音尾巴前响，或者反过来把语音盖掉。现在只认一个状态机：
+     phase='voices' → 本批所有语音登记完毕 → Promise.all(真正 ended)
+     → phase='music' → domainMusicPlay(winner) 只起胜方那一首。
+   domainVoicesBusy() 是全局丢弃闸门，语音期间任何 BGM 起播一律 return。 */
+function domAud(){
+  return window.__domainAudio || (window.__domainAudio={token:0,voices:[],winner:null,phase:'idle',since:0});
+}
+function domainAudioBegin(){
+  const d=domAud(); d.token++; d.voices=[]; d.winner=null; d.phase='voices'; d.since=Date.now();
+  /* ★ v503 提前预热领域音源：160ms 后起宿傩语音时不再同步建链，避免把五条那一拍卡掉 */
+  try{ if(typeof prepDomAudio==='function') prepDomAudio(); }catch(e){}
+  return d.token;
+}
+/* ★ v503 清闸门：换棒 / 重开 / 登场语音结束时调用，防 phase 残留 'voices'
+   把 700ms BGM 保活看守一起挡死（用户报「五条登场语音播完没有 BGM」的根因） */
+function domainAudioReset(){
+  try{
+    const d=domAud(); d.token++; d.voices=[]; d.winner=null; d.phase='idle'; d.since=0;
+  }catch(e){}
+}
+function domainVoice(key,lead,fb,vol){
+  const d=domAud(); let p=null;
+  try{ p=window.playSoloVoice(key,lead,fb,vol); }catch(e){}
+  const el=window.__lastSoloVoice;
+  try{ if(el) el.__guardUntil=Date.now()+8000; }catch(e){}
+  d.voices.push({key:key,el:el,p:p||Promise.resolve()});
+  return p||Promise.resolve();
+}
+function domainVoicesBusy(){
+  try{
+    const d=domAud();
+    if(d.phase!=='voices') return false;
+    if(Date.now()-d.since>12000){ d.phase='music'; return false; }   /* 兜底：不许永久卡住 */
+    return true;
+  }catch(e){ return false; }
+}
+function domainSetWinner(w){ try{ const d=domAud(); if(d.phase==='voices') d.winner=w; }catch(e){} }
+function domainAudioSeal(winner){
+  const d=domAud(), tk=d.token;
+  if(winner) d.winner=winner;
+  Promise.all(d.voices.map(function(v){ return v.p||Promise.resolve(); })).then(function(){
+    const check=function(){
+      if(tk!==d.token) return;
+      const still=d.voices.some(function(v){
+        try{ return v.el && !v.el.ended && !v.el.paused && v.el.currentTime>0.02; }catch(e){ return false; }
+      });
+      if(still){ setTimeout(check,120); return; }
+      d.phase='music';
+      try{ domainMusicPlay(d.winner); }catch(e){}
+    };
+    check();
+  });
+}
+function domainMusicPlay(winner){
+  if(!winner) return;
+  if(winner==='suku'){ try{ startSukuBgm(); }catch(e){} return; }
+  try{
+    if(typeof S!=='undefined' && S && S.hero==='okkotsu') startOkkoDomainBgm();
+    else if(typeof S!=='undefined' && S && S.hero==='itadori') playExtraBgm('yuji',0.8);
+    else playExtraBgm('ujaku',0.8);
+  }catch(e){}
+}
+function deferAfterVoices(fn){
+  const d=domAud(), tk=d.token;
+  const run=function(){
+    if(tk!==d.token) return;
+    if(domainVoicesBusy()){ setTimeout(run,120); return; }
+    try{ fn(); }catch(e){}
+  };
+  run();
+}
 /* ★ v479 五条领域语音守卫：任何一处 stopDomSfx／_sfxGate／hardStopVoices 误停，220ms 内拉回；
    这是「领域展开语音在进入对拼时消失」的兜底 —— 桌面能完整播完，移动端才暴露。 */
 setInterval(function(){
@@ -21866,6 +22185,13 @@ setInterval(function(){
         var _dq=_dg.el.play(); if(_dq&&_dq.catch) _dq.catch(function(){});
       }
     }
+    /* ★ v502 对拼双方都保活：任何 hardStopVoices / pauseAllAudio 误停，220ms 内拉回 */
+    try{ var _cs=window.__clashSukuEl;
+      if(_cs && !_cs.ended && Date.now()<(_cs.__guardUntil||0) && _cs.paused
+         && !document.hidden && !(typeof S!=='undefined'&&S&&S.paused)){
+        var _cq=_cs.play(); if(_cq&&_cq.catch) _cq.catch(function(){});
+      }
+    }catch(_){}
     var e=window.__gojoVoiceEl;
     if(!e) return;
     if(Date.now()>(e.__guardUntil||0)){ if(!e.paused) return; window.__gojoVoiceEl=null; return; }
@@ -21954,6 +22280,7 @@ function okkoDomSeek4(el){
 }
 /* ★ v161 乙骨领域 BGM（AIZO）：领域成立期间循环播放，从第 4 秒起播；领域消失／乙骨下场时停播并恢复原 BGM */
 function startOkkoDomainBgm(_fromZero){
+  if(domainVoicesBusy()) return;   /* ★ v502 乙骨 AIZO 也要等两句念完 */
   /* ★ v458：乙骨「领域展开」语音念完（约 1.37s）后才衔接 AIZO，避免人声被领域曲盖住。 */
   if(!okkoDomBgmOn && S.okkoVoiceUntil && Date.now()<S.okkoVoiceUntil){
     const _wait=S.okkoVoiceUntil-Date.now();
@@ -22029,6 +22356,25 @@ function killSukuBgm(){
 setInterval(function(){
   try{ if(document.hidden) return; if(typeof S!=='undefined' && S && S.paused) return; enforceBgmLayer(); }catch(e){}   /* ★ v477 暂停态不跑巡检 */
 },700);
+/* ★ v501 BGM 保活：换曲、切前台、自动播放策略、Blob 建链卡帧都会让「该响的那条」
+   停在 paused。每 700ms 按与 enforceBgmLayer 完全相同的优先级找出应响的轨，静默补播一次；
+   不新增任何 BGM 层，也不与静音/暂停/切后台冲突。 */
+setInterval(function(){
+  try{
+    if(document.hidden||window.__appHidden||bgmMuted||domainVoicesBusy()||(typeof S!=='undefined'&&S&&S.paused)) return;
+    let want=null;
+    try{ if(sukuBgmOn&&S.sukuDom>0&&sukuBgmEl) want=sukuBgmEl; }catch(e){}
+    try{ if(!want&&okkoDomBgmOn&&S.okkoDom>0&&domAudioEls.okkoDomain) want=domAudioEls.okkoDomain; }catch(e){}
+    try{ if(!want&&typeof extraBgmKey==='string'&&extraBgmKey&&extraBgmEls[extraBgmKey]) want=extraBgmEls[extraBgmKey]; }catch(e){}
+    try{ if(!want&&musEl&&musWant) want=musEl; }catch(e){}
+    try{ if(!want&&bgmEl&&!bgmSuspendedByDomain) want=bgmEl; }catch(e){}
+    if(!want||!want.paused) return;
+    if(want.ended&&!want.loop) return;
+    const go=function(){ try{ if(want.paused){ const p=want.play(); if(p&&p.catch)p.catch(function(){}); } }catch(e){} };
+    if(want.readyState<2){ try{ want.load(); want.addEventListener('canplay',go,{once:true}); }catch(e){} setTimeout(go,600); }
+    else go();
+  }catch(e){}
+},700);
 /* ★ v459 互斥巡检：任何时刻 sukuBgmOn 与 okkoDomBgmOn 不得同时为真
    ★ v460 追加：旗标已关、音轨却还在放（切页/暂停恢复留下的鬼影）⇒ 直接硬停。
    放行 0.9s 的淡出窗口，避免把 stopSukuBgm 的正常淡出切断。 */
@@ -22085,11 +22431,12 @@ function sukuBgmWatchStart(){
       if(!sukuBgmEl) bad=true;
       else if(sukuBgmEl.paused) bad=true;
       else if((sukuBgmEl.volume||0)<0.02) bad=true;
-      if(bad){ try{ startSukuBgm(0,0.30); }catch(e){} }
+      if(bad && !domainVoicesBusy()){ try{ startSukuBgm(0,0.30); }catch(e){} }
     }catch(e){}
   },700);
 }
 function startSukuBgm(_try,_vol){
+  if(domainVoicesBusy()) return;   /* ★ v502 语音未念完，领域曲一律不抢播 */
   /* ★ v421 用户报「虎杖终结宿傩后结算 BGM 没正常播放」的真正根因：
      宿傩领域语音的 promise / 5.2s 兜底定时器在**进入结算之后**才 resolve，
      它会呼叫 startSukuBgm() → stopAllOtherDomainBgm() 把正在播的 SPECIALZ 直接停掉。
@@ -22186,6 +22533,7 @@ function suspendMainBgm(fade){
   }
 }
 function resumeMainBgm(fade){
+  if(domainVoicesBusy()) return;   /* ★ v502 */
   if(S&&S.deathVoiceUntil&&Date.now()<S.deathVoiceUntil) return;   /* ★ v455 死亡语音期间不恢复 BGM */
   /* ★ v326 五条领域期间不回主 BGM（对拼成功后也一样） */
   if(S&&S.phase==='fight'&&S.hero==='gojo'&&(S.gojoDom>0||S.gojoVoidT>0)&&!(S.sukuDom>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v387 宿傩领域中不再拉起无量空处曲 */
@@ -23867,8 +24215,9 @@ html.land #resultScreen::-webkit-scrollbar,html.rot #resultScreen::-webkit-scrol
    基础布局吃掉（内容仍贴顶），改用 padding 补白又与滚动打架。
    横向内容带已解决主要观感问题；竖向在真实数据下内容会自然铺满。 */
 /* ★ 超宽画面（宽高比 ≥1.9，如 TV / 21:9）：两个 CTA 不再各撑半屏，收成定宽居中 */
-html.rsWide #resultScreen .ctaRow{justify-content:center;gap:22px;}
-html.rsWide #resultScreen .ctaRow .cta{flex:0 1 min(460px,32vw);}
+/* ★ v500：CTA 已在左栏内，超宽屏不再居中定宽，改为贴左、各占半栏 */
+html.rsWide #resultScreen .ctaRow{justify-content:flex-start;gap:14px;}
+html.rsWide #resultScreen .ctaRow .cta{flex:1 1 0;min-width:0;}
 /* ★ 矮容器（可视高 ≤545px，如手机横屏 390）：纵向间距整体收紧，少滚一段 */
 html.rsSquat #resultScreen:not(.hide){gap:8px;padding:12px 16px 14px;}
 html.rsSquat #resultScreen #rCols{gap:6px 14px;}
