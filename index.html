@@ -1,3 +1,23 @@
+<!-- ★ v504 跨端一致性（电脑 / 手机 / 各渠道）：
+     ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
+        APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
+        与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
+     ② 版本可见：<meta name="jjk-build" content="v504"> + 标题页右下角「v6.5 · b504」小字，
+        两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
+        避免手机长期停在旧缓存。
+     ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
+        #loadScr 是 body 直接子元素、在 #app 之外，而 html.rot 的 rotate(90deg) 只作用于 #app
+        ⇒ 游戏被转成横屏、加载层仍是竖的。现在给 #loadScr 套用与 #app 完全相同的尺寸与变换，
+        #lsWrap 改按横版宽度取尺寸。probe505c 实测竖屏 390×844：
+        appTransform = loadTransform = matrix(0,1,-1,0,390,0)。
+     ④ 手机端「领域对拼语音不响」：手机 WebView 首次解码音源慢，readyState=0 时同步 play()
+        被静默丢弃（与 v492 黑闪音效同一个坑），电脑解码快所以正常。
+        playSoloVoice 增加 canplay 监听 + 150/420/1200ms 三次重试 + 手势兜底；
+        v503 的 180ms 渐入循环在手机会被定时器节流卡在 volume=0 ⇒ 整句静音，
+        改为固定第二声部 0.70 + 400ms 兜一次。
+        probe505c 实测：五条 vol=1 / 宿傩 vol=0.7、两句 rs=4 同时在播、异常 []。
+     ⑤ 主站 server.js 与 GH 版 SW_REG 注册统一加 updateViaCache:'none' + 立即 update，
+        防止浏览器把 sw.js 缓存 24h 导致手机长期拿不到新版。 -->
 <!-- ★ v503 两项（用户继续反馈的同一组问题）：
      ① 五条悟登场语音播完没有响起他的背景音乐。
         根因：v502 的 domainAudio 总线若因上一局领域展开未 seal 就换棒 / 重开，
@@ -882,6 +902,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
+<meta name="jjk-build" content="v504">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3565,6 +3586,7 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
     </div>
   </div>
   <div class="screen" id="titleScreen">
+    <div id="buildTag">v6.5 · b504</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -22057,17 +22079,31 @@ function playSoloVoice(key, lead, fallbackSec, vol){
       fin();
     };
     _armTimer();
+    /* ★ v504 手机端「领域对拼语音不响」根因：手机 WebView 首次解码音源慢，
+       readyState=0 时同步 play() 被静默丢弃（与 v492 黑闪音效同一个坑）；电脑解码快所以正常。
+       这里补 canplay 监听 + 150/420/1200ms 三次重试，并保留 pointerdown 手势兜底。 */
+    const _kickVoice=function(){
+      try{
+        if(done||el.ended) return;
+        if(_audStale(_ag)) return;
+        if(el.paused){ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }
+      }catch(e){}
+    };
     try{
+      if(el.readyState<2){
+        try{ el.load(); }catch(e){}
+        try{ el.addEventListener('canplay',_kickVoice,{once:true}); }catch(e){}
+      }
       const p=el.play();
       if(p&&p.catch) p.catch(function(){
+        _kickVoice();
         const once=function(){ document.removeEventListener('pointerdown',once,true); document.removeEventListener('touchstart',once,true);
           if(_audStale(_ag)) return;   /* ★ v462：等交互补播的这一份也受代次管 */
           try{ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){} };
         document.addEventListener('pointerdown',once,true); document.addEventListener('touchstart',once,true);
       });
-    }catch(e){}
-    setTimeout(function(){ try{ if(_audStale(_ag)) return;   /* ★ v462：跨了暂停/切页就作废，别回来补播 */
-      if(el.paused&&!done&&!S.paused){ const q=el.play(); if(q&&q.catch) q.catch(function(){}); } }catch(e){} },150);
+    }catch(e){ _kickVoice(); }
+    [150,420,1200].forEach(function(ms){ setTimeout(_kickVoice,ms); });
   });
 }
 try{ window.playSoloVoice=playSoloVoice; }catch(e){}
@@ -22079,20 +22115,16 @@ function startClashSukuVoice(){
   try{
     if(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0)) return window.__clashSukuP;
     if(typeof window.playSoloVoice!=='function') return null;
-    /* ★ v503 第二声部：0.92 会把五条整个人声盖住（听感＝被截断），降到 0.70 并渐入 180ms */
+    /* ★ v504 第二声部 0.70（0.92 会盖住五条）；渐入循环在手机 WebView 会被定时器节流
+       卡在 volume=0 ⇒ 整句静音，改为固定值 + 400ms 兜一次 */
     const p=domainVoice('sukuDom', 0, 5.80, 0.70);
     window.__clashSukuP=p; window.__clashSukuUntil=Date.now()+6000;
     const el=window.__lastSoloVoice;
     try{ if(el) el.__guardUntil=Date.now()+8000; }catch(e){}
     try{ window.__clashSukuEl=el; }catch(e){}
     if(el){
-      try{ el.volume=0; }catch(e){}
-      const _t0=Date.now();
-      (function up(){
-        const k=Math.min(1,(Date.now()-_t0)/180);
-        try{ el.volume=0.70*k; }catch(e){}
-        if(k<1) setTimeout(up,30);
-      })();
+      try{ el.volume=0.70; }catch(e){}
+      setTimeout(function(){ try{ if(!el.ended) el.volume=0.70; }catch(e){} },400);
     }
     return p;
   }catch(e){ return null; }
@@ -24222,7 +24254,26 @@ html.rsWide #resultScreen .ctaRow .cta{flex:1 1 0;min-width:0;}
 html.rsSquat #resultScreen:not(.hide){gap:8px;padding:12px 16px 14px;}
 html.rsSquat #resultScreen #rCols{gap:6px 14px;}
 html.rsSquat #resultScreen .ctaRow .cta{padding-top:6px;padding-bottom:6px;}
-</style>
+
+/* ═══════════ ★ v504 跨端版本一致 + 竖屏加载动画 ═══════════ */
+/* 标题页右下角小字：电脑 / 手机 / 网页 / APK / GH 镜像一眼能比对是不是同一版 */
+#buildTag{position:absolute;right:10px;bottom:8px;z-index:6;
+  font:600 10px/1.2 ui-monospace,Consolas,monospace;letter-spacing:1.4px;
+  color:rgba(255,255,255,.42);pointer-events:none;
+  text-shadow:0 1px 3px rgba(0,0,0,.65);}
+/* ★ v504 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
+   #loadScr 是 body 的直接子元素、在 #app 之外，而 html.rot 的 rotate(90deg)
+   只作用在 #app 上 ⇒ 游戏被转成横屏、加载层仍是竖的，看起来方向错乱。
+   这里让加载层用与 #app 完全相同的尺寸与变换，并让图案按横版宽度取尺寸。 */
+html.rot #loadScr{
+  inset:auto;top:0;left:0;
+  width:100vh;height:100vw;
+  width:100dvh;height:100dvw;
+  transform-origin:top left;
+  transform:rotate(90deg) translateY(-100%);
+}
+html.rot #lsWrap{width:min(34vh,390px);}
+</style></style>
 <!-- ★ v307 虎杖终结一击：钉崎演出结束后全屏白爆 + 立绘 -->
 <div aria-hidden="true" id="yujiFin"><div class="yfBurst"></div><img alt id="yfImg"></div>
 <div aria-hidden="true" id="deathBlack"><div class="dbMask"></div><img alt class="dbArt" id="dbArt"><div class="dbTxt"></div><div class="dbHint">轻触画面任意处跳过</div></div>
@@ -24244,14 +24295,47 @@ html.rsSquat #resultScreen .ctaRow .cta{padding-top:6px;padding-bottom:6px;}
     <div class="gdRow"><button id="gdSkip">跳过</button><button id="gdNext">下一步</button></div>
   </div>
 </div>
+<script>
+/* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
+   Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
+(function(){
+  var B='v504';
+  try{
+    var k='jjk_build_seen', seen=localStorage.getItem(k);
+    if(!seen){ localStorage.setItem(k,B); }
+    else if(seen!==B){
+      localStorage.setItem(k,B);
+      try{ if(window.caches&&caches.keys) caches.keys().then(function(ks){
+        return Promise.all(ks.map(function(n){ return caches.delete(n); }));
+      }).catch(function(){}); }catch(e){}
+      try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)
+        navigator.serviceWorker.getRegistrations().then(function(rs){
+          rs.forEach(function(r){ try{ r.update().catch(function(){}); }catch(e){} });
+        }).catch(function(){}); }catch(e){}
+      if(!sessionStorage.getItem('jjk_build_reload_'+B)){
+        sessionStorage.setItem('jjk_build_reload_'+B,'1');
+        setTimeout(function(){ try{ location.reload(); }catch(e){} },180);
+      }
+    }
+  }catch(e){}
+  /* 竖屏时尝试系统级锁定横屏；多数浏览器会拒绝，忽略即可，CSS 旋转才是主路径 */
+  try{
+    if(screen.orientation&&screen.orientation.lock&&document.documentElement.classList.contains('rot'))
+      screen.orientation.lock('landscape').catch(function(){});
+  }catch(e){}
+})();
+</script>
 
 <script>/* GitHub Pages：注册 Service Worker —— 旧版从来没注册过，
    导致每次打开都要把 20MB+ 资源重下一遍（这就是「打开非常卡」的根因）。 */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(){});
+    navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(function(reg){
+      try{ reg.update().catch(function(){}); }catch(e){}
+      try{ setInterval(function(){ reg.update().catch(function(){}); },30000); }catch(e){}
+    }).catch(function(){});
   });
 })();</script>
-</body>
+</body></body>
 </html>
