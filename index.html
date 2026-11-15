@@ -1,3 +1,11 @@
+<!-- ★ v506 手机端领域对拼语音 + GH 竖屏加载层
+     ① probe506b（去掉无头 autoplay 豁免）实测两句语音全 paused/ct=0：
+        play() 被自动播放策略拒绝后只被静默吞掉，且 solo 音轨是从未入 DOM 的游离元素。
+        修法：常驻隐藏宿主 + 领域展开瞬间静音空播解锁 + 拒绝时静音解锁重播；
+        就绪事件补 loadeddata/canplaythrough、重试窗口延到 4s、守卫期语音不受代次影响。
+     ② 领域语音不再因 S.paused 早退，两处 160ms 对拼定时器同样去掉该早退。
+     ③ GH 镜像独有 #ghLoad 加载层（z-index 999999）补 html.rot 旋转，修手机方向不对。
+     ④ 全渠道统一到 v506。 -->
 <!-- ★ v504 跨端一致性（电脑 / 手机 / 各渠道）：
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
@@ -902,7 +910,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v504">
+<meta name="jjk-build" content="v506">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3185,8 +3193,23 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
  animation:glSlide 1.15s ease-in-out infinite;}
 @keyframes glSlide{0%{transform:translateX(-105%)}100%{transform:translateX(330%)}}
 #ghLoad .gl-s{font-size:11px;letter-spacing:.14em;opacity:.42;}
+/* ★ v506 竖屏强制横屏：GH 独有的 #ghLoad 是 z-index:999999 的全屏层，
+   旧版 position:fixed;inset:0 完全不跟 html.rot 旋转 ⇒ 游戏已转成横屏，
+   盖在最上面的加载页仍是竖的（用户报「github 链接手机加载动画方向不对」）。
+   这里套用与 v504 的 #loadScr / #app 完全相同的尺寸与变换。 */
+html.rot #ghLoad{inset:auto;top:0;left:0;
+ width:100vh;height:100vw;width:100dvh;height:100dvw;
+ transform-origin:top left;transform:rotate(90deg) translateY(-100%);}
 </style>
 <script>(function(){
+  /* ★ v506 提前加 rot 类：主脚本的 layoutOrientation() 要等到大 HTML 解析完才跑，
+     首帧加载层会先竖着闪一下。这里在 <body> 开头就按同一判据补上，方向从第一帧就对。 */
+  try{
+    var de=document.documentElement;
+    var _por=(innerHeight>innerWidth), _small=Math.min(innerWidth,innerHeight)<=600 ||
+      ((navigator.maxTouchPoints||0)>0||('ontouchstart' in window)) && Math.min(innerWidth,innerHeight)<=1024;
+    if(_por&&_small) de.classList.add('rot');
+  }catch(e){}
   var t0=Date.now(), done=false;
   function off(){
     if(done) return; done=true;
@@ -3586,7 +3609,7 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b504</div>
+    <div id="buildTag">v6.5 · b506</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -5592,7 +5615,7 @@ function gojoVoid(){
     /* ★ v501 宿傩那句在五条开口后 160ms 起（原 4.25s）；两条独立音轨各自念完 */
     /* ★ v502 玩家语音开口后 160ms 起宿傩；不对拼则只记玩家胜，随后 seal 等语音念完 */
     try{ window.__clashSukuP=null; setTimeout(function(){
-      if(S.phase!=='fight'||S.paused) return;
+      if(S.phase!=='fight') return;   /* ★ v506 去掉 S.paused：领域演出冻结的是战斗逻辑，音频照走 */
       const _willCl=(typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(isHard()));
       if(_willCl) startClashSukuVoice(); else domainSetWinner('player');
       domainAudioSeal();
@@ -20929,7 +20952,7 @@ function okkoUlt(){
   const _clashSoon=(S.suk.hp>0 && typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(true));
   try{ S.okkoVoiceUntil=Date.now()+1370; domainVoice('yutaDomain', 0, 1.35, 0.92); /* ★ v502 登记到总线 */ }catch(e){}
   try{ window.__clashSukuP=null; setTimeout(function(){
-    if(S.phase!=='fight'||S.paused) return;
+    if(S.phase!=='fight') return;   /* ★ v506 同五条路径 */
     if(_clashSoon) startClashSukuVoice(); else domainSetWinner('player');
     domainAudioSeal();
   },160); }catch(e){}
@@ -22016,11 +22039,59 @@ function _sfxGate(el){
    （内部会 stopDomSfx）、或上一次播放停在尾端，都会让这一次静音或从尾端起播。
    这里改用 cloneNode 复用已解码元素（不重复 atob 大音源）、不写 domCur，并注册到
    domAudioEls 让 pauseAllAudio / resumeAllAudio 一并接管。回传 Promise 保持既有 .then 链。 */
+
+/* ══════════════ ★ v506 手机端语音通道加固 ══════════════
+   probe506b（去掉无头的 autoplay 豁免）实测：领域对拼两句语音全部
+   paused=true / currentTime=0，canplay + 150/420/1200ms 重试全被拒。
+   两个手机专属原因：
+     ① solo 音轨是 cloneNode 出来的**游离元素**，从未插入 DOM —— iOS / 夸克 U4
+        对 detached media element 的 play() 有额外限制（尤其异步调用时）；
+     ② play() 被自动播放策略 reject 后旧版只 .catch(function(){}) 吞掉，
+        160ms 后的宿傩那句已不在手势调用栈内，永远等不到下一次点击。
+   对策：常驻隐藏宿主（元素进 DOM 且只建一次）＋ 在用户手势最新鲜的
+   「领域展开这一刻」做静音空播解锁，之后异步 play 即可放行。 */
+function soloHost(){
+  var h=document.getElementById('jjkSoloHost');
+  if(!h){
+    try{
+      h=document.createElement('div'); h.id='jjkSoloHost';
+      h.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;';
+      (document.body||document.documentElement).appendChild(h);
+    }catch(e){ return null; }
+  }
+  return h;
+}
+function unlockVoiceEls(){
+  /* ★ v506b：音轨是「首次手势之后」才由 prepDomAudio() 预建的，
+     旧版带一次性 flag 会在空集合上解锁完就再也不跑 ⇒ 等于没解锁。
+     改成按元素标记，每次领域展开都补解锁新建的音轨。 */
+  try{
+    for(const k in domAudioEls){
+      const e=domAudioEls[k];
+      if(!e||e.tagName!=='AUDIO'||e.__unlocked) continue;
+      e.__unlocked=1;
+      try{
+        const wm=e.muted; e.muted=true;
+        const p=e.play();
+        const rst=function(){ try{ e.pause(); e.currentTime=0; e.muted=wm; }catch(_){} };
+        if(p&&p.then) p.then(rst,rst); else rst();
+      }catch(_){}
+    }
+  }catch(e){}
+}
+try{
+  document.addEventListener('pointerdown',unlockVoiceEls,{once:true,capture:true});
+  document.addEventListener('touchstart',unlockVoiceEls,{once:true,capture:true});
+}catch(e){}
+
 function playSoloVoice(key, lead, fallbackSec, vol){
   const _ag=_audGen;   /* ★ v462 本次请求的音讯代次 */
   if(bgmMuted) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
+  /* ★ v506 领域展开会冻结战斗逻辑（freezeCine / domainShift），但音频按真实时间轴走；
+     这三句领域语音不因 S.paused 早退，否则手机事件循环一抖整句就没了。 */
+  const _domV=(key==='gojoDom'||key==='sukuDom'||key==='yutaDomain');
   /* ★ v462：切在后台/暂停时只保留时间线，不出声（否则回前台会一齐爆响） */
-  if(document.hidden || (typeof S!=='undefined' && S && S.paused)) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
+  if(document.hidden || (!_domV && (typeof S!=='undefined' && S && S.paused))) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
   let el=null, src='';
   try{
     prepDomAudio();
@@ -22033,7 +22104,11 @@ function playSoloVoice(key, lead, fallbackSec, vol){
     if(!el&&src) el=domMkEl(src,false);
   }catch(e){}
   if(!el) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
-  try{ el.volume=(vol==null?0.92:vol); el.currentTime=0; el.loop=false; }catch(e){}
+  /* ★ v506：游离元素进常驻隐藏宿主（仍复用同一实例，不新建，保住解锁状态） */
+  try{ if(!el.parentNode){ const _h=soloHost(); if(_h) _h.appendChild(el); } }catch(e){}
+  try{ if(el.ended||el.error||el.networkState===3){ el.load(); } }catch(e){}
+  try{ el.volume=(vol==null?0.92:vol); el.currentTime=0; el.loop=false;
+       if(_domV){ el.__domainVoice=1; el.__guardUntil=Date.now()+9000; } }catch(e){}
   /* 前导静音：已解码直接 seek；未解码用 loadeddata + 90ms 兜底，且只在前 0.05s 内才 seek，
      避免把「从尾端起播」误判成 skip 前导。 */
   if(lead>0){
@@ -22084,26 +22159,53 @@ function playSoloVoice(key, lead, fallbackSec, vol){
        这里补 canplay 监听 + 150/420/1200ms 三次重试，并保留 pointerdown 手势兜底。 */
     const _kickVoice=function(){
       try{
-        if(done||el.ended) return;
-        if(_audStale(_ag)) return;
-        if(el.paused){ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }
+        if(done||el.ended||document.hidden) return;
+        /* ★ v506 手机切前后台会让 _audGen++，旧版据此把全部重试废掉 ⇒ 整句静音。
+           守卫期内的领域语音不受代次影响，继续补播。 */
+        if(_audStale(_ag) && !(el.__domainVoice && (el.__guardUntil||0)>Date.now())) return;
+        if(el.paused){
+          const q=el.play();
+          if(q&&q.catch) q.catch(function(){
+            /* ★ v506 静音空播解锁：被自动播放策略拒绝时，先在静音态 play 成功，
+               再恢复有声重播（160ms 后的宿傩那句已不在手势栈内，靠这条救回） */
+            try{
+              const wm=el.muted; el.muted=true;
+              const q2=el.play();
+              const rst=function(){ try{ el.pause(); el.currentTime=0; el.muted=wm; }catch(_){} setTimeout(_kickVoice,60); };
+              const noop=function(){ try{ el.muted=wm; }catch(_){} };
+              if(q2&&q2.then) q2.then(rst,noop); else noop();
+            }catch(_){}
+          });
+        }
       }catch(e){}
     };
     try{
       if(el.readyState<2){
         try{ el.load(); }catch(e){}
-        try{ el.addEventListener('canplay',_kickVoice,{once:true}); }catch(e){}
+        /* ★ v506 手机解码慢，三个就绪事件都兜一次 */
+        ['canplay','loadeddata','canplaythrough'].forEach(function(ev){
+          try{ el.addEventListener(ev,_kickVoice,{once:true}); }catch(e){}
+        });
       }
       const p=el.play();
       if(p&&p.catch) p.catch(function(){
         _kickVoice();
-        const once=function(){ document.removeEventListener('pointerdown',once,true); document.removeEventListener('touchstart',once,true);
-          if(_audStale(_ag)) return;   /* ★ v462：等交互补播的这一份也受代次管 */
-          try{ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){} };
-        document.addEventListener('pointerdown',once,true); document.addEventListener('touchstart',once,true);
+        /* ★ v506b 领域语音：守卫期内持续等用户下一次触屏补播（演出时点屏幕很常见），
+           且不受代次变更影响；旧版只挂一次 once，点一次没救回来就永远静音 */
+        const onGesture=function(){
+          if(done||el.ended) return;
+          if(_audStale(_ag) && !(el.__domainVoice && (el.__guardUntil||0)>Date.now())) return;
+          try{ const q=el.play(); if(q&&q.catch) q.catch(function(){}); }catch(e){}
+        };
+        document.addEventListener('pointerdown',onGesture,true);
+        document.addEventListener('touchstart',onGesture,true);
+        setTimeout(function(){
+          document.removeEventListener('pointerdown',onGesture,true);
+          document.removeEventListener('touchstart',onGesture,true);
+        },7000);
       });
     }catch(e){ _kickVoice(); }
-    [150,420,1200].forEach(function(ms){ setTimeout(_kickVoice,ms); });
+    [150,420,1200,2400,4000].forEach(function(ms){ setTimeout(_kickVoice,ms); });   /* ★ v506 窗口延到 4s */
   });
 }
 try{ window.playSoloVoice=playSoloVoice; }catch(e){}
@@ -22145,6 +22247,8 @@ function domainAudioBegin(){
   const d=domAud(); d.token++; d.voices=[]; d.winner=null; d.phase='voices'; d.since=Date.now();
   /* ★ v503 提前预热领域音源：160ms 后起宿傩语音时不再同步建链，避免把五条那一拍卡掉 */
   try{ if(typeof prepDomAudio==='function') prepDomAudio(); }catch(e){}
+  /* ★ v506 此刻用户手势最新鲜：静音空播解锁全部语音元素，之后异步 play 才不会被拒 */
+  try{ if(typeof unlockVoiceEls==='function') unlockVoiceEls(); }catch(e){}
   return d.token;
 }
 /* ★ v503 清闸门：换棒 / 重开 / 登场语音结束时调用，防 phase 残留 'voices'
@@ -24329,7 +24433,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v505', RK='jjk_ver_reload_'+B;
+  var B='v506', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
