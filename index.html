@@ -1,3 +1,9 @@
+<!-- ★ v507 领域对拼语音固定「玩家略先、几乎同时」
+     手机反序根因：首次展开两句 solo 音轨都是现场 clone 且未解码，play() 要等解码／重试，
+     宿傩文件小、重试时机靠前就抢在五条前出声；v506 的静音解锁又会与正式 play 抢状态。
+     改法：preClashVoices() 在首次手势就预建预解码三句音轨（不播放）；
+     armClashAfterPlayer() + playing 事件：玩家一出声同步起宿傩（1200ms 兜底放闸）；
+     domainAudioBegin() 不再调 unlockVoiceEls()。全渠道统一到 v507。 -->
 <!-- ★ v506 手机端领域对拼语音 + GH 竖屏加载层
      ① probe506b（去掉无头 autoplay 豁免）实测两句语音全 paused/ct=0：
         play() 被自动播放策略拒绝后只被静默吞掉，且 solo 音轨是从未入 DOM 的游离元素。
@@ -910,7 +916,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v506">
+<meta name="jjk-build" content="v507">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3609,7 +3615,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b506</div>
+    <div id="buildTag">v6.5 · b507</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -5614,12 +5620,13 @@ function gojoVoid(){
     try{ window.__gojoVoiceP=_pr; window.__gojoVoiceUntil=Date.now()+5300; }catch(e){}   /* ★ v494 语音窗口：实测 5.3s，其间 ujaku 一律不许抢播 */
     /* ★ v501 宿傩那句在五条开口后 160ms 起（原 4.25s）；两条独立音轨各自念完 */
     /* ★ v502 玩家语音开口后 160ms 起宿傩；不对拼则只记玩家胜，随后 seal 等语音念完 */
-    try{ window.__clashSukuP=null; setTimeout(function(){
-      if(S.phase!=='fight') return;   /* ★ v506 去掉 S.paused：领域演出冻结的是战斗逻辑，音频照走 */
+    /* ★ v507 不再写死 160ms：等五条真的出声后 120ms 才起宿傩，顺序在任何设备都固定 */
+    try{ window.__clashSukuP=null; armClashAfterPlayer(function(){
+      if(S.phase!=='fight') return;
       const _willCl=(typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(isHard()));
       if(_willCl) startClashSukuVoice(); else domainSetWinner('player');
       domainAudioSeal();
-    },160); }catch(e){}
+    },'gojoDom'); }catch(e){}
     /* ★ v494 领域曲等这一句真的念完才起（对拼中、暂停中都不起） */
     try{
       var _goU=function(){
@@ -20951,11 +20958,12 @@ function okkoUlt(){
      主 BGM 反而与两句语音叠播）。这里只把宿傩那句提前，保证两条语音各自念完。 */
   const _clashSoon=(S.suk.hp>0 && typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(true));
   try{ S.okkoVoiceUntil=Date.now()+1370; domainVoice('yutaDomain', 0, 1.35, 0.92); /* ★ v502 登记到总线 */ }catch(e){}
-  try{ window.__clashSukuP=null; setTimeout(function(){
-    if(S.phase!=='fight') return;   /* ★ v506 同五条路径 */
+  /* ★ v507 同五条路径：等乙骨语音真的出声 */
+  try{ window.__clashSukuP=null; armClashAfterPlayer(function(){
+    if(S.phase!=='fight') return;
     if(_clashSoon) startClashSukuVoice(); else domainSetWinner('player');
     domainAudioSeal();
-  },160); }catch(e){}
+  },'yutaDomain'); }catch(e){}
   skillBeat({charge:720,cast:1.0,stop:0.20,flash:'fPurple',slow:0.60,word:''});   /* ★ v100 word='' 只保留顿挫 */
   /* ★ v475 用户指定：会触发对拼时不换场景、不换立绘 —— 维持目前立绘直接进入对拼动画，
      剑林场景与领域立绘改到对拼结束后才切（见 okkoDomainClash 胜利分支）。
@@ -22061,6 +22069,74 @@ function soloHost(){
   }
   return h;
 }
+
+/* ══════════════ ★ v507 对拼语音「五条略先、几乎同時」 ══════════════
+   手機上實測變成「先宿儺、後五條」：首次領域展開時 __solo_gojoDom /
+   __solo_sukuDom 都不存在，兩句都是現場 clone 基礎音軌 ⇒ 都未解碼，
+   play() 要等解碼或 150/420/1200ms 重試；宿儺檔小、重試時機靠前就搶先出聲。
+   v506 的 unlockVoiceEls() 還會對基礎音軌靜音 play，非同步 pause 與
+   緊跟的正式 play 互相打架，把五條再拖一拍。
+   對策：① 首次用戶手勢就預建並 load 三句 solo 音軌（只解碼、不播放）；
+        ② 宿儺不再用固定 160ms，改為等玩家語音 currentTime 真的動了才起。 */
+function preClashVoices(){
+  try{
+    if(typeof prepDomAudio==='function') prepDomAudio();
+    const host=(typeof soloHost==='function')?soloHost():null;
+    const sp=(typeof domPrepSpecs==='function')?domPrepSpecs():[];
+    const keys=['gojoDom','sukuDom','yutaDomain'];
+    for(let i=0;i<keys.length;i++){
+      const k=keys[i], sk='__solo_'+k;
+      if(domAudioEls[sk]) continue;
+      let src=''; for(let j=0;j<sp.length;j++) if(sp[j][0]===k){ src=sp[j][1]; break; }
+      if(!src) continue;
+      /* ★ v507c 與 prepDomAudio 完全相同的建鏈（domMkEl 內部會 sndUrl + load），
+         不再 clone —— clone 只複製 src 屬性，解碼緩衝並不跟著過去。 */
+      const e=domMkEl(src,false);
+      if(!e) continue;
+      try{ e.volume=0; e.loop=false; if(host) host.appendChild(e); }catch(_){}
+      domAudioEls[sk]=e;
+      /* ★ v507c 靜音空跑預熱（沿用 prepDomAudio 對 yutaRika 的既有手法）：
+         真正跑一小段讓瀏覽器完成解碼緩衝，之後 play() 立刻出聲。
+         這一步只在「首次用戶手勢」時執行，遠早於領域展開，
+         非同步 pause 不會與正式起播競爭（v506 的教訓）。 */
+      try{
+        e.muted=true;
+        const pp=e.play();
+        const rst=function(){ try{ e.pause(); e.currentTime=0; e.muted=false; }catch(_){} };
+        if(pp&&pp.then) pp.then(rst,rst); else rst();
+      }catch(_){}
+    }
+  }catch(e){}
+}
+/* ★ v507b 事件驅動：玩家音軌一觸發 playing（或 play() Promise resolve）
+   就立刻同步起宿儺，不靠輪詢、不靠定時器 —— 手機上 20ms 定時器會被節流到 100ms+，
+   probe507 實測輪詢版領先量被拖到 968ms，完全不是「幾乎同時」。
+   1200ms 兜底：極端情況下玩家音軌始終沒出聲也不讓 phase 卡死。 */
+function fireClashPending(){
+  var f=window.__clashPending;
+  if(!f) return;
+  window.__clashPending=null;
+  /* ★ v507d 同步起播：五条的 playing 事件已經代表它先出聲了，
+     此刻立刻起宿儺即「幾乎同時、五條略先」。不再用 120ms setTimeout ——
+     手機／無頭環境會把短定時器節流到 1000ms，反而把間隔拉成一整秒。 */
+  try{ f(); }catch(e){}
+}
+function armClashAfterPlayer(cb, key){
+  window.__clashPendingKey=key||'gojoDom';
+  window.__clashPending=cb;
+  setTimeout(function(){
+    var f=window.__clashPending;
+    if(!f) return;
+    window.__clashPending=null;
+    try{ f(); }catch(e){}
+  },1200);
+}
+try{
+  const _preOnce=function(){ setTimeout(function(){ try{ preClashVoices(); }catch(e){} },0); };
+  document.addEventListener('pointerdown',_preOnce,{once:true,capture:true});
+  document.addEventListener('touchstart',_preOnce,{once:true,capture:true});
+}catch(e){}
+
 function unlockVoiceEls(){
   /* ★ v506b：音轨是「首次手势之后」才由 prepDomAudio() 预建的，
      旧版带一次性 flag 会在空集合上解锁完就再也不跑 ⇒ 等于没解锁。
@@ -22187,7 +22263,11 @@ function playSoloVoice(key, lead, fallbackSec, vol){
           try{ el.addEventListener(ev,_kickVoice,{once:true}); }catch(e){}
         });
       }
+      /* ★ v507b 玩家语音真正开始出声的事件探针（宿傩那句不挂） */
+      const _isPlayer=(key==='gojoDom'||key==='yutaDomain');
+      if(_isPlayer){ try{ el.addEventListener('playing',function(){ fireClashPending(); },{once:true}); }catch(e){} }
       const p=el.play();
+      if(_isPlayer&&p&&p.then) p.then(function(){ fireClashPending(); },function(){});
       if(p&&p.catch) p.catch(function(){
         _kickVoice();
         /* ★ v506b 领域语音：守卫期内持续等用户下一次触屏补播（演出时点屏幕很常见），
@@ -22247,8 +22327,10 @@ function domainAudioBegin(){
   const d=domAud(); d.token++; d.voices=[]; d.winner=null; d.phase='voices'; d.since=Date.now();
   /* ★ v503 提前预热领域音源：160ms 后起宿傩语音时不再同步建链，避免把五条那一拍卡掉 */
   try{ if(typeof prepDomAudio==='function') prepDomAudio(); }catch(e){}
-  /* ★ v506 此刻用户手势最新鲜：静音空播解锁全部语音元素，之后异步 play 才不会被拒 */
-  try{ if(typeof unlockVoiceEls==='function') unlockVoiceEls(); }catch(e){}
+  /* ★ v507 预建 / 预解码三句 solo 音轨（幂等）。不再调 unlockVoiceEls()：
+     它对基础音轨的静音 play + 异步 pause 会与紧跟的正式 play 竞争，把五条拖慢。
+     自动播放策略由 v506 的 _kickVoice 静音解锁重播与手势兜底负责。 */
+  try{ if(typeof preClashVoices==='function') preClashVoices(); }catch(e){}
   return d.token;
 }
 /* ★ v503 清闸门：换棒 / 重开 / 登场语音结束时调用，防 phase 残留 'voices'
@@ -24433,7 +24515,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v506', RK='jjk_ver_reload_'+B;
+  var B='v507', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
