@@ -1,3 +1,26 @@
+<!-- ★ v508 夸克（严格自动播放策略 / 单音频仲裁）现场的三处根治：
+     ① 领域对拼「只有宿傩在念、五条那句没声音」——真正根因在 preClashVoices()：
+        预热用 muted=true 起播，而 playSoloVoice 正式起播只设 volume、从不设 muted；
+        解码慢的机器（夸克 / 手机 WebView）预热 Promise 迟迟不 resolve，正式那句
+        从一开始就是**静音**的；等 rst 赶到又 pause()+currentTime=0 把它彻底掐掉。
+        而玩家那句的 playing 探针是 once，还被预热那次消耗掉 ⇒ 宿傩在五条仍静音时抢先开口。
+        修法：__warming／__live 双标记隔离预热与正式播放；正式起播无条件 muted=false；
+        playing 探针改非 once 且忽略预热事件。
+     ② 五条登场「语音一响 BGM 就断、之后一直没有 BGM」：
+        switchBGM 换源第一件事是 bgmEl.pause()，而语音 Promise 在手机上常超时提前 resolve，
+        _after 就在语音还在念时把 BGM 换掉；换源后的起播又全在手势栈外，被策略拒掉即永久无声
+        （语音早有静音解锁＋手势兜底，BGM 一直没有）。
+        修法：已在放五条曲就完全不碰 BGM；switchBGM 补 10s 手势兜底。
+     ③ 「之后一直没有 BGM」的另外两条死锁：
+        · playExtraBgm 失败时 extraBgmKey 残留 ⇒ startBGM 里 if(extraBgmKey) return 永久锁死；
+          加 4s 未出声即清 key 并放行主 BGM。
+        · resumeMainBgm 开头 if(domainVoicesBusy()) 直接 return 且不清 bgmSuspendedByDomain；
+          改为记 __bgmResumePending，由 700ms 保活看守在语音结束后补一次。
+     ④ 开场影片被识别成视频、进入夸克/UC 原生播放器：
+        v175 只把 opacity 设 0，元素仍铺满全屏，而这类内核按**几何尺寸**嗅探；
+        改为 2px 固定元素（画面本来就由 canvas 逐帧绘制），并补 x5-video-player-type=h5-page、
+        x5-playsinline、disablepictureinpicture、controlslist。实测 videoWidth 仍 1132×640，
+        canvas 逐帧绘制正常（均值 20~64 波动，非黑屏）。 -->
 <!-- ★ v507 领域对拼语音固定「玩家略先、几乎同时」
      手机反序根因：首次展开两句 solo 音轨都是现场 clone 且未解码，play() 要等解码／重试，
      宿傩文件小、重试时机靠前就抢在五条前出声；v506 的静音解锁又会与正式 play 抢状态。
@@ -916,7 +939,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v507">
+<meta name="jjk-build" content="v508">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1643,7 +1666,10 @@ body.kashimo-noGuard #pad .btn[data-act="guard"]{}
    （出现播放按钮、倍速、全屏那一整套），并要求点击才播。把 video 隐形、改由 canvas 逐帧绘制，
    页面里就没有可被接管的目标，画面直接出、无需点击。 */
 #bootVideo canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;background:#000;}
-#bootVideo video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;z-index:0;}
+#bootVideo video{position:fixed;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:0;object-fit:cover;}
+/* ★ v508 缩到 2px：夸克 / UC / 小米内核的视频嗅探按元素几何尺寸判定，
+   v175 只把 opacity 设 0 但元素仍铺满全屏 ⇒ 依旧被接管成原生播放器（播放键/倍速/全屏）。
+   画面本来就由 canvas 逐帧绘制，元素缩到 2px 不影响 drawImage。 */
 #bootVideo .bvSkip{position:absolute;right:14px;bottom:14px;z-index:3;color:#fff;opacity:.72;
   font-size:13px;letter-spacing:2px;background:rgba(0,0,0,.42);padding:6px 13px;border-radius:20px;
   font-family:inherit;pointer-events:auto;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
@@ -3615,7 +3641,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b507</div>
+    <div id="buildTag">v6.5 · b508</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -3647,7 +3673,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
 
   <!-- ★ v160 开场影片：全屏盖在标题页前，播完（或点击跳过）才触发标题「两图拼合」动画 -->
   <div aria-label="开场动画，点击画面开启声音，右下角可跳过" id="bootVideo" role="button" tabindex="0">
-    <video disableremoteplayback id="bootVideoEl" muted playsinline preload="auto" src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/036311795fca.mp4" webkit-playsinline></video>
+    <video disableremoteplayback disablepictureinpicture controlslist="nodownload nofullscreen noremoteplayback" x5-video-player-type="h5-page" x5-playsinline webkit-playsinline muted playsinline preload="auto" id="bootVideoEl" src="https://cdn.jsdelivr.net/gh/linziyang777/jjk@main/assets/036311795fca.mp4" webkit-playsinline></video>
     <script>/* ★ v316 手机浏览器开场影片黑屏修复：把 assets/ 的 mp4 先 fetch 成 blob 再交给 <video>，
        绕开 Range / 缓存残片 / 原生播放器接管等问题；单文件版（src 是 data:）自动跳过。 */
 (function(){
@@ -11893,6 +11919,8 @@ function hardStopVoices(){
 }
 /* BGM 层互斥：按优先序只保留一条在响，其余 pause（同时保证该响的那条在响） */
 function enforceBgmLayer(){
+  /* ★ v508 语音窗口内被挡下的恢复请求，phase 结束后的第一拍补上 */
+  try{ if(window.__bgmResumePending!=null && !domainVoicesBusy()){ const _f=window.__bgmResumePending; window.__bgmResumePending=null; resumeMainBgm(_f); } }catch(_){}
   /* ★ v485 修「点音乐关闭、曲子又被拉回来」：静音期间不许任何 BGM 被巡检拉起 */
   if(typeof bgmMuted!=='undefined' && bgmMuted){
     try{
@@ -19946,7 +19974,20 @@ if(window.__appHidden && document.hidden) return; /*x*/
   extraBgmKey=k;
   try{ suspendMainBgm(0.5); }catch(e){}
   try{ stopSukuBgm(); }catch(e){}
-  const el=getExtraBgm(k); if(!el) return;
+  const el=getExtraBgm(k);
+  if(!el){ extraBgmKey=''; return; }
+  /* ★ v508 startBGM 里 `if(extraBgmKey) return;` 是全局闸门：只要这条额外音轨没真正响起来，
+     主 BGM 就永远起不来（夸克把 play() 拒掉时正是如此）。4s 还没出声就主动放行。 */
+  setTimeout(function(){
+    try{
+      if(extraBgmKey!==k) return;
+      const e2=extraBgmEls[k];
+      if(e2 && !e2.paused && (e2.currentTime||0)>0.05) return;
+      extraBgmKey='';
+      if(typeof bgmMuted!=='undefined' && !bgmMuted && !document.hidden
+         && !(typeof S!=='undefined'&&S&&S.paused)) startBGM(0.6);
+    }catch(_){}
+  },4000);
   const dur=(typeof fade==='number')?fade:0.75;
   try{ el.volume=0; var _rp=(extraBgmPos[k]||0);
     el.currentTime=(_rp>0.4?_rp:(typeof DOMAIN_BGM_LEAD!=='undefined'?(DOMAIN_BGM_LEAD[k]||0):0));
@@ -20059,6 +20100,15 @@ function switchBGM(track){
   try{ _kick(); }catch(e){}
   try{ if(bgmEl && bgmEl.readyState<2) bgmEl.addEventListener('canplay',_kick,{once:true}); }catch(e){}
   try{ setTimeout(_kick,350); setTimeout(_kick,1100); }catch(e){}
+  /* ★ v508 夸克：换源后的 play() 全在手势调用栈外，被自动播放策略拒了就永久无声。
+     10 秒内玩家只要碰一下屏幕就必然起来（语音早就有这套兜底，BGM 一直没有）。 */
+  try{
+    const _gh=function(){ _kick(); };
+    const _off=function(){ document.removeEventListener('pointerdown',_gh,true); document.removeEventListener('touchstart',_gh,true); };
+    document.addEventListener('pointerdown',_gh,true);
+    document.addEventListener('touchstart',_gh,true);
+    setTimeout(_off,10000);
+  }catch(e){}
 }
 /* ★ 移动端兼容 2/2：iOS 上 <audio>.volume 是**只读**的 —— 赋值被忽略、恒为 1。
    于是「1 秒渐入」在手机上完全失效、一开始就是满音量。探测不可写就改用 Web Audio 增益。 */
@@ -20511,6 +20561,9 @@ function startNext(h){
     try{ if(typeof window.playSoloVoice==='function') _vp=window.playSoloVoice('gojoVoice2', DOM_LEAD.gojoVoice2||0, 2.6, 0.9); }catch(e){}
     const _after=function(){
       try{ domainAudioReset(); }catch(e){}
+      /* ★ v508 已经在放五条曲就什么都别做：switchBGM 会先 bgmEl.pause() 再换源，
+         而语音 Promise 在手机上常常超时提前 resolve ⇒ 听感正是「语音一响 BGM 就断」。 */
+      try{ if(typeof bgmEl!=='undefined' && bgmEl && !bgmEl.paused && typeof bgmTrack!=='undefined' && bgmTrack==='gojo') return; }catch(e){}
       try{ if(typeof bgmTrack!=='undefined' && bgmTrack!=='gojo') switchBGM('gojo'); else startBGM(0.8); }catch(e){}
       /* 700ms 保活看守下一拍会再兜一次，双保险 */
       try{ setTimeout(function(){ if(!bgmMuted && bgmEl && bgmEl.paused) startBGM(0.6); },400); }catch(e){}
@@ -22100,9 +22153,17 @@ function preClashVoices(){
          這一步只在「首次用戶手勢」時執行，遠早於領域展開，
          非同步 pause 不會與正式起播競爭（v506 的教訓）。 */
       try{
-        e.muted=true;
+        /* ★ v508 夸克现场根因：预热是 muted 播放，而 playSoloVoice 正式起播只设 volume、不设 muted；
+           解码慢的机器上预热 Promise 迟迟不 resolve ⇒ 正式那句从一开始就是**静音**的，
+           等 rst 赶到又 pause()+currentTime=0，把它彻底掐掉 ⇒ 玩家只听见后起的宿傩。
+           __warming / __live 两个标记把预热与正式播放彻底隔离。 */
+        e.__warming=1; e.muted=true;
         const pp=e.play();
-        const rst=function(){ try{ e.pause(); e.currentTime=0; e.muted=false; }catch(_){} };
+        const rst=function(){ try{
+          e.__warming=0;
+          if(e.__live){ e.muted=false; return; }
+          e.pause(); e.currentTime=0; e.muted=false;
+        }catch(_){} };
         if(pp&&pp.then) pp.then(rst,rst); else rst();
       }catch(_){}
     }
@@ -22149,7 +22210,7 @@ function unlockVoiceEls(){
       try{
         const wm=e.muted; e.muted=true;
         const p=e.play();
-        const rst=function(){ try{ e.pause(); e.currentTime=0; e.muted=wm; }catch(_){} };
+        const rst=function(){ try{ if(e.__live||e.__warming){ e.muted=wm; return; } e.pause(); e.currentTime=0; e.muted=wm; }catch(_){} };
         if(p&&p.then) p.then(rst,rst); else rst();
       }catch(_){}
     }
@@ -22183,7 +22244,7 @@ function playSoloVoice(key, lead, fallbackSec, vol){
   /* ★ v506：游离元素进常驻隐藏宿主（仍复用同一实例，不新建，保住解锁状态） */
   try{ if(!el.parentNode){ const _h=soloHost(); if(_h) _h.appendChild(el); } }catch(e){}
   try{ if(el.ended||el.error||el.networkState===3){ el.load(); } }catch(e){}
-  try{ el.volume=(vol==null?0.92:vol); el.currentTime=0; el.loop=false;
+  try{ el.__warming=0; el.__live=1; el.muted=false; el.volume=(vol==null?0.92:vol); el.currentTime=0; el.loop=false;
        if(_domV){ el.__domainVoice=1; el.__guardUntil=Date.now()+9000; } }catch(e){}
   /* 前导静音：已解码直接 seek；未解码用 loadeddata + 90ms 兜底，且只在前 0.05s 内才 seek，
      避免把「从尾端起播」误判成 skip 前导。 */
@@ -22205,6 +22266,7 @@ function playSoloVoice(key, lead, fallbackSec, vol){
   return new Promise(function(res){
     let done=false, timer=null;
     const fin=function(){ if(done) return; done=true; try{ el.removeEventListener('ended',fin); }catch(e){}
+      try{ el.__live=0; }catch(e){}
       if(timer) clearTimeout(timer); res(); };
     try{ el.addEventListener('ended',fin,{once:true}); }catch(e){}
     const _dur=Math.max(0.8,(fallbackSec||4)-(lead||0));
@@ -22265,7 +22327,12 @@ function playSoloVoice(key, lead, fallbackSec, vol){
       }
       /* ★ v507b 玩家语音真正开始出声的事件探针（宿傩那句不挂） */
       const _isPlayer=(key==='gojoDom'||key==='yutaDomain');
-      if(_isPlayer){ try{ el.addEventListener('playing',function(){ fireClashPending(); },{once:true}); }catch(e){} }
+      if(_isPlayer){ try{
+        /* ★ v508 不能用 once：预热那次 playing 会把监听消耗掉，而且它一触发就让宿傩抢在
+           玩家（此刻还是静音态）之前开口 —— 这正是「只有宿傩在念」的听感来源。 */
+        const _pf=function(){ if(el.__warming) return; el.removeEventListener('playing',_pf); fireClashPending(); };
+        el.addEventListener('playing',_pf);
+      }catch(e){} }
       const p=el.play();
       if(_isPlayer&&p&&p.then) p.then(function(){ fireClashPending(); },function(){});
       if(p&&p.catch) p.catch(function(){
@@ -22751,7 +22818,9 @@ function suspendMainBgm(fade){
   }
 }
 function resumeMainBgm(fade){
-  if(domainVoicesBusy()) return;   /* ★ v502 */
+  /* ★ v508 旧版在这里直接 return，而它同时不清 bgmSuspendedByDomain ⇒ 只要调用点
+     恰好落在领域语音窗口内，主 BGM 就永久静音（「登场语音之后一直没有 BGM」）。 */
+  if(domainVoicesBusy()){ window.__bgmResumePending=(typeof fade==='number'?fade:0.8); return; }   /* ★ v502 */
   if(S&&S.deathVoiceUntil&&Date.now()<S.deathVoiceUntil) return;   /* ★ v455 死亡语音期间不恢复 BGM */
   /* ★ v326 五条领域期间不回主 BGM（对拼成功后也一样） */
   if(S&&S.phase==='fight'&&S.hero==='gojo'&&(S.gojoDom>0||S.gojoVoidT>0)&&!(S.sukuDom>0)){ try{ playExtraBgm('ujaku',0.8); }catch(e){} return; }   /* ★ v387 宿傩领域中不再拉起无量空处曲 */
@@ -24515,7 +24584,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v507', RK='jjk_ver_reload_'+B;
+  var B='v508', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
