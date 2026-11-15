@@ -24326,12 +24326,42 @@ html.rot #lsWrap{width:min(34vh,390px);}
 })();
 </script>
 
-<script>/* GitHub Pages：注册 Service Worker —— 旧版从来没注册过，
-   导致每次打开都要把 20MB+ 资源重下一遍（这就是「打开非常卡」的根因）。 */
+<script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
+  var B='v505', RK='jjk_ver_reload_'+B;
+  var hardReset=function(cb){
+    var jobs=[];
+    try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
+    try{ if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){ return Promise.all(rs.map(function(r){ return r.unregister().catch(function(){}); })); }).catch(function(){})); }catch(e){}
+    var done=false, fin=function(){ if(done) return; done=true; cb(); };
+    Promise.all(jobs).then(fin,fin); setTimeout(fin,1500);
+  };
+  var refresh=function(){
+    var u=new URL(location.href); u.searchParams.set('_fresh',Date.now().toString(36));
+    try{ location.replace(u.href); }catch(e){ location.reload(); }
+  };
+  /* 静态托管没有 /api/ver ⇒ 用随版本一起推的 ver.json，带随机参数绕开 Pages 边缘缓存 */
+  try{
+    fetch('./ver.json?_='+Date.now(),{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.b && j.b!==B){
+          var n=+(sessionStorage.getItem(RK)||0);
+          if(n<2){ sessionStorage.setItem(RK,String(n+1)); hardReset(refresh); }
+        }
+      }).catch(function(){});
+  }catch(e){}
+  try{
+    var tag=document.getElementById('buildTag');
+    if(tag && !tag.__jjk){
+      tag.__jjk=1; tag.style.pointerEvents='auto'; tag.style.cursor='pointer'; tag.style.zIndex='99';
+      tag.title='SW '+B+' · 点击强制检查更新（清缓存并重载）';
+      tag.addEventListener('click',function(){ tag.textContent='检查更新中…'; hardReset(refresh); });
+    }
+  }catch(e){}
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(function(reg){
+    navigator.serviceWorker.register('./sw.js?v='+B,{scope:'./',updateViaCache:'none'}).then(function(reg){
       try{ reg.update().catch(function(){}); }catch(e){}
       try{ setInterval(function(){ reg.update().catch(function(){}); },30000); }catch(e){}
     }).catch(function(){});

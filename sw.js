@@ -1,4 +1,4 @@
-const CORE_CACHE='jjk-core-v504';
+const CORE_CACHE='jjk-core-v505';
 const ASSET_CACHE='jjk-assets';
 self.addEventListener('install',function(){self.skipWaiting();});
 self.addEventListener('activate',function(e){
@@ -12,6 +12,7 @@ self.addEventListener('activate',function(e){
     }).catch(function(){})
   );
 });
+function netOnly(req){ try{ return new Request(req,{cache:'no-store'}); }catch(e){ return req; } }
 self.addEventListener('fetch',function(e){
   var req=e.request; if(req.method!=='GET')return;
   var url=new URL(req.url);
@@ -20,7 +21,7 @@ self.addEventListener('fetch',function(e){
   if(!isDoc) return;
   /* 文档：网络优先，离线才回缓存 */
   e.respondWith(
-    fetch(req).then(function(resp){
+    fetch(netOnly(req)).then(function(resp){
       if(resp&&resp.ok){ var cp=resp.clone(); caches.open(CORE_CACHE).then(function(c){ c.put(req,cp).catch(function(){}); }); }
       return resp;
     }).catch(function(){ return caches.match(req); })
