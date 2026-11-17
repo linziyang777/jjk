@@ -7391,7 +7391,9 @@ function gojoFinisherShow(){
 }
 function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostBreak,exec,noNum){
   /* ★ v266 十种影法术：影子回合免疫伤害（真·秒杀/结算类 finisher 不挡） */
-  if(S.shadowTurnN===S.turnN && !finisher && !exec && !noKill){
+  /* ★ V520b 影遁只护本体：这条拦截原在「目标转给式神」分支之前，
+     导致打贯牛 / 魔虚罗 / 颚吐也被吞掉。限定 target=sukuna。 */
+  if(S.shadowTurnN===S.turnN && !finisher && !exec && !noKill && S.target==='sukuna'){
     fxText(SX()-20*SC,GY-180*SC,'影','#8b5cf6',true);
     say('sys','攻击落进影子里 —— 没有命中。');
     return;
@@ -20489,9 +20491,9 @@ function start(){
   hideDomainAnnounce();   /* ★ v86 重开局同样要收掉「领域展开」大字，否则会带进选人／下一棒画面 */
   resetBattle();
   /* ★ v474 用户指定：进选人界面才把开场曲切回普通 BGM，并从头播放 */
-  window.__bootBgmGojo=false;
-  try{ switchBGM('main'); }catch(e){}
-  try{ if(typeof bgmEl!=='undefined'&&bgmEl){ bgmEl.currentTime=0; if(typeof startBGM==='function'&&!bgmMuted) startBGM(0.8); } }catch(e){}
+  /* ★ V520b 开场到选人不换源、不 seek 0：同一首曲连续循环下去。
+     战斗内登场仍由 switchBGM 按角色切曲，领域曲机制不受影响。 */
+  try{ window.__bootBgmGojo=false; if(typeof bgmEl!=='undefined'&&bgmEl&&bgmEl.paused&&!bgmMuted&&typeof startBGM==='function') startBGM(0.8); }catch(e){}
   resize();
   syncHud();
   }catch(e){ try{ console.error('[start]',e); }catch(_e){} }
@@ -21178,6 +21180,12 @@ function showGuide(){
     if(!list.length) return;
     const hit=document.getElementById('guideHit'), ov=document.getElementById('guideOv');
     if(!hit||!ov) return;
+    /* ★ V520b 引导第 1 步框的就是倒计时框，必须强制刷新舞台显隐并摘掉 tbMute。
+       syncStageChrome 带 _chromeCov 缓存，弹引导时不会自己重跑。 */
+    try{
+      var _tb=document.getElementById('turnBar'); if(_tb) _tb.classList.remove('tbMute');
+      S.tbHold=0; if(typeof syncStageChrome==='function') syncStageChrome();
+    }catch(e){}
     window.__gdList=list; GUIDE_I=0; GUIDE_ON=true; S.guideShown=true;
     S.paused=true;   /* 世界冻结；render 照跑，画面不会黑 */
     const pb=document.getElementById('pauseBtn'); if(pb) pb.classList.remove('paused');
@@ -22565,9 +22573,8 @@ function bgmGesture(){
 /* ① 打开页面即试播。BGM_SRC 定义在主脚本之后的 bgmData 里，所以要等 DOM 解析完 */
 function bgmBoot(){
   /* ★ v523 开场影片期间首页曲就是 gojo，用它的就绪判据；影片结束后才回到常态曲 */
-  const _gojoPhase=!!(window.__bootPlaying||window.__bootBgmGojo);
-  const _ok=_gojoPhase?gojoBgmReady():bgmReady();
-  if(_ok && !bgmMuted) startBGM(BGM_FADE);
+  /* ★ V520b 全流程同一首 main 曲，就绪判定不再分 gojo / main */
+  if(bgmReady() && !bgmMuted) startBGM(BGM_FADE);
 }
 /* ★ v165 用户要求 BGM 从开场影片起播：DOMContentLoaded 就 boot（此时影片刚开始）。
    若因音轨/Blob 未就绪而没播成，短间隔重试（最多 8 次）；网页端被自动播放策略静音起播的，
@@ -23839,7 +23846,9 @@ function playTitleOpen(){
      关掉网页重开（新 session）才会再看到开场。 */
   let _seenAt=0;
   try{ _seenAt=+(sessionStorage.getItem('jjk_boot_seen')||0)||0; }catch(e){}
-  if(_seenAt && Date.now()-_seenAt < 30*60*1000){
+  /* ★ V520b 30 分钟 → 8 秒：旧窗口把正常重进 / 刷新也当成重播吞掉，用户报「开场视频不播」。
+     8 秒只挡同一次加载里的重复触发。 */
+  if(_seenAt && Date.now()-_seenAt < 8000){
     window.__bootPlaying=false;
     window.__bootBgmGojo=false;
     try{ v.pause(); }catch(e){}
@@ -23862,7 +23871,7 @@ function playTitleOpen(){
   /* ★ v523 影片一播就放首页同曲：直接把 track 设为 gojo 并起播，
      不再依赖 switchBGM 在音源未就绪时静默 return（旧版因此影片期间没有音乐或切成 main）。 */
   try{
-    window.__bootBgmGojo=true; bgmTrack='gojo';
+    window.__bootBgmGojo=false; bgmTrack='main';   /* ★ V520b 开场→选人统一普通战斗曲 */
     if(typeof ensureBgm==='function'){ var _be=ensureBgm(); if(_be){ try{ _be.loop=true; if(_be.readyState<2){ var _p=_be.play(); if(_p&&_p.catch) _p.catch(function(){}); } }catch(e){} } }
     if(typeof startBGM==='function') startBGM(0.6);
     /* ★ v523b 自动播放被拒时，首次触控（点跳过／点画面）立刻补播 */
@@ -24006,7 +24015,8 @@ function playTitleOpen(){
     if(started||opened) return;                    /* ★ v468 修「开场动画播两次」：只允许起播一次 */
     started=true;
     /* ★ v471 用户指定：开场影片起播即同步五条悟登场 BGM（首页 main BGM 由 open() 还原，不受影响） */
-    try{ window.__bootBgmGojo=true; if(typeof switchBGM==='function'){ try{ switchBGM('gojo'); }catch(e){} } if(typeof bgmGesture==='function'){ try{ bgmGesture(); }catch(e){} } }catch(e){}
+    /* ★ V520b 保持 main：不切曲、不重设 track，只在真掉线时补一次起播 */
+    try{ window.__bootBgmGojo=false; if(typeof bgmGesture==='function'){ try{ bgmGesture(); }catch(e){} } if(typeof startBGM==='function'&&typeof bgmEl!=='undefined'&&bgmEl&&bgmEl.paused&&!bgmMuted){ startBGM(0.6); } }catch(e){}
     /* ★ v469 双保险：起播前把进度归零，任何残留（换源前的自动播放、seek 残值）都不会让
        使用者看到「从中间接着播」或「又从头播一遍」 */
     try{ if(v.currentTime>0.15) v.currentTime=0; }catch(e){}
@@ -25332,7 +25342,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v520', RK='jjk_ver_reload_'+B;
+  var B='v520b', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
