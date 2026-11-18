@@ -13,9 +13,9 @@
 > 仓库只保留在线版。单文件离线包（66 MB）体积超过 jsDelivr 单包 50 MB 上限，会让整站资源无法经 CDN 分发，因此不再随仓库发布——需要离线版请向作者索取 `新宿决战.html`（双击即玩，断网可跑）。
 
 <p align="center">
-  <img src="docs/battle.jpg" width="86%" alt="第 2 回合的战斗：五条悟、魔虚罗、宿傩同框">
+  <img src="docs/battle.jpg" width="86%" alt="第 2 回合的战斗：五条悟的苍·拳砸中宿傩，右上角魔虚罗在场">
 </p>
-<p align="center"><sub>第 2 回合 —— 魔虚罗已被召出挡在中间；右上角写着宿傩下回合想用的招（玉犬·影犬咬碎）和三格适应，底部技能按钮上边沿正中那滴水，就是这一招要花的点数</sub></p>
+<p align="center"><sub>第 2 回合 —— 苍·拳砸中宿傩那一下，红字 −16% 是实际伤害；宿傩血条下那三枚白底墨框是本回合在场的单位（本体 / 魔虚罗 / 颚吐），右上角写着他下回合要用的「斩击 · 近身 · 单体」，紧挨着意图框的那枚音符小钮是音乐开关；技能框上沿的小数字，就是这一招要花的点数</sub></p>
 
 ## 这是什么
 
@@ -30,13 +30,13 @@
 ## 长什么样
 
 <p align="center">
-  <img src="docs/select.jpg" width="31%" alt="选人界面">
-  <img src="docs/battle.jpg" width="31%" alt="战斗界面">
-  <img src="docs/result.jpg" width="31%" alt="结算界面">
-</p>
-<p align="center"><sub>选人 → 战斗 → 结算（结算页有接力链、结局图鉴、全服战况与手感反馈）</sub></p>
+    <img src="docs/select.jpg" width="31%" alt="选人界面：六名术师">
+    <img src="docs/battle.jpg" width="31%" alt="战斗界面：第 2 回合，苍·拳命中宿傩">
+    <img src="docs/result.jpg" width="31%" alt="结算界面：战况、结局图鉴与接力链">
+  </p>
+  <p align="center"><sub>选人 → 战斗 → 结算（结算页有接力链、结局图鉴、全服战况与手感反馈）</sub></p>
 
-三张都是 V520 的实机画面，无头 Chrome 打开 `index.html` 直接抓的，没有后期合成。
+三张都是 V520（v520f）的实机画面，无头 Chrome 打开本地 HTML 直接抓的，没有后期合成，也没做美术修饰。
 
 ## 参战角色
 
