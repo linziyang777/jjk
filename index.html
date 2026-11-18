@@ -1487,17 +1487,27 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 .nametag.sk{background:var(--red);}
 /* ★ v296 宿傩被没收技能清单：仿 nametag 的黑框斜切风格（右下角） */
 #sukLost{
-  position:absolute;right:calc(8px + env(safe-area-inset-right));bottom:calc(118px*var(--k));
+  /* ★ v520d 用户报「已失效清单遮住咒力条」：旧版写死 bottom:118k，条数一多就往上长，
+     正好糊在玩家血条/咒力条上。现挂进 .hud.bottom，用 bottom:100% 一律长在 HUD 上沿之外。 */
+  position:absolute;right:calc(8px + env(safe-area-inset-right));bottom:100%;margin-bottom:calc(3px*var(--k));
   z-index:7;display:none;flex-direction:column;align-items:flex-end;
-  gap:calc(4px*var(--k));pointer-events:none;
+  gap:calc(4px*var(--k));pointer-events:auto;
 }
 #sukLost.on{display:flex;}
+/* ★ v520e 用户反馈「太杂乱」：7 条黑底标签竖着堆在画面右缘，等于第三条边栏。
+   平时只留一枚「已失效 N」小徽章，点开才在左侧横向铺开清单（横屏手机比竖排省一半面积）。 */
+#sukLost b{cursor:pointer;user-select:none;}
+#sukLost b i{font-style:normal;margin-left:calc(5px*var(--k));padding:0 calc(4px*var(--k));
+  background:#fff;color:#000;font-size:calc(9px*var(--k));line-height:1.5;}
+#sukLost.open{flex-direction:row-reverse;align-items:center;}
+#sukLost.open #sukLostList{display:flex;}
 #sukLost b{
   font-weight:900;font-size:calc(9.5px*var(--k));letter-spacing:2px;line-height:1;
   background:#000;color:#fff;padding:calc(3px*var(--k)) 7px;transform:skewX(-8deg);
   border:calc(1.5px*var(--k)) solid #fff;box-shadow:2px 2px 0 rgba(0,0,0,.4);white-space:nowrap;
 }
-#sukLostList{display:flex;flex-direction:column;align-items:flex-end;gap:calc(3px*var(--k));}
+#sukLostList{display:none;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;
+  align-items:center;gap:calc(3px*var(--k));max-width:calc(100vw - 70px);}
 #sukLost .slTag{
   font-weight:900;font-size:calc(11px*var(--k));letter-spacing:calc(1px*var(--k));line-height:1;
   background:#000;color:#fff;padding:calc(3px*var(--k)) 8px calc(2px*var(--k));
@@ -2202,8 +2212,9 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   opacity:0;transition:opacity .35s ease;pointer-events:none;}
 #streetTip.on{opacity:1;}
 /* ★ v110 暂停 / 继续按钮：沿用其他 HUD 的硬边框样式，尺寸随 --k 自适应手机 */
-/* ★ v519 暂停键回到时间框左侧：左侧补白 69px = 跳过键宽 95 − 暂停键宽 26，使左右占位相等、时间框仍居中 */
-#pauseBtn{pointer-events:auto;position:static;margin-left:calc(69px*var(--k));flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+/* ★ v519 暂停键回到时间框左侧：左侧补白 = 跳过键宽 − 暂停键宽 26，使左右占位相等、时间框仍居中 */
+/* ★ v520d 跳过键 95→70（去掉「回合」二字），补偿同步 69→44 */
+#pauseBtn{pointer-events:auto;position:static;margin-left:calc(44px*var(--k));flex:0 0 auto;display:flex;align-items:center;justify-content:center;
   width:calc(26px*var(--k));height:calc(26px*var(--k));background:#fff;color:var(--ink);
   border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);cursor:pointer;}
 #pauseBtn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink);}
@@ -2235,7 +2246,8 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v511 用户指定：回合横幅消失之后，倒计时才正常显现 —— 横幅期间整条退场 */
 #turnBar.tbMute{opacity:0;transition:opacity .18s ease;}
 /* ★ v511 跳过回合：与暂停按钮同区（时间控制），不进技能栏、不挤压按钮宽度 */
-#skipBtn{pointer-events:auto;position:static;flex:0 0 calc(95px*var(--k));justify-content:center;display:inline-flex;align-items:center;gap:calc(3px*var(--k));
+#skipBtn{pointer-events:auto;position:static;flex:0 0 calc(70px*var(--k));justify-content:center;display:inline-flex;align-items:center;gap:calc(3px*var(--k));
+  white-space:nowrap;   /* ★ v520d 用户指定：去掉「回合」二字并保证单行，不再折成两行 */
   font-family:inherit;font-size:calc(11px*var(--k));font-weight:900;letter-spacing:1px;line-height:1.15;
   color:#111;background:#fff;border:2px solid var(--ink);padding:calc(4px*var(--k)) calc(9px*var(--k));
   min-height:calc(28px*var(--k));box-shadow:2px 2px 0 var(--ink);cursor:pointer;
@@ -2380,7 +2392,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 /* ★ v511 用户反馈「意图条位置不好」：原在 HUD 行流中间（世界斩条与状态行之间），
    视觉上像第三条血条且离宿傩很远。改挂在宿傩血条同一行右端 —— 与《杀戮尖塔》
    「敌人血条 + 意图」同构，读到血条就同时读到它下一步要干什么。 */
-#intentRow{display:none;min-width:0;margin:calc(-1px*var(--k)) 0 0;justify-content:flex-end;padding:0 calc(10px*var(--k));}   /* ★ v523 上移贴住血条 */
+#intentRow{display:none;min-width:0;margin:calc(12px*var(--k)) 0 0;justify-content:flex-end;padding:0 calc(38px*var(--k)) 0 calc(10px*var(--k));}   /* ★ v520f 与血条留 12k 空隙、右侧留 38k 给音乐键 */
 #sukIntent{display:inline-flex;align-items:center;max-width:calc(230px*var(--k));min-width:0;gap:calc(5px*var(--k));
   background:#111;color:#fff;border:2px solid #111;padding:calc(2px*var(--k)) 8px calc(1px*var(--k));
   transform:skewX(-8deg);box-shadow:2px 2px 0 rgba(0,0,0,.3);white-space:nowrap;}
@@ -2793,7 +2805,7 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 /* ★ v186 式神血条行改为绝对定位：此前它是 #stage 的 flex 流成员，出现/消失会改变 #field 高度，
    而 display 变化不触发 window resize ⇒ 画布尺寸停留在血条存在时的较小值 ⇒ 领域场景底部留白。
    现改为叠在场景上（用户要求），#field 高度恒定。 */
-#tgtRow{display:none;gap:8px;justify-content:flex-start;align-items:center;
+#tgtRow{display:none;gap:8px;justify-content:flex-start;align-items:center;flex-wrap:wrap;
   /* ★ v234 用户指定：整行搬到左上角、宿傩血条框（#skRow）正下方 —— 原先叠在底部会与技能栏/血条带
      互相干涉（用户截图）。高度对齐：.hud 顶部 padding 6k + #skRow 行高约 20k+边框，再加一点净空。
      z-index 压到 12（低于暂停遮罩 29），并在 renderTargetRow 里挂起时整行隐藏。 */
@@ -2801,9 +2813,9 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 /* ★ v234 原身战仪式条（#riteRow）常显 ⇒ 式神血条行再往下让一行（仪式条行高 ≈22k） */
 #stage.hasRite #tgtRow{top:calc(55px*var(--k) + 18px);}   /* ★ v243 同步下移 */
 #tgtRow.on{display:flex;pointer-events:auto;}
-#tgtRow .tg{font-weight:900;font-size:clamp(10px,2.6vw,13px);letter-spacing:1px;
-  padding:6px 11px;border:3px solid var(--ink);background:#fff;color:var(--ink);
-  box-shadow:3px 3px 0 var(--ink);cursor:pointer;user-select:none;}
+#tgtRow .tg{font-weight:900;font-size:calc(13px*var(--k));letter-spacing:1px;
+  padding:calc(5px*var(--k)) calc(9px*var(--k));border:calc(2.5px*var(--k)) solid var(--ink);background:#fff;color:var(--ink);
+  box-shadow:calc(2px*var(--k)) calc(2px*var(--k)) 0 var(--ink);cursor:pointer;user-select:none;}
 #tgtRow .tg.on{background:#111;color:#fff;}
 #tgtRow .tg small{opacity:.72;font-weight:700;}
 .btn.b-vow .ico{color:var(--red);}
@@ -2811,22 +2823,28 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 /* 咒力状态栏（黑闪连锁 / 术式熔断 / 电荷 / 血契 / 燃烧 / 束缚 / 共鸣） */
 /* ★ v251 用户指定：宿傩的状态徽标（术式熔断／血契／原身…）不再占白框内的高度，
    改为绝对定位贴在宿傩面板下缘之外，跟式神血条同一带 —— 白框因此收窄。 */
-#statusRow{display:none;flex-wrap:wrap;gap:calc(4px*var(--k));margin-top:0;
-  position:absolute;left:12px;top:calc(100% - 1px);z-index:12;pointer-events:none;   /* ★ v523 +2→−1，收紧血条与状态标签空隙 */
+#statusRow{display:none;flex-wrap:wrap;gap:calc(3px*var(--k));margin-top:0;
+  /* ★ v520d 用户指定：整行上移，直接抵在宿傩血条下缘（原 top:100%−1 挂在 HUD 最下方）。
+     宽度由 clampTopCluster() 收到「暂停键左侧 8px」，不再钻到「第 N 回合」时间框底下被盖住。 */
+  position:absolute;left:12px;top:calc(21px*var(--k));z-index:12;pointer-events:none;
   max-width:calc(100% - 24px);}
 #statusRow.on{display:flex;}
-.stChip{display:flex;align-items:center;gap:3px;border:2px solid var(--ink);background:#fff;
-  padding:calc(1px*var(--k)) calc(6px*var(--k)) calc(1px*var(--k)) calc(3px*var(--k));font-size:calc(10px*var(--k));font-weight:900;letter-spacing:.5px;line-height:1.5;
+.stChip{display:flex;align-items:center;gap:calc(2px*var(--k));border:2px solid var(--ink);background:#fff;
+  /* ★ v520d 手机密度：内边距/字号/字距各收一点，5 枚徽标正好在「暂停键左侧」夹宽内单行放下 */
+  padding:calc(1px*var(--k)) calc(5px*var(--k)) calc(1px*var(--k)) calc(2px*var(--k));font-size:calc(9.5px*var(--k));font-weight:900;letter-spacing:0;line-height:1.5;
   box-shadow:2px 2px 0 var(--ink);white-space:nowrap;}
-.stChip .ico{width:12px;height:12px;}
-.stChip.red{background:#ffe9ec;border-color:var(--red);color:#8f0d22;box-shadow:2px 2px 0 var(--red);}
-.stChip.purple{background:#f2ecff;border-color:var(--purple);color:#4c1d95;box-shadow:2px 2px 0 var(--purple);}
-.stChip.gold{background:#fff6dc;border-color:#b8860b;color:#7a5600;box-shadow:2px 2px 0 #b8860b;}
-.stChip.fire{background:#ffefe2;border-color:#e0561c;color:#8a2c06;box-shadow:2px 2px 0 #e0561c;}
+.stChip .ico{width:calc(10px*var(--k));height:calc(10px*var(--k));}   /* ★ v520d 随 --k 缩放，手机上不再撑宽徽标 */
+/* ★ v520e 用户反馈「页面太杂乱」：徽标配色由红/紫/金/橙 4 色收敛为 2 档 ——
+   负面（red / fire）＝淡红底＋红框，其余（purple / gold）＝白底＋墨框。
+   整排只读两种颜色，扫视成本降一半；红只留给「正在伤到你」的状态。 */
+.stChip.red,.stChip.fire{background:#fdeef0;border-color:var(--red);color:#8f0d22;box-shadow:2px 2px 0 var(--red);}
+.stChip.purple,.stChip.gold{background:#fff;border-color:var(--ink);color:var(--ink);box-shadow:2px 2px 0 var(--ink);}
+/* 「+N」折叠位：虚线框表示「还有，但先不占地方」，可点开 */
+.stChip.more{background:#fff;border-style:dashed;color:#666;box-shadow:none;pointer-events:auto;cursor:pointer;}
 
 /* ---------- ★ v390 真希：见切／龙骨蓄力 图形化仪表 ---------- */
-#makiMeter{display:none;align-items:center;gap:calc(8px*var(--k));margin-top:calc(5px*var(--k));
-  padding-left:calc(2px*var(--k));}
+#makiMeter{display:none;align-items:center;gap:calc(8px*var(--k));margin-top:0;margin-bottom:calc(4px*var(--k));
+  padding-left:calc(2px*var(--k));}   /* ★ v520d 移到血条上方 ⇒ 上边距归零、下边距留 4k */
 #makiMeter.on{display:flex;}
 #makiMeter .mmTag{border:2px solid var(--ink);background:#fff;padding:calc(1px*var(--k)) calc(7px*var(--k));
   font-size:calc(10px*var(--k));font-weight:900;letter-spacing:1px;line-height:1.7;
@@ -2859,7 +2877,7 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 @keyframes yujiPulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
 
 /* 背景音乐按钮图标 */
-#bgmBtn .ico{width:15px;height:15px;color:var(--ink);}
+#bgmBtn .ico{width:calc(13px*var(--k));height:calc(13px*var(--k));color:var(--ink);}   /* ★ v520f 随按钮缩放 */
 /* ---------- ★ v151 音乐盒：自订歌单（本地导入 / 网络直链 / 网络搜索接入） ---------- */
 #musicBtn{position:absolute;right:48px;top:8px;z-index:41;width:34px;height:34px;
   display:flex;align-items:center;justify-content:center;background:#fff;
@@ -3691,7 +3709,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>反转术式</b>　濒死（≤25% 生命）时领悟，每局一次，回复 25% 生命。</p>
     <p><b>束缚</b>　没收·神武解（宿傩本局永久失去「神武解：电击」，适应清零且本棒无法再适应／本棒输出 ×0.85）·有罪判决（罪状 +3，立刻可开庭／本棒受伤 ×1.3）·辩护人之束缚（本棒受伤 ×0.72／输出 ×0.85）。</p>
     <h3 style="--hc:#7c3aed">乙骨忧太<small>OKKOTSU · 无限咒力·术式复制</small></h3>
-    <p><b>太刀·咒斩</b>　<b>5%~7%</b> 最大生命，可自发黑闪。</p>
+    <p><b>太刀·呪斩</b>　<b>5%~7%</b> 最大生命，可自发黑闪。</p>
     <p><b>里香·召唤</b>　咒力上限 −50%，里香登场 <b>5 回合</b>。<b>里香没有生命值、无法被杀死</b>；5 回合到期或施展「无限制咒力解放」后退场。在场期间：乙骨所有技能不消耗咒力；二技能变为「模仿术式」；里香每回合以「咒力拳」出击，并替乙骨分担一半伤害（领域「真赝相爱」期间里香受守护、不再分担）。★ 里香离场后乙骨仍保有已学的模仿术式。</p>
     <p><b>模仿术式</b>　里香在场时，二技能变为「模仿术式」，池中五招随机抽取：<b>赤血操术·穿血</b>（15%~20%，附着血契）／<b>言灵术式</b>（定住宿傩一回合·自身追加一次行动，用后永久移出）／<b>宿傩的「解」</b>（14%~18%，墨痕斩，与宿傩版镜像）／<b>宿傩的「捌」</b>（17%~21%，多道赤红斩生于对手身上）／<b>邪去侮天梯</b>（10%~15%，消除宿傩一个常规技能；领域里那次也造成同等伤害，用后永久移出）。<br>　　★ 言灵与天梯（领域里那次除外）全局各只能使用一次，用过即从池子永久移出。<br>　　除言灵与天梯外，每招冷却 1 回合，冷却结束自动切换到池中下一招；技能框的大字与小字会同步换成当前招式。</p>
     <p><b>领域·真赝相爱</b>　3 点咒力（里香在场不消耗）·葛笼封锁＋伤害 ×1.5，每局一次。展开时 <b>100% 必定触发对拼</b>：胜率由推挤结束当下的指针位置决定（起点 70%／苦战·无量 50%）；★ 宿傩中过无量空处 ⇒ <b>乙骨必胜（100%）</b>：<b>胜</b> ⇒ 伏魔御厨子的结界当场碎裂、宿傩陷入术式熔断；<b>败</b> ⇒ 乙骨术式熔断、伏魔御厨子成立。成立后宿傩立即被笼罩，每 2 回合发动一次弥须葛笼；★ 乙骨的「真赝相爱」<b>不会被魔虚罗从外侧击碎</b>（对拼获胜后持续到乙骨退场）。</p>
@@ -3748,7 +3766,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
       <canvas id="cv"></canvas>
       <!-- ★ v266 音乐盒已移除 -->
       <div id="bgmBtn" title="背景音乐开关"><svg aria-hidden="true" class="ico"><use href="#ic-note"></use></svg><i aria-hidden="true" class="ml"></i></div>
-      <div id="turnBar" style="display:none"><div id="pauseBtn" title="暂停 / 继续"><svg aria-hidden="true" class="ico" viewBox="0 0 24 24"><path class="icPause" d="M7 4h4v16H7zM13 4h4v16h-4z"/><path class="icPlay" d="M8 4l12 8-12 8z"/></svg></div><div class="tb" id="turnTxt">第 1 回合 · 10.0s</div><button id="skipBtn" title="跳过本回合 —— 未用完的行动力攒到下回合">跳过回合<small>SKIP</small></button><i id="streetTip"></i></div>
+      <div id="turnBar" style="display:none"><div id="pauseBtn" title="暂停 / 继续"><svg aria-hidden="true" class="ico" viewBox="0 0 24 24"><path class="icPause" d="M7 4h4v16H7zM13 4h4v16h-4z"/><path class="icPlay" d="M8 4l12 8-12 8z"/></svg></div><div class="tb" id="turnTxt">第 1 回合 · 10.0s</div><button id="skipBtn" title="跳过本回合 —— 未用完的行动力攒到下回合">跳过<small>SKIP</small></button><i id="streetTip"></i></div>
       <div id="redAlert"></div>
       <div id="warnMark">！</div>
       <div class="flash" id="fPurple"></div>
@@ -3768,19 +3786,22 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
 
     <!-- 底部：五条悟 -->
     <div class="hud bottom">
+      <!-- ★ v520d 用户指定：宿傩「已失效」清单从右下角改挂到下方 HUD 上沿之外（bottom:100%）
+           —— 旧版 bottom:118k 是写死的，手机一旦多几条没收就向上长，直接盖住玩家血条与咒力条。 -->
+      <div id="sukLost"><b id="sukLostBtn" title="点击查看被没收的技能">已失效<i id="sukLostN">0</i></b><div id="sukLostList"></div></div>
       <!-- ★ v34 角色血条与咒力条同行显示（原来咒力条单独占一行） -->
-      <div class="row merged" id="heroRow">
-        <div class="nametag" id="heroTag" style="background:var(--blue)">五条悟<small>GOJO</small></div>
-        <div class="bar ghp"><i id="gjHp"></i><b id="gjHpTxt">100%</b></div>
-        <div class="nametag" id="subTag" style="background:var(--cyan)">咒力<small>CE</small></div>
-        <div class="bar ce thin pips" id="gjCe" title="咒力点数 · 每回合 +1 点（上限 5 点）"><i></i><i></i><i></i><i></i><i></i><b id="gjCeTxt">5</b></div>
-      </div>
-      <!-- ★ v390 真希专属仪表：见切 2 格 + 龙骨蓄力条（仅真希在场时显示） -->
+      <!-- ★ v520d 用户指定：真希「灵魂损伤 / 龙骨·蓄」整行改挂血条上方（原在血条下方，手机端起手就压在血条带上） -->
       <div id="makiMeter">
         <span class="mmTag">灵魂损伤</span>
         <span class="mmPips"><i></i><i></i><i></i></span>
         <span class="mmTag">龙骨·蓄</span>
         <span class="mmBar"><i id="mmCharge"></i><b id="mmChargeTxt">0</b></span>
+      </div>
+      <div class="row merged" id="heroRow">
+        <div class="nametag" id="heroTag" style="background:var(--blue)">五条悟<small>GOJO</small></div>
+        <div class="bar ghp"><i id="gjHp"></i><b id="gjHpTxt">100%</b></div>
+        <div class="nametag" id="subTag" style="background:var(--cyan)">咒力<small>CE</small></div>
+        <div class="bar ce thin pips" id="gjCe" title="咒力点数 · 每回合 +1 点（上限 5 点）"><i></i><i></i><i></i><i></i><i></i><b id="gjCeTxt">5</b></div>
       </div>
       <div class="hint" id="hint">每回合限出一招（选定后本回合技能栏变灰）</div>
     </div>
@@ -3791,8 +3812,6 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <div id="tgtRow"></div>
     <!-- ★ v304 虎杖领域态字样层：用一层覆盖 canvas 重放图像的文字带，使其在式神血条行之上 -->
     <canvas aria-hidden="true" id="itaDomTxt"></canvas>
-    <!-- ★ v296 宿傩已被没收／消除的技能（右下角，黑框白字） -->
-    <div id="sukLost"><b>已失效</b><div id="sukLostList"></div></div>
     <!-- ★ v110 暂停遮罩：置于 #stage 层级（#field 外），才能连同下方技能栏一并挡住 -->
     <div id="pauseOv"><div class="pt">暂 停</div><div class="ps">点这里、或左上角的按钮继续</div><button class="cta" id="btnPauseJump">世界线跳跃<span class="ctaSub">放弃本局·重选难度</span></button></div>
     <!-- 手机按钮 -->
@@ -5394,9 +5413,10 @@ function S10(){
   g.font='900 96px "Noto Serif SC","STSong","SimSun",serif';
   const jg=g.createLinearGradient(0,-52,0,52);
   jg.addColorStop(0,'#fff4cc');jg.addColorStop(0.42,'#e9c86a');jg.addColorStop(1,'#a9791f');
-  g.lineWidth=13;g.strokeStyle='rgba(18,10,28,.94)';g.strokeText('咒斩',0,2);
-  g.lineWidth=6;g.strokeStyle='rgba(255,252,244,.95)';g.strokeText('咒斩',0,2);
-  g.fillStyle=jg;g.fillText('咒斩',0,2);
+  /* ★ v520f 用户指定：乙骨一技能的大字改用原作的「呪」（v504 全档简繁统一时被并成「咒」） */
+  g.lineWidth=13;g.strokeStyle='rgba(18,10,28,.94)';g.strokeText('呪斩',0,2);
+  g.lineWidth=6;g.strokeStyle='rgba(255,252,244,.95)';g.strokeText('呪斩',0,2);
+  g.fillStyle=jg;g.fillText('呪斩',0,2);
   /* 字腰一道细高光 */
   g.globalAlpha=0.32;g.strokeStyle='#fff';g.lineWidth=1.2;
   g.beginPath();g.moveTo(-96,-24);g.lineTo(96,-36);g.stroke();
@@ -7117,8 +7137,13 @@ function placeTgtRow(){
   /* ★ v251 状态徽标已移到白框外（绝对定位）⇒ 以实际高度判断是否在显示；
      徽标行隐藏时改用宿傩面板下缘，式神血条不会再跳到血条上。 */
   const hud=stage.querySelector('.hud');
+  const rr=$('riteRow');
   let y=null;
   if(sr.offsetHeight>0){ const sy=stageOffsetTop(sr, stage); if(sy!=null) y=sy+sr.offsetHeight+4; }
+  /* ★ v520d 状态徽标已上移到宿傩血条下缘（不再挂在 HUD 尾部）⇒ 世界斩仪式条仍在 HUD 流里时，
+     式神血条行必须让过它，否则会直接压在仪式条上。 */
+  if(rr && rr.offsetHeight>0){ const ry=stageOffsetTop(rr, stage);
+    if(ry!=null){ const c=ry+rr.offsetHeight+4; y=(y==null?c:Math.max(y,c)); } }
   if(y==null && hud){ const hy=stageOffsetTop(hud, stage); if(hy!=null) y=hy+hud.offsetHeight+4; }
   if(y==null) return;
   row.style.top=Math.max(18,Math.round(y))+'px';   /* 下限保护：算歪时不会跑到血条上 */
@@ -7153,6 +7178,8 @@ function renderTargetRow(){
   row.innerHTML=list.map(x=>
     '<span class="tg'+(S.target===x[0]?' on':'')+'" data-tg="'+x[0]+'">'+x[1]+
     (x[2]?('<small> '+x[2]+'</small>'):'')+'</span>').join('');
+  clampTopCluster(row);   /* ★ v520d 同上 */
+  placeTgtRow();          /* ★ v520d 夹宽可能折行改变高度，重新定位 */
 }
 /* ★ v40 五条悟新技能：术式反转·赫（红色图标，主动，CD 1 回合）
    伤害 = 「苍」的 1.5 倍；若宿傩身上带着「苍」的标记，再 ×1.5 —— 复刻「苍赫相撞」的连携。 */
@@ -7309,7 +7336,7 @@ const KIND_BY_HERO={
   gojo:    {atk:'术式顺转·苍', hollow:'虚式·茈',      black:'黑闪'},
   kashimo: {atk:'术式顺转·放电', hollow:'幻兽琥珀·解放', black:'黑闪'},
   higuruma:{atk:'法槌·开廷',    hollow:'审判·下达',   black:'黑闪'},
-  okkotsu: {atk:'太刀·咒斩',  hollow:'领域·真赝相爱', black:'黑闪'},
+  okkotsu: {atk:'太刀·呪斩',  hollow:'领域·真赝相爱', black:'黑闪'},
   itadori: {atk:'径庭拳',      hollow:'赤血操术·穿血', black:'黑闪'},
   maki:    {atk:'释魂刀',      hollow:'无声突袭',     black:'黑闪'}
 };
@@ -19674,6 +19701,21 @@ function render(){
    11. HUD 同步
    ========================================================= */
 /* 咒力状态栏：把当前生效的增益 / 减益用图标胶囊列出来（只在内容变化时重建 DOM） */
+/* ★ v520d 手机顶部簇夹宽：状态徽标 / 式神血条一律左贴宿傩血条下缘，
+   右边界收到「暂停键左侧 8px」为止 —— 否则条目一多就钻到「第 N 回合」白框底下被盖住。
+   用百分比而不是 px，横竖屏切换、改窗口宽度都不用重算。 */
+function clampTopCluster(el){
+  try{
+    const st=$('stage'), tb=$('turnBar'), pb=$('pauseBtn');
+    if(!st||!el) return;
+    if(!tb||!pb||getComputedStyle(tb).display==='none'||!pb.getBoundingClientRect().width){
+      if(el.style.maxWidth) el.style.maxWidth=''; return;
+    }
+    const sr=st.getBoundingClientRect(), pr=pb.getBoundingClientRect(), er=el.getBoundingClientRect();
+    const w=Math.max(140, Math.round(pr.left - er.left - 4));
+    el.style.maxWidth=(Math.min(100, w/sr.width*100)).toFixed(2)+'%';
+  }catch(e){}
+}
 function renderStatus(){
   const row=$('statusRow'); if(!row) return;
   const chips=[];
@@ -19705,11 +19747,31 @@ if(S.sukuBurn)     chips.push(['melt','red','宿傩·术式熔断']);       /* �
   if((S.soulStack||0)>0) chips.push(['blood','purple','灵魂损伤 '+S.soulStack+'/3']);   /* ★ v391 真希：释魂刀留下的永久伤 */
   if(S.rika) chips.push(['guard','purple','里香 · 残'+S.rikaT+'回合']);
   else if(S.hero==='okkotsu'&&(S.rikaCd||0)>0) chips.push(['guard','purple','里香召唤 CD '+S.rikaCd]);
-  const sig=chips.map(c=>c[0]+c[2]).join('|');
+  /* ★ v520e 用户反馈「太杂乱」：单行最多 5 枚，其余折成「+N」。点「+N」临时展开全量，
+     6 秒后（或再点一次）自动收回 —— 常驻状态只留最要紧的那几条。 */
+  if(!row.__bound){
+    row.__bound=1;
+    row.addEventListener('click',function(ev){
+      const t=ev.target&&ev.target.closest?ev.target.closest('.stChip.more'):null;
+      if(!t) return;
+      row.__exp=!row.__exp;
+      clearTimeout(row.__tm);
+      if(row.__exp) row.__tm=setTimeout(function(){ row.__exp=false; row.__sig=''; renderStatus(); },6000);
+      row.__sig=''; renderStatus();
+    });
+  }
+  const N=5;
+  const view=(row.__exp||chips.length<=N)?chips:chips.slice(0,N).concat([['lost','more','+'+(chips.length-N)]]);
+  const sig=(row.__exp?'E':'C')+chips.map(c=>c[0]+c[2]).join('|');
   if(row.__sig===sig) return;
   row.__sig=sig;
-  row.innerHTML=chips.map(c=>'<span class="stChip '+c[1]+'">'+ICO(c[0])+c[2]+'</span>').join('');
+  row.innerHTML=view.map(function(c){
+    if(c[1]==='more') return '<span class="stChip more" title="展开全部状态">'+c[2]+'</span>';
+    return '<span class="stChip '+c[1]+'">'+ICO(c[0])+c[2]+'</span>';
+  }).join('');
+  row.classList.toggle('texp',!!row.__exp);
   row.classList.toggle('on',chips.length>0);
+  clampTopCluster(row);   /* ★ v520d 同上：改完内容立刻夹宽，避免顶到时间框底下 */
 }
 
 const PADBTN={};   /* 技能栏按钮引用缓存（syncHud 每帧调用） */
@@ -19764,11 +19826,22 @@ function syncSukLost(){
   for(const k in SL){ if(SL[k] && SUK_LOST_NAMES[k] && k!=='bolt') list.push(SUK_LOST_NAMES[k]); }
   /* ★ v389 没收④：身体能力被抽走 —— 输出 −15%（永久，本局） */
   if(S.sukuPhysDry && list.indexOf(SUK_LOST_NAMES.phys)<0) list.push(SUK_LOST_NAMES.phys);
-  if(!list.length){ if(box.__on){ box.__on=false; box.classList.remove('on'); } return; }
+  /* ★ v520e 点徽章展开 / 再点收起，5 秒无操作自动收回 */
+  if(!box.__bound){
+    box.__bound=1;
+    const bb=document.getElementById('sukLostBtn');
+    if(bb) bb.addEventListener('click',function(){
+      box.classList.toggle('open');
+      clearTimeout(box.__tm);
+      if(box.classList.contains('open')) box.__tm=setTimeout(function(){ box.classList.remove('open'); },5000);
+    });
+  }
+  if(!list.length){ if(box.__on){ box.__on=false; box.__k=''; box.classList.remove('on','open'); } return; }
   if(!box.__on){ box.__on=true; box.classList.add('on'); }
   const key=list.join('|');
   if(box.__k===key) return;
   box.__k=key;
+  const n=document.getElementById('sukLostN'); if(n) n.textContent=list.length;
   const l=document.getElementById('sukLostList');
   if(l) l.innerHTML=list.map(function(n){ return '<span class="slTag">'+n+'</span>'; }).join('');
 }
@@ -20855,7 +20928,7 @@ const SEL_INFO={
     ['没收优先级','咒具「神武解」→ 术式「解·捌·伏魔御厨子」→ 咒力「反转术式」→ 身体能力'],
     ['反转术式','濒死 ≤25% 时领悟，每局一次，回复 25%']]},
   okkotsu:{role:'万能型，里香在场时最强',rows:[
-    ['太刀·咒斩','近身斩击，可触发黑闪'],
+    ['太刀·呪斩','近身斩击，可触发黑闪'],
     ['里香·召唤','咒力上限 −50%，里香在场 5 回合；技能不耗咒力、分担半伤'],
     ['模仿术式','五招随机：穿血 15~20／言灵／解／捌／天梯 10~15'],
     ['轮换规则','每招冷却 1 回合自动换下一招；言灵与天梯全局各一次'],
@@ -20928,7 +21001,7 @@ const HERO_BTN={
         ult:['melt','审判·下达',S=>{ const n=S.higuVerdictN||0, g=S.guilt||0;
           if(g<3) return '罪状 '+g+'/3·不足不可下达';
           return n>=2?'★ 死刑·处刑人之剑':('没收刑·第 '+(n+1)+'/3 次判决'); }],},
-  okkotsu:{atk:['black','太刀·咒斩','5%~7% 最大生命'],
+  okkotsu:{atk:['black','太刀·呪斩','5%~7% 最大生命'],
         guard:['guard','里香·召唤',S=>(S.rikaCd||0)>0?('CD '+S.rikaCd+' 回合'):'咒力上限 −50%·里香登场 5 回合'],
         rika:['spark','模仿术式',S=>{ const d=(S.rikaCopy&&typeof COPY_DEF!=='undefined')?COPY_DEF[S.rikaCopy]:null; return (d?d.nm+'．'+d.sub:'解析中……')+((S.rikaCopyCd||0)>0?('．冷却 '+S.rikaCopyCd+' 回合'):''); }],
         ult:['domain','领域·真赝相爱',S=>S.okoUsed?'已无法开启领域':(S.rika?'里香在场·不耗咒力':'3 点咒力·葛笼封锁＋伤害×1.5')],},   /* ★ v77 重做／★ v116 文案 */
@@ -21626,7 +21699,7 @@ function okkoAtk(){
     if(doBlack){ d*=2; flash('fWhite'); shake(); S.blackN++; S.blackChain=Math.min(3,(S.blackChain||0)+1); }   /* ★ v204 音效已提到 QTE 点中瞬间 */
     S.gojo.pose='atk'; S.gojo.poseT=0.3;
     SFX.atk();
-    fxManga('太刀·咒斩',GX()+96*SC,GY-236*SC,false,'#7c3aed',false,true,0,-1);   /* ★ v407 左右消散 */   /* ★ v400 乙骨一技能：纯线条刀痕文字 */ flash('fPurple'); shake();
+    fxManga('太刀·呪斩',GX()+96*SC,GY-236*SC,false,'#7c3aed',false,true,0,-1);   /* ★ v407 左右消散 */   /* ★ v400 乙骨一技能：纯线条刀痕文字 */ flash('fPurple'); shake();
     addFx({type:'okkoWave',dur:0.44,x:GX()+120*SC,y:GY-200*SC});   /* ★ v99 咒力斩击波加大；★ v205 飞行速度略微加快（0.6→0.5s）；★ v207 再略微加快（0.5→0.44s） */
     if(doBlack){
       say('okko','「黑闪——！！」');
@@ -22593,7 +22666,11 @@ function bgmBootRetry(){
   const el=bgmEl;
   /* ★ v208 需求①：开场影片播放期间（__bootPlaying）把重试窗口从 8 次（≈5s）拉长到 30 次（≈18s），
      覆盖「影片已在播、BGM 音源/Blob 尚未就绪」的慢机器 ⇒ 影片与 BGM 尽可能同时起来 */
-  if((!el||el.paused)&&!bgmMuted&&_bgmBootTries++<(window.__bootPlaying?30:8)){ setTimeout(bgmBootRetry,220); }
+  /* ★ v520f 用户指定：BGM 从开场「咒」字载入动画起就响 —— 载入层还在（loadGate 未结束）时
+     也按开场窗口重试 30 次（≈6.6s）。原来非影片期只给 8 次（≈1.8s），BGM 数据块还没就绪就放弃，
+     一路干等到 window.load（66MB 文档里要晚好几秒），咒字动画整段是静的。 */
+  const _early = !!window.__bootPlaying || !window.__loadGateDone;
+  if((!el||el.paused)&&!bgmMuted&&_bgmBootTries++<(_early?30:8)){ setTimeout(bgmBootRetry,220); }
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bgmBootRetry);
 window.addEventListener('load',bgmBootRetry);
@@ -24591,7 +24668,11 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
   background:#d7263d;transform:rotate(-40deg);pointer-events:none;z-index:6;}
 #bgmBtn.muted .ml{display:block;}
 /* ★ v276 背景音乐按钮：静音时的斜线画在最上层 */
-#bgmBtn{position:absolute;}
+/* ★ v520f 用户指定：音乐键缩小、摆到宿傩意图框正右侧（原来吊在血条下方，与意图框错开一大块）。
+   尺寸随 --k 缩放：手机 30×0.581≈17.4px、桌面 30px；top 由「血条 18k + 间距 12k + 意图框半高 11.8k − 按钮半高 15k」推得，
+   不再手填像素 —— 与 #intentRow 的 12k 上边距同源，改一处不会错位。 */
+#bgmBtn{position:absolute;right:12px;top:calc(2.5px + 23.6px*var(--k));
+  width:calc(30px*var(--k));height:calc(30px*var(--k));}
 #bgmBtn.muted:after{content:"" !important;position:absolute;left:2px;right:2px;top:50%;
   height:3px;background:#d7263d;transform:rotate(-40deg);z-index:5;pointer-events:none;}
 /* ★ v276 宿傩领域张开时只出「领域展开」字样，不要黑球／结印图 */
@@ -25368,7 +25449,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v520c', RK='jjk_ver_reload_'+B;
+  var B='v520f', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
