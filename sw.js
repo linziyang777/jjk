@@ -1,4 +1,4 @@
-const CORE_CACHE='jjk-core-v520f';
+const CORE_CACHE='jjk-core-v520h';
 const ASSET_CACHE='jjk-assets';
 self.addEventListener('install',function(){self.skipWaiting();});
 self.addEventListener('activate',function(e){
@@ -18,6 +18,23 @@ self.addEventListener('fetch',function(e){
   var url=new URL(req.url);
   if(url.origin!==location.origin) return;          /* CDN 资源不介入 */
   var isDoc = req.mode==='navigate' || /(\/|index\.html)$/.test(url.pathname);
+  /* ★ v523 資源改回同源後，assets 由 SW 緩存托底：檔名即內容哈希 ⇒ cache-first 永不失效 */
+  var isAsset = url.pathname.indexOf('/assets/') >= 0;
+  if(isAsset){
+    if(req.headers.get('range')) return;      /* 分段請求直通，206 寫進緩存會毀掉影片/音頻 */
+    e.respondWith(
+      caches.open(ASSET_CACHE).then(function(c){
+        return c.match(req).then(function(hit){
+          if(hit) return hit;
+          return fetch(req).then(function(resp){
+            if(resp&&resp.ok){ var cp=resp.clone(); c.put(req,cp).catch(function(){}); }
+            return resp;
+          });
+        });
+      })
+    );
+    return;
+  }
   if(!isDoc) return;
   /* 文档：网络优先，离线才回缓存 */
   e.respondWith(
