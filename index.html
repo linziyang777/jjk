@@ -20098,7 +20098,7 @@ function syncHud(){
 
   /* 技能栏：本回合已出招 → 三个按钮全部变灰（选中的那个带「已选定」标记）
      引用做惰性缓存 + 只在状态变化时写 class（syncHud 每帧调用，避免无谓的 DOM 写入） */
-  ['atk','guard','hollow','okkotsu','vow'].forEach(a=>{
+  ['atk','guard','hollow','okkorct','vow'].forEach(a=>{   /* ★ V520c 用户报「乙骨反转术式消失」：此处误写 hero 键名 'okkotsu'，而 DOM 是 data-act="okkorct" ⇒ querySelector 恒为 null，整个按钮分支被 return 跳过，永远停在 HTML 的 display:none。改成 data-act 的值。 */
     let b=PADBTN[a];
     if(!b) b=PADBTN[a]=document.querySelector('#pad [data-act="'+a+'"]');
     if(!b) return;
@@ -20434,7 +20434,8 @@ function enterDiff(fromId){
      跳过按钮在右下角，残留 click 正好落在同位置的首页「进入「帐」」按钮上，
      旧版因此会「跳过后直接进难度页」——手机端影片卡顿时尤其明显。 */
   /* ★ v265 修「有时点世界线跳跃没反应」：从结算页进入时战斗早已开始，开场影片锁不该生效 */
-  if(fromId!=='resultScreen'){
+  /* ★ V520c 暂停页跳世界线（pauseScreen）与结算页一样，不该受开场影片守卫约束 */
+  if(fromId!=='resultScreen' && fromId!=='pauseScreen'){
     try{
       /* ★ v474 防卡死：开场旗标若已残留（影片事件没接上／后台冻结），但覆盖层其实早已不在，
          就不再拦截，否则首页「进入」永远点不动。 */
@@ -20474,6 +20475,9 @@ function enterDiff(fromId){
   }
 }
 function start(){
+  /* ★ V520c 保险：进选人前一概清掉开场影片旗标 —— 它一旦残留，会把难度页／世界线跳跃
+     这些「都要过 enterDiff 守卫」的转场全部拦死。 */
+  try{ window.__bootPlaying=false; window.__bootGuardUntil=0; }catch(e){}
   /* ★ v474 防卡死：首页／难度页连点或异常时只跑一次；任何一步出错都不影响后面进选人。 */
   if(window.__startBusy) return; window.__startBusy=true; try{ setTimeout(function(){ window.__startBusy=false; },900); }catch(e){}
   try{ ac(); }catch(e){}
@@ -23649,7 +23653,11 @@ $('btnPauseJump').addEventListener('click',function(){
     S.turnWait=0; S.shikWait=0; S.cutin=0; S.cine=0;
     var _tbar=document.getElementById('turnBar'); if(_tbar) _tbar.classList.remove('tbMute');
   }catch(e){}
-  enterDiff();
+  /* ★ V520c 用户报「世界线跳跃点了没反应」：这里原来无参调用 enterDiff()，
+     于是走进「开场影片守卫」分支 —— 影片旗标一旦残留（黑屏那种情况尤其容易），
+     判定就 return，难度页永远不出现。显式传 pauseScreen 走白名单，并顺手清旗标。 */
+  try{ window.__bootPlaying=false; window.__bootGuardUntil=0; }catch(e){}
+  enterDiff('pauseScreen');
 });
   /* ★ v240 用户指定：点「暂停」字样（或遮罩空白处）也能继续 —— 「世界线跳跃」按钮照旧走自己的逻辑。 */
   if($('pauseOv')) $('pauseOv').addEventListener('click',function(e){
@@ -23923,9 +23931,18 @@ function playTitleOpen(){
     const dpr=Math.min(window.devicePixelRatio||1, 2);
     cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); };
   const useFallback=function(){   /* canvas 绘制不可用时，退回直接显示 video（保证有画面） */
-    if(fallback) return; fallback=true;
+    /* ★ V520c 用户报「开场视频没播就黑屏」：旧版 1.5 秒没拿到首帧就降级，但手机上
+       「没首帧」通常是解码还没完成（videoWidth 仍为 0），不是 canvas 画不出来。
+       一旦降级：canvas 被藏 + video 是 2px/opacity .01 的隐形元素 ⇒ 整屏纯黑，
+       只能干等到片尾 ended 才收场。现在解码未完成不降级，真降级则把 video 撑满全屏。 */
+    if(fallback) return;
+    if(!v.videoWidth) return;
+    /* ★ V520c-2：draw 循环还没启动（还在等载入闸门 / canplay）时同样不算 canvas 失效，
+       否则 1.5 秒定时器会在首帧到来之前就把 canvas 藏掉 —— 那还是黑屏。 */
+    if(!frameN) return;
+    fallback=true;
     try{ if(cv) cv.style.display='none'; }catch(e){}
-    try{ v.style.opacity='1'; }catch(e){}
+    try{ v.style.opacity='1'; v.style.width='100vw'; v.style.height='100vh'; v.style.zIndex='2'; }catch(e){}
   };
   const draw=function(){
     raf=0; frameN++; if(opened) return;
@@ -23986,7 +24003,16 @@ function playTitleOpen(){
   const startDraw=function(){ if(!cv){ return; } try{ raf=requestAnimationFrame(draw); }catch(e){ useFallback(); } };
   window.addEventListener('resize',function(){ if(!opened && !fallback && drew) fit(); });
   /* 1.5s 内 canvas 仍未取到帧 ⇒ 回退直接显示 video */
-  setTimeout(function(){ if(!opened && !drew) useFallback(); },1500);
+  /* ★ V520c 同上：只在「已有视频尺寸却画不出帧」时才降级，解码中继续等；
+     再加一条绝对兜底 —— 无论卡在哪，16 秒后一定收场进标题页，不再让人对着黑屏干等。 */
+  setTimeout(function(){ if(!opened && !drew && v.videoWidth) useFallback(); },1500);
+  setTimeout(function(){ if(!opened && !drew && v.videoWidth) useFallback(); },4000);
+  /* ★ V520c-3 兜底分两档：
+     ① 已经起播（started）却 8 秒拿不到画面 ⇒ 起播失败，直接收场；
+     ② 28 秒还没收场（含慢机器仍在载入）⇒ 强制进标题页。
+     旧版一律 16 秒，会把弱机「还在载入」的开场直接砍掉。 */
+  setTimeout(function(){ try{ if(!opened && started && !drew) open(); }catch(e){} },8000);
+  setTimeout(function(){ try{ if(!opened) open(); }catch(e){} },28000);
 
   /* ★ v174/v175 声音 ★
      网页端「无用户手势」时，有声自动播放一定被浏览器拒绝 —— 一旦被拒，多数国产浏览器就会
@@ -25342,7 +25368,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v520b', RK='jjk_ver_reload_'+B;
+  var B='v520c', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
