@@ -1631,7 +1631,7 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 /* ★ v391 鹿紫云一：2 号位不再是「无防御」——改成非防御型的「电荷放出」（耗尽电荷换取伤害与一回合电场）。
    仍然没有任何格挡／治疗技能，无防御的设计取向不变，所以整格隐藏的规则一并移除。 */
 body.kashimo-noGuard #pad .btn[data-act="guard"]{}
-#pad{display:flex;gap:calc(9px*var(--k));padding:calc(11px*var(--k)) 12px calc(8px*var(--k));
+#pad{display:flex;gap:calc(9px*var(--k));padding:calc(4px*var(--k)) 12px calc(8px*var(--k));   /* ★ v533 11→4 */
   z-index:7;position:relative;}
 /* ★ v78 五条悟有 5 个按钮：略微收紧字号与间距，避免手机端挤爆 */
 #pad.five{gap:calc(6px*var(--k));padding-left:8px;padding-right:8px;}
@@ -3747,10 +3747,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
       <!-- ★ v36 漫画对话框（由画面外的独立一行迁入战场内，按说话者浮到其脚下） -->
       <div id="logbox">
         <div id="logList"></div>
-        <div id="bubble">
-          <span class="who w-narr">旁白</span>
-          <span class="txt">「……」</span>
-        </div>
+        <div id="bubble"></div>   <!-- ★ v533 删掉开局左下角那条空白「旁白」气泡 -->
       </div>
     </div>
 
@@ -4873,6 +4870,12 @@ function flushSay(){
     showing=true;
     const _len=String(txt==null?'':txt).length;
     qTimer=1.30+Math.min(2.90,_len*0.046);
+    /* ★ v533 自适应：连打／技能演出中加速，队列积压时再加速，避免下一招放完了气泡还在播上一套 */
+    try{
+      if(S && (S.acted || (typeof fxBusy==='function' && fxBusy()))) qTimer*=0.52;
+      if(queue.length>1) qTimer*=0.66;
+      qTimer=Math.max(0.42,qTimer);
+    }catch(e){}
     const info=WHO[w]||WHO.narr;
     const side=SAY_SIDE[w]||'p-mid';
     const ent = side==='p-hero' ? 'in-l'
@@ -5871,6 +5874,8 @@ function flash(id){
    ========================================================= */
 /* 本回合出招锁定：选定后技能栏整体变灰，直到下一回合开始才解禁 */
 function markActed(a){
+  /* ★ v533 新招起手：清掉上一套未播完的气泡，别让台词跨招串台 */
+  try{ queue.length=0; showing=false; qTimer=0; if(typeof bubble!=='undefined'&&bubble){ bubble.className=''; bubble.innerHTML=''; bubble.__live=false; } }catch(e){}
   S.acted=true; S.lastAct=a||'';
   S.shikWait=Math.max(S.shikWait||0,1.6); /* ★ v471c 技能动画期间冻结读秒 */
   /* ★ v266 宿傩「十种影法术」：玩家出招 ⇒ 宿傩隐入影子，本回合免疫伤害（每局一次、30% 机率、第 2 回合起） */
@@ -6539,7 +6544,7 @@ function itaDomain(){
   /* ★ v77 激活条件改为血量：生命低于 40% 最大生命才可展开（不再看共鸣） */
   if(S.itadori.hp>=S.maxHp*0.40){ say('sys','生命高于 40%——濒死之际（生命低于 40% 最大生命），领域才会展开。'); return; }
   S.resUsed=true; S.res=0;
-  try{ playExtraBgm('itadori',0.5); }catch(e){}   /* ★ v305 虎杖选定领域展开 ⇒ 换 BGM */
+  try{ playExtraBgm('yuji',0.5); }catch(e){}   /* ★ v533 统一用 yuji 轨，展开即起播、成立时不重播 */
   /* ★ v193 需求③：虎杖展开领域 ⇒ 宿傩的「伏魔御厨子」**当场消散**（连同其必中斩击一并解除），
      随后才播虎杖的领域展开动画。 */
   if(S.sukuDom>0){
@@ -12905,8 +12910,10 @@ function itaSoulCut(){
     addFx({type:'soulDim',dur:2.55});
     addFx({type:'soulDash',dur:0.42});
     /* ★ v524 裁断线先行：冲刺的同时就在宿傩身上划出裁剪线，0.42s 走完全程才炸开斩击 */
-    addFx({type:'soulCut',dur:1.58,x:SX(),y:GY-sukHeight()*0.52,sc:0.56,
-           ang:0.30+rnd(-0.09,0.09), seed:(rnd(1,40)|0), len:0.96});
+    /* ★ v533 裁断线角度随机 ±35°（原来只有 ±5°）；同步给 soulBlip 用，避免白芒和虚线不同向 */
+    const _sa=rnd(-0.62,0.62); S.__soulAng=_sa;
+    addFx({type:'soulCut',dur:1.42,x:SX(),y:GY-sukHeight()*0.52,sc:0.66,
+           ang:_sa, seed:(rnd(1,40)|0), len:0.96});
     S.hitStop=Math.max(S.hitStop,0.10);
     setTimeout(()=>{
       if(S.phase!=='fight') return;
@@ -12916,7 +12923,7 @@ function itaSoulCut(){
       shake(); shake();
       flash('fHit');
       try{ fxShards(SX(),GY-sukHeight()*0.50,'228,240,255',true); }catch(e){}
-      try{ addFx({type:'soulBlip',dur:0.20,x:SX(),y:GY-sukHeight()*0.52,ang:0.30}); }catch(e){}
+      try{ addFx({type:'soulBlip',dur:0.20,x:SX(),y:GY-sukHeight()*0.52,ang:(S.__soulAng||0)}); }catch(e){}   /* ★ v533 跟随随机裁断线 */
       try{ SFX.slash(); }catch(e){}
     },430);
     setTimeout(()=>{
@@ -15539,7 +15546,7 @@ function drawFx(){
               fade*0.6*(1-Math.max(0,(q+0.5-0.48)/0.52)));
           }
           try{
-            ctx.save(); ctx.filter='blur('+(3.2*s)+'px)'; ctx.globalAlpha=fade*0.55;
+            ctx.save(); ctx.filter=(typeof FX_LITE!=='undefined'&&FX_LITE)?'none':('blur('+(3.2*s)+'px)'); ctx.globalAlpha=fade*0.55;
             ctx.strokeStyle='rgba(255,255,255,.62)'; ctx.lineWidth=4.4*s;
             ctx.beginPath(); ctx.moveTo(L*0.08,0); ctx.lineTo(L*0.47,0); ctx.stroke(); ctx.restore();
           }catch(e){}
@@ -15983,7 +15990,7 @@ else if(f.type==='itaPunch'){
     /* ★ v468 灵魂·解②：虎杖冲刺立绘（径庭拳同款 itaDash 拖影）冲到宿傩身前 */
     else if(f.type==='soulDash'){
       const t=Math.max(0,Math.min(1,f.t/f.dur));
-      const e=1-Math.pow(1-t,2.4);
+      const e=1-Math.pow(1-t,1.45);   /* ★ v533 原 2.4 尾段过拖，改成 1.45：起步快、收尾干净 */
       const s2=SC, hh=itaHeight()*0.86;
       const cut=(IMGS.itaDash||IMGS.itaDomArt||IMGS.itadori);   /* ★ v471 固定用径庭拳立绘 */
       const _w0=cut?(hh*cut.width/cut.height):0;
@@ -16034,10 +16041,11 @@ else if(f.type==='itaPunch'){
       if(!f.pts) f.pts=soulLinePts(cx,cy,ang,Math.min(W,H)*(f.len||0.94),f.seed||3);
       const pts=f.pts;
       let tot=0; for(let i=1;i<pts.length;i++) tot+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
-      const p1=Math.min(1,t/0.42);                                  /* 裁断线推进 */
-      const p2=t<0.42?0:Math.min(1,(t-0.42)/0.38);                   /* 斩开 */
-      const p3=t<0.62?0:Math.min(1,(t-0.62)/Math.max(0.06,dur-0.62));/* 余韵 */
-      const lineA=1-p3*0.88;
+      /* ★ v533：裁断线 0.42→0.30 收完，斩开同帧接上；余韵 0.62→0.50 且完全淡出 */
+      const p1=Math.min(1,t/0.30);
+      const p2=t<0.30?0:Math.min(1,(t-0.30)/0.42);
+      const p3=t<0.50?0:Math.min(1,(t-0.50)/Math.max(0.06,dur-0.50));
+      const lineA=Math.max(0,1-p3);
       /* ① 裁断线：黑垫底 + 白色虚线（双层，亮 / 暗背景都读得出来） */
       if(p1>0 && lineA>0.02){
         const reach=tot*p1;
@@ -16094,6 +16102,16 @@ else if(f.type==='itaPunch'){
           ctx.drawImage(im,-w*k2/2,-h*k2/2,w*k2,h*k2);
           ctx.restore();
         }
+        /* ★ v533 启用此前只声明未绘制的 soulBurst：沿裁断线方向的大爆闪（SUB3 量级） */
+        const ib=IMGS.soulBurst;
+        if(ib){
+          const bbase=Math.min(W*0.96,H*1.04)*(f.sc||0.54)*1.55;
+          const kk=0.78+0.34*Math.min(1,p2/0.22);
+          ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang);
+          ctx.globalAlpha=ain*fade*0.66;
+          ctx.drawImage(ib,-bbase*kk/2,-bbase*kk/2,bbase*kk,bbase*kk);
+          ctx.restore();
+        }
         /* 剪口：沿切线方向的三道细裂（长短不一，白轴黑边） */
         {
           const seamT=Math.min(1,p2/0.22), seamA=(p2<0.72?1:Math.max(0,1-(p2-0.72)/0.28));
@@ -16103,6 +16121,9 @@ else if(f.type==='itaPunch'){
           for(let i=0;i<3;i++){
             const off=(i-1)*7*s, len0=(0.20+0.13*i)*Math.min(W,H)*seamT;
             const tilt=(i===1?0:(i===0?0.34:-0.30));
+            /* ★ v533 三道短裂沿切线方向错峰外推，跟着斩开一起炸出去 */
+            const sh=(i===1?0.35:1)*Math.max(0,p2-0.06)*34*s*seamA;
+            ctx.save(); ctx.translate(sh,0);
             for(let pass=0;pass<2;pass++){
               ctx.strokeStyle=pass===0?'rgba(12,10,18,.9)':'rgba(255,255,255,.96)';
               ctx.lineWidth=(pass===0?5.0:2.0)*s*seamA;
@@ -16112,6 +16133,7 @@ else if(f.type==='itaPunch'){
               ctx.quadraticCurveTo(0, off+tilt*22*s, len0*0.5, off-tilt*10*s);
               ctx.stroke();
             }
+            ctx.restore();
           }
           ctx.globalAlpha=seamA;
           ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=1.6*s;
@@ -20822,6 +20844,12 @@ function enterDiff(fromId){
   }
 }
 function start(){
+  /* ★ v533：#logbox 原本在 #field(z1) 内，再高的 z-index 也压不过外面的 #pad(z7)/.hud(z6)。
+     移到 #stage 顶层并给 z20，旁述与双方气泡不会再被血条／技能栏／回合栏遮住。 */
+  try{
+    var _lb=$('logbox'), _stg=$('stage');
+    if(_lb&&_stg&&_lb.parentNode!==_stg){ _stg.appendChild(_lb); _lb.style.zIndex='20'; }
+  }catch(e){}
   /* ★ V520c 保险：进选人前一概清掉开场影片旗标 —— 它一旦残留，会把难度页／世界线跳跃
      这些「都要过 enterDiff 守卫」的转场全部拦死。 */
   try{ window.__bootPlaying=false; window.__bootGuardUntil=0; }catch(e){}
@@ -23764,7 +23792,8 @@ function domainBgmReconcile(){
     if(S.sukuDom>0) want='suku';
     else if(S.okkoDom>0) want='okko';
     else if(S.hero==='gojo' && (S.gojoDom>0 || S.gojoVoidT>0)) want='ujaku';
-    else if(S.hero==='itadori' && ((S.itaDom||0)>0 || (S.itaSimpleDom||0)>0)) want='yuji';
+    /* ★ v533：itaSimpleDom 是「简易领域」常驻增益，不是领域展开，绝不能据此播领域曲 */
+    else if(S.hero==='itadori' && (S.itaDom||0)>0) want='yuji';
   }catch(e){ return; }
   if(!want){ _domBgmFixTry=0; _domBgmFixKey=''; return; }
   if(_domBgmFixKey!==want){ _domBgmFixKey=want; _domBgmFixTry=0; }
@@ -24302,7 +24331,7 @@ function playTitleOpen(){
   ov.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
   /* ★ v469 兜底计时：低端机「换源 → canplay → 首帧」可能要 2~4 秒，固定 12s 会在片尾前
      就把开场切掉。改为起播后按真实片长重新计时（片长未知时 20s），没起播才用 8s 短兜底。 */
-  let bootWd=setTimeout(function(){ try{ if(v.paused && v.currentTime<0.1) open(); }catch(e){} },9000);
+  let bootWd=setTimeout(function(){ try{ if(v.paused && v.currentTime<0.1) open(); }catch(e){} },3000);   /* ★ v533 9s→3s：自动播放被拒时不再干等 */
   v.addEventListener('playing',function(){
     try{
       clearTimeout(bootWd);
@@ -24405,8 +24434,8 @@ function playTitleOpen(){
      ① 已经起播（started）却 8 秒拿不到画面 ⇒ 起播失败，直接收场；
      ② 28 秒还没收场（含慢机器仍在载入）⇒ 强制进标题页。
      旧版一律 16 秒，会把弱机「还在载入」的开场直接砍掉。 */
-  setTimeout(function(){ try{ if(!opened && started && !drew) open(); }catch(e){} },8000);
-  setTimeout(function(){ try{ if(!opened) open(); }catch(e){} },28000);
+  setTimeout(function(){ try{ if(!opened && started && !drew) open(); }catch(e){} },2500);   /* ★ v533 8s→2.5s：弱机不再对着黑屏干等 */
+  setTimeout(function(){ try{ if(!opened) open(); }catch(e){} },12000);   /* ★ v533 28s→12s */
 
   /* ★ v174/v175 声音 ★
      网页端「无用户手势」时，有声自动播放一定被浏览器拒绝 —— 一旦被拒，多数国产浏览器就会
@@ -24648,6 +24677,18 @@ function loop(now){
      旧写法只要任一环节抛一次异常，后面的 requestAnimationFrame(loop) 就不会执行，
      整条渲染循环永久断链 —— 画面冻死，但 DOM 动画（如「八握剑」字样）照旧播，
      表现出来就是「字样出现了、魔虚罗却没现身、游戏卡住」。 */
+  /* ★ v533：标题／难度／选人／结算层盖着时，update+render 全是浪费，也会在选人页闪出战斗帧。
+     这里直接跳过并把画布清一次；界面层一收就自动恢复。 */
+  var _idleUI=false;
+  try{ ['selectUI','titleScreen','diffScreen','resultScreen'].forEach(function(id){
+    var e=document.getElementById(id); if(e && !e.classList.contains('hide')) _idleUI=true;
+  }); }catch(e){}
+  if(_idleUI){
+    if(!window.__idleCleared){ try{ ctx.clearRect(0,0,W,H); }catch(e){} window.__idleCleared=true; }
+    try{ syncStageChrome(); }catch(e){}
+    requestAnimationFrame(loop); return;
+  }
+  window.__idleCleared=false;
   try{ syncStageChrome(); }catch(e){ frameErr('chrome',e); }
   /* ★ v296 幕效轻量模式：降采样中或幕效堆满时，关掉 shadowBlur 这类每帧最贵的操作 */
   FX_LITE = (PERF<0.9) || (S.fx.length>16);   /* ★ v116 每帧同步回合列显隐 */
@@ -24806,7 +24847,7 @@ const SND_SUKU_BGM='assets/ecee6d093cb2.mp3';      /* 伏魔御厨子领域 BGM 
   letter-spacing:.14em;font-weight:600;pointer-events:none;}
 /* ★ v252 用户指定：① 去掉「点击下方按钮…」那行提示；② 底部技能栏收紧，白色区域面积变小 */
 #hint{display:none !important;}
-#pad{gap:calc(7px*var(--k));padding:calc(11px*var(--k)) 10px calc(5px*var(--k));}
+#pad{gap:calc(7px*var(--k));padding:calc(4px*var(--k)) 10px calc(5px*var(--k));}   /* ★ v533 11→4 */
 #pad .btn{padding:calc(7px*var(--k)) 4px calc(6px*var(--k));font-size:calc(14.5px*var(--k));gap:calc(2px*var(--k));box-shadow:4px 4px 0 var(--ink);border-width:2.5px;}
 #pad .btn small{font-size:calc(9px*var(--k));}
 #pad.five .btn{padding:calc(6px*var(--k)) 2px calc(5px*var(--k));font-size:calc(12.5px*var(--k));}
@@ -25766,7 +25807,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v532', RK='jjk_ver_reload_'+B;
+  var B='v533', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
