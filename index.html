@@ -8,7 +8,14 @@
   ③ 世界线跳跃即时收掉回合横幅并作废回合定时器；
   ④ 五条悟 ∞ 从小字下方移到小字前，与其余角色同位置；
   ⑤ 真希条明示「体力」、引导文案补生命值与咒力/体力差异。
---> <!-- ★ v521 两项：
+--> <!-- ★ v524 三项（用户指定）：
+  ① 玩家角色被致命一击打倒时改走「三段变速」：定格 0.62s → 极慢 0.10 保持 → 0.45 → 1 收尾，
+     退场演出后移 4100ms，看得清倒下这一下；
+  ② 「灵魂·解」重做成三段式并加入原作「裁断线」符号：先有虚线＋剪刀掠过宿傩身体，
+     剪断之后才炸开不规则斩痕（NANO 新贴图），最后留裂网余韵；
+  ③ 宿傩「捌」改为三段式：掌前赤丝收束 → 赤线贯穿 → 26 道不规则赤斩 → 焦痕回缩。
+-->
+<!-- ★ v521 两项：
   ① 宿傩击败玩家角色进入「致命一击」慢放：定格 0.62s + timeScale 0.18→1 缓升 2.6s，
      退场演出整体后移 1.5s（2600→4100ms），让玩家看清倒下那一下；
   ② 水滴角标移到技能框内、贴在小字前；五条悟全技能改浅色 ∞ 置于小字下方。
@@ -4145,7 +4152,9 @@ const IMG={
   agyoTxt:'assets/c9c977539da2.webp',
   /* ★ v466 NANO AI：世界斩「空间撕裂」／灵魂解「交叉灵魂斩」，黑底已转 alpha */
   worldSlashInk:'assets/c0ca9deedd59.webp',
-  soulCutInk:'assets/84e58afed76d.webp',
+  soulCutInk:'assets/1ec7423fbaec.webp',
+  soulResidue:'assets/f7051c47dd0f.webp',
+  soulBurst:'assets/0e7e841da6c3.webp',
   itaEntryArt:'assets/b218217a2e62.webp',
   itaSel:'assets/498ca37ea280.webp',
   clashAir:'assets/f1934b11d081.webp',
@@ -4262,7 +4271,7 @@ IMG.bgCity='assets/456a4d30b7fd.webp';
 IMG.impactInk='assets/c8612fd4d5dd.webp';   /* ★ v451 NANO AI 墨爆（白底转 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底转 alpha，已加粗） */   /* ★ v451 NANO AI 墨爆（白底转 alpha） */
 /* ★ v463 街道破碎 V3：瓦砾带贴图（NANO AI 生成，白底转 alpha） */
 IMG.streetRubble='assets/d16a9959ff36.webp';
-const IMGS={gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null,streetRubble:null,worldSlashInk:null,soulCutInk:null};
+const IMGS={gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null,streetRubble:null,worldSlashInk:null,soulCutInk:null,soulResidue:null,soulBurst:null};
 
 /* =========================================================
    1. 音效（Web Audio API）
@@ -5498,6 +5507,7 @@ function fxHollow(){
   S.speed=1.2;
 }
 function fxSlash(){ addFx({type:'slash',dur:0.4,x:GX(),y:GY-120*SC}); }
+const INKBURST_SCALE=0.74;   /* ★ v525 用户指定：全局墨爆再缩到 74%（132→98 / 210→155 的量级） */
 function fxImpact(x,y,big,soft){ addFx({type:'impact',dur:big?0.5:0.32,x:x,y:y,big:!!big,soft:!!soft,rot:rnd(0,Math.PI*2)}); }
 /* 漫画格：集中线 + 招式大字 */
 function fxManga(txt,x,y,big,col,inv,noblob,dur,hd){   /* ★ v407 第 9 参数 hd：文字改「左右消散」（+1 往右、−1 往左） */   /* ★ v403 新增可选 dur，其余呼叫不传 ⇒ 走原值 */
@@ -5688,6 +5698,54 @@ function fxKaiCut(mir){
   if(kaiLiveN()>=2) return;
   addFx({type:'kaiCut',dur:0.62,mir:!!mir,seed:rnd(0,60),ang:kaiRandAng(),ay:rnd(-26,26)});
   S.speed=1.4;
+}
+/* ★ v524 裁断线几何：4 点折线（首尾贯穿身体两端，中段带不对称折角） */
+function soulLinePts(cx,cy,ang,len,seed){
+  const a=Math.cos(ang), b=Math.sin(ang), nx=-b, ny=a;
+  const sd=(seed||1)%7;
+  const pts=[];
+  for(let i=0;i<4;i++){
+    const u=(i/3-0.5)*len;
+    const w=(i===0||i===3)?0:(((i+sd)%5)-2)*len*0.020;
+    pts.push({x:cx+a*u+nx*w, y:cy+b*u+ny*w});
+  }
+  return pts;
+}
+/* 取折线上距起点 dist 处的点与切角 */
+function soulAt(pts,dist){
+  let acc=0;
+  for(let i=1;i<pts.length;i++){
+    const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
+    const seg=Math.hypot(dx,dy);
+    if(acc+seg>=dist || i===pts.length-1){
+      const u=Math.max(0,Math.min(1,(dist-acc)/Math.max(1e-6,seg)));
+      return {x:pts[i-1].x+dx*u, y:pts[i-1].y+dy*u, a:Math.atan2(dy,dx)};
+    }
+    acc+=seg;
+  }
+  const e=pts[pts.length-1];
+  return {x:e.x,y:e.y,a:0};
+}
+/* 剪刀图标：刃口朝 +x，s=半长；黑描边 + 白刃芯，两种底色上都看得清 */
+function soulScissors(s,open){
+  const o=(open==null?0.26:open);
+  ctx.save();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  for(let pass=0;pass<2;pass++){
+    ctx.strokeStyle=pass===0?'#0b0b12':'#ffffff';
+    ctx.lineWidth=(pass===0?0.20:0.11)*s;
+    for(let m=-1;m<=1;m+=2){
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(0.52*s, m*o*s*0.55, 1.02*s, m*(0.06+o*0.55)*s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(-0.50*s, m*0.26*s, 0.23*s, 0.16*s, m*0.45, 0, 6.283);
+      ctx.stroke();
+    }
+    if(pass===1){ ctx.beginPath(); ctx.arc(0,0,0.085*s,0,6.283); ctx.fillStyle='#0b0b12'; ctx.fill(); }
+  }
+  ctx.restore();
 }
 /* ★ v408 「捌」重做：不是横扫，是「从目标身上瞬间生出多道交叉赤斩」——
    9 道不等角、不等长的不对称放射斩线，错峰 8~14ms 依次炸开，中心一点白爆。 */
@@ -6373,7 +6431,7 @@ function hurtHero(d,kind){
   const _hpAfter=(S.hero==='kashimo'?S.kashimo.hp:(S.hero==='itadori'?S.itadori.hp:S.gojo.hp));
   if(_hpBefore>0 && _hpAfter<=0 && d>0){
     S.hitStop=Math.max(S.hitStop||0,0.62);   /* 画面先冻住，看清刀落下的那一拍 */
-    S.slowT=2.6; S.slowDur=2.6;              /* 之后 timeScale 0.18 → 1 缓升（真实时间驱动） */
+    S.slowT=2.7; S.slowDur=2.7;              /* ★ v524 之后走三段变速：0.10 保持 → 0.45 → 1 */
     try{ fxText(W*0.5,H*0.30,'致命一击','#c0392b',true,0,{sz:1.18,dur:1.7,stamp:true}); }catch(e){}
     try{ flash('fHit'); shake(); }catch(e){}
     try{ say('sys','★ 致命一击 —— '+(HERO_INFO[S.hero]||{nm:'术师'}).nm+'力尽倒下。'); }catch(e){}
@@ -7379,6 +7437,16 @@ function skillBeat(o){
 }
 /* ★ v63 最后一击：停顿 + 变速（所有角色 / 两种终结通用）
    ——先 hitStop 定格（世界暂停、动画凝固），定格结束后 timeScale 0.22 → 1 缓升，强化终结的顿挫感 */
+/* ★ v524 三段变速：极慢保持 → 缓升 → 收尾。比线性 ramp 更有「顿 / 拖 / 回」的层次，
+   用在玩家角色被致命一击打倒的那一下：看得清倒下，又不会拖到不耐烦。 */
+function slowWarp(remain,total){
+  const D=Math.max(1e-6,total), el=Math.max(0,D-remain);
+  const a=D*0.18, b=D*0.60;
+  const se=function(u){ u=Math.max(0,Math.min(1,u)); return u*u*(3-2*u); };
+  if(el<a) return 0.10;                                    /* 段① 极慢：几乎只剩呼吸 */
+  if(el<b) return 0.10+0.35*se((el-a)/Math.max(1e-6,b-a)); /* 段② 0.10 → 0.45 缓升 */
+  return 0.45+0.55*se((el-b)/Math.max(1e-6,D-b));          /* 段③ 0.45 → 1 收尾 */
+}
 function finisherSlow(){
   S.hitStop=Math.max(S.hitStop,0.34);
   S.slowT=1.15; S.slowDur=1.15;
@@ -8098,6 +8166,13 @@ const DEATH_LINES={
    点击画面任意处跳过（画面最下方一行小字提示）。 */
 let dbTok=0;
 function deathBlackout(lines, done, art, leadMs){
+  /* ★ v526 用户要「玩家死亡时的受击过程给慢放」：慢放其实从 v521 起就有（致命一击 hitStop 0.62s
+     + 0.10→0.45→1 三段变速），但旧版在这里**同一帧就把 deathBlack 黑屏盖上去**，
+     玩家根本看不到倒地那一下的慢动作。现在借现成的 leadMs 延后入口，把黑屏对白推到慢放走完之后；
+     延长窗口内点任意处仍可跳过（沿用下面 v459 的 skip 处理）。 */
+  if(leadMs==null && typeof S!=='undefined' && S && (S.slowT||0)>0){
+    leadMs=Math.round(S.slowT*1000)+300;
+  }
   /* ★ v423 用户指定：五条悟死亡时先让腰斩漫画页完整播一段，再进黑屏对白。
      leadMs>0 时只做一次延后重入，不碰原有逐句逻辑。 */
   if(leadMs>0){
@@ -8109,6 +8184,8 @@ function deathBlackout(lines, done, art, leadMs){
       try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
       try{ document.removeEventListener('pointerdown',_skipFn,true); }catch(e){}
       clearTimeout(_leadT);
+      /* ★ v526 跳过死亡演出时顺手结束慢放，别让战局一直停在 0.1 倍速 */
+      try{ S.hitStop=0; S.slowT=0; S.timeScale=1; }catch(e){}
       try{ const _db=document.getElementById('deathBlack'); if(_db){ _db.classList.remove('on'); _db.style.display='none'; _db.style.pointerEvents='none'; _db.onpointerdown=null; } }catch(e){}
       try{ const _dc=document.getElementById('deathCut'); if(_dc) _dc.classList.remove('on'); }catch(e){}
       try{ done&&done(); }catch(e){}
@@ -9346,12 +9423,21 @@ function fxSukuMelee(){
   S.hitStop=Math.max(S.hitStop,0.06);
   flash('fWhite');
   /* 第二拍（+70ms）：捌 —— 赤红爆闪（大字 + 开放碎片，不再用规则圆环／圆形命中星） */
+  /* ★ v524 捌 改为三段式：聚（掌前收束赤丝）→ 射（赤线贯穿）→ 炸（26 道赤斩）→ 余（焦痕回缩） */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     fxManga('捌',SX()+30*SC,GY-262*SC,false,'#d7263d',false,false,0.42);   /* ★ v403 0.6→0.42 */
+    addFx({type:'batsuCharge',dur:0.15,x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
+  },50);   /* ★ v403 连斩第二拍 70→50ms */
+  setTimeout(()=>{
+    if(S.phase!=='fight') return;
     fxBatsuNet(GX()+26*SC, GY-140*SC);   /* ★ v411 捌：改为从宿傩射向对手，命中才在他身上炸网 */
     shake(true);
-  },50);   /* ★ v403 连斩第二拍 70→50ms */
+  },190);
+  setTimeout(()=>{
+    if(S.phase!=='fight') return;
+    addFx({type:'batsuScar',dur:0.58,x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
+  },470);
   /* 第三拍（+160ms）：第二道「解」错位叠上 —— 连斩的第二刀
      ★ v438 用户指定：一击 1~2 道即可 ⇒ 第二刀改成 55% 机率才落，不再每次必出，
      配合 fxKaiCut／fxKaiScrape 的在场上限（同时最多 2 道），任何连段都不会堆出三四道。 */
@@ -12826,16 +12912,19 @@ function itaSoulCut(){
     freezeCine(2.55); S.cineFx=1;   /* ★ v502 战斗逻辑照冻，但演出特效要按真实时间推进 */
     addFx({type:'soulDim',dur:2.55});
     addFx({type:'soulDash',dur:0.42});
+    /* ★ v524 裁断线先行：冲刺的同时就在宿傩身上划出裁剪线，0.42s 走完全程才炸开斩击 */
+    addFx({type:'soulCut',dur:1.58,x:SX(),y:GY-sukHeight()*0.52,sc:0.56,
+           ang:0.30+rnd(-0.09,0.09), seed:(rnd(1,40)|0), len:0.96});
     S.hitStop=Math.max(S.hitStop,0.10);
     setTimeout(()=>{
       if(S.phase!=='fight') return;
-      addFx({type:'soulCut',dur:1.15,x:SX(),y:GY-sukHeight()*0.54,sc:0.72});
-      fxWhiteSlash();
+      /* ★ v524b 去掉原「整屏白色光带」——它会盖住裁断线，改为只留短线爆闪（见 fxSoulBlip） */
       S.negUntil=performance.now()+3000;      /* ★ v471 宿傩负片延长 */
       S.hitStop=Math.max(S.hitStop,0.16);
       shake(); shake();
       flash('fHit');
       try{ fxShards(SX(),GY-sukHeight()*0.50,'228,240,255',true); }catch(e){}
+      try{ addFx({type:'soulBlip',dur:0.20,x:SX(),y:GY-sukHeight()*0.52,ang:0.30}); }catch(e){}
       try{ SFX.slash(); }catch(e){}
     },430);
     setTimeout(()=>{
@@ -13029,32 +13118,47 @@ function drawSukuDomBg(){
    烘进离屏 canvas，只在画布尺寸 / 缩放（W/H/SC/GY/PERF/DPR）变化时重画一次，常态帧只做一次 drawImage。 */
 /* ★ v517 战斗背景「咒」复用 #loadScr 载入动画那枚图案：直接读它的 background-image，
    不重复内嵌 base64；图片解码完成后清掉静态背景缓存，下一帧换上。失败则回退原 canvas 字形。 */
-let _curseGlyph=null,_curseGlyphTried=false;
-function getCurseGlyph(){
-  if(_curseGlyph && _curseGlyph.complete && _curseGlyph.naturalWidth) return _curseGlyph;
-  if(_curseGlyphTried) return null;
-  _curseGlyphTried=true;
+/* ★ v525 用户报「背景字样错了，要开场字样动画那两个字的样式」：
+   真因＝拆分版（网页版／小游戏包）把 #lsGlyph 的 data: 内联图改写成了 assets/xxx.webp，
+   而旧正则只认 data:image/ ⇒ 一路取不到图，背景永远落到下面的 canvas 回退，画出单个「咒」。
+   现在两种形态都认；元素被摘掉（#loadScr 播完即移除）时回样式表里找；失败不再永久放弃。 */
+let _curseGlyph=null,_curseGlyphTried=0,_curseGlyphUri='';
+function curseGlyphUri(){
+  if(_curseGlyphUri) return _curseGlyphUri;
+  const _pick=function(b){
+    const m=/url\(\s*(["']?)([^"')]+)\1\s*\)/.exec(b||'');
+    return (m&&m[2])||'';
+  };
   try{
-    let bg='';
     const el=document.getElementById('lsGlyph');
-    if(el) bg=getComputedStyle(el).backgroundImage;
-    if(!bg){
-      for(var i=0;i<document.styleSheets.length;i++){
-        var rr; try{ rr=document.styleSheets[i].cssRules; }catch(e){ continue; }
-        if(!rr) continue;
-        for(var j=0;j<rr.length;j++){
-          if((rr[j].selectorText||'')==='#lsGlyph'){ bg=rr[j].style.backgroundImage||''; break; }
-        }
-        if(bg) break;
+    if(el){ const u=_pick(getComputedStyle(el).backgroundImage); if(u){ _curseGlyphUri=u; return u; } }
+  }catch(e){}
+  try{
+    for(var i=0;i<document.styleSheets.length;i++){
+      var rr; try{ rr=document.styleSheets[i].cssRules; }catch(e){ continue; }
+      if(!rr) continue;
+      for(var j=0;j<rr.length;j++){
+        var sel=(rr[j]&&rr[j].selectorText)||'';
+        if(sel.indexOf('#lsGlyph')<0) continue;
+        var u2=_pick(rr[j].style&&rr[j].style.backgroundImage);
+        if(u2){ _curseGlyphUri=u2; return u2; }
       }
     }
-    const m=/url\((["']?)(data:image\/[^")']+)\1\)/.exec(bg);
-    if(m){
-      const im=new Image();
-      im.onload=function(){ _bgStatic=null; _bgStaticKey=''; };
-      im.src=m[2];
-      _curseGlyph=im;
-    }
+  }catch(e){}
+  return '';
+}
+function getCurseGlyph(){
+  if(_curseGlyph && _curseGlyph.complete && _curseGlyph.naturalWidth) return _curseGlyph;
+  if(_curseGlyphTried>32) return null;      /* 只防死循环，不再「一次失败就永不再试」 */
+  _curseGlyphTried++;
+  try{
+    const u=curseGlyphUri();
+    if(!u) return null;
+    const im=new Image();
+    im.onload=function(){ _bgStatic=null; _bgStaticKey=''; };
+    im.onerror=function(){ _curseGlyph=null; _curseGlyphUri=''; };
+    im.src=u;
+    _curseGlyph=im;
   }catch(e){}
   return null;
 }
@@ -13090,20 +13194,21 @@ function bgStatic(){
     g.fillStyle=_vg; g.fillRect(0,0,W,H);
   }
     const _cg=getCurseGlyph();
+  /* ★ v525 用户指定：背景「呪術」字样再缩小、不要太显眼；并按原图比例画（旧版塞进正方形，横向被压扁） */
   if(_cg && _cg.naturalWidth){
-    g.save(); g.globalAlpha=0.135;
-    const _gs=Math.min(W,H)*0.42, _gx=W/2, _gy=H*0.55;   /* ★ v519 0.62→0.42：背景字样退到配角 */
-    g.drawImage(_cg,_gx-_gs/2,_gy-_gs/2,_gs,_gs);
+    g.save(); g.globalAlpha=0.112;
+    const _gw=Math.min(W,H)*0.33, _gh=_gw*(_cg.naturalHeight||780)/(_cg.naturalWidth||1100);
+    g.drawImage(_cg,W/2-_gw/2,H*0.55-_gh/2,_gw,_gh);
     g.restore();
   }else{
-g.globalAlpha=0.135; g.fillStyle='#0d0d0d';
-  g.font='900 '+(Math.min(W,H)*0.28)+'px "Noto Sans SC",serif';   /* ★ v402 用户指定：背景「咒」字缩小一倍 */
+g.globalAlpha=0.112; g.fillStyle='#0d0d0d';
+  g.font='900 '+(Math.min(W,H)*0.17)+'px "Noto Sans SC",serif';   /* ★ v525 回退字形同步缩小，且写完整的「呪術」 */
   g.textAlign='center'; g.textBaseline='middle';
-  const _cx=W/2, _cy=H*0.55, _fs=Math.min(W,H)*0.28;   /* ★ v402 泼溅半径／垂流长度都基于 _fs，一并跟着缩 */
+  const _cx=W/2, _cy=H*0.55, _fs=Math.min(W,H)*0.17;   /* ★ v525 泼溅半径／垂流长度跟着字样一起缩 */
   /* 五层叠墨：由外而内，模拟宣纸吸墨的毛边 */
-  for(let _i=5;_i>=1;_i--){ g.globalAlpha=0.035+0.016*(5-_i); g.shadowColor='rgba(8,8,8,.5)'; g.shadowBlur=(6+_i*7)*SC; g.fillText('咒',_cx+(_i%2?1:-1)*1.5*SC,_cy+(_i%3-1)*1.2*SC); }
+  for(let _i=5;_i>=1;_i--){ g.globalAlpha=0.035+0.016*(5-_i); g.shadowColor='rgba(8,8,8,.5)'; g.shadowBlur=(6+_i*7)*SC; g.fillText('呪術',_cx+(_i%2?1:-1)*1.5*SC,_cy+(_i%3-1)*1.2*SC); }
   /* 主体 */
-  g.shadowBlur=0; g.globalAlpha=0.155; g.fillText('咒',_cx,_cy);
+  g.shadowBlur=0; g.globalAlpha=0.155; g.fillText('呪術',_cx,_cy);
   /* 泼溅：字缘随机墨点 */
   for(let _b=0;_b<46;_b++){
     const _t=_b*2.39996, _rr=(0.30+0.26*Math.abs(Math.sin(_b*1.7)))*_fs;
@@ -15477,6 +15582,66 @@ function drawFx(){
         ctx.restore();
       }
     }
+    else if(f.type==='soulBlip'){
+      /* ★ v524b 斩中那一瞬的短促白芒：沿斩线方向的一道收窄亮条 + 芯白，不出屏、不盖裁断线 */
+      const s=SC, k=Math.min(1,f.t/f.dur), a=(1-k)*(1-k);
+      const L=Math.min(W,H)*0.42*(0.6+0.4*(1-k)), th=(1-0.45*k)*13*s;
+      ctx.save();
+      ctx.translate(f.x,f.y); ctx.rotate(f.ang||0.30);
+      ctx.globalCompositeOperation='lighter';
+      const g=ctx.createLinearGradient(-L,0,L,0);
+      g.addColorStop(0,'rgba(120,200,255,0)');
+      g.addColorStop(0.42,'rgba(255,255,255,'+(0.85*a).toFixed(3)+')');
+      g.addColorStop(0.58,'rgba(255,255,255,'+(0.85*a).toFixed(3)+')');
+      g.addColorStop(1,'rgba(120,200,255,0)');
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.moveTo(-L,0); ctx.lineTo(0,-th); ctx.lineTo(L,0); ctx.lineTo(0,th); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    else if(f.type==='batsuCharge'){
+      /* ★ v524 捌 段①：八道赤丝向掌心收束 + 一点赤核（起手，不抢戏） */
+      const s=SC, k=Math.min(1,f.t/f.dur), e=k*k;
+      const cx=f.x, cy=f.y, sd=f.seed||3;
+      ctx.save(); ctx.lineCap='round';
+      for(let i=0;i<8;i++){
+        const a=(i/8)*6.283+sd*0.4, r0=(52+((i*7+sd)%17))*s*(1-0.55*e);
+        const r1=14*s*(1-0.7*e);
+        ctx.globalAlpha=0.55*e+0.10;
+        ctx.strokeStyle=(i%3===0)?'rgba(255,240,235,.92)':'rgba(215,38,61,.85)';
+        ctx.lineWidth=(i%3===0?1.5:1.0)*s;
+        ctx.beginPath();
+        ctx.moveTo(cx+Math.cos(a)*r0, cy+Math.sin(a)*r0*0.86);
+        ctx.quadraticCurveTo(cx+Math.cos(a+0.28)*r1*1.6, cy+Math.sin(a+0.28)*r1*1.4,
+                             cx+Math.cos(a)*r1, cy+Math.sin(a)*r1*0.9);
+        ctx.stroke();
+      }
+      ctx.globalAlpha=0.35+0.6*e;
+      ctx.fillStyle='rgba(215,38,61,.95)';
+      ctx.beginPath(); ctx.arc(cx,cy,3.2*s*(0.5+e),0,6.283); ctx.fill();
+      ctx.restore();
+    }
+    else if(f.type==='batsuScar'){
+      /* ★ v524 捌 段③：三道粗焦痕缓慢回缩、边缘碳化（余韵，替掉原来「啪一下全没」） */
+      const s=SC, k=Math.min(1,f.t/f.dur), fade=1-k;
+      const cx=f.x, cy=f.y, sd=(f.seed||3)%5;
+      ctx.save(); ctx.lineCap='butt';
+      for(let i=0;i<3;i++){
+        const a=(i-1)*0.62+sd*0.08, L=(0.20+0.09*((i+sd)%3))*Math.min(W,H)*(1-0.18*k);
+        const dx=Math.cos(a), dy=Math.sin(a);
+        ctx.globalAlpha=fade*0.55;
+        ctx.strokeStyle='rgba(120,12,26,.95)';
+        ctx.lineWidth=(3.4-i*0.8)*s;
+        ctx.beginPath();
+        ctx.moveTo(cx-dx*L, cy-dy*L);
+        ctx.quadraticCurveTo(cx+dy*7*s, cy-dx*7*s, cx+dx*L, cy+dy*L);
+        ctx.stroke();
+        ctx.globalAlpha=fade*0.30;
+        ctx.strokeStyle='rgba(255,120,90,.85)';
+        ctx.lineWidth=1.0*s;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     else if(f.type==='batsuDash'){
       /* ★ v411 捌 前置：宿傩起手 → 赤线射向对手，末端白爆；斩网在 90ms 后才于对手身上炸开 */
       const s=SC, k=Math.min(1,f.t/f.dur);
@@ -15844,44 +16009,135 @@ else if(f.type==='itaPunch'){
         ctx.restore();
       }
     }
-    /* ★ v468 灵魂·解③：NANO 斩击贴图（宿傩身上炸开） */
+    /* ★ v524 灵魂·解 三段式（用户指定：参考原作「裁断线」——
+       先出现虚线＋剪刀的裁剪线，剪断之后才炸出斩击）：
+       ① 裁断线 0→0.42s：虚线斜掠身体，剪刀沿线推进、走到那一点就咬合
+       ② 斩开 0.42→0.80s：NANO 不规则斩痕＋白热核＋碎片
+       ③ 余韵 0.62→dur：裂网残留、虚线余影淡出 */
     else if(f.type==='soulCut'){
-      const t=Math.max(0,Math.min(1,f.t/f.dur));
-      const pop=t<0.10?(t/0.10):1;
-      const fade=t<0.52?1:Math.max(0,1-(t-0.52)/0.48);
-      const im=IMGS.soulCutInk;
+      const s=SC, dur=f.dur||1.58, t=f.t;
       const cx=f.x, cy=f.y;
-      const sc0=Math.min(W*0.80,H*0.94)*(f.sc||1);
-      const k2=(0.70+0.30*pop)*(1+0.035*Math.sin(t*38));
-      ctx.save();
-      ctx.globalAlpha=fade;
-      if(im){
-        const w=sc0*im.width/im.height*k2*1.20, h=sc0*k2*0.80;   /* ★ v472 压扁拉长→不对称 */
-        ctx.save(); ctx.translate(cx,cy); ctx.rotate(0.24);      /* ★ v472 斜置破除十字对称 */
-        ctx.globalAlpha=fade*0.55;
-        ctx.drawImage(tintOf(im,'#101426'),-w/2,-h/2,w,h);
-        ctx.globalAlpha=fade;
-        ctx.drawImage(im,-w/2,-h/2,w,h);
-        ctx.restore();
-      }
-      /* 命中瞬间的白热核心 */
-      if(t<0.30){
-        const fa=1-t/0.30;
-        ctx.globalAlpha=fa*0.9; ctx.globalCompositeOperation='lighter';
-        /* ★ v500 卡顿修复：渐变最外圈本来就是全透明，旧版却每帧把整块超宽画布
-           （2736×1264 ≈ 346 万像素）铺一遍。改只填渐变半径的方形，像素量降到约 1/4；
-           渐变对象按 (cx,cy,r) 缓存，避免每帧重新 createRadialGradient。 */
-        const r0=Math.min(W,H)*0.36;
-        if(!f._g || f._gr!==r0 || f._gcx!==cx || f._gcy!==cy){
-          const g=ctx.createRadialGradient(cx,cy,2,cx,cy,r0);
-          g.addColorStop(0,'rgba(255,255,255,0.95)');
-          g.addColorStop(0.30,'rgba(168,236,255,0.55)');
-          g.addColorStop(1,'rgba(120,200,255,0)');
-          f._g=g; f._gr=r0; f._gcx=cx; f._gcy=cy;
+      const ang=(f.ang==null?0.30:f.ang);
+      /* ★ v525 用户指定：斩开那一下的斩痕方向原来和裁断线同向（重合看不清），
+         改成与裁断线错开约 60° 的另一个方向 —— 先看到虚线，再看到一道横切过去的伤口。 */
+      const ang2=(f.ang2==null?ang-1.05:f.ang2);
+      if(!f.pts) f.pts=soulLinePts(cx,cy,ang,Math.min(W,H)*(f.len||0.94),f.seed||3);
+      const pts=f.pts;
+      let tot=0; for(let i=1;i<pts.length;i++) tot+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+      const p1=Math.min(1,t/0.42);                                  /* 裁断线推进 */
+      const p2=t<0.42?0:Math.min(1,(t-0.42)/0.38);                   /* 斩开 */
+      const p3=t<0.62?0:Math.min(1,(t-0.62)/Math.max(0.06,dur-0.62));/* 余韵 */
+      const lineA=1-p3*0.88;
+      /* ① 裁断线：黑垫底 + 白色虚线（双层，亮 / 暗背景都读得出来） */
+      if(p1>0 && lineA>0.02){
+        const reach=tot*p1;
+        ctx.save();
+        ctx.lineCap='butt'; ctx.lineJoin='round';
+        for(let pass=0;pass<2;pass++){
+          ctx.beginPath();
+          let acc=0;
+          ctx.moveTo(pts[0].x,pts[0].y);
+          for(let i=1;i<pts.length;i++){
+            const seg=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+            if(acc+seg<=reach){ ctx.lineTo(pts[i].x,pts[i].y); acc+=seg; }
+            else{
+              const u=(reach-acc)/Math.max(1e-6,seg);
+              ctx.lineTo(pts[i-1].x+(pts[i].x-pts[i-1].x)*u, pts[i-1].y+(pts[i].y-pts[i-1].y)*u);
+              break;
+            }
+          }
+          ctx.setLineDash([16*s,12*s]);
+          ctx.lineDashOffset=-(t*150*s)%100000;
+          if(pass===0){ ctx.globalAlpha=lineA*0.88; ctx.strokeStyle='#0b0b12'; ctx.lineWidth=8.4*s; }
+          else{ ctx.globalAlpha=lineA; ctx.strokeStyle='#ffffff'; ctx.lineWidth=3.8*s; }
+          ctx.stroke();
         }
-        ctx.fillStyle=f._g; ctx.fillRect(cx-r0,cy-r0,r0*2,r0*2);
+        ctx.restore();
+        /* 剪刀：沿弧长等距四枚，走到才出现，越过那一刻 90ms 内咬合 */
+        const marks=[0.15,0.41,0.67,0.92];
+        for(let mi=0;mi<marks.length;mi++){
+          const mk=marks[mi];
+          if(p1<mk) continue;
+          const at=soulAt(pts,tot*mk);
+          const snap=Math.min(1,(p1-mk)/0.10);
+          const open=0.34-0.28*snap;
+          ctx.save();
+          ctx.translate(at.x,at.y); ctx.rotate(at.a+Math.PI*0.06*(mi%2?1:-1));
+          ctx.globalAlpha=lineA;
+          soulScissors(19*s,open);
+          ctx.restore();
+        }
       }
-      ctx.restore();
+      /* ② 斩开：不规则斩痕贴图 + 白热核 */
+      if(p2>0){
+        const im=IMGS.soulCutInk;
+        const ain=Math.min(1,p2/0.14);
+        const fade=p2<0.58?1:Math.max(0,1-(p2-0.58)/0.42);
+        if(im){
+          const k2=0.88+0.14*Math.min(1,p2/0.24);
+          const base=Math.min(W*0.96,H*1.04)*(f.sc||0.54);
+          const w=base*im.width/im.height, h=base*0.54;
+          ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang2);
+          ctx.globalAlpha=ain*fade*0.22;
+          ctx.drawImage(tintOf(im,'#0a0c16'),-w*k2/2,-h*k2/2,w*k2,h*k2);
+          ctx.globalAlpha=ain*fade*0.78;
+          ctx.drawImage(im,-w*k2/2,-h*k2/2,w*k2,h*k2);
+          ctx.restore();
+        }
+        /* 剪口：沿切线方向的三道细裂（长短不一，白轴黑边） */
+        {
+          const seamT=Math.min(1,p2/0.22), seamA=(p2<0.72?1:Math.max(0,1-(p2-0.72)/0.28));
+          const ca=Math.cos(ang2), sa=Math.sin(ang2);
+          ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang2);
+          ctx.lineCap='round';
+          for(let i=0;i<3;i++){
+            const off=(i-1)*7*s, len0=(0.20+0.13*i)*Math.min(W,H)*seamT;
+            const tilt=(i===1?0:(i===0?0.34:-0.30));
+            for(let pass=0;pass<2;pass++){
+              ctx.strokeStyle=pass===0?'rgba(12,10,18,.9)':'rgba(255,255,255,.96)';
+              ctx.lineWidth=(pass===0?5.0:2.0)*s*seamA;
+              ctx.globalAlpha=seamA*(pass===0?0.75:1);
+              ctx.beginPath();
+              ctx.moveTo(-len0*0.5, off);
+              ctx.quadraticCurveTo(0, off+tilt*22*s, len0*0.5, off-tilt*10*s);
+              ctx.stroke();
+            }
+          }
+          ctx.globalAlpha=seamA;
+          ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=1.6*s;
+          ctx.beginPath(); ctx.moveTo(-0.5*Math.min(W,H)*0.62*seamT,0); ctx.lineTo(0.5*Math.min(W,H)*0.62*seamT,0); ctx.stroke();
+          ctx.restore();
+        }
+        if(p2<0.42){
+          const fa=1-p2/0.42;
+          const r0=Math.min(W,H)*0.20;
+          ctx.save();
+          ctx.globalCompositeOperation='lighter';
+          ctx.globalAlpha=fa*0.55;
+          if(!f._g || f._gr!==r0 || f._gcx!==cx || f._gcy!==cy){
+            const g=ctx.createRadialGradient(cx,cy,2,cx,cy,r0);
+            g.addColorStop(0,'rgba(255,255,255,0.95)');
+            g.addColorStop(0.30,'rgba(168,236,255,0.52)');
+            g.addColorStop(1,'rgba(120,200,255,0)');
+            f._g=g; f._gr=r0; f._gcx=cx; f._gcy=cy;
+          }
+          ctx.fillStyle=f._g; ctx.fillRect(cx-r0,cy-r0,r0*2,r0*2);
+          ctx.restore();
+        }
+      }
+      /* ③ 余韵：不规则裂网向外扩、淡出 */
+      if(p3>0 && p3<1){
+        const im2=IMGS.soulResidue;
+        if(im2){
+          const k3=0.90+0.46*p3;
+          const base=Math.min(W*0.98,H*1.06)*k3;
+          const w=base, h=base*im2.height/im2.width;
+          ctx.save(); ctx.translate(cx,cy); ctx.rotate(ang*0.35);
+          ctx.globalAlpha=(1-p3)*0.58;
+          ctx.drawImage(im2,-w/2,-h/2,w,h);
+          ctx.restore();
+        }
+      }
     }
         else if(f.type==='soulCross'){
       /* ★ v467 重做（用户指定）：不再用规则十字 —— 改成六道角度／长度／弧度全不相同的不规则斩线，
@@ -16687,7 +16943,7 @@ else if(f.type==='lightPillar'){
       const p=k, r=(10+p*(f.big?90:52))*SC;
       const q=Math.min(1,p*1.55);
       const im=IMGS.impactInk, imw=IMGS.impactInkWhite;
-      const base=(f.big?150:94)*SC;   /* ★ v470 用户指定：墨爆图案整体缩小（原 210/132） */
+      const base=(f.big?150:94)*SC*INKBURST_SCALE;   /* ★ v525 全局再缩 26%（v470 已从 210/132 缩到 150/94） */
       /* ★ v451b 命中瞬间就该有体量，不能等 r 慢慢长起来 */
       /* ★ v461 用户指定：玩家被打中的那几处墨爆太抢镜 ⇒ soft 版缩到 46%、降到 60% 不透明度、不垫白墨 */
       const _sf=(f.soft?0.46:1);
@@ -20538,6 +20794,20 @@ function enterDiff(fromId){
     reveal();                                        /* 白页先就位，来源页在上层推开 */
     setTimeout(function(){ src.classList.add('hide'); src.classList.remove('dolly'); src.__dollyAt=0; },520);   /* ★ v517 与 .5s dollyIn 对齐 */
   }else{
+    /* ★ v525 用户报「手机网页版在结算界面点世界线跳跃还是没有跳回难度页」：
+       这个分支只把难度页显示出来，却从没把结算层收起来 —— #resultScreen 的 z-index 是 60，
+       难度页只有 25 ⇒ 难度页一直被压在结算页底下，看起来就像按钮完全没反应（实测命中栈正常、
+       diffScreen 也确实拿到了 .in，只是被盖住了）。
+       现在先把结算层藏掉，连终幕／黑屏独白／分享遮罩一起收，再显示难度页。 */
+    if(fromId==='resultScreen'){
+      try{
+        window.__forceResultNow=false;                 /* 顺带关掉「强制结算」闸门，防残留定时器二次弹结算 */
+        var _rs=$('resultScreen'); if(_rs){ _rs.classList.remove('in'); _rs.classList.add('hide'); }
+        ['gzFin','yujiFin','deathBlack','shareOv','guideHit'].forEach(function(id){
+          var e=document.getElementById(id); if(e){ e.classList.remove('on'); }
+        });
+      }catch(e){}
+    }
     reveal();
   }
 }
@@ -20912,7 +21182,7 @@ const SEL_INFO={
     ['束缚','雷神之躯／魔眼·透视／限界放电']]},
   higuruma:{role:'审判型，靠举证与质询下判决',rows:[
     ['法槌·开廷','8~12% 伤害；举证 +1（宿傩用过术式 ⇒ +2），证据上限 3'],
-    ['领域展延·锁定罪状','1 点咒力·格挡 −30%；把证据锁成罪状（1 证据 = 1 罪状）'],
+    ['领域展延·锁定罪状','格挡 −30%；把证据锁成罪状（1 证据 = 1 罪状）'],
     ['完美格挡','抓现行犯 ⇒ 罪状直接 +3（一次填满，正好够开一次庭）'],
     ['罪状门槛','★ 三技能都要「罪状 ≥3」才能发动；每次判决后罪状清零，须重新累积'],
     ['审判·下达','第 1、2 次只判「没收」：宿傩被没收一项能力并吃 20% 伤害'],
@@ -20929,7 +21199,7 @@ const SEL_INFO={
     ['领域·真赝相爱','对拼 70%（困难 50%）·伤害 ×1.5·每局一次']]},
   itadori:{role:'曾为宿傩容器，可以造成灵魂重创',rows:[   /* ★ v443 用户指定 */
     ['径庭拳','4~6% ＋ 滞后的二段追击'],
-    ['简易领域','1 点咒力·中和必中；展开后常驻，可灭灶·开的场火'],
+    ['简易领域','中和必中；展开后常驻，可灭灶·开的场火'],
     ['赤血操术·穿血','15~20% 最大生命，血契最多叠 ×3'],
     ['领域展开','生命 <40% 解锁；展开瞬间震碎伏魔御厨子'],
     ['共鸣（彩蛋）','灵魂·解足以击杀时触发，直接走向真结局']]},
@@ -20998,9 +21268,9 @@ const HERO_BTN={
   okkotsu:{atk:['black','太刀·呪斩','5%~7% 最大生命'],
         guard:['guard','里香·召唤',S=>(S.rikaCd||0)>0?('CD '+S.rikaCd+' 回合'):'咒力上限 −50%·里香登场 5 回合'],
         rika:['spark','模仿术式',S=>{ const d=(S.rikaCopy&&typeof COPY_DEF!=='undefined')?COPY_DEF[S.rikaCopy]:null; return (d?d.nm+'．'+d.sub:'解析中……')+((S.rikaCopyCd||0)>0?('．冷却 '+S.rikaCopyCd+' 回合'):''); }],
-        ult:['domain','领域·真赝相爱',S=>S.okoUsed?'已无法开启领域':(S.rika?'里香在场·不耗咒力':'3 点咒力·葛笼封锁＋伤害×1.5')],},   /* ★ v77 重做／★ v116 文案 */
+        ult:['domain','领域·真赝相爱',S=>S.okoUsed?'已无法开启领域':(S.rika?'里香在场·葛笼封锁＋伤害×1.5':'葛笼封锁＋伤害×1.5')],},   /* ★ v525 用户指定：消耗已有徽标，小字不再写「N 点咒力」 */   /* ★ v77 重做／★ v116 文案 */
   itadori:{atk:['fist','径庭拳','5%~7% ＋ 二段追击'],
-        guard:['guard','简易领域','1 点咒力·中和必中'],
+        guard:['guard','简易领域','中和必中'],   /* ★ v525 消耗已有徽标 */
         ult:['blood','赤血操术·穿血',S=>S.itaUltCd>0?('CD '+S.itaUltCd+' 回合'):'15%~20% · 留下血契']},
   maki:{atk:['black','释魂刀','10% · 无视适应'],   /* ★ v389 1 技名由渲染层按玩家选定的咒具覆写 */
         /* ★ v408：架势冷却 3 回合；全开仍只在血量 ≤35% 出现，但按下无视冷却 */
@@ -23466,8 +23736,43 @@ setInterval(function(){
     if(sukuBgmOn && !(S.sukuDom>0)){ try{ stopSukuBgm(); }catch(e){} _dirty=true; }
     if(okkoDomBgmOn && !(S.okkoDom>0)){ try{ stopOkkoDomainBgm(); }catch(e){} _dirty=true; }
     if(_dirty){ setTimeout(function(){ try{ if(!extraBgmKey) resumeMainBgm(0.9); }catch(e){} },820); }
+    try{ domainBgmReconcile(); }catch(e){}
   }catch(e){}
 },900);
+/* ★ v525 领域 BGM 核对器（用户报「宿傩领域展开没有正常播放音乐」＋「此类的音乐不播放」）：
+   四条领域曲都是「一次性回调」发起的（语音 promise / Promise.all / 单点巡检），任何一次被
+   domainVoicesBusy() 的**丢弃式**闸门挡下、或被自动播放策略拒掉，就再也没人补 ——
+   而 v501 的保活只认「旗标已开」的轨，旗标没打开时它什么都做不了。
+   这里改成按状态核对：领域在、语音已毕、没静音没暂停、那条曲却没响 ⇒ 直接补起播。 */
+let _domBgmFixTry=0,_domBgmFixKey='';
+function domainBgmReconcile(){
+  if(typeof S==='undefined' || !S || S.phase!=='fight') return;
+  if(S.paused || (typeof bgmMuted!=='undefined' && bgmMuted) || document.hidden || window.__appHidden) return;
+  if(typeof domainVoicesBusy==='function' && domainVoicesBusy()) return;
+  let want=null;
+  try{
+    if(S.sukuDom>0) want='suku';
+    else if(S.okkoDom>0) want='okko';
+    else if(S.hero==='gojo' && (S.gojoDom>0 || S.gojoVoidT>0)) want='ujaku';
+    else if(S.hero==='itadori' && ((S.itaDom||0)>0 || (S.itaSimpleDom||0)>0)) want='yuji';
+  }catch(e){ return; }
+  if(!want){ _domBgmFixTry=0; _domBgmFixKey=''; return; }
+  if(_domBgmFixKey!==want){ _domBgmFixKey=want; _domBgmFixTry=0; }
+  if(_domBgmFixTry>40) return;          /* 音源真的坏了就别无限重试 */
+  let playing=false;
+  try{
+    if(want==='suku') playing=!!(sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused);
+    else if(want==='okko') playing=!!(okkoDomBgmOn && domAudioEls.okkoDomain && !domAudioEls.okkoDomain.paused);
+    else playing=!!(extraBgmKey===want && extraBgmEls[want] && !extraBgmEls[want].paused);
+  }catch(e){}
+  if(playing){ _domBgmFixTry=0; return; }
+  _domBgmFixTry++;
+  try{
+    if(want==='suku') startSukuBgm(0,0.50);
+    else if(want==='okko') startOkkoDomainBgm();
+    else playExtraBgm(want,0.8);
+  }catch(e){}
+}
 
 /* ★ v432 用户报「宿傩开领域（不对拼）没有领域音乐，暂停后再继续又有了」。
    根因：v302 的补播只有 12×140ms ≈ 1.7s 的重试，而手机上 prepDomAudio 要把 base64 解成 blob
@@ -24357,7 +24662,7 @@ function loop(now){
     /* ★ v63 最后一击变速：hitStop 期间冻结 slow 计时；定格结束后 timeScale 从 0.22 缓升至 1（真实时间驱动） */
     if(S.hitStop<=0 && S.slowT>0){
       S.slowT=Math.max(0,S.slowT-rdt);
-      S.timeScale=S.slowT<=0?1:(0.18+0.82*(1-S.slowT/Math.max(1e-6,S.slowDur)));   /* ★ v521 0.22→0.18 */
+      S.timeScale=S.slowT<=0?1:slowWarp(S.slowT,S.slowDur);   /* ★ v524 三段变速曲线 */
     }
   }catch(e){ frameErr('clock',e); }
   try{ update(rdt*(S.hitStop>0?1:(S.timeScale||1))); }catch(e){ frameErr('update',e); }
@@ -25451,7 +25756,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v520h', RK='jjk_ver_reload_'+B;
+  var B='v526', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
