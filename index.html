@@ -5695,8 +5695,9 @@ function kaiRandAng(){
    多出来的（连段、领域同时、乙骨复制）一律不生成，画面不会再堆成三四道。 */
 function kaiLiveN(){ let n=0; for(let i=0;i<S.fx.length;i++){ if(S.fx[i].type==='kaiCut') n++; } return n; }
 function fxKaiCut(mir){
-  if(kaiLiveN()>=2) return;
-  addFx({type:'kaiCut',dur:0.62,mir:!!mir,seed:rnd(0,60),ang:kaiRandAng(),ay:rnd(-26,26)});
+  if(kaiLiveN()>=1) return;   /* ★ v529 同时最多一道 ⇒ 总白刃不会超过 3 条 */
+  addFx({type:'kaiCut',dur:0.62,mir:!!mir,seed:rnd(0,60),ang:kaiRandAng(),ay:rnd(-26,26),
+         nl:1+Math.floor(Math.random()*2),ka:0.26+Math.random()*0.44});   /* ★ v532 1~2 条随机，张角每次随机 */
   S.speed=1.4;
 }
 /* ★ v524 裁断线几何：4 点折线（首尾贯穿身体两端，中段带不对称折角） */
@@ -5779,8 +5780,8 @@ function fxBatsuNet(cx,cy,fromX,fromY){
 }
 function fxKaiScrape(mir){
   /* ★ v417 改用 kaiCut 的纸面裂口（同一套语言、实机验证可见） */
-  if(kaiLiveN()>=2) return;   /* ★ v438 在场上限 2 道 */
-  addFx({type:'kaiCut',dur:0.62,mir:!!mir,seed:rnd(0,60),ang:kaiRandAng(),ay:rnd(-26,26)});
+  if(kaiLiveN()>=1) return;   /* ★ v529 与 fxKaiCut 共用上限：最多一道、最多 3 条白刃 */
+  addFx({type:'kaiCut',dur:0.62,mir:!!mir,seed:rnd(0,60),ang:kaiRandAng(),ay:rnd(-26,26),nl:1+Math.floor(Math.random()*2),ka:0.26+Math.random()*0.44});
   if(false) addFx({type:'kaiScrape',dur:0.46,mir:!!mir});   /* ★ v403 0.55→0.38 */   /* ★ v401 一道贯穿式开放长斩，取代整块墨痕抠图 */
   S.speed=1.4;
 }
@@ -9417,12 +9418,11 @@ function startKashimo(){
    并补上顿挫、白闪、震屏与命中星，做出实打实的连斩打击感。 */
 function fxSukuMelee(){
   SFX.slash();
-  /* 第一拍：解 —— 墨线勾边大字 + 墨痕自右向左刮（主体） */
-  fxJieInk(SX()-100*SC,GY-238*SC);
-  fxKaiCut();   /* ★ v408 解：一线横贯 + 迟滞裂口 */
+  /* ★ v527 用户指定：这里只播「捌」的红色攻击特效 —— 原先同帧混进的「解」墨线大字
+     （fxJieInk）、横贯裂口（fxKaiCut）与 160ms 那道第二刀全部移除，不再出现黑白斩痕。
+     其它调用点（乙骨模仿术式、领域内的解）仍保留原效果，不受影响。 */
   S.hitStop=Math.max(S.hitStop,0.06);
-  flash('fWhite');
-  /* 第二拍（+70ms）：捌 —— 赤红爆闪（大字 + 开放碎片，不再用规则圆环／圆形命中星） */
+  /* 第一拍（+50ms）：捌 —— 赤红爆闪（大字 + 开放碎片，不再用规则圆环／圆形命中星） */
   /* ★ v524 捌 改为三段式：聚（掌前收束赤丝）→ 射（赤线贯穿）→ 炸（26 道赤斩）→ 余（焦痕回缩） */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
@@ -9438,16 +9438,8 @@ function fxSukuMelee(){
     if(S.phase!=='fight') return;
     addFx({type:'batsuScar',dur:0.58,x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
   },470);
-  /* 第三拍（+160ms）：第二道「解」错位叠上 —— 连斩的第二刀
-     ★ v438 用户指定：一击 1~2 道即可 ⇒ 第二刀改成 55% 机率才落，不再每次必出，
-     配合 fxKaiCut／fxKaiScrape 的在场上限（同时最多 2 道），任何连段都不会堆出三四道。 */
-  setTimeout(()=>{
-    if(S.phase!=='fight') return;
-    fxJieInk(SX()-158*SC,GY-204*SC);
-    if(Math.random()<0.55) fxKaiScrape();
-    S.hitStop=Math.max(S.hitStop,0.05);
-    shake();
-  },160);   /* ★ v403 连斩第三拍 220→160ms */
+  /* ★ v527：原第三拍第二道「解」（fxJieInk + fxKaiScrape）已移除；
+     打击反馈由 190ms 捌爆发自带 shake(true) 承担。 */
 }
 function sukunaAttack(){
   /* ★ v455 近身斩击同样是「解／捌」 */
@@ -14614,6 +14606,8 @@ function openCut(ax,ay,bx,by,o){
   const rgba=(c,a)=>'rgba('+c+','+Math.max(0,Math.min(1,a)).toFixed(3)+')';
   const stops=[[0,0],[0.16,al*0.22],[0.34,al],[gpAt-gp,al],
                [gpAt-gp*0.5,0],[gpAt+gp*0.5,0],[gpAt+gp,al],[0.82,al],[1,0]];
+  /* ★ v528 fadeRight：把靠出招方（bx/by 端）的渐隐段拉长并加软边；不传则行为完全不变 */
+  if(o.fadeRight){ stops.length=7; stops.push([0.74,al*0.52],[0.89,al*0.16],[1,0]); }
   ctx.save();
   ctx.lineCap='butt'; ctx.lineJoin='miter';
   const g=ctx.createLinearGradient(ax,ay,bx,by);
@@ -15490,51 +15484,67 @@ function drawFx(){
       } ctx.restore();
     }
         else if(f.type==='kaiCut'){
-      /* ★ v408 「解」：一线先到、裂口后张（黑缝 + 白热轴线 + 纸口白边 + 细齿 + 墨屑） */
+      /* ★ v529 用户指定：白刃交叉锚点＝玩家立绘中心（GX / GY），不再固定在屏幕正中；
+         斩击线随机 1~3 道（f.nl），每道略微错开高度并缩短一点，靠出招方（右端）渐隐虚化。 */
       const s=SC, t=f.t/f.dur;
-      const ax=W*0.5, ay=GY-150*s+(f.ay||0), ang=(f.ang!==undefined?f.ang:(f.mir?0.16:-0.16));   /* ★ v431 角度由 kaiRandAng() 随机给定 */
-      const LL=W*1.24*(0.16+0.84*Math.min(1,t/0.14));   /* ★ v417 加长到整屏 */
+      const ax=GX(), ay=GY-150*s+(f.ay||0);   /* ← 交叉锚点：玩家立绘中心 */
+      const ang=(f.ang!==undefined?f.ang:(f.mir?0.16:-0.16));
+      const LL=W*0.88*(0.16+0.84*Math.min(1,t/0.14));
       const open=Math.max(0,Math.min(1,(t-0.055)/0.20));
       const close=Math.max(0,Math.min(1,(t-0.62)/0.38));
       const fade=Math.max(0,1-close);
       if(fade>0.01){
-        const g=open*(1-close*0.5)*5.2*s;   /* ★ v438 6.6→5.2：刀口收窄，白热轴线不再把黑缝劈成两道 */
-        ctx.save(); ctx.translate(ax,ay); ctx.rotate(ang);
-        ctx.lineCap='butt'; ctx.lineJoin='miter';
-        /* ① 被切开的真空 */
-        ctx.globalAlpha=fade*0.96; ctx.fillStyle='#0a0a0c';
-        ctx.beginPath();
-        ctx.moveTo(-LL/2,0);
-        ctx.quadraticCurveTo(0,-g*2.05,LL/2,0);
-        ctx.quadraticCurveTo(0,g*2.05,-LL/2,0);
-        ctx.closePath(); ctx.fill();
-        /* ② 切口本身：一道白热的轴线 */
-        ctx.globalAlpha=fade;
-        ctx.strokeStyle='rgba(255,244,236,.50)'; ctx.lineWidth=5*s;
-        ctx.beginPath(); ctx.moveTo(-LL/2,0); ctx.lineTo(LL/2,0); ctx.stroke();
-        ctx.strokeStyle='rgba(255,255,255,.99)'; ctx.lineWidth=2.6*s;
-        ctx.beginPath(); ctx.moveTo(-LL/2,0); ctx.lineTo(LL/2,0); ctx.stroke();
-        /* ③ 纸口白边 */
-        ctx.globalAlpha=fade*0.92; ctx.strokeStyle='rgba(255,252,246,.92)'; ctx.lineWidth=1.6*s;
-        for(const sd of [-1,1]){ ctx.beginPath(); ctx.moveTo(-LL/2,sd*g); ctx.lineTo(LL/2,sd*g); ctx.stroke(); }
-        /* ④ 毛边细齿 */
-        ctx.globalAlpha=fade*0.8; ctx.strokeStyle='rgba(20,18,22,.85)'; ctx.lineWidth=1.2*s;
-        for(let i=0;i<15;i++){
-          const q=(i+0.5)/15, xx=-LL/2+LL*q, sd=(i%2?1:-1);
-          const hh=(6+16*Math.abs(Math.sin(i*3.7+(f.seed||0)))*(0.35+0.9*open))*s;
-          const gl=g*(1-Math.pow(2*q-1,2));
-          if(gl<1*s) continue;
-          ctx.beginPath(); ctx.moveTo(xx,sd*gl); ctx.lineTo(xx+hh*0.7,sd*(gl+hh)); ctx.stroke();
+        const nl=Math.max(1,Math.min(3,f.nl||1));
+        for(let li=0;li<nl;li++){
+          /* ★ v530：两道时强制一正一负角度，交点固定在玩家立绘中心（不做事先上下错位） */
+          const L=LL*(1-0.08*li);
+          const spread=(f.ka||0.60);   /* ★ v532 张角随机：两道总夹角 30°~80°（每道 ±15°~40°），不固定 */
+          const ai=(nl===1?ang:(li===0?-spread:spread));
+          const g=open*(1-close*0.5)*5.2*s;
+          const kvo=ctx.createLinearGradient(-L/2,0,L/2,0);
+          kvo.addColorStop(0,'rgba(10,10,12,1)'); kvo.addColorStop(0.60,'rgba(10,10,12,0.94)');
+          kvo.addColorStop(0.82,'rgba(10,10,12,0.30)'); kvo.addColorStop(1,'rgba(10,10,12,0)');
+          const kwh=ctx.createLinearGradient(-L/2,0,L/2,0);
+          kwh.addColorStop(0,'rgba(255,255,255,1)'); kwh.addColorStop(0.58,'rgba(255,255,255,0.92)');
+          kwh.addColorStop(0.80,'rgba(255,255,255,0.30)'); kwh.addColorStop(1,'rgba(255,255,255,0)');
+          ctx.save(); ctx.translate(ax,ay); ctx.rotate(ai);
+          ctx.lineCap='butt'; ctx.lineJoin='miter';
+          ctx.globalAlpha=fade*0.96; ctx.fillStyle=kvo;
+          ctx.beginPath();
+          ctx.moveTo(-L/2,0);
+          ctx.quadraticCurveTo(0,-g*2.05,L/2,0);
+          ctx.quadraticCurveTo(0,g*2.05,-L/2,0);
+          ctx.closePath(); ctx.fill();
+          ctx.globalAlpha=fade; ctx.strokeStyle=kwh; ctx.lineWidth=5*s;
+          ctx.beginPath(); ctx.moveTo(-L/2,0); ctx.lineTo(L/2,0); ctx.stroke();
+          ctx.globalAlpha=fade; ctx.lineWidth=2.6*s;
+          ctx.beginPath(); ctx.moveTo(-L/2,0); ctx.lineTo(L/2,0); ctx.stroke();
+          ctx.globalAlpha=fade*0.92; ctx.lineWidth=1.6*s;
+          for(const sd of [-1,1]){ ctx.beginPath(); ctx.moveTo(-L/2,sd*g); ctx.lineTo(L/2,sd*g); ctx.stroke(); }
+          ctx.globalAlpha=fade*0.8; ctx.strokeStyle='rgba(20,18,22,.85)'; ctx.lineWidth=1.2*s;
+          for(let i=0;i<15;i++){
+            const q=(i+0.5)/15, xx=-L/2+L*q, sd=(i%2?1:-1);
+            const hh=(6+16*Math.abs(Math.sin(i*3.7+(f.seed||0)))*(0.35+0.9*open))*s;
+            const gl=g*(1-Math.pow(2*q-1,2));
+            if(gl<1*s) continue;
+            ctx.globalAlpha=fade*0.8*(1-Math.max(0,(q-0.48)/0.52));
+            ctx.beginPath(); ctx.moveTo(xx,sd*gl); ctx.lineTo(xx+hh*0.7,sd*(gl+hh)); ctx.stroke();
+          }
+          ctx.globalAlpha=fade*0.6;
+          for(let i=0;i<8;i++){
+            const q=((i*0.137+(f.seed||0)*0.01)%1)-0.5, xx=L*q, sd=(i%2?1:-1);
+            const gl=g*(1-Math.pow(2*q,2));
+            if(gl<0.5*s) continue;
+            openDiamond(xx,sd*(gl+(5+i*3)*s*open),(6+i*2)*s,(1.6+i*0.4)*s,i*1.1,'26,24,28',
+              fade*0.6*(1-Math.max(0,(q+0.5-0.48)/0.52)));
+          }
+          try{
+            ctx.save(); ctx.filter='blur('+(3.2*s)+'px)'; ctx.globalAlpha=fade*0.55;
+            ctx.strokeStyle='rgba(255,255,255,.62)'; ctx.lineWidth=4.4*s;
+            ctx.beginPath(); ctx.moveTo(L*0.08,0); ctx.lineTo(L*0.47,0); ctx.stroke(); ctx.restore();
+          }catch(e){}
+          ctx.restore();
         }
-        /* ⑤ 菱形墨屑 */
-        ctx.globalAlpha=fade*0.6;
-        for(let i=0;i<8;i++){
-          const q=((i*0.137+(f.seed||0)*0.01)%1)-0.5, xx=LL*q, sd=(i%2?1:-1);
-          const gl=g*(1-Math.pow(2*q,2));
-          if(gl<0.5*s) continue;
-          openDiamond(xx,sd*(gl+(5+i*3)*s*open),(6+i*2)*s,(1.6+i*0.4)*s,i*1.1,'26,24,28',fade*0.6);
-        }
-        ctx.restore();
       }
     }
     else if(f.type==='batsuNet'){
@@ -15756,7 +15766,7 @@ else if(f.type==='kaiScrape'){
       const al=Math.min(1,t/0.06)*Math.min(1,(1-t)/0.16);
       /* ① 扫掠段 */
       if(t<scT+0.06 && al>0.01){
-        const L=W*1.34;
+        const L=W*0.98;   /* ★ v528 1.34 → 0.98 */
         const cx0=W+L*0.46, endX=-L*0.46;
         let cx;
         if(t<scT){ const p=t/scT, e=p*p*p; cx=cx0-(cx0-endX)*e; }
@@ -15769,7 +15779,7 @@ else if(f.type==='kaiScrape'){
         openCut(-LL/2,0,LL/2,0,{rgb:'12,11,10',core:'252,250,244',w:4.6,a:al*0.96,
           bend:-0.06,gap:8*s,gpAt:0.46,splinter:3,
           dm:5,seed:7.3,dmA:grow,dmCol:'14,12,11',
-          halo:'rgba(10,9,8,.5)',blur:4});
+          halo:'rgba(10,9,8,.5)',blur:4,fadeRight:true});
         ctx.restore();
       }
       /* ② 留痕段：整屏裂口 */
@@ -15777,14 +15787,14 @@ else if(f.type==='kaiScrape'){
         const q=(t-0.28)/0.72;
         const fa=Math.min(1,(t-0.28)/0.06)*(1-q*q*q);
         if(fa>0.01){
-          const LL2=W*1.28*(0.86+0.14*Math.min(1,(t-0.28)/0.14));
+          const LL2=W*0.94*(0.86+0.14*Math.min(1,(t-0.28)/0.14));   /* ★ v528 1.28 → 0.94 */
           ctx.save();
           ctx.translate(W*0.5,cy); ctx.rotate(ang);
           ctx.lineCap='butt'; ctx.lineJoin='miter';
           openCut(-LL2/2,0,LL2/2,0,{rgb:'12,11,10',core:'252,250,244',w:5.2,a:fa*0.95,
             bend:-0.05,gap:10*s,gpAt:0.5,splinter:4,
             dm:6,seed:9.1,dmA:fa,dmCol:'14,12,11',
-            halo:'rgba(8,8,8,.55)',blur:5});
+            halo:'rgba(8,8,8,.55)',blur:5,fadeRight:true});
           /* 沿缝的几枚墨屑（只在早段，避免后段脏） */
           if(q<0.45 && !f.chips){
             f.chips=[];
@@ -25756,7 +25766,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v526', RK='jjk_ver_reload_'+B;
+  var B='v532', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
