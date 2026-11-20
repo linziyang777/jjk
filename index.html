@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v543">
+<meta name="jjk-build" content="v545">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3940,7 +3940,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b543</div>
+    <div id="buildTag" style="display:none"></div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -25000,16 +25000,29 @@ function playTitleOpen(){
   let ctx=null, raf=0, drew=false, fallback=false;
   /* ★ v178 看门狗计数器（宣告置于 draw 之前，避免 TDZ） */
   let frameN=0, lastFrame=0, lastCt=-1, stallN=0, rescueN=0, pauseN=0;
+  let lastFitW=0, lastFitH=0;
   const fit=function(){ if(!cv) return;
     const w=Math.max(1, ov.clientWidth || window.innerWidth);
     const h=Math.max(1, ov.clientHeight || window.innerHeight);
+    lastFitW=w; lastFitH=h;
     const dpr=Math.min(window.devicePixelRatio||1, 2);
     cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); };
   /* ★ v543 立即按容器尺寸初始化一次：旧版要等 videoWidth 就绪才 fit，
      首帧 canvas 停在默认 300×150 → 第二帧突变到 801，画面会抽一下。 */
   try{ fit(); }catch(e){}
+  /* ★ v543n 手机竖屏进来时 .rot 在加载后异步加上，遮罩从 390×844 转成 844×390，
+     而 fit 此前量到的是竖屏 ⇒ canvas 比例错乱。这里不依赖 draw 循环（视频 error
+     或首帧未到时 draw 根本不跑），直接监听 html 的 class 变化与 resize，
+     一经变化立即按当前容器重算 canvas。 */
+  try{ if(window.MutationObserver){
+    new MutationObserver(function(){ try{ if(window.__bootPlaying) fit(); }catch(e){} })
+      .observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+  } }catch(e){}
   window.addEventListener('resize',function(){
     try{ if(window.__bootPlaying) fit(); }catch(e){}
+  },{passive:true});
+  window.addEventListener('orientationchange',function(){
+    try{ fit(); setTimeout(function(){ fit(); },300); }catch(e){}
   },{passive:true});
   const useFallback=function(){   /* canvas 绘制不可用时，退回直接显示 video（保证有画面） */
     /* ★ V520c 用户报「开场视频没播就黑屏」：旧版 1.5 秒没拿到首帧就降级，但手机上
@@ -25027,11 +25040,23 @@ function playTitleOpen(){
   };
   const draw=function(){
     raf=0; frameN++; if(opened) return;
+    /* ★ v543m 手机竖屏进来时 .rot 会把开场遮罩转成横屏，而这一下是异步切 class，
+       初始化 fit 和 videoWidth 就绪时都可能还没转完 ⇒ canvas 卡在竖屏比例。
+       每 12 帧核对一次容器尺寸（8 秒影片约 40 次，开销可忽略），变了立刻重算。 */
+    if(frameN%12===0){
+      try{
+        const _w=ov.clientWidth, _h=ov.clientHeight;
+        if(_w>1 && _h>1 && (_w!==lastFitW || _h!==lastFitH)) fit();
+      }catch(e){}
+    }
     const t=performance.now();
     let ct=-1;
     try{
       if(!ctx) ctx=cv.getContext('2d');
-      if(!drew && v.videoWidth){ drew=true; }   /* ★ v543 尺寸已在初始化时 fit，这里不再重复赋值 canvas.width */
+      /* ★ v543l 恢复第二次 fit：初始化那次在 .rot 旋转生效前量到竖屏尺寸，
+         手机上遮罩转成 844×390 横屏后 canvas 仍是 390×844 竖屏 ⇒ 画面比例错乱。
+         videoWidth 就绪时布局（含旋转）已稳定，必须按真实容器重算。 */
+      if(!drew && v.videoWidth){ fit(); drew=true; }
       if(ctx && v.videoWidth && cv.width){
         const vw=v.videoWidth, vh=v.videoHeight, cw=cv.width, ch=cv.height;
         /* 回到 cover：这段影片本身上下自带黑边（画面内嵌 2.35:1），cover 正好把黑边裁掉、
@@ -26468,7 +26493,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v543', RK='jjk_ver_reload_'+B;
+  var B='v545', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
