@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v547">
+<meta name="jjk-build" content="v548">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -15310,13 +15310,49 @@ function drawFxMakiStance(f) {
   ];
   ctx.save();
   ctx.translate(hx,gy-2*s);
+  /* ★ v548 贴地薄雾：几团低透明度墨雾沿地面缓慢外扩，不是向上喷的气。
+     用横扁的径向渐变，中心淡、边缘更淡，叠加后像地面浮起的一层薄烟。 */
+  const mistN=5;
+  for(let m=0;m<mistN;m++){
+    const ph=m*1.37;
+    const grow=0.55+0.45*Math.min(1,k/0.55);
+    const cx=Math.sin(ph+k*0.5)*hgt()*0.26*grow;
+    const cy=Math.cos(ph*0.7+k*0.35)*hgt()*0.035;
+    const rw=hgt()*(0.16+0.09*(0.5+0.5*Math.sin(ph*2.1)))*grow;
+    const rh=rw*0.30;
+    if(rw<1) continue;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.scale(1,rh/rw);
+    const g=ctx.createRadialGradient(0,0,rw*0.10,0,0,rw);
+    g.addColorStop(0,'rgba(24,25,29,'+(0.16*al).toFixed(3)+')');
+    g.addColorStop(0.55,'rgba(45,47,52,'+(0.09*al).toFixed(3)+')');
+    g.addColorStop(1,'rgba(80,82,88,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(0,0,rw,0,TAU); ctx.fill();
+    ctx.restore();
+  }
   for(let r=0;r<rings.length;r++){
     const R=rings[r];
     const grow=0.72+0.30*Math.min(1,k/0.34);
     const rx=R.rx*hgt()*grow, ry=R.ry*hgt()*grow;
     const rot=k*R.sp*0.55+R.ph;
     ctx.save(); ctx.rotate(rot*0.10);
-    ctx.globalAlpha=al*R.a;
+    /* 柔化底层：宽而淡的墨晕，让环边不是硬铁丝 */
+    ctx.globalAlpha=al*R.a*0.22;
+    ctx.lineWidth=(R.w+5.5)*s;
+    ctx.strokeStyle='rgba(30,32,36,.9)';
+    ctx.beginPath();
+    const STEPS0=44;
+    for(let i=0;i<=STEPS0;i++){
+      const a=i/STEPS0*TAU;
+      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
+      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
+    /* 主线 */
+    ctx.globalAlpha=al*R.a*0.82;
     ctx.lineWidth=R.w*s;
     ctx.strokeStyle=(r%2===0)?'#17181c':'rgba(60,62,68,.86)';
     ctx.beginPath();
@@ -15344,18 +15380,8 @@ function drawFxMakiStance(f) {
     ctx.stroke();
     ctx.restore();
   }
-  /* 少量上升的墨色碎屑，贴地、不飘高 */
-  if(k>0.12){
-    for(let i=0;i<6;i++){
-      const q=((k-0.12)*0.9+i*0.16)%1;
-      const a=i*1.9+q*2.2;
-      const rr=hgt()*(0.34+0.30*q);
-      const x=Math.cos(a)*rr, y=Math.sin(a)*rr*0.22-q*hgt()*0.10;
-      ctx.globalAlpha=al*(1-q)*0.55;
-      ctx.fillStyle='#17181c';
-      ctx.beginPath(); ctx.arc(x,y,(1.2+1.0*Math.abs(Math.sin(i)))*s,0,TAU); ctx.fill();
-    }
-  }
+  /* ★ v548 删掉原先「向上飘的墨屑」——那读起来像排气；
+     现在只留贴地薄雾 + 柔化墨环，整体更接近原作里沉稳的架势。 */
   ctx.restore();
   function hgt(){ return itaHeight(); }
 }
@@ -26442,7 +26468,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v547', RK='jjk_ver_reload_'+B;
+  var B='v548', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
