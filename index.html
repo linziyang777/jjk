@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v542">
+<meta name="jjk-build" content="v543">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -2096,6 +2096,9 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 #qteGold{position:absolute;top:0;height:100%;
   background:repeating-linear-gradient(135deg,#f5c542 0 10px,#dfa41d 10px 20px);
   box-shadow:inset 0 0 0 3px #111;animation:gz .28s steps(1) infinite alternate;}
+/* ★ v543 魔虚罗空间斩：灰白条，与黑闪金条做视觉区分 */
+#qteGold.grey{background:repeating-linear-gradient(135deg,#f2f2f2 0 10px,#cfcfcf 10px 20px);
+  box-shadow:inset 0 0 0 3px #111,0 0 14px rgba(255,255,255,.55);}
 @keyframes gz{from{filter:brightness(1)}to{filter:brightness(1.3)}}
 #qteCur{position:absolute;top:-4px;width:7px;height:calc(100% + 8px);background:#111;
   box-shadow:0 0 12px #fff,0 0 4px #000;}
@@ -3667,8 +3670,10 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>黑闪</b>　五条悟「苍／苍·拳」8%／虎杖「径庭拳」14%／乙骨「太刀·呪斩」8% 起（鹿紫云一、日车宽见、真希不会自发黑闪）；<b>每引发一次 +5%，上限 +15%</b>。引发时时间冻结、画面转暗并出现金色计量条（1.5 秒内点击，虎杖的条更长）——点中 ⇒ 该击伤害 ×2；没点中 ⇒ 普通伤害。完美格挡必定引发黑闪（追击黑闪 ×3）；立束缚「黑闪之束缚」可让下一击必出黑闪。</p>
     <p><b>立束缚</b>　每位术师<b>一棒只能立 1 道</b>，立下即在本棒<b>永久生效</b>（代价同样永久），<b>不消耗行动</b>；同一棒可「解缚」，但吃 18% 反噬且这一棒不能再立。条款见各角色。</p>
     <p><b>适应</b>　魔虚罗<b>在场时</b>宿傩才具适应能力与适应条：同一技能第 1 次正常／第 2 次 <b>80%</b>／第 3 次起 <b>50%</b>（<b>最低 50% 伤害</b>，只减伤、不会失效）。<b>魔虚罗死亡时适应条归零，但已被适应的技能仍保留减伤。</b></p>
+    <p><b>魔虚罗·超速适应再生</b>　★ v543：魔虚罗被打空血条时，若不是被<b>单发直接打空</b>（法轮碎裂），就不会永久下场 —— 它进入重组倒计时：<b>原作难度 2 回合／苦战·绝境 1 回合</b>，每个回合<b>开始时</b>自动推进，归零即<b>满血复活</b>。这是被动，不占用魔虚罗当回合的攻击；重组期间不可被继续攻击。直接杀死（单发打空）才永久下场。★ 它每次受击都会<b>从右下至左上斜向消失</b>（伤越重消失越多），满血再生的瞬间形象还原。</p>
+    <p><b>魔虚罗·习得技</b>　★ v543：魔虚罗会随同场对象自行学习 —— 与<b>五条悟</b>同场满 <b>3 回合</b>习得「<b>小型空间斩</b>」（触发时弹出金条反应游戏，化解则无事发生，错过受到 <b>30%</b> 最大生命伤害）；与<b>其余任意角色</b>同场满 <b>3 回合</b>习得「<b>同型返斩</b>」（伤害＝此前挨过的<b>最重一击</b>与纵斩 <b>10%</b> 中的较大值）。习得后按「空间斩 ＞ 同型返斩 ＞ 纵斩」的优先级出手，各有 CD。已习得的技能跨换人保留。</p>
     <p><b>解析（魔虚罗死后）</b>　宿傩改以「适应」解析对手：适应条从 <b>0</b> 起，<b>对手为同一位术师时每回合 +10%</b>；每增长 10%，宿傩<b>所有攻击伤害 +3%</b>（满 100% ⇒ +30%）。换人则重新解析。</p>
-    <p><b>式神</b>　魔虚罗：宿傩生命首次跌破 90% 后的回合结束时召唤，可切目标「集火」击破（死后适应条归零，已适应的招式仍减伤，并开始解析对手）；颚吐：宿傩生命 &lt;85% 后的下一回合自动召唤。</p>
+    <p><b>式神</b>　魔虚罗：宿傩生命首次跌破 90% 后的回合结束时召唤，可切目标「集火」击破（未直接杀死则按超速再生倒计时满血归来，法轮碎裂才永久下场；适应条归零，已适应的招式仍减伤，并开始解析对手）；颚吐：宿傩生命 &lt;85% 后的下一回合自动召唤。</p>
     <p><b>接力·遗志</b>　每位术师倒下后，下一位登场即继承遗志：<b>1 次受击免伤</b>（只挡 ≥5% 最大生命的实质打击）＋<b>首次攻击 +10%</b>。轮换不再是纯损失。</p>
     <p><b>看破（宿傩）</b>　同一位术师在场<b>超过 10 回合</b> ⇒ 宿傩看破其术式：你对它的伤害 <b>−10%</b>（不累加，换棒即解除）。</p>
     <p><b>激怒（宿傩）</b>　同一位术师在场<b>每 10 回合</b>，宿傩对其伤害 <b>+10%</b>（2 层封顶 +20%）；换棒全部清零。</p>
@@ -3935,7 +3940,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b542</div>
+    <div id="buildTag">v6.5 · b543</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -4581,6 +4586,15 @@ const CE_COST={
 };
 const CE_TAG=CE_COST;
 /* ★ v542 某角色某招的**格数**消耗：真希普攻看当前咒具、二技能看「架势／全开」 */
+/* ★ v543 iOS 判定：iPhone/iPad/iPod + iPadOS 桌面伪装。与尾部 iosHintInit 同款，刻意内联以免跨 IIFE。 */
+function jjkIsIOS(){
+  if(window.__jjkIsIOS!=null) return window.__jjkIsIOS;
+  try{
+    const ua=navigator.userAgent||'';
+    window.__jjkIsIOS=/iP(hone|ad|od)/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  }catch(e){ window.__jjkIsIOS=false; }
+  return window.__jjkIsIOS;
+}
 function cePipFor(hero,act){
   if(hero==='maki' && act==='atk'){ return ((S.makiW||0)%3===0)?2:1; }         /* 释魂刀 2 / 游云 1 / 龙骨 1 */
   if(hero==='maki' && act==='guard'){
@@ -4790,6 +4804,10 @@ const S={
   sukuBurn:false, gojoBurn:false, okkBurn:false, higuDom:0, higuJudge:0, higuExtend:0, evidence:0, heavyEv:0, heavyLocked:0, higuRct:false, sukuPhysDry:false, makiRead:0, makiParry:0, makiW:0, makiBrace:0, makiCharge:0, soulWound:0, makiAwaken:0, makiFull:0, makiUsed:0, makiGSel:null, makiStanceT:0, makiBraceT:0,   /* ★ v390 makiFull＝全开残余回合；makiStanceT／makiBraceT＝架势与龙骨的回合戳 */   /* ★ v387 日车领域／真希新机制 */    /* ★ v92 领域对拼输掉方的术式熔断（除「反转术式」外无法使用任何术式） */
   rika:false, rikaT:0, rikaCopy:'', ceCap:100, rikaCd:0, rikaCopyCd:0, rikaRevCd:0, okkoRevCd:0, rikaCopyKeep:false,   /* ★ v55 式神·里香 */   /* ★ v212 rikaCopyKeep：里香「时限到」退场 ⇒ 模仿术式仍可用；「血量耗尽」被击破 ⇒ 不可用 */   /* ★ v46 agyoUsed：一场只召唤一次式神 */
   mahaHp:0, mahaMax:0, mahaSlashCd:0,
+  /* ★ v543 魔虚罗新机制：超速再生 / 两招习得 */
+  mahaRegen:0, mahaMaxTaken:0, mahaLearnGojo:0, mahaLearnOther:0,
+  mahaBlur:0,   /* ★ v543 掉血虚化程度 0~1：每次受击上升，满血再生时归零 */
+  mahaSpace:false, mahaCopy:false, mahaSpaceCd:0, mahaCopyCd:0,
   para:0,                             /* ★ v393 我方「麻痹」剩余回合：1 回合无法行动，不因受伤解除 */
   heroVulnT:0,                        /* 虎葬·碎击：我方防御力 -10% 剩余回合 */
   cangMark:0, heCd:0,                 /* 五条悟：苍标记层数 / 赫 冷却 */
@@ -6365,6 +6383,7 @@ function gojoVoid(){
 }
 function domainShiftResolve(){
   S.turnN++;                                           /* 直接开始新回合 */
+  try{ mahaTurnStart(); }catch(e){}                    /* ★ v543 魔虚罗回合开始被动 */
   S.actsLeft=1+(S.bonus||0)+1;                         /* 新回合行动 + 领域奖励 1 次行动力 */
   if(S.bonus>0) say('sys','★ 未用完的行动攒下 —— 本回合可行动 '+S.actsLeft+' 次！');
   S.bonus=0;
@@ -7912,17 +7931,100 @@ function agyoDown(){
   syncHud();
 }
 /* ---------- 魔虚罗：击破（HP 归零） ---------- */
-function mahaSlain(){
+/* ★ v543 回合开始被动：再生倒计时 / 学习计数 / 技能 CD 递减。
+   不 consuming 魔虚罗的攻击，只是回合戳推进时的一次记账。 */
+function mahaTurnStart(){
+  if(!S.maha && !S.mahaDead) return;
+  /* 学习：与五条同场 3 回合 ⇒ 小型空间斩；与其他角色同场 3 回合 ⇒ 同型返斩 */
+  if(S.maha && !S.mahaDead){
+    if(S.hero==='gojo' && !S.mahaSpace){
+      S.mahaLearnGojo=(S.mahaLearnGojo||0)+1;
+      if(S.mahaLearnGojo>=3){
+        S.mahaSpace=true; S.mahaSpaceCd=1;
+        say('sys','★ 魔虚罗完成对「无下限／空间」的解析 —— 习得「小型空间斩」：它会斩你脚下的空间，看准金条点击化解。');
+        flash('fPurple'); shake();
+      }
+    }else if(S.hero!=='gojo' && !S.mahaCopy){
+      S.mahaLearnOther=(S.mahaLearnOther||0)+1;
+      if(S.mahaLearnOther>=3){
+        S.mahaCopy=true; S.mahaCopyCd=1;
+        const _base=SUK_MAXHP*MAHO_SLASH_PCT, _mx=Math.max(_base,S.mahaMaxTaken||0);
+        say('sys','★ 魔虚罗解析了你的术式 —— 习得「同型返斩」：伤害取「此前挨过的最重一击 '+Math.round(_mx)+'」与纵斩的较大值。');
+        flash('fPurple'); shake();
+      }
+    }
+  }
+  if(S.mahaSpaceCd>0) S.mahaSpaceCd--;
+  if(S.mahaCopyCd>0) S.mahaCopyCd--;
+  /* 超速适应再生：被打空但非一击秒杀 ⇒ 倒计时结束回满血 */
+  if(S.mahaRegen>0 && S.mahaDead){
+    S.mahaRegen--;
+    if(S.mahaRegen<=0){
+      S.mahaHp=S.mahaMax; S.mahaDead=false; S.mahaFade=0;
+      S.mahaBlur=0;   /* ★ v543 回满血 ⇒ 形象还原 */
+      S.mahaSlashCd=0; S.mahaRegen=0;
+      fxText(SX()-150*SC,GY-250*SC,'适 应','#8b5cf6',true,0,{sz:1.15});
+      flash('fPurple'); shake();
+      say('sys','★ 魔虚罗·超速适应再生 —— 法轮重组，生命回满！');
+      syncHud();
+    }
+  }
+}
+/* ★ v543 小型空间斩：复用黑闪 QTE 条，但成功＝免伤，失败＝大幅掉血 */
+function mahaSpaceSlash(){
+  if(!S.maha||S.mahaDead||!S.mahaSpace) return;
+  say('sys','魔虚罗「小型空间斩」—— 他斩的不是你，是你脚下的空间！在金条内点击格挡。');
+  const base=SUK_MAXHP*0.30;   /* ★ v543 [PLACEHOLDER] 失败大幅掉血 30% 最大生命 */
+  try{ startQTE(function(hit){
+    if(S.phase!=='fight') return;
+    if(hit){
+      fxText(GX(),GY-190*SC,'空间 · 化解','#3fbf72',true);
+      say('sys','你在那一瞬踩住了地面 —— 空间斩从身侧擦过，没有伤到你。');
+    }else{
+      hurtHero(base,'maha_space');
+      fxText(GX(),GY-176*SC,'-'+Math.round(base)+'%','#111',false,0,{sz:0.95});
+      flash('fRed'); shake();
+      say('sys','空间在你脚下裂开 —— 小型空间斩命中，受到 '+sukPct(base)+' 最大生命伤害！');
+    }
+    syncHud();
+  },'maha'); }catch(e){ say('sys','魔虚罗的空间斩被中断了。'); }
+}
+/* ★ v543 同型返斩：伤害 = max(此前所受最大单次伤害, 纵斩) */
+function mahaCopySlash(){
+  if(!S.maha||S.mahaDead||!S.mahaCopy) return;
+  const base=SUK_MAXHP*MAHO_SLASH_PCT;
+  const d=Math.max(base, Math.round((S.mahaMaxTaken||0)*10)/10);
+  shikLunge('maha');
+  lungeAfter(155,function(){
+    S.shikWait=Math.max(S.shikWait||0,0.95);
+    addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#b8860b',tag:'返斩'});
+    hurtHero(d,'maha');
+    fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#b8860b',false,0,{sz:0.95});
+  });
+  say('sys','魔虚罗「同型返斩」—— 把挨过的最重一击还给你：'+sukPct(d)+' 最大生命。');
+}
+function mahaSlain(direct){
   if(!S.maha&&S.mahaFade<=0) return;
-  S.mahaFade=MAHA_FADE; S.mahaDead=true;
+  S.mahaDead=true;
   adaptOnMahaDown();                       /* ★ v484 */
   if(S.target==='maha') S.target='sukuna';
-  fxShikFade('魔虚罗·击破',SX()-102*SC,GY-258*SC,24);   /* ★ v468 统一样式：黑字白描边·小字·渐隐 */
-  say('sys','★ 魔虚罗被击破——适应条归零，已被适应的招式仍减伤；宿傩开始解析对手！');
+  if(direct){
+    /* 单发直接打空血条＝直接杀死：法轮碎裂，永久下场 */
+    S.mahaFade=MAHA_FADE; S.mahaRegen=0;
+    fxShikFade('魔虚罗·法轮碎裂',SX()-102*SC,GY-258*SC,24);
+    say('sys','★ 魔虚罗被直接杀死 —— 法轮碎裂，不再重生；适应条归零，已被适应的招式仍减伤。');
+  }else{
+    /* ★ v543 未被直接杀死：进入再生倒计时，回合开始时满血归来 */
+    S.mahaFade=MAHA_FADE*0.45;
+    S.mahaRegen=(S.diff==='normal')?2:1;   /* 原作档 2 回合 / 苦战·绝境 1 回合 */
+    fxShikFade('魔虚罗·法轮重组中',SX()-102*SC,GY-258*SC,24);
+    say('sys','★ 魔虚罗被击破，但法轮未碎 —— '+S.mahaRegen+' 回合后「超速适应再生」满血归来；适应条归零，已被适应的招式仍减伤。');
+  }
   syncHud();
 }
 /* ---------- 式神受击 ---------- */
 function damageShiki(who,d,big){
+  if(who==='maha' && S.mahaDead) return;   /* ★ v543 重组中不可再被打 */
   const dd=Math.max(1,Math.round(d*(SHIK_TAKEN[who]||1)*10)/10);
   if(who==='agyo'){
     S.agyoHp=Math.max(0,S.agyoHp-dd);
@@ -7935,10 +8037,13 @@ function damageShiki(who,d,big){
     fxText(SX()-96*SC,GY-178*SC,'-'+dd,'#2b6cb0',!!big);
     kanjuDown();
   }else{
+    const _before=S.mahaHp;
     S.mahaHp=Math.max(0,S.mahaHp-dd);
+    S.mahaMaxTaken=Math.max(S.mahaMaxTaken||0,Math.round(dd*10)/10);   /* ★ v543 供同型返斩取最大值 */
+    S.mahaBlur=Math.min(0.92,Math.max(0,1-S.mahaHp/Math.max(1,S.mahaMax))*0.95);   /* ★ v543 掉血虚化 */
     fxImpact(SX()-150*SC,GY-130*SC,!!big);
     fxText(SX()-150*SC,GY-178*SC,'-'+dd,'#2b6cb0',!!big);
-    if(S.mahaHp<=0) mahaSlain();
+    if(S.mahaHp<=0) mahaSlain(dd>=S.mahaMax-0.001);   /* ★ v543 单发足以打空满血＝直接杀死；累计磨血＝再生 */
   }
   syncHud();
 }
@@ -8094,9 +8199,19 @@ function shikigamiAct(){
       }
     }
   }
-  /* 魔虚罗：斩击（CD1） */
+  /* ★ v543 用户指定：所有招式**等概率随机**（全解锁三招各 1/3；CD 中的不进池） */
   if(S.maha&&!S.mahaDead&&!_mahaDebut){
-    if((S.mahaSlashCd||0)<=0){
+    const _pool=['slash'];
+    if(S.mahaSpace && (S.mahaSpaceCd||0)<=0) _pool.push('space');
+    if(S.mahaCopy && (S.mahaCopyCd||0)<=0) _pool.push('copy');
+    const _act=_pool[Math.floor(Math.random()*_pool.length)];
+    if(_act==='space'){
+      S.mahaSpaceCd=3;
+      try{ mahaSpaceSlash(); }catch(e){}
+    }else if(_act==='copy'){
+      S.mahaCopyCd=2;
+      try{ mahaCopySlash(); }catch(e){}
+    }else if((S.mahaSlashCd||0)<=0){
       S.mahaSlashCd=1;
       let d=SUK_MAXHP*MAHO_SLASH_PCT;
       /* ★ v117c 依用户要求：移除魔虚罗攻击时画面中央的「斩击」大字图案（保留伤害数字与文字提示）。 */
@@ -9669,21 +9784,35 @@ function tryHeal(){
 /* ★ v140 黑闪 QTE：只由「判定将打出黑闪」触发（旧的「普通格挡后 50%」已移除）。
    cb = 结算回调（收到是否命中黄条），命中 → cb(true) 出黑闪；错过 → cb(false) 走普通伤害。
    战斗时间在 QTE 期间冻结（见 update：QTE.active 分支不再递减 S.turn），画面同时压暗。 */
-function startQTE(cb){
+function startQTE(cb,mode){
   if(S.phase!=='fight'||QTE.active){ if(typeof cb==='function') cb(false); return; }
-  const w=(S.hero==='itadori')?0.30:0.20;   /* ★ v140 虎杖的黄条比其他角色长（30% vs 20%） */
-  const c=0.20+Math.random()*(0.60-w);      /* 金色区域中心（保证整条落在 0~1 内） */
-  QTE.active=true; QTE.t=0; QTE.cb=(typeof cb==='function')?cb:null;
+  /* ★ v543 黑闪 20%（虎杖 30%）不变；空间斩收窄到 12%（约 180ms 窗口，惩罚性反应游戏应更难）。
+     12% 为 [PLACEHOLDER]，验证路径：真人 20 次成功率 60~75%，低于 50% 放宽到 15%。 */
+  const w=(mode==='maha')?0.12:((S.hero==='itadori')?0.30:0.20);
+  const c=0.20+Math.random()*(0.60-w);      /* 点位中心每次随机（保证整条落在 0~1 内） */
+  QTE.active=true; QTE.t=0; QTE.cb=(typeof cb==='function')?cb:null; QTE.mode=mode||'bf';
   QTE.dur=1.5+((typeof IS_TOUCH!=='undefined'&&IS_TOUCH)?0.1:0);   /* ★ v266 触屏 +0.1s */
   QTE.g0=c; QTE.g1=c+w;
-  $('qteGold').style.left=(QTE.g0*100)+'%';
   $('qteGold').style.width=(w*100)+'%';
+  $('qteGold').style.left=((QTE.mode==='maha')?(1-QTE.g1):QTE.g0)*100+'%';
+  $('qteGold').classList.toggle('grey',QTE.mode==='maha');
   $('qte').classList.add('on');
   $('qteDim').classList.add('on');          /* ★ v140 整体画面亮度降低 */
   S.gojo.pose='idle'; S.suk.pose='idle';
   try{ warmBlackFlashSfx(); }catch(e){}   /* ★ v520h 读条这 1.5s 正好用来备好原声 */
   SFX.warn();
-  say('sys','黑闪！光标进入金色区域时点击屏幕（或按空格）！');
+  try{
+    const _qt=document.querySelector('#qte .qt'), _qh=document.querySelector('#qte .qh');
+    if(QTE.mode==='maha'){
+      if(_qt) _qt.textContent='魔虚罗 · 小型空间斩 —— 进入灰白区域时点击化解';
+      if(_qh) _qh.textContent='进入灰白区域时点击化解 ｜ 错过 → 大幅掉血 ｜ 1.5 秒后自动结算';
+      say('sys','空间斩！进入灰白区域时点击化解（或按空格）。');
+    }else{
+      if(_qt) _qt.textContent='黑闪 —— 光标进入金色区域时点击！';
+      if(_qh) _qh.textContent='命中 → 伤害 ×2 ｜ 时机错过 → 普通伤害 ｜ 1.5 秒后自动消失（点击屏幕／空格）';
+      say('sys','黑闪！光标进入金色区域时点击屏幕（或按空格）！');
+    }
+  }catch(e){ say('sys',QTE.mode==='maha'?'空间斩！进入灰白区域时点击化解！':'黑闪！点击！'); }
 }
 /* ★ v140 黑闪判定入口：判定将打出黑闪 ⇒ 先暂停＋压暗＋出黄条，点中才真的打出黑闪 */
 function blackGate(run){
@@ -9706,7 +9835,8 @@ function qtePress(){
   /* ★ v204 需求：黄条点中的瞬间就播黑闪音效（原先在各技能结算段才播 —— 虎杖线延迟 160ms）；
      音量已对齐音乐盒 BGM（见 SFX.black）。未点中不播。 */
   /* ★ v459：只有虎杖一技能（itaAtk）预先挂了 __bfSpecialQTE 才用特别黑闪原声 */
-  if(hit){ SFX.black(); playBlackFlashSfx(false, !!window.__bfSpecialQTE); try{ window.__bfSpecialQTE=false; }catch(e){} }
+  if(hit && QTE.mode!=='maha'){ SFX.black(); playBlackFlashSfx(false, !!window.__bfSpecialQTE); try{ window.__bfSpecialQTE=false; }catch(e){} }
+  if(hit && QTE.mode==='maha'){ try{ SFX.block(); }catch(e){} }
   if(cb){ cb(hit); return; }                /* ★ v140 新路径：交回当前技能的结算回调 */
   /* 旧路径兜底（完美格挡必出黑闪，无回调）：沿用原本的五条悟演出 */
   S.gojo.pose='atk'; S.gojo.poseT=0.35;
@@ -10259,12 +10389,14 @@ function summonMaha(withLog){
     /* ★ v40 魔虚罗生命 = 宿傩最大生命 30%；与颚吐同场时，后召唤者减半 */
     S.mahaMax=SUK_MAXHP*MAHO_PCT.hp*(typeof shikHalveFor==='function'?shikHalveFor('maha'):1);
     S.mahaHp=S.mahaMax; S.mahaSlashCd=0;
+    /* ★ v543 每次新召唤重置倒计时；习得状态保留（魔虚罗自己学会的） */
+    S.mahaRegen=0; S.mahaSpaceCd=0; S.mahaCopyCd=0; S.mahaMaxTaken=0; S.mahaBlur=0;
     if(typeof sukPaySuk==='function') sukPaySuk(MAHO_PCT.cost);
     if(S.target==='sukuna' && S.agyo) say('sys','魔虚罗生命 '+Math.round(S.mahaMax)+'（与颚吐同场：后召唤者生命减半）。');
     flash('fPurple'); shake();
     if(withLog){
       say('suku','「布瑠部由良由良——八握剑·异戒神将·魔虚罗。」');
-      say('sys','魔虚罗登场：同一技能第 2 次伤害 80%、第 3 次起 50%——轮换招式更划算；击破它后适应条归零，但已适应的招式仍减伤。');
+      say('sys','魔虚罗登场：同一技能第 2 次伤害 80%、第 3 次起 50%——轮换招式更划算；打空它的血但没一击秒杀，它会按难度在 1~2 回合后满血再生；同场满 3 回合还会自行习得新技能。');
     }
   };
   /* ★ v491 用户指定：召唤演出期间魔虚罗不得「活动」——
@@ -10964,7 +11096,10 @@ function sukunaTurn(){
 }
 /* ★ v539 从 sukunaTurn 尾段抽出：等攻击动画播完再执行 */
 function sukunaTurnTail(){
+  /* ★ v543 空间斩 QTE 未结算完不推进回合（1.5s 后自动超时，不会永久卡住） */
+  if(QTE.active){ setTimeout(sukunaTurnTail,260); return; }
 S.turnN++;
+  try{ mahaTurnStart(); }catch(e){}                    /* ★ v543 魔虚罗回合开始被动 */
   try{ analyzeTick(); }catch(e){}   /* ★ v484 魔虚罗死后：解析进度每回合 +10%（同一术师） */
   /* ★ v450 看破 / 激怒：同一术师在场超过 10 回合 ⇒ 宿傩看破其术式（对其减伤 10%，不累加）；
      每 10 回合 ⇒ 宿傩对其伤害 +10%（2 层封顶 20%）。换棒全部清零。 */
@@ -12774,11 +12909,12 @@ function update(dt){
       /* 黑闪 QTE：战斗时间暂停，只有光标在走 */
       QTE.t+=dt;
       const p=Math.min(1,QTE.t/QTE.dur);
-      $('qteCur').style.left='calc('+(p*100)+'% - 3px)';
+      const _qp=(QTE.mode==='maha')?(1-p):p;   /* ★ v543 空间斩：自右向左 */
+      $('qteCur').style.left='calc('+(_qp*100)+'% - 3px)';
       if(QTE.t>=QTE.dur){
         const cb=QTE.cb; QTE.cb=null;
         endQTE();
-        say('sys','光标滑过——黑闪的机会消失了。');
+        say('sys',QTE.mode==='maha'?'空间斩擦过——你没能化解。':'光标滑过——黑闪的机会消失了。');
         if(cb) cb(false);   /* ★ v140 超时＝错过黄条：走普通伤害，时间继续 */
       }
     }else if(S.cutin>0){
@@ -20170,10 +20306,39 @@ function drawMahoBody(){
     ctx.drawImage(im, x0-w/2, cy0-h/2+bob, w, h);
     ctx.restore();
   }   /* ★ v288 再上提，配合右移形成「立于宿傩身后」的层叠感（脚仍落在地面附近） */
-  /* 纯抠图：不加任何光晕/描边；被无限制·茈 抹除时整身渐隐 */
-  ctx.save(); ctx.globalAlpha=mahaAlpha();
-  ctx.drawImage(im, x-w/2, cy-h/2+bob, w, h);
+  /* ★ v543 再生动画：立绘从**右下至左上**斜向消失（右下先碎），回满血时 mahaBlur 归零。
+     保留区域由 x/w + y/h <= D 决定：D=2 全留、D=1 留左上三角、D=0 全没。 */
+  const _blur=Math.max(0,Math.min(1,S.mahaBlur||0));
+  const _D=2*(1-_blur);
+  const _dx=x-w/2, _dy=cy-h/2+bob;
+  function _mahaClip(D){
+    ctx.beginPath(); ctx.moveTo(_dx,_dy);
+    if(D>=2){
+      ctx.lineTo(_dx+w,_dy); ctx.lineTo(_dx+w,_dy+h); ctx.lineTo(_dx,_dy+h);
+    }else if(D>=1){
+      ctx.lineTo(_dx+w,_dy);
+      ctx.lineTo(_dx+w,_dy+(D-1)*h);
+      ctx.lineTo(_dx+(D-1)*w,_dy+h);
+      ctx.lineTo(_dx,_dy+h);
+    }else if(D>0){
+      ctx.lineTo(_dx+D*w,_dy); ctx.lineTo(_dx,_dy+D*h);
+    }
+    ctx.closePath();
+  }
+  ctx.save(); _mahaClip(_D); ctx.clip();
+  ctx.globalAlpha=mahaAlpha();
+  ctx.drawImage(im, _dx, _dy, w, h);
   ctx.restore();
+  /* 斜边三层羽化 */
+  if(_blur>0.02 && _blur<0.995){
+    for(let k=0;k<3;k++){
+      const f=(k+1)/4;
+      ctx.save(); _mahaClip(Math.max(0,_D-f*0.12)); ctx.clip();
+      ctx.globalAlpha=mahaAlpha()*(1-f)*0.5;
+      ctx.drawImage(im, _dx, _dy, w, h);
+      ctx.restore();
+    }
+  }
 }
 /* 场地燃烧：贴着地面线的火舌 + 上飘火星 */
 function drawFlames(){   /* ★ v85 重做：参考「灶·开」fugaFlame 素材的场地燃烧 */
@@ -21378,7 +21543,7 @@ function extraBgmWatch(){
   if(!_inDomain){ stopExtraBgm(0.8,false); try{ resumeMainBgm(1.0); }catch(e){} }   /* ★ v306 收尾也走长淡出，衔接主 BGM */
 }
 const BGM_START=0;   /* ★ v479 用户规则：除乙骨领域曲第 4 秒起播外，其余一律从头播 */                  /* ★ v52 起播位置（秒）：「听雨的声音」段落入点；若不准直接改这个数字 */
-function bgmReady(){ return typeof BGM_SRC!=='undefined' && !!BGM_SRC; }
+function bgmReady(){ return typeof BGM_SRC!=='undefined' && !!BGM_SRC; }   /* ★ v543 data URI 本身即音源，Blob 非就绪前提 */
 /* ★ 移动端兼容 1/2：iOS Safari 对 data: URI 音源支持很差（经常整段播不出来），
    必须转成 Blob URL 再交给 <audio> */
 function bgmUrl(){
@@ -21390,6 +21555,26 @@ function bgmUrl(){
   if(!bgmReady()) return '';
   const src=_gojo?BGM_GOJO:BGM_SRC;
   if(src.slice(0,5)!=='data:'){ if(_gojo) gojoObjUrl=src; else bgmObjUrl=src; return src; }
+  /* ★ v543 非 iOS 提前起播：data URI 直接交给 <audio>，浏览器自己解码，主线程不阻塞；
+     Blob 化挪到空闲期做。iOS 保留下方同步 Blob（Safari 对 data URI 支持差，生命线不动）。 */
+  if(!jjkIsIOS()){
+    const _bgLater=function(){
+      const _run=function(){
+        try{
+          const _c=src.indexOf(','), _m=(src.slice(5,_c).split(';')[0])||'audio/mpeg';
+          const _b=atob(src.slice(_c+1)), _u=new Uint8Array(_b.length);
+          for(let k=0;k<_b.length;k++) _u[k]=_b.charCodeAt(k);
+          const _url=(window.URL||window.webkitURL).createObjectURL(new Blob([_u],{type:_m}));
+          if(_gojo) gojoObjUrl=_url; else bgmObjUrl=_url;
+        }catch(e){}
+      };
+      try{ if(window.requestIdleCallback) requestIdleCallback(_run,{timeout:4000}); else setTimeout(_run,1200); }
+      catch(e){ setTimeout(_run,1200); }
+    };
+    if(_gojo && !gojoObjUrl && !window.__bgGojoLazy){ window.__bgGojoLazy=1; _bgLater(); }
+    if(!_gojo && !bgmObjUrl && !window.__bgMainLazy){ window.__bgMainLazy=1; _bgLater(); }
+    return src;
+  }
   try{
     const comma=src.indexOf(',');
     const mime=(src.slice(5,comma).split(';')[0])||'audio/mpeg';
@@ -24712,15 +24897,20 @@ function playTitleOpen(){
 (function(){
   const ov=$('bootVideo'); if(!ov) return;
   const v=$('bootVideoEl'); if(!v){ playTitleOpen(); return; }
-  /* ★ v491 用户报「开场影片还是会重播、音乐也重播」：
-     68MB 单档在手机上很容易被系统回收（tab discard / WebView 记忆体回收），
-     回来时整页重跑 ⇒ 影片从 0 再播一遍、BGM 也从头起。
-     这里用 sessionStorage 做「本会话已播过」去重：30 分钟内重载直接进标题页，
-     关掉网页重开（新 session）才会再看到开场。 */
+  /* ★ v543 双保险去重（修「8 秒内刷新吞掉开场」）：
+     旧版在**启动瞬间**就写 sessionStorage，于是启动后 8 秒内刷新 ⇒ 直接进标题、影片整段丢失。
+     现在两路分开：
+       · 内存旗标 __bootInitDone —— 只挡「同一次加载里初始化跑两次」（原 8 秒窗口的真实用途）；
+       · sessionStorage 改为**播完／主动跳过才写**的完成时间戳，8 秒窗口从完成时刻起算。
+     结果是：没看完就刷新 ⇒ 重新播；看完或跳过后 8 秒内重载 ⇒ 不重播。
+     再留 20 秒兜底：影片事件没接上（tab 回收 / 系统冻结）也按看过处理，退回 v491 的老问题不会重现。 */
+  if(window.__bootInitDone) return;
+  window.__bootInitDone=true;
+  const _markBootSeen=function(){
+    try{ sessionStorage.setItem('jjk_boot_seen',''+Date.now()); }catch(e){}
+  };
   let _seenAt=0;
   try{ _seenAt=+(sessionStorage.getItem('jjk_boot_seen')||0)||0; }catch(e){}
-  /* ★ V520b 30 分钟 → 8 秒：旧窗口把正常重进 / 刷新也当成重播吞掉，用户报「开场视频不播」。
-     8 秒只挡同一次加载里的重复触发。 */
   if(_seenAt && Date.now()-_seenAt < 8000){
     window.__bootPlaying=false;
     window.__bootBgmGojo=false;
@@ -24731,7 +24921,7 @@ function playTitleOpen(){
     try{ playTitleOpen(); }catch(e){}
     return;
   }
-  try{ sessionStorage.setItem('jjk_boot_seen',''+Date.now()); }catch(e){}
+  /* ★ v543 启动瞬间不再写 seen —— 只有 open()/ended 才写，见下方 _markBootSeen 调用 */
   /* ★ v469：不再靠 autoplay 起播 —— 旧版 68MB 的 HTML 解析期间（脚本还没跑到）autoplay
      已经把影片「隐形」播掉一段、甚至整段播完（video 是 opacity:0，画面本应由 canvas 逐帧画），
      等这里 startPlay() 再 play() 就从 0 重来，看起来就是「开场动画播了两遍」。
@@ -24768,12 +24958,32 @@ function playTitleOpen(){
     /* ★ v474 用户指定：进入选人界面之前（标题／难度页）沿用开场影片的曲（gojo），
        不在这里切回主 BGM —— 切换与「从头播放」统一放在 start()（进选人前一刻）。 */
     playTitleOpen(); };
-  v.addEventListener('ended',open);
-  v.addEventListener('error',function(){ open(); });   /* 影片载入失败直接进标题 */
+  /* ★ v543 在 open() 里写完成戳（涵盖 ended／跳过／错误／看门狗所有收场路径） */
+  const _openWithStamp=function(){ try{ _markBootSeen(); }catch(e){} open(); };
+  v.addEventListener('ended',_openWithStamp);
+  v.addEventListener('error',_openWithStamp);
+  v.addEventListener('timeupdate',function(){
+    /* 部分移动端 ended 不触发；到 90% 就算看过，正常留下完成戳 */
+    try{ if(v.duration && isFinite(v.duration) && v.duration>1 && v.currentTime >= v.duration*0.9) _markBootSeen(); }catch(e){}
+  });
+  /* ★ v543 兜底：进入影片 20 秒后无条件记一次看过，防 tab 回收 / 系统冻住导致 ended 缺失 */
+  setTimeout(function(){ if(window.__bootPlaying) _markBootSeen(); },20000);
+  /* 主动跳过也记看过 */
+  window.__bootSkip=function(){ try{ _markBootSeen(); }catch(e){} open(); };   /* 影片载入失败直接进标题 */
   ov.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
   /* ★ v469 兜底计时：低端机「换源 → canplay → 首帧」可能要 2~4 秒，固定 12s 会在片尾前
      就把开场切掉。改为起播后按真实片长重新计时（片长未知时 20s），没起播才用 8s 短兜底。 */
-  let bootWd=setTimeout(function(){ try{ if(v.paused && v.currentTime<0.1) open(); }catch(e){} },3000);   /* ★ v533 9s→3s：自动播放被拒时不再干等 */
+  /* ★ v543 修「开场动画被 3 秒兜底掐掉」：
+     旧版 3 秒一到就判 v.paused && currentTime<0.1 ⇒ open()；但 69MB 单档的 loadGate
+     本身要 1.5~6 秒，此时影片还在等闸门、根本没起播，被误判成自动播放被拒。
+     实测 gate=false / vr=1 / vt=0 时就被关掉，稳定复现。
+     现在：闸门没完成就续等；只有闸门已开、影片仍未起播才判被拒。 */
+  let bootWd=setTimeout(function _bootWd(){
+    try{
+      if(window.__loadGateDone && v.paused && v.currentTime<0.1){ open(); return; }
+      if(!window.__loadGateDone) bootWd=setTimeout(_bootWd,300);
+    }catch(e){}
+  },3000);   /* ★ v533 9s→3s：自动播放被拒时不再干等 ★ v543 加闸门判定 */
   v.addEventListener('playing',function(){
     try{
       clearTimeout(bootWd);
@@ -24781,7 +24991,7 @@ function playTitleOpen(){
       bootWd=setTimeout(open, d*1000+4000);
     }catch(e){}
   });
-  window.__bootSkip=open;   /* ★ v178 暴露给全域键盘处理（开场期间 Enter / 空格 = 跳过） */
+  /* ★ v543 跳过入口已在上方改为带完成戳的包装；这里不再重复赋值 */
 
   /* ★ v175 canvas 镜像 ★
      夸克 / UC 等国产浏览器会在检测到页面里「可见的大尺寸 <video>」时把它接管成自家播放器，
@@ -24795,6 +25005,12 @@ function playTitleOpen(){
     const h=Math.max(1, ov.clientHeight || window.innerHeight);
     const dpr=Math.min(window.devicePixelRatio||1, 2);
     cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); };
+  /* ★ v543 立即按容器尺寸初始化一次：旧版要等 videoWidth 就绪才 fit，
+     首帧 canvas 停在默认 300×150 → 第二帧突变到 801，画面会抽一下。 */
+  try{ fit(); }catch(e){}
+  window.addEventListener('resize',function(){
+    try{ if(window.__bootPlaying) fit(); }catch(e){}
+  },{passive:true});
   const useFallback=function(){   /* canvas 绘制不可用时，退回直接显示 video（保证有画面） */
     /* ★ V520c 用户报「开场视频没播就黑屏」：旧版 1.5 秒没拿到首帧就降级，但手机上
        「没首帧」通常是解码还没完成（videoWidth 仍为 0），不是 canvas 画不出来。
@@ -24815,7 +25031,7 @@ function playTitleOpen(){
     let ct=-1;
     try{
       if(!ctx) ctx=cv.getContext('2d');
-      if(!drew && v.videoWidth){ fit(); drew=true; }
+      if(!drew && v.videoWidth){ drew=true; }   /* ★ v543 尺寸已在初始化时 fit，这里不再重复赋值 canvas.width */
       if(ctx && v.videoWidth && cv.width){
         const vw=v.videoWidth, vh=v.videoHeight, cw=cv.width, ch=cv.height;
         /* 回到 cover：这段影片本身上下自带黑边（画面内嵌 2.35:1），cover 正好把黑边裁掉、
@@ -24942,8 +25158,8 @@ function playTitleOpen(){
   });
   const sk=ov.querySelector('.bvSkip');
   if(sk){
-    sk.addEventListener('pointerdown',function(e){ e.stopPropagation(); open(); });
-    sk.addEventListener('click',function(e){ e.stopPropagation(); open(); });
+    sk.addEventListener('pointerdown',function(e){ e.stopPropagation(); try{ _markBootSeen(); }catch(e2){} open(); });
+    sk.addEventListener('click',function(e){ e.stopPropagation(); try{ _markBootSeen(); }catch(e2){} open(); });
   }
   /* ★ v469 data:URI 影片移动端要整段载入记忆体再解码（极卡）：转 Blob URL 串流解码。
    改为「同步 atob → Blob」：fetch(data:) 在低端机要几百毫秒才回来，那段时间里影片只能
@@ -26252,7 +26468,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v542', RK='jjk_ver_reload_'+B;
+  var B='v543', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
