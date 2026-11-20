@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v548">
+<meta name="jjk-build" content="v552">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1548,14 +1548,10 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 /* ★ v264 用户指定：玩家血条贴回技能框上方 —— 底部 HUD 吃掉剩余空间
    （v263 画布满铺后不再占 flex 流，需要它把玩家 HUD 压回底部） */
 #stage>.hud.bottom{margin-top:auto;}
-/* ★ v546 玩家条组 : 宿傩条组 ≈ 2:1 —— 顶部宿傩整行只占一半宽，底部玩家整行满宽。
-   两行本就在不同的 .hud 容器里，无法用同一 flex 权重比，这里直接限宽。
-   居中对齐保持原视觉重心；窄屏下用 min-width 保证读数不被挤没。 */
-#stage>.hud:not(.bottom){width:50%;max-width:50%;min-width:240px;margin-left:auto;margin-right:auto;}
+/* ★ v550 撤销 v546 的整行限宽（用户澄清：2:1 指的是**同一行里两条本身**，不是上下两行）。
+   两行都恢复满宽，比例由下面的主条 flex:2 / 副条 flex:1 控制。 */
+#stage>.hud:not(.bottom){width:100%;}
 #stage>.hud.bottom{width:100%;}
-@media (max-width:640px){
-  #stage>.hud:not(.bottom){width:62%;max-width:62%;min-width:0;}
-}
 /* ★ v263 满铺：整个战斗介面共用同一张背景 */
 #cv{position:absolute;inset:0;display:block;}
 
@@ -15292,98 +15288,73 @@ function _fxArcBand(cx, cy, R, a0, a1, wA, wB, col, alpha) {
    排版原则：特效一律放在「身前＝画面右侧」的空档，不压脸、不压躯干；底色是白素描城市 ⇒ 以墨黑为主体。
    原作依据：0 咒力，靠肉体与五感在斩击到达前架开（连宿傩贴脸直斩也只轻伤）。 */
 function drawFxMakiStance(f) {
-  /* ★ v547 用户指定：重写为「角色脚下环状不规则气流」——
-     原作里真希是零咒力的天与咒缚，架势靠的是身体与咒具，不该有刀光/飞斩。
-     这里只画她脚下三四圈墨色气流，半径带随机起伏、缓慢旋动，黑白两色 + 极淡灰。 */
+  /* ★ v551 用户指定：涟漪要**有缺口、不规则**。
+     5 道环从丹田（腰腹）向外扩散，每道拆成 2~3 段、缺口大小不等且随时间漂移；
+     半径用双频扰动 + 低频偏心，做成不规则水纹而非完美同心圆。柔和墨灰、不做流线/脚下雾。 */
   const TAU=Math.PI*2;
   const k=Math.max(0,Math.min(1,f.t/(f.dur||1.05)));
-  const s=SC, hx=GX(), gy=GY;
-  const fadeIn=Math.min(1,k/0.16), fadeOut=Math.max(0,(k-0.72)/0.28);
+  const s=SC, hx=GX(), gy=GY, H0=itaHeight();
+  const cx=hx, cy=gy-H0*0.34;          /* 丹田 */
+  const fadeIn=Math.min(1,k/0.08), fadeOut=Math.max(0,(k-0.74)/0.26);
   const al=Math.max(0,Math.min(fadeIn,1-fadeOut));
   if(al<=0.01) return;
-  /* 脚下的椭圆环（透视压扁），三四层不同相位与起伏 */
-  const rings=[
-    {rx:0.34, ry:0.09, ph:0.00, sp: 0.9, w:2.2, a:0.92},
-    {rx:0.26, ry:0.07, ph:1.30, sp:-1.2, w:1.7, a:0.72},
-    {rx:0.42, ry:0.11, ph:2.60, sp: 0.6, w:1.4, a:0.56},
-    {rx:0.18, ry:0.05, ph:0.70, sp: 1.6, w:1.1, a:0.48}
-  ];
+  const INK='rgba(78,82,90,';
+  const INK2='rgba(120,124,132,';
+
   ctx.save();
-  ctx.translate(hx,gy-2*s);
-  /* ★ v548 贴地薄雾：几团低透明度墨雾沿地面缓慢外扩，不是向上喷的气。
-     用横扁的径向渐变，中心淡、边缘更淡，叠加后像地面浮起的一层薄烟。 */
-  const mistN=5;
-  for(let m=0;m<mistN;m++){
-    const ph=m*1.37;
-    const grow=0.55+0.45*Math.min(1,k/0.55);
-    const cx=Math.sin(ph+k*0.5)*hgt()*0.26*grow;
-    const cy=Math.cos(ph*0.7+k*0.35)*hgt()*0.035;
-    const rw=hgt()*(0.16+0.09*(0.5+0.5*Math.sin(ph*2.1)))*grow;
-    const rh=rw*0.30;
-    if(rw<1) continue;
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.scale(1,rh/rw);
-    const g=ctx.createRadialGradient(0,0,rw*0.10,0,0,rw);
-    g.addColorStop(0,'rgba(24,25,29,'+(0.16*al).toFixed(3)+')');
-    g.addColorStop(0.55,'rgba(45,47,52,'+(0.09*al).toFixed(3)+')');
-    g.addColorStop(1,'rgba(80,82,88,0)');
-    ctx.fillStyle=g;
-    ctx.beginPath(); ctx.arc(0,0,rw,0,TAU); ctx.fill();
-    ctx.restore();
+  ctx.translate(cx,cy);
+
+  const RINGS=3;   /* ★ v552 环数 5→3，避免过密 */
+  for(let r=0;r<RINGS;r++){
+    const lp=Math.max(0,Math.min(1,(k-0.03-r*0.05)/0.40));
+    if(lp<=0) continue;
+    const rr=H0*(0.11+0.175*r)*lp;   /* ★ v552 间距 0.105→0.175 身高，三道明显拉开 */
+    if(rr<2) continue;
+    const phase=k*1.9+r*1.7;
+    /* 每道环 2~3 段，缺口大小不等（0.22~0.55 弧度），段与段之间明显断开 */
+    const segCount=2+(r%2);
+    const baseA=r*0.78+k*0.34;
+    for(let g=0;g<segCount;g++){
+      const gapA=0.22+0.33*(0.5+0.5*Math.sin(phase+g*2.1));   /* 缺口角度随时间变 */
+      const segStart=baseA+g*(TAU/segCount)+0.14*Math.sin(phase+g);
+      const segSpan=TAU/segCount-gapA;
+      if(segSpan<=0.05) continue;
+      const steps=32;
+      const width=(2.0-0.20*r)*s;
+      const baseA2=0.92-0.14*r;
+      /* 不规则半径：双频起伏 + 一个方向的偏心，让环不是正圆 */
+      const pt=function(a){
+        const wob=1+0.11*Math.sin(a*3+phase)+0.06*Math.sin(a*5-phase*0.8)
+                    +0.05*Math.cos(a*2-phase*0.5);
+        const ex=0.06*rr*Math.cos(phase*0.7), ey=0.06*rr*Math.sin(phase*0.7);
+        return {x:Math.cos(a)*rr*wob+ex, y:Math.sin(a)*rr*wob+ey};
+      };
+      const drawArc=function(w,col,alpha){
+        ctx.globalAlpha=al*alpha*lp;
+        ctx.lineWidth=w; ctx.strokeStyle=col;
+        ctx.beginPath();
+        for(let t=0;t<=steps;t++){
+          const p=pt(segStart+segSpan*t/steps);
+          if(t===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+        }
+        ctx.stroke();
+      };
+      drawArc(width+4*s, INK2+'0.28)', baseA2*0.45);
+      drawArc(width,     INK+'0.90)',  baseA2);
+      drawArc(Math.max(0.6*s,width-1.2*s), 'rgba(252,252,252,0.64)', baseA2*0.5);
+    }
   }
-  for(let r=0;r<rings.length;r++){
-    const R=rings[r];
-    const grow=0.72+0.30*Math.min(1,k/0.34);
-    const rx=R.rx*hgt()*grow, ry=R.ry*hgt()*grow;
-    const rot=k*R.sp*0.55+R.ph;
-    ctx.save(); ctx.rotate(rot*0.10);
-    /* 柔化底层：宽而淡的墨晕，让环边不是硬铁丝 */
-    ctx.globalAlpha=al*R.a*0.22;
-    ctx.lineWidth=(R.w+5.5)*s;
-    ctx.strokeStyle='rgba(30,32,36,.9)';
-    ctx.beginPath();
-    const STEPS0=44;
-    for(let i=0;i<=STEPS0;i++){
-      const a=i/STEPS0*TAU;
-      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
-      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.closePath(); ctx.stroke();
-    /* 主线 */
-    ctx.globalAlpha=al*R.a*0.82;
-    ctx.lineWidth=R.w*s;
-    ctx.strokeStyle=(r%2===0)?'#17181c':'rgba(60,62,68,.86)';
-    ctx.beginPath();
-    const STEPS=44;
-    for(let i=0;i<=STEPS;i++){
-      const a=i/STEPS*TAU;
-      /* 不规则：两个不同频率的正弦叠加，保证环不是完美椭圆 */
-      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
-      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.closePath(); ctx.stroke();
-    /* 气流断口：在环上留一小段空白，读起来像「流动」而非静止圆圈 */
-    ctx.globalAlpha=al*R.a*0.8;
-    ctx.lineWidth=(R.w+0.8)*s;
-    ctx.strokeStyle='#fff';
-    const a0=rot*1.8+r*0.9, a1=a0+0.16;
-    ctx.beginPath();
-    for(let i=0;i<=8;i++){
-      const a=a0+(a1-a0)*i/8;
-      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
-      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
-      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-  /* ★ v548 删掉原先「向上飘的墨屑」——那读起来像排气；
-     现在只留贴地薄雾 + 柔化墨环，整体更接近原作里沉稳的架势。 */
+
+  /* 中心小水花点 */
+  const cr=H0*0.05*Math.min(1,k/0.2);
+  const cg=ctx.createRadialGradient(0,0,0,0,0,Math.max(1,cr));
+  cg.addColorStop(0,INK+'0.40)');
+  cg.addColorStop(0.55,INK2+'0.13)');
+  cg.addColorStop(1,INK2+'0)');
+  ctx.globalAlpha=al; ctx.fillStyle=cg;
+  ctx.beginPath(); ctx.arc(0,0,Math.max(1,cr),0,TAU); ctx.fill();
+
   ctx.restore();
-  function hgt(){ return itaHeight(); }
 }
 function drawFxMakiAwaken(f) {
   const TAU = Math.PI * 2;
@@ -15483,7 +15454,7 @@ function drawFxHiguExtend(f) {
   if(fade<=0.01) return;
   ctx.save();
   /* ① 竖直裁判线：一条墨线从天到地，把画面分作「原告/被告」两侧 */
-  const jx=hx-hgt*0.30;
+  const jx=W*0.50;   /* ★ v548c 裁判线放在两人之间的画面中央（旧版贴着玩家侧，几乎看不见） */
   const jp=Math.min(1,k/0.20);
   ctx.globalAlpha=fade*0.85;
   ctx.strokeStyle=ink; ctx.lineWidth=2.6*s2;
@@ -15495,7 +15466,7 @@ function drawFxHiguExtend(f) {
   for(let i=0;i<4;i++){
     const p=Math.max(0,Math.min(1,(k-0.06-i*0.045)/0.26));
     if(p<=0) continue;
-    const y0=gy-hgt*(0.86-i*0.16), x0=jx+hgt*(0.95-i*0.05);
+    const y0=gy-hgt*(0.86-i*0.16), x0=W*(0.86-i*0.04);   /* ★ v548c 从右侧宿傩方向飞向中线 */
     const x1=jx+4*s2, y1=cy-hgt*(0.18-i*0.09);
     const x=x0+(x1-x0)*p, y=y0+(y1-y0)*p;
     if(p<1){
@@ -26388,7 +26359,19 @@ html.rot #loadScr{
   transform:rotate(90deg) translateY(-100%);
 }
 html.rot #lsWrap{width:min(34vh,390px);}
-</style></style>
+/* ★ v550c 同一行「生命条:副条」= 2:1
+   底部玩家 生命(ghp):咒力(ce.pips)；顶部宿傩 生命(hp):适应(adapt.pips) */
+.hud .row.merged .bar.hp,
+.hud .row.merged .bar.ghp{flex:2 1 0 !important;min-width:0 !important;width:auto !important;}
+.hud .row.merged .bar.ce.pips,
+.hud .row.merged .bar.adapt.pips{flex:1 1 0 !important;min-width:0 !important;width:auto !important;}
+</style>/* ★ v550c 同一行「生命条:副条」= 2:1（放最后的 style 块，压住旧的固定宽度规则）
+   底部玩家 = 生命(ghp):咒力(ce.pips)；顶部宿傩 = 生命(hp):适应(adapt.pips) */
+.hud .row.merged .bar.hp,
+.hud .row.merged .bar.ghp{flex:2 1 0 !important;min-width:0 !important;width:auto !important;}
+.hud .row.merged .bar.ce.pips,
+.hud .row.merged .bar.adapt.pips{flex:1 1 0 !important;min-width:0 !important;width:auto !important;}
+</style>
 <!-- ★ v307 虎杖终结一击：钉崎演出结束后全屏白爆 + 立绘 -->
 <div aria-hidden="true" id="yujiFin"><div class="yfBurst"></div><img alt id="yfImg"></div>
 <div aria-hidden="true" id="deathBlack"><div class="dbMask"></div><img alt class="dbArt" id="dbArt"><div class="dbTxt"></div><div class="dbHint">轻触画面任意处跳过</div></div>
@@ -26414,7 +26397,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v548';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v552';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26450,7 +26433,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v548</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v552</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26468,7 +26451,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v548', RK='jjk_ver_reload_'+B;
+  var B='v552', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
