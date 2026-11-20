@@ -1,3 +1,26 @@
+<!-- ★ v542 用户指定：六角色资源经济重配（真希启用体力条）
+     ① 真希（天与咒缚）：资源条由「无咒力」铭牌改为「体力」，与咒力同款五格、每回合 +1。
+        消耗：释魂刀 2 / 游云 1 / 龙骨 1；天与咒缚·架势 1；全开 0；无声突袭 3（CD 2→3）。
+     ② 鹿紫云一：雷 2 点、电荷放出 3 点、幻兽琥珀 0 点。
+     ③ 乙骨忧太：太刀 1、里香·召唤 3、领域 3、反转术式 3；里香在场全部免费（角标标「…」），
+        退场时咒力只余 3 点（召唤时的 50 上限取消，改为阶梯残留）。
+     ④ 虎杖悠仁：径庭拳／灵魂解 1、简易领域 2、穿血 3、领域展开 0。
+     ⑤ 日车宽见：不变（法槌 0 / 展延 1 / 判决 2）。⑥ 五条悟：六眼全 0，标「…」。
+     实现：CE_COST 表 + cePipFor()（真希随咒具/架势动态）＋ heroCe()／ceFree()；
+           按钮角标、按下判定、置灰、HUD 全部读同一函数，杜绝「显示 1 格却提示不足」。 -->
+<!-- ★ v541 两项（用户指定）：口径归一 + 适应全角色生效
+  ① 数值口径统一：全站一切百分比只以「宿傩一阶段满血 150 点 = 100%」为基准。
+     · 删掉 HERO_DMG 的 0.8 除返补偿（原本文案写 5% 实际打 6.25%，现在写多少打多少）；
+       苦战/绝境两档的 heroDmg 由 0.80/0.72 改为 1.00/0.90，绝对数值不变。
+     · 伤害飘字、血条读数、技能小字、术式公开全部同口径：我方满血显示 66.7%，
+       宿傩两条命合计 200%，进入原身（第二管）后读数从 100% 起算 ⇒ 超过 100%。
+     · 「点」表述全部改成百分比（电荷放出、见切·反击、龙骨·蓄、灼烧、反转术式回复）。
+     · 文案与代码对齐：苍 5%~7%（苍·拳 ×2 ⇒ 10%~14%）、赫 7.5%~10.5%、
+       法槌 4.3%~6.4%、径庭拳 5.3%~7.5%＋二段 2.7%~4.7%、无声突袭 18%。
+  ② 适应系统对全部六名角色生效：每个角色的每个招式都补上独立 sid
+     （原来没传 sid 的招共用「角色:类型」一个桶），因此逐招累积 1 次 / 2 次 80% / 3 次起 50%；
+     纯物理招（释魂刀、龙骨）带 S.noAdapt，既不减伤也不累积层数。
+-->
 <!-- ★ v523 三项：
   ① 引导期倒计时框显现；引导结束先收起，等第 1 回合横幅播完再显现开始计时；
   ② 宿傩血条与状态/意图行之间的空隙收紧；
@@ -1043,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v539">
+<meta name="jjk-build" content="v542">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3458,6 +3481,17 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
      ⑩ 乙骨胜利台词图案等比放大；⑪ 「诛伏赐死」字号 0.094H→0.072H；
      ⑫ 黑闪双资源：特别原声只给虎杖一技能黑闪与终结宿傩动画，其余用普通黑闪。 -->
 <!-- © 2026 老中医 · 新宿决战（JUJUTSU KAISEN fan game）· All rights reserved. -->
+<style id="pctChip">
+/* ★ v541 百分比读数：宿傩血条会显示到 198.0% 这种 6 位数，且血条可能不满（白底），
+   给所有血量/咒力读数加一层半透明墨底，任何时候都压得住。 */
+.hud .bar b{
+  background:rgba(14,12,11,.66);
+  padding:0 4px;border-radius:2px;
+  font-variant-numeric:tabular-nums;
+}
+.hud .bar.hp b{ background:rgba(120,12,24,.72); }
+.hud .bar.ghp b{ background:rgba(12,40,72,.72); }
+</style>
 </head>
 <body>
 <div id="ghLoad" aria-hidden="true">
@@ -3626,6 +3660,9 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
   <div class="rpHead"><span class="rpT">战斗规则<small>BATTLE RULES</small></span><button aria-label="关闭" id="rpClose">×</button></div>
   <div class="rpBody">
     <h3 style="--hc:#a04038">共通机制<small>BASICS</small></h3>
+    <p><b>数值口径</b>　全站所有百分比只有一个基准：<b>宿傩一阶段满血 = 100%</b>。我方满血 100 点显示为 <b>66.7%</b>；宿傩两条命合计 <b>200%</b>，进入原身（第二管）后血量显示会从 <b>100% 起算</b>，因此原身期的读数<b>高于 100%</b>。技能文案里的百分比、命中飘出的伤害数字、血条读数三者完全一致 —— 写多少就是打多少（苦战/绝境档我方输出另有难度系数，见标题页）。</p>
+    <p>
+<b>咒力／体力（五格资源）</b>　六名术师共用同一套资源：满格 <b>5 点</b>，每回合自然回复 <b>1 点</b>；按钮左上角的小数字就是这一招的消耗，不够就会变灰。五条悟（六眼）与「里香在场的乙骨」<b>不消耗</b>，标记为「…」。禅院真希身为天与咒缚、零咒力，同一根五格条改称 <b>体力</b>：释魂刀 2 点、游云／龙骨 1 点、架势 1 点、全开 0 点、无声突袭 3 点。里香退场时，乙骨的咒力只余 <b>3 点</b>。</p>
     <p><b>回合制·行动力</b>　每回合基本 1 次行动（选定后本回合技能栏变灰）；宿傩每回合行动一次。<b>多 1 点行动力＝这一回合能多出一次招</b>：完美格挡 ⇒ 下回合 +1；五条悟展开领域、乙骨领域成立、游云用满 4 次 ⇒ 当回合追加 1 次。行动力 &gt;1 时右上角出现「行动力 ×N」胶囊，获得那一刻还会砸出一行金色「行动力 +1」，出招后仍留在本回合，用完才交棒宿傩。<b>回合真正开始的判定</b>　宿傩与在场式神的攻击动画<b>全部播完</b>之后才进入下一回合 —— 技能栏重新亮起、能再点技能的那一刻，才是你出手的时机（提前点会被记下来，解锁瞬间自动补发）。</p>
     <p><b>黑闪</b>　五条悟「苍／苍·拳」8%／虎杖「径庭拳」14%／乙骨「太刀·呪斩」8% 起（鹿紫云一、日车宽见、真希不会自发黑闪）；<b>每引发一次 +5%，上限 +15%</b>。引发时时间冻结、画面转暗并出现金色计量条（1.5 秒内点击，虎杖的条更长）——点中 ⇒ 该击伤害 ×2；没点中 ⇒ 普通伤害。完美格挡必定引发黑闪（追击黑闪 ×3）；立束缚「黑闪之束缚」可让下一击必出黑闪。</p>
     <p><b>立束缚</b>　每位术师<b>一棒只能立 1 道</b>，立下即在本棒<b>永久生效</b>（代价同样永久），<b>不消耗行动</b>；同一棒可「解缚」，但吃 18% 反噬且这一棒不能再立。条款见各角色。</p>
@@ -3646,7 +3683,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>近身斩击／斩击波</b>　两型普攻（三阶段后斩击波概率提高）。攻击前 0.5 秒画面边缘闪红「！」，0.8 秒内点「无下限术式／格挡」可无伤。</p>
     <p><b>完美格挡</b>　画面边缘亮起<b>黑色预警（0.7 秒）</b>后，在<b>最后 0.5 秒</b>内按下防御型技能（简易领域／领域展延／天与咒缚·架势／无下限·不可侵）即触发：画面剧烈震动、全场压暗并聚焦己身，出现黑字红边的「完璧」，<b>下回合行动力 +1</b>（右上角胶囊变 ×2，并浮出金色「行动力 +1」）。注意：反转术式是治疗，<b>不参与</b>完美格挡；预警的前 0.2 秒按下只算普通格挡。</p>
     <p><b>「解」／「捌」</b>　伏魔御厨子成立后的必中斩击：「解」的斩雨把领域内无咒力之物斩成粉碎；「捌」贴身、按咒力差一刀切下。领域展开的当回合「解＋捌」同时斩下，之后每回合只落「解」—— 伤害一律＝(解 15%＋捌 15%)×0.7＝<b>21% 最大生命</b>；「落花之情」可抵消后续连击。</p>
-    <p><b>灶·开</b>　二阶段起放出火焰，点燃场地（3 回合 × 每回合 3% 最大生命灼烧）；虎杖的简易领域可灭火。</p>
+    <p><b>灶·开</b>　二阶段起放出火焰，点燃场地（3 回合 × 每回合 3.3% 最大生命灼烧）；虎杖的简易领域可灭火。</p>
     <p><b>神武解：电击</b>　★ 原身形态新增技能（动画与鹿紫云一的「雷」相同，<b>同样自手臂／指尖射出</b>，只是打向玩家角色）：造成 5% 宿傩最大生命伤害，并使我方<b>麻痹 1 回合</b>（纯粹无法行动，不因受伤提前解除）。被日车宽见的束缚「没收·神武解」或「处刑人之剑」首次命中后，宿傩本局永久失去此技能（附身／原身皆然）。</p>
     <p><b>世界斩</b>　原身形态限定的秒杀技（见共通机制）。</p>
     <p><b>式神召唤</b>　魔虚罗（宿傩生命 &lt;90% 后）／颚吐（生命 &lt;85% 后）。</p>
@@ -3660,19 +3697,19 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>反转术式（2 技·形态二）</b>　生命 ≤40%、<b>不可侵被破解后</b>、或<b>术式熔断时</b>随时可用（不再看血线）：回复 <b>25%</b> 最大生命，CD 2 回合；可治愈熔断的术式，并使「无量空处」可再多展开 1 次（每用一次 +1，本局上限 2 次）。</p>
     <p><b>虚式·茈</b>　CD 3 回合／不消耗咒力（六眼），<b>20%~25% 最大生命</b>（实际结算值）；连续 4 回合不动用茈 ⇒ 解锁「无限制·茈」。</p>
     <p><b>无限制·茈</b>　解锁后无视冷却直接放：<b>30%~35% 最大生命</b>，并抹除魔虚罗与颚吐。代价是解除上限的茈会波及自身 —— 失去<b>当前生命的 20%</b>（不会致死）。</p>
-    <p><b>术式反转·赫</b>　红色按钮，CD 1 回合：伤害为「苍」的 1.5 倍（4.5%~7.3% 最大生命）；引爆「苍」标记再 +50%。</p>
+    <p><b>术式反转·赫</b>　红色按钮，CD 1 回合：伤害为「苍」的 1.5 倍（7.5%~10.5% 最大生命）；引爆「苍」标记再 +50%。</p>
     <p><b>无量空处</b>　蓝色「领域展开」按钮：不消耗咒力（六眼）·<b>本局最多 2 次</b> —— 初始 1 次，每使用一次「反转术式」解锁 +1 次（封顶 2 次）。展开后计时暂停并跳过宿傩回合，额外获得 1 次行动力；五条悟退场时双方领域一并消散、场景复原。★ 领域内的原身宿傩在「能正常活动的回合」有 <b>25%</b> 机率展开「伏魔御厨子」，当场粉碎无量空处（每局至多一次，不再受领域使用次数限制）。</p>
     <p><b>束缚</b>　术式公开（本棒每一发「茈」<b>×1.6</b>、首发冷却 −1，普通茈与无限制·茈皆生效／本棒受伤 ×1.3）·不设防之束缚（本棒伤害 ×1.5／本棒无法使用反转术式）·魂之代偿（回复 45% 生命＋茈冷却清零／生命上限 −25%，仅生命 ≤50% 可立）。</p>
     <h3 style="--hc:#b8860b">鹿紫云一<small>KASHIMO · 咒力电击·幻兽琥珀</small></h3>
-    <p><b>咒力电击·雷</b>　<b>10%~15%</b> 最大生命 ×（1＋0.10×电荷层数）；命中 <b>+1 层电荷</b>（宿傩上回合用过术式 ⇒ +2），<b>上限 5 层</b>。每层电荷让输出 +10%，同时让自己受到的伤害 −10%（<b>3 层封顶 −30%</b>，另有一成底减）。</p>
-    <p><b>带电体·反噬</b>　「幻兽琥珀」解放后才生效：每回合结束电自己一下 —— 2 层 −5%、3 层以上 −7%。想留住高电荷，就得一路被自己的雷烧。</p>
-    <p><b>无防御</b>　鹿紫云一<b>没有格挡、没有治疗</b> —— 二技能「电荷放出」也不是防御，是拿电荷换一回合的电场。</p>
-    <p><b>电荷放出（2 技·1 点咒力）</b>　<b>最多耗 2 层</b>电荷，打出 <b>7.5% × 层数</b> 的必中雷击（无视魔虚罗适应），本回合受到的伤害再 −(15% + 15%×层数)。在<b>完美格挡窗口</b>（最后 0.5 秒）按下 ⇒ 电流回冲，<b>返还 1 层</b>电荷。</p>
-    <p><b>幻兽琥珀·解放</b>　一生一次，解锁条件两条，缺一不可：<b>电荷 ≥3 层</b> ＋ <b>自身生命 ≤40%</b>。伤害 <b>50% 最大生命</b>（75 点），无视适应、无视减伤。<b>但它不跳过「受肉·崩坏」</b>：打在受肉之躯上，躯体崩解、原身满血站起来，这张牌就白扔了。留到原身才是它该去的地方。解放后<b>常驻</b>、不再倒数消散。</p>
+    <p><b>咒力电击·雷（1 技·2 点咒力）</b>　<b>10%~15%</b> 最大生命 ×（1＋0.10×电荷层数）；命中 <b>+1 层电荷</b>（宿傩上回合用过术式 ⇒ +2），<b>上限 5 层</b>。每层电荷让输出 +10% —— 电荷<b>不再减伤</b>，它只是电压。</p>
+    <p><b>无防御</b>　鹿紫云一<b>没有格挡、没有治疗</b> —— 二技能「电荷放出」也不是防御，是拿全部电荷换一回合的电场。</p>
+    <p><b>电荷放出（2 技·3 点咒力）</b>　<b>一次放光身上所有电荷</b>（伤害最多按 <b>3 层</b>计入），打出 <b>7.5% × 层数</b> 的必中雷击（无视魔虚罗适应），本回合受到的伤害 −(15% + 15%×层数)，3 层即 <b>−60%</b>。放完电荷归零，蓄电从零开始。</p>
+    <p><b>幻兽琥珀·解放（3 技·不消耗咒力）</b>　一生一次，解锁条件只剩 <b>自身生命 ≤40%</b>（不再要求电荷）。<b>这一下不造成任何伤害</b> —— 它换的不是输出，是活命：解放后进入 <b>2 回合强制续命</b>，且每回合额外获得 <b>1 层电荷</b>。代价是<b>清空全部电荷</b>，本局再不能解放。</p>
+    <p><b>强制续命（解放后 2 回合）</b>　这两个回合内<b>生命不会被清空</b>——致命一击只把血压到 1；同时<b>每回合额外 +1 层电荷</b>。2 回合结束时：<b>若生命早已被打空 ⇒ 立绘消散、下场进入死亡黑幕</b>；<b>若还活着 ⇒ 回到常态</b>（术式解放本局已用尽）。</p>
     <p><b>满电荷·二段雷</b>　电荷 ≥4 层时，一次「雷」会追加第二段（0.6 倍、无视适应）——这是他在世界斩预警回合里唯一能把血条打空的东西。</p>
     <p><b>束缚</b>　雷神之躯（本棒伤害 ×1.45／本棒受伤 ×1.3）·魔眼·透视（适应清零且本棒无法再适应／生命上限 −12%）·限界放电（电荷 +2 层、下一击 ×2.2／立刻自损 10）。</p>
     <h3 style="--hc:#2b6cb0">日车宽见<small>HIGURUMA · 领域「诛伏赐死」</small></h3>
-    <p><b>法槌·开廷（举证）</b>　<b>8%~12%</b> 最大生命；取得 1 条证据（宿傩上回合用过术式 ⇒ 2 条）。证据上限 3，本身不是罪状。</p>
+    <p><b>法槌·开廷（举证）</b>　<b>4.3%~6.4%</b> 最大生命；取得 1 条证据（宿傩上回合用过术式 ⇒ 2 条）。证据上限 3，本身不是罪状。</p>
     <p><b>完美格挡</b>　在宿傩出手的最后 0.5 秒按下「领域展延」，法庭当场记下「现行犯」：<b>罪状直接 +3</b>（一次填满，直达死刑门槛）。</p>
     <p><b>领域展延·锁定罪状（质询）</b>　1 点咒力，★宿傩下一击伤害 <b>−30%</b>（百分比减伤，不是全额免伤；完美格挡仍可把该击完全架开）；把已取得的证据锁成罪状（1 条证据 = 1 层罪状，上限 3）。三技能按钮下方的三格充能条即当前罪状数（灰／蓝／橙／红）。</p>
     <p><b>审判·下达（判决）</b>　第 <b>1、2 次</b>只判「没收」：宿傩被没收一项能力并吃 <b>20%</b> 伤害；<b>第 3 次起</b>自动化为「<b>处刑人之剑</b>」（本局只能出鞘一次）。<br>　　死刑·一阶段：剑触及受肉之躯 ⇒ <b>直接处刑</b>，造成 <b>100%</b> 最大生命（当场崩解、宿傩现原身）；死刑·二阶段：原身承受 <b>60%</b> 最大生命。<br>　　没收按原作优先级：咒具「神武解」→ 术式「解·捌·伏魔御厨子」→ 咒力「反转术式」→ 身体能力（输出 −15%）。</p>
@@ -3680,27 +3717,29 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>反转术式</b>　濒死（≤25% 生命）时领悟，每局一次，回复 25% 生命。</p>
     <p><b>束缚</b>　没收·神武解（宿傩本局永久失去「神武解：电击」，适应清零且本棒无法再适应／本棒输出 ×0.85）·有罪判决（罪状 +3，立刻可开庭／本棒受伤 ×1.3）·辩护人之束缚（本棒受伤 ×0.72／输出 ×0.85）。</p>
     <h3 style="--hc:#7c3aed">乙骨忧太<small>OKKOTSU · 无限咒力·术式复制</small></h3>
-    <p><b>太刀·呪斩</b>　<b>5%~7%</b> 最大生命，可自发黑闪。</p>
-    <p><b>里香·召唤</b>　咒力上限 −50%，里香登场 <b>5 回合</b>。<b>里香没有生命值、无法被杀死</b>；5 回合到期或施展「无限制咒力解放」后退场。在场期间：乙骨所有技能不消耗咒力；二技能变为「模仿术式」；里香每回合以「咒力拳」出击，并替乙骨分担一半伤害（领域「真赝相爱」期间里香受守护、不再分担）。★ 里香离场后乙骨仍保有已学的模仿术式。</p>
+    <p><b>太刀·呪斩（1 技·1 点咒力）</b>　<b>5%~7%</b> 最大生命，可自发黑闪。</p>
+    <p><b>里香·召唤（2 技·3 点咒力）</b>　召唤当场耗 3 点、咒力上限 −50%，里香登场 <b>5 回合</b>。<b>里香没有生命值、无法被杀死</b>；5 回合到期或施展「无限制咒力解放」后退场。在场期间：乙骨所有技能不消耗咒力；二技能变为「模仿术式」；里香每回合以「咒力拳」出击，并替乙骨分担一半伤害（领域「真赝相爱」期间里香受守护、不再分担）。★ 里香离场后乙骨仍保有已学的模仿术式，但咒力条只剩 <b>3 点</b>残留（要等每回合 +1 慢慢爬回来）。</p>
     <p><b>模仿术式</b>　里香在场时，二技能变为「模仿术式」，池中五招随机抽取：<b>赤血操术·穿血</b>（15%~20%，附着血契）／<b>言灵术式</b>（定住宿傩一回合·自身追加一次行动，用后永久移出）／<b>宿傩的「解」</b>（14%~18%，墨痕斩，与宿傩版镜像）／<b>宿傩的「捌」</b>（17%~21%，多道赤红斩生于对手身上）／<b>邪去侮天梯</b>（10%~15%，消除宿傩一个常规技能；领域里那次也造成同等伤害，用后永久移出）。<br>　　★ 言灵与天梯（领域里那次除外）全局各只能使用一次，用过即从池子永久移出。<br>　　除言灵与天梯外，每招冷却 1 回合，冷却结束自动切换到池中下一招；技能框的大字与小字会同步换成当前招式。</p>
     <p><b>领域·真赝相爱</b>　3 点咒力（里香在场不消耗）·葛笼封锁＋伤害 ×1.5，每局一次。展开时 <b>100% 必定触发对拼</b>：胜率由推挤结束当下的指针位置决定（起点 70%／苦战·无量 50%）；★ 宿傩中过无量空处 ⇒ <b>乙骨必胜（100%）</b>：<b>胜</b> ⇒ 伏魔御厨子的结界当场碎裂、宿傩陷入术式熔断；<b>败</b> ⇒ 乙骨术式熔断、伏魔御厨子成立。成立后宿傩立即被笼罩，每 2 回合发动一次弥须葛笼；★ 乙骨的「真赝相爱」<b>不会被魔虚罗从外侧击碎</b>（对拼获胜后持续到乙骨退场）。</p>
-    <p><b>反转术式（4 技）</b>　回复 <b>25%</b> 最大生命，CD 2 回合，术式熔断中也可用。</p>
+    <p><b>反转术式（4 技·3 点咒力）</b>　回复 <b>25%</b> 最大生命，CD 2 回合，术式熔断中也可用。</p>
     <p><b>无限制咒力解放</b>　里香在场时立束缚卡第二选项：对全体敌人 <b>20%</b> 最大生命伤害，之后里香立即退场。</p>
     <p><b>束缚</b>　复制术式（本棒伤害 ×1.35／本棒受伤 ×1.2）·里香·全力（本棒受伤 ×0.78、每回合反伤宿傩 3%／每回合自损 3）·魂之绊（回复 40% 生命／生命上限 −15%，仅生命 ≤50% 可立）。</p>
     <h3 style="--hc:#8c2f24">虎杖悠仁<small>ITADORI · 径庭拳·简易领域</small></h3>
-    <p><b>径庭拳</b>　<b>4%~6%</b> ＋ 二段追击（滞后的第二段冲击，1.5%~3%）。</p>
-    <p><b>简易领域</b>　1 点咒力·中和必中，可灭「灶·开」的场火。<b>一旦展开即常驻</b>—— 今后宿傩「伏魔御厨子」的领域必中斩击不再伤到虎杖；每次使用后 3 回合内受伤 ×0.8。</p>
-    <p><b>赤血操术·穿血</b>　<b>15%~20%</b>，留下血契（最多 ×3，每回合侵蚀 3%/层）。</p>
-    <p><b>领域展开</b>　生命低于 40% 最大生命时，第 4 个按钮变为「领域展开」—— 濒死之际的最后反击；展开瞬间若宿傩正维持「伏魔御厨子」，其结界当场碎裂（领域必中斩击一并解除），对拼胜率 <b>100%</b>。领域持续到虎杖退场。</p>
+    <p><b>径庭拳（1 技·1 点咒力）</b>　<b>5.3%~7.5%</b> ＋ 二段追击（滞后的第二段冲击，2.7%~4.7%）。领域内的「灵魂·解」同样 1 点。</p>
+    <p><b>简易领域（2 技·2 点咒力）</b>　中和必中，可灭「灶·开」的场火。<b>一旦展开即常驻</b>—— 今后宿傩「伏魔御厨子」的领域必中斩击不再伤到虎杖；每次使用后 3 回合内受伤 ×0.8。</p>
+    <p><b>赤血操术·穿血（3 技·3 点咒力）</b>　<b>15%~20%</b>，留下血契（最多 ×3，每回合侵蚀 3%/层）。</p>
+    <p><b>领域展开（不消耗咒力）</b>　生命低于 40% 最大生命时，第 4 个按钮变为「领域展开」—— 濒死之际的最后反击；展开瞬间若宿傩正维持「伏魔御厨子」，其结界当场碎裂（领域必中斩击一并解除），对拼胜率 <b>100%</b>。领域持续到虎杖退场。</p>
     <p><b>钉崎·共鸣（彩蛋）</b>　虎杖在场、且「灵魂·解」这一刀足以击杀宿傩时触发：全场黑屏播放钉崎野蔷薇的共鸣画面（读秒暂停），播毕再出「解」。<b>一阶段（受肉之躯）</b>：只打穿肉体 —— 宿傩舍弃伏黑惠现出原身，且<b>下一回合完全无法行动</b>（真结局不在此阶段成立）；<b>二阶段（原身）</b>：直接讨伐宿傩，走向真结局。</p>
     <p><b>束缚</b>　黑闪之束缚（下一击必出黑闪、×2.2／接下来 2 回合受伤 ×1.3）·不屈之魂（生命 ≤35% 时输出 ×1.5／其余时候输出 ×0.95）·魂之境界（本棒伤害 ×1.4／每回合自损 2.5）。</p>
     <h3 style="--hc:#3a3f45">禅院真希<small>MAKI · 天与咒缚·释魂刀</small></h3>
-    <p><b>咒具切换</b>　1 技右上角角标可自由换刀（不消耗行动）：<b>释魂刀</b>（<b>10%</b> 最大生命·灵魂损伤·无视适应）／<b>游云</b>（<b>15%</b> 最大生命·用满 4 次本回合多一次行动，带咒力可被适应）／<b>龙骨</b>（<b>8%</b> 最大生命·架刀受伤 −35%，吸收的冲击蓄进下一击）。</p>
-    <p><b>灵魂损伤（释魂刀专属）</b>　释魂刀切的是灵魂，<b>伤口不会愈合</b>：每命中一次累积 1 层灵魂损伤（上限 3，本局永久、换人也不消）。每层 ⇒ 宿傩受到的伤害 +2%、反转术式回复 −34%；<b>满 3 层</b> ⇒ 宿傩下一个回合无法行动（反转术式也完全无效）；3 层状态下再打中一次 ⇒ 层数归零。这是真希一个人能留给整队的最大遗产。</p>
-    <p><b>天与咒缚·架势</b>　不耗咒力，<b>CD 3 回合</b>：本回合只有宿傩「解」「捌」与伏魔御厨子的「领域必中」（皆伤害减半）、颚吐「虎葬·碎击」、魔虚罗「斩击」伤得到真希，其余攻击一律架开。</p>
-    <p><b>无声突袭</b>　<b>20%</b> 最大生命·无视适应，CD 2 回合；灵魂损伤 ≥2 层时必定要害：<b>×(1＋0.12×层数)</b>（3 层 ⇒ ×1.36）。这是她在世界斩预警回合里打空血条的唯一手段。</p>
-    <p><b>龙骨·蓄（HUD 仪表）</b>　血条下方左边三格是「灵魂损伤」，右边一条是「龙骨·蓄」——<b>数字为百分比，100% ＝宿傩一阶段的整条血（150 点）</b>，满蓄（20%）时转金，这一击会把积蓄的冲击一次吐出。</p>
-    <p><b>天与咒缚·全开</b>　生命 ≤50%（或未手动选择时的预设）⇒ 2 技变为「天与咒缚·全开」。按下后输出 +25%（本局常驻）＋回复 15% 生命；代价是全开后 3 回合受伤 +10%（架势仍可并存）。一生一次。</p>
+    <p><b>咒具切换</b>　1 技右上角角标可自由换刀（换刀本身不消耗行动，但出手要付体力）：<b>释魂刀</b>（<b>2 点</b>·<b>10%</b> 最大生命·灵魂损伤·无视适应）／<b>游云</b>（<b>1 点</b>·<b>15%</b> 最大生命·用满 4 次本回合多一次行动，带咒力可被适应）／<b>龙骨</b>（<b>1 点</b>·<b>8%</b> 最大生命·架刀受伤 −35%，吸收的冲击蓄进下一击）。</p>
+    <p><b>灵魂损伤（释魂刀专属）</b>　释魂刀切的是灵魂，<b>伤口不会愈合</b>：每命中一次累积 1 层灵魂损伤（上限 3，本局永久、换人也不消）。每层 ⇒ 宿傩受到的伤害 +2%、反转术式回复 −34%；<b>满 3 层</b> ⇒ 宿傩下一个回合无法行动（反转术式也完全无效）；3 层状态下再打中一次（或直接用「无声突袭」命中）⇒ 层数归零。这是真希一个人能留给整队的最大遗产。</p>
+    <p><b>天与咒缚·架势（2 技·1 点体力）</b>　<b>CD 3 回合</b>：本回合只有宿傩「解」「捌」与伏魔御厨子的「领域必中」（皆伤害减半）、颚吐「虎葬·碎击」、魔虚罗「斩击」伤得到真希，其余攻击一律架开。</p>
+    <p><b>无声突袭（3 技·3 点体力）</b>　<b>18%</b> 最大生命·无视适应，<b>CD 3 回合</b>。<b>命中后灵魂损伤一律清零</b>——这一刀把攒下的裂口用掉，想再打要害必须重新用释魂刀叠。<b>3 层</b>时必定要害：<b>×1.36</b>；<b>2 层</b>只有 <b>×1.15</b> 的小加成。这是她在世界斩预警回合里打空血条的唯一手段。</p>
+    <p><b>体力条（HUD）</b>　真希的资源条是<b>体力</b>而非咒力（天与咒缚·零咒力），同样是五格、每回合 +1 点：释魂刀 2 点／游云·龙骨 1 点／架势 1 点／无声突袭 3 点，全开免费。她没有任何回复体力的手段，只能靠回合自然回复。</p>
+    <p>
+<b>龙骨·蓄（HUD 仪表）</b>　血条下方左边三格是「灵魂损伤」，右边一条是「龙骨·蓄」——<b>数字为百分比，100% ＝宿傩一阶段的整条血（150 点）</b>，满蓄（20%）时转金，这一击会把积蓄的冲击一次吐出。</p>
+    <p><b>天与咒缚·全开（2 技切换态·不消耗体力）</b>　生命 ≤50%（或未手动选择时的预设）⇒ 2 技变为「天与咒缚·全开」。按下后输出 +25%（本局常驻）＋回复 15% 生命；代价是全开后 3 回合受伤 +10%（架势仍可并存）。一生一次。</p>
     <p><b>束缚</b>　天与咒缚·极致（本棒伤害 ×1.55／本棒无法使用 2 技「天与咒缚」）·魂斩·一闪（下一刀 ×2.2 且无视适应／接下来 2 回合受伤 ×1.2）·静寂（本棒受伤 ×0.72／输出 ×0.85）。</p>
     <p class="rpNote">数值以游戏内实际结算为准；里香、式神与领域的详细互动见各角色条目。</p>
   </div>
@@ -3896,7 +3935,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     </div>
   </div>
   <div class="screen" id="titleScreen">
-    <div id="buildTag">v6.5 · b539</div>
+    <div id="buildTag">v6.5 · b542</div>
     <div id="titleBg">
       <div class="bgHalf L" id="bgL"></div>
       <div class="bgHalf R" id="bgR"></div>
@@ -4359,8 +4398,8 @@ const TURN_SEC=10;    /* ★ v112 每回合时长（秒，原 7.5）；实际以
 /* ★ 难度：只调宿傩伤害；★ v112 起两档回合时长统一为 10 秒，机制（仪式/立束缚/魔虚罗）完全一致 */
 const DIFFS={
   normal:{label:'原作', dmg:1.00, turn:10, lim:6, push:0.70, pushStep:0.045, heroDmg:1.00, adapt:false},
-  hard:  {label:'苦战', dmg:1.40, turn:10, lim:3, push:0.50, pushStep:0.075, heroDmg:0.80, adapt:false},
-  void:  {label:'绝境', dmg:1.85, turn:7,  lim:2, push:0.42, pushStep:0.085, heroDmg:0.72, adapt:true }
+  hard:  {label:'苦战', dmg:1.40, turn:10, lim:3, push:0.50, pushStep:0.075, heroDmg:1.00, adapt:false},
+  void:  {label:'绝境', dmg:1.85, turn:7,  lim:2, push:0.42, pushStep:0.085, heroDmg:0.90, adapt:true }
 };   /* ★ v480 第三档：2 人 / 适应常驻 / 7 秒回合
         ★ v498 用户指定「调成极难但可通」：dmg 2.20 → 1.85、heroDmg 0.60 → 0.72。
         原参数下两人合计仅 8~16 次出手，而打空 150 点需要 22~30 次命中，缺口 1.5~3 倍 ⇒ 数学上不可通。
@@ -4405,9 +4444,12 @@ function streetCheck(){
                 魔虚罗护卫回血 40%）一律按 SUK_MAXHP 等比换算，保证文案里的百分数仍然成立；
              ③ 被动 / 附带伤害（里香反伤、血契侵蚀、完美格挡反伤、脆弱追击）不参与系数下调。 */
 const SUK_MAXHP=150;   /* ★ v393 用户指定：宿傩单管血回到 150 点＝100%（v99 曾加至 165，现还原为基准值） */
+/* ★ v541 统一口径：全站一切百分比都以「宿傩一阶段满血 150 点 = 100%」为基准。
+   我方满血 100 点 ⇒ 66.7%；宿傩两阶段合计 300 点 ⇒ 200%。*/
 /* ★v39：把「对宿傩的伤害值」换算成「最大生命 %」字串（四舍五入取整）；
         我方 maxHp／咒力上限均为 100，数值即百分比，无需换算。 */
-function sukPct(v){ return Math.round(v/SUK_MAXHP*100)+'%'; }
+function heroPct(v){ return (Math.round(v/SUK_MAXHP*100*10)/10).toFixed(1)+'%'; }   /* ★ v541 我方掉血／回血也按同一基准换算 */
+function sukPct(v){ return (Math.round(v/SUK_MAXHP*100*10)/10).toFixed(1)+'%'; }   /* ★ v541 一位小数，免得 0.4% 被截成 0% */
 
 /* ★ v40 式神数值模板（以宿傩最大生命为 100% 参照）
    · 颚吐：HP 18% / 攻 45% / 防 70% / 速 85% / 召唤消耗当前咒力 20%
@@ -4463,7 +4505,7 @@ function adaptOnMahaDown(){
   if(typeof syncAdaptBar==='function') syncAdaptBar();
 }
 function adaptTick(sid){
-  if(adaptPhase()!=='adapt'||!sid||(S.noAdaptT||0)>0) return;   /* 解析阶段不再累积技能适应 */
+  if(adaptPhase()!=='adapt'||!sid||(S.noAdaptT||0)>0||S.noAdapt) return;   /* ★ v541 S.noAdapt：纯物理招不攒适应 */   /* 解析阶段不再累积技能适应 */
   S.suk.adaptMap[sid]=Math.min(3,(S.suk.adaptMap[sid]||0)+1);
   syncAdaptBar();
 }
@@ -4501,7 +4543,7 @@ const MAHO_SLASH_PCT=.10; /* 魔虚罗·斩击：10% 最大生命 */
 const YUGYO_BASE=0.10, YUGYO_STEP=0.02, YUGYO_CAP=0.06, YUGYO_P=0.28;   /* 玉犬：10% 起，每次影法术 +2%，封顶 +6% */
 const KANJU_LO=0.18, KANJU_HI=0.225;                                     /* 贯牛冲锋：18~22.5%（名目 20~25%） */
 
-const HERO_DMG=0.80;
+const HERO_DMG=1.00;   /* ★ v541 口径归一：文案里的百分比就是真实结算值（不再有 0.8 除返补偿） */
 const SUK_RECOVER=0.10;
 let DIFF_PICK='normal';                        /* 标题页选中的难度，start() 时写进 S.diff */
 function turnSec(){ return (DIFFS[S.diff]||DIFFS.normal).turn; }
@@ -4531,15 +4573,29 @@ const CE_PIP=20;
 const CE_MAX=5;
 const CE_COST={
   gojo:    {atk:0, guard:0, hollow:0, he:0, dom:0},   /* 六眼：全 0，还原原作的无消耗 */
-  kashimo: {atk:1, guard:1, hollow:0},                 /* 雷 1 点 / 电荷放出 1 点 / 琥珀 0 点（代价是清空电荷） */
-  itadori: {atk:0, guard:1, hollow:2},                 /* 径庭拳 0 / 简易领域 1 / 穿血 2 */
+  kashimo: {atk:2, guard:3, hollow:0},                 /* ★ v542 雷 2 点 / 电荷放出 3 点 / 琥珀 0 点（代价是清空电荷） */
+  itadori: {atk:1, guard:2, hollow:3},                 /* ★ v542 径庭拳·灵魂解 1 / 简易领域 2 / 穿血 3（领域展开 0） */
   higuruma:{atk:0, guard:1, hollow:2},                 /* 法槌 0 / 领域展延 1 / 审判·下达 2 */
-  okkotsu: {atk:0, guard:0, hollow:3},                 /* 太刀 0 / 里香·召唤 0 / 真赝相爱 3 */
-  maki:    {}                                          /* 天与咒缚：没有咒力 */
+  okkotsu: {atk:1, guard:3, hollow:3, okkorct:3},       /* ★ v542 太刀 1 / 里香·召唤 3 / 真赝相爱 3 / 反转术式 3（里香在场全免） */
+  maki:    {atk:2, guard:1, hollow:3}                   /* ★ v542 真希＝体力：释魂刀 2 / 游云·龙骨 1（见 cePipFor） / 架势 1 / 全开 0 / 突袭 3 */
 };
 const CE_TAG=CE_COST;
+/* ★ v542 某角色某招的**格数**消耗：真希普攻看当前咒具、二技能看「架势／全开」 */
+function cePipFor(hero,act){
+  if(hero==='maki' && act==='atk'){ return ((S.makiW||0)%3===0)?2:1; }         /* 释魂刀 2 / 游云 1 / 龙骨 1 */
+  if(hero==='maki' && act==='guard'){
+    const can=(!S.makiUsed && S.gojo && S.gojo.hp<=S.maxHp*0.50);
+    const sel=(S.makiGSel==null)?(can?1:0):(S.makiGSel?1:0);
+    return (sel===1 && can)?0:1;                                                  /* 全开免费 / 架势 1 */
+  }
+  const t=CE_COST[hero]||{}; return t[act]||0;
+}
+/* ★ v542 当前角色的可用咒力（鹿紫云走独立字段） */
+function heroCe(){ return (S.hero==='kashimo')?(S.kashimo.ce||0):(S.gojo.ce||0); }
+/* ★ v542 咒力无限态：六眼 / 里香在场 */
+function ceFree(){ return S.hero==='gojo' || (S.hero==='okkotsu' && !!S.rika); }
 /* 某角色某招的咒力消耗（点） */
-function ceCost(hero,act){ const t=CE_COST[hero]||{}; return (t[act]||0)*CE_PIP; }
+function ceCost(hero,act){ return cePipFor(hero,act)*CE_PIP; }
 function cePipTxt(n){ return (n&&n>0)?String(n):''; }   /* ★ v520 角标只留数字，不写「点」 */
 function cePipNum(v){ return Math.round(Math.max(0,v)/CE_PIP*10)/10; }
 /* ★ v512 HUD 格数渲染：显示/状态全部收口在这里 */
@@ -4547,7 +4603,7 @@ function setCeGauge(ce,cap){
   const el=document.getElementById('gjCe'); if(!el) return;
   const hero=S.hero;
   const pips=el.__pips||(el.__pips=el.querySelectorAll('i'));
-  const none=(hero==='maki');                                  /* 天与咒缚：没有咒力 */
+  const none=false;   /* ★ v542 真希改用「体力」——同为五格资源，不再是无资源角色 */
   const inf =(hero==='gojo')||(hero==='okkotsu'&&!!S.rika);    /* 六眼 / 里香在场：不消耗 */
   if(el.__none!==none){ el.__none=none; el.classList.toggle('none',none); }
   if(el.__inf !==inf ){ el.__inf =inf ; el.classList.toggle('inf',inf); }
@@ -4563,9 +4619,9 @@ function setCeGauge(ce,cap){
   const txt=none?'无咒力':(inf?'…':String(n));
   if(b && b.textContent!==txt) b.textContent=txt;
   /* 悬停说明：把「为什么没有格子 / 为什么是 ∞」直接写清楚，不靠玩家猜 */
-  const ti=none?'天与咒缚——没有咒力'
-    :(hero==='gojo')?'六眼·不消耗咒力（还原原作）'
-    :(inf?'里香在场：技能不耗咒力':'咒力点数 · 每回合 +1 点（上限 5 点）');
+  const ti=(hero==='gojo')?'六眼·不消耗咒力（还原原作）'
+    :(inf?'里香在场：技能不耗咒力'
+    :(hero==='maki'?'体力点数 · 每回合 +1 点（上限 5 点）':'咒力点数 · 每回合 +1 点（上限 5 点）'));
   if(el.title!==ti) el.title=ti;
 }
 function ceRegenRate(){ return CE_PER_TURN/turnSec(); }
@@ -4704,7 +4760,7 @@ const S={
   dom:{active:false,seq:[],idx:0,correct:0,t:0,marks:[]}, domainUsed:false,
   blackN:0, whatIf:false, cutin:0,
   hero:'gojo', kashimo:{hp:100,ce:100}, amber:30, amberTagHide:0,   /* ★ v70 ce＝咒力条；amberTagHide＝解放后标签延迟 */
-  amberUsed:false, trueForm:false,   /* ★ v52 amberSkip：使用当回合不扣倒计时 */      /* ★ 幻兽琥珀是否已解放（一生一次）/ 宿傩是否已显原身 */
+  amberUsed:false, amberOn:0, amberLethal:0, amberCastTurn:0, trueForm:false,   /* ★ v540 琥珀＝2 回合续命形态 */   /* ★ v52 amberSkip：使用当回合不扣倒计时 */      /* ★ 幻兽琥珀是否已解放（一生一次）/ 宿傩是否已显原身 */
   sukuNoShinbu:false,                 /* ★ v214 日车「没收·神武解」命中 ⇒ 宿傩本局永久失去「神武解：电击」（附身／原身都一样） */
   heavyPending:0,                     /* ★ v391 日车：完美格挡换来的「重罪证据」额度（下一次举证变重罪） */
   soulStack:0,                        /* ★ v391 真希：释魂刀留下的灵魂损伤层数（0~3，本局永久，反转术式治不好） */
@@ -4802,7 +4858,7 @@ function resetBattle(){
    
   S.dom={active:false,seq:[],idx:0,correct:0,t:0,marks:[]}; S.domainUsed=false;
   S.blackN=0; S.whatIf=false;  S.cutin=0;
-  S.hero='gojo'; S.kashimo.hp=100; S.amber=2;  S.amberUsed=false; S.trueForm=false;   /* ★ v46 amber＝剩余回合 */
+  S.hero='gojo'; S.kashimo.hp=100; S.amber=0;  S.amberUsed=false; S.amberOn=0; S.amberLethal=0; S.amberCastTurn=0; S.trueForm=false;   /* ★ v46 amber＝剩余回合 */
   setHeroHint('gojo');   /* ★ v135 提示条跟随角色 */
   S.downDone=false; try{ S.__downKick=0; S.__downForce=0; S.__downTok=(S.__downTok||0)+1; }catch(_e){} S.pendingTrueForm=false; S.kashimoDead=0; S.usedHeroes=[]; window.__hardPick=null;   /* v378 新局重抽 */   /* ★ v32 开局空名单：不预置五条悟 */
   S.itadori.hp=100; S.blood=0; S.itaUltCd=0; S.itaHeal=false; S.itaDom=0; S.itaSimpleDom=0;
@@ -6358,12 +6414,9 @@ function hurtHero(d,kind){
     syncHud();
     return;
   }
-  /* ★ v393 鹿紫云一·带电体：每层电荷让受到的伤害 −10%（3 层 −30%），
-     「电荷放出」那一回合再叠一层电场减伤（15%~60%）。这是他唯一的「防御」，而且是拿电荷换的。 */
+  /* ★ v540 用户指定：取消「携带电荷」的减伤（原来的 d*=0.90 底减与每层 −10% 一并移除）——
+     电荷现在只加输出，不再当护甲。鹿紫云唯一的减伤只剩「电荷放出」当回合的电场。 */
   if(S.hero==='kashimo' && d>0){
-    const _kch=Math.min(3,S.charge||0);
-    d*=0.90;                                  /* 带电体：身体半电离，物理斩击先被弹掉一成 */
-    if(_kch>0) d*=(1-0.10*_kch);              /* 每层再 −10%（3 层累计 ≈ −37%，与 5 层旧制同值） */
     if(S.kashFieldT===S.turnN && (S.kashField||0)>0) d*=(1-S.kashField);
     d=Math.round(d*10)/10;
   }
@@ -6445,7 +6498,18 @@ function hurtHero(d,kind){
   /* ★ v521 致命一击慢放：先记下扣血前的血量，归零那一击给足定格＋缓放，
      让「被腰斩 / 被斩碎」这一下有反应时间（原来是直接切退场演出，太快）。 */
   const _hpBefore=(S.hero==='kashimo'?S.kashimo.hp:(S.hero==='itadori'?S.itadori.hp:S.gojo.hp));
-  if(S.hero==='kashimo') S.kashimo.hp=Math.max(0,S.kashimo.hp-d);
+  if(S.hero==='kashimo'){
+    const _nh=S.kashimo.hp-d;
+    if(_nh<=0 && S.amberOn && (S.amber||0)>0){
+      /* ★ v540 幻兽琥珀·强制续命：这两回合内生命不会被清空 ——
+         本该死的一击只把血压到 1，并记下「这具身体已经死了」，等琥珀结束再结算消散。 */
+      S.amberLethal=1; S.kashimo.hp=1;
+      try{ fxText(GX()+rnd(-12,12),GY-224*SC,'琥珀·续命','#e030c8',true); }catch(e){}
+      try{ say('sys','★ 幻兽琥珀·强制续命 —— 这一击足够致命，琥珀把命按住了（本回合不会倒下）。'); }catch(e){}
+    }else{
+      S.kashimo.hp=Math.max(0,_nh);
+    }
+  }
   else if(S.hero==='itadori') S.itadori.hp=Math.max(0,S.itadori.hp-d);
   else S.gojo.hp=Math.max(0,S.gojo.hp-d);
   const _hpAfter=(S.hero==='kashimo'?S.kashimo.hp:(S.hero==='itadori'?S.itadori.hp:S.gojo.hp));
@@ -6794,7 +6858,7 @@ function fireFlame(){
       say('sys','简易领域隔绝了火焰——场地没有被点燃。');
     }else{
       S.burn=3;
-      say('sys','场地被「灶·开」点燃：接下来 3 回合，每回合结束时受到 5% 最大生命的灼烧。');
+      say('sys','场地被「灶·开」点燃：接下来 3 回合，每回合结束时受到 '+heroPct(5)+' 的灼烧。');
     }
     syncHud();
     const hp=curHp();
@@ -6810,9 +6874,9 @@ function burnTick(){
   S.burn--;
   const bd=5;
   hurtHero(bd);
-  fxText(GX()+rnd(-14,14),GY-182*SC,'灼烧 -'+bd+'%','#e0561c');
+  fxText(GX()+rnd(-14,14),GY-182*SC,'灼烧 -'+heroPct(bd),'#e0561c');
   SFX.hurt();
-  say('sys','场地燃烧——受到 5% 最大生命的灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
+  say('sys','场地燃烧——受到 '+heroPct(bd)+' 的灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
   const hp=curHp();
   syncHud();
   if(hp<=0){
@@ -6851,7 +6915,7 @@ function actAtk(allowBlack){
     fxManga(_muOff?'术式顺转·苍·拳':'术式顺转·苍',GX()+96*SC,GY-236*SC,false,_muOff?'#0284c7':'#2b6cb0');
     /* ★ v213 用户指定：五条「苍」伤害 3.5~5.6% → **4%~6% 最大生命**（黑闪仍 ×2 ⇒ 8%~12%） */
     /* ★ v230 用户指定上调：2.8~4.2% 实际 → 5.0~7.0%（raw 0.072~0.10 × HERO_DMG 0.70） */
-    let d=rnd(SUK_MAXHP*0.0625, SUK_MAXHP*0.0875);   /* ★ v395 对齐文案：苍＝5~7% 最大生命（raw 先除 ×0.80 系数 ⇒ 0.05/0.8~0.07/0.8） */
+    let d=rnd(SUK_MAXHP*0.05, SUK_MAXHP*0.07);   /* ★ v541 苍 = 5%~7%（苍·拳 ×2 ⇒ 10%~14%），与文案完全一致 */
     if(_muOff) d*=2;                      /* ★ v230 苍·拳：伤害 ×2（不挂标记） */
     if(doBlack){
       /* 黑闪动画与「苍」的技能动画同拍出现（技能动画在上面一行已经起来）；★ v204 音效已提到 QTE 点中瞬间 */
@@ -7274,7 +7338,7 @@ function actHe(){
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     /* ★ v230 用户指定上调：3.2~5.1% 实际 → 7.0~9.0%（raw 0.10~0.128 × HERO_DMG 0.70） */
-    let d=rnd(SUK_MAXHP*0.0875, SUK_MAXHP*0.1125);   /* ★ v395 对齐文案：赫＝7~9% 最大生命（引爆苍标记时再 ×1.5） */
+    let d=rnd(SUK_MAXHP*0.075, SUK_MAXHP*0.105);   /* ★ v541 赫 = 苍的 1.5 倍 = 7.5%~10.5%（引爆苍标记时再 ×1.5） */
     if(S.cangMark>0){
       d*=1.5; S.cangMark=0;
       if(S.agyo) agyoDown();   /* ★ v52 「苍赫相撞」连颚吐一起扫掉 */
@@ -7319,7 +7383,7 @@ function actHollow(){
   setTimeout(()=>{ SFX.hollow(); shake(); flash('fWhite'); flash('fPurple'); },980);
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    let d=rnd(SUK_MAXHP*0.20,SUK_MAXHP*0.25)/HERO_DMG;   /* ★ v394 对齐文案：虚式·茈＝一阶段 25~30% 最大生命（150 基准 ⇒ 37.5~45 点；先除 HERO_DMG，hitSukuna 入口再乘回） */
+    let d=rnd(SUK_MAXHP*0.20,SUK_MAXHP*0.25);   /* ★ v394 对齐文案：虚式·茈＝一阶段 25~30% 最大生命（150 基准 ⇒ 37.5~45 点；先除 HERO_DMG，hitSukuna 入口再乘回） */
     d=applyPubVow(d);                                  /* ★ v243 术式公开兑现（共用） */
     hitSukuna(d,true,'hollow',false,false,'gojo_hollow');   /* ★ v427 标记「虚式·茈」击杀 */
     say('narr',pick(['旁白：红与蓝相撞，虚构的质量吞没了整条街。','旁白：茈——不存在于这个世界的冲击，正面命中。','旁白：硝烟散去，宿傩的半边身子消失了。']));
@@ -7368,7 +7432,7 @@ function hollowUnlimited(){
     if(S.phase!=='fight') return;
     if(S.maha) killMaha();                    /* ★ 抹除魔虚罗（渐隐退场） */
     if(S.agyo) agyoDown();                    /* ★ v52 无限制菈连颚吐一起抹除 */
-    let _hd=rnd(SUK_MAXHP*0.30,SUK_MAXHP*0.35)/HERO_DMG;   /* ★ v413 46~55% → 36~42%：配术式公开 1.35 后单发上限 85（一阶段 57%），不再一发打空 */   /* ★ v395 用户指定上调：无限制·茈＝46~55% 最大生命（原 46~58 点在 150 基准下只等于 24.5~30.9%，已被普通茈 25~30% 追平） */
+    let _hd=rnd(SUK_MAXHP*0.30,SUK_MAXHP*0.35);   /* ★ v413 46~55% → 36~42%：配术式公开 1.35 后单发上限 85（一阶段 57%），不再一发打空 */   /* ★ v395 用户指定上调：无限制·茈＝46~55% 最大生命（原 46~58 点在 150 基准下只等于 24.5~30.9%，已被普通茈 25~30% 追平） */
     _hd=applyPubVow(_hd);                     /* ★ v243 修 BUG：无限制·茈同样吃「术式公开」×1.8 */
     hitSukuna(_hd,true,'hollow',false,false,'gojo_hollow');   /* ★ v427 标记「无限制·茈」击杀 */
     /* ★ 代价：解除上限的茈会波及自身 —— ★ v222 用户要求降低反噬：40% → **20%**（现有生命的） */
@@ -7416,7 +7480,13 @@ const SID_NAME={
   rika_copy_blood:'赤血操术', rika_copy_kai:'解', rika_copy_hatsu:'捌',
   rika_copy_tenrai:'邪去侮天梯', okko_dom_tenrai:'邪去侮天梯',
   rika_punch:'里香·拳', rika_release:'无限制咒力解放', higuExec:'处刑人之剑',
-  ita_soul:'灵魂·解', ita_soul_final:'灵魂·解·共鸣'
+  ita_soul:'灵魂·解', ita_soul_final:'灵魂·解·共鸣',
+  /* ★ v541 全角色逐招独立适应：新补的 sid 中文名 */
+  kash_atk:'咒力电击·雷',
+  ita_atk:'径庭拳', ita_black:'径庭拳·黑闪', ita_blood:'赤血操术·穿血',
+  higu_atk:'法槌·开廷', higu_verdict:'审判·下达',
+  okko_atk:'太刀·呪斩', okko_black:'太刀·呪斩·黑闪',
+  maki_w0:'释魂刀', maki_w1:'游云', maki_w2:'龙骨', maki_ult:'无声突袭'
 };
 function kindName(k){
   const t0=KIND_BY_HERO[S.hero]||KIND_BY_HERO.gojo;
@@ -7504,7 +7574,7 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     return;
   }
   /* ★ v38：我方主输出招统一伤害系数。noScale 供「处刑人之剑」等即死类结算绕过。 */
-  let d=raw*(noScale?1:(DF().heroDmg||HERO_DMG));   /* ★ v480 第三档 heroDmg 0.60 */
+  let d=raw*(noScale?1:(DF().heroDmg||1));   /* ★ v480 第三档 heroDmg 0.60 */
   if((S.soulWound||0)>0) d*=1.06;      /* ★ v480 魂伤：+12% → +6% */
   if(S.hero==='maki'&&S.makiAwaken) d*=1.25;   /* ★ v387 天与咒缚·全开 */
   if((S.soulStack||0)>0 && !noScale && !finisher) d*=(1+0.02*S.soulStack);   /* ★ v480 每层 +4% → +2% */
@@ -7677,9 +7747,9 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
    6.5 第二位术师：鹿紫云一（幻兽琥珀）
    ========================================================= */
 function kashAtk(){
-  if(S.amber<=0) return;
+  if(S.phase!=='fight') return;
   if(S.acted) return;                                       /* 本回合已出招 */
-  if((S.kashimo.ce||0)<ceCost('kashimo','atk')){ say('sys','咒力不足 1 点——等一等再出手。'); return; }
+  if((S.kashimo.ce||0)<ceCost('kashimo','atk')){ say('sys','咒力不足 '+cePipFor('kashimo','atk')+' 点——等一等再出手。'); return; }
   S.kashimo.ce-=ceCost('kashimo','atk');
   const _ch=Math.min(5,S.charge||0);   /* ★ v440 电荷上限 4→5 */
   markActed('atk');
@@ -7692,14 +7762,14 @@ function kashAtk(){
     if(S.phase!=='fight') return;
     /* ★ v393 电压：每一层电荷让雷的输出 +12%（3 层 = +36%），但同时让自己更脆（见 hurtHero） */
     const _mul=1+0.10*_ch;   /* ★ v480 层增益 15% → 10%（满 5 层 ×1.5） */
-    const d=Math.round(SUK_MAXHP*rnd(0.10,0.15)*_mul/HERO_DMG*10)/10;   /* ★ v480 基础 10~15% ×（1+0.10×层） */   /* ★ v410 用户指定：一技能再降 5%（9.2~13.8% → 8.74~13.11%，含电压 _mul 加成） */   /* ★ v395 口径统一：咒力电击·雷 10.7~16%（×电荷加成 _mul） */   /* 幻兽琥珀期间普攻 ×2 */
+    const d=Math.round(SUK_MAXHP*rnd(0.10,0.15)*_mul*10)/10;   /* ★ v480 基础 10~15% ×（1+0.10×层） */   /* ★ v410 用户指定：一技能再降 5%（9.2~13.8% → 8.74~13.11%，含电压 _mul 加成） */   /* ★ v395 口径统一：咒力电击·雷 10.7~16%（×电荷加成 _mul） */   /* 幻兽琥珀期间普攻 ×2 */
     say('kash',pick(['「雷——」','「提高音量！！」','「生前葬，开场。」']));
     /* ★ v391 原作向：鹿紫云的术式就是把咒力转成电。宿傩上回合用了术式 ⇒ 残留的咒力一并吸过来，
        这一击多蓄 1 层（打得到、也吸得到）。所以「宿傩越凶，你充得越快」——但他也越容易把你打死。 */
     const _evi=!!(S.sukLast && S.sukLast!=='rct');
     const _gain=Math.min(5-_ch, _evi?2:1);
     if(_gain>0) S.charge=_ch+_gain;
-    hitSukuna(d,false,'atk');
+    hitSukuna(d,false,'atk',false,false,'kash_atk');
     /* ★ v393 原作向：满电荷（3 层）＝整条身体通电，第一击之后雷还没散 —— 追加一段（0.6 倍、无视适应）。
        这一段是鹿紫云唯一能在「世界斩预警回合」里把血条打空的东西。 */
     if((S.charge||0)>=4){
@@ -7711,26 +7781,26 @@ function kashAtk(){
         syncHud();
       },260);
     }
-    say('sys','咒力电击·雷 —— 电荷 '+(S.charge||0)+'/5（每层输出 +10%、受到伤害 −10%；4 层起附赠二段雷）'
+    say('sys','咒力电击·雷 —— 电荷 '+(S.charge||0)+'/5（每层输出 +10%；电荷不再减伤；4 层起附赠二段雷）'
       +(_evi?'；宿傩上回合动用术式，残留咒力一并吸来 +1 层':'')+'。'
-      +((S.charge||0)>=5?'★ 电荷已满。':((S.charge||0)>=3?'★ 电荷 ≥3 层 —— 生命压到 40% 以下即可解放「幻兽琥珀」。':'')));
+      +((S.charge||0)>=5?'★ 电荷已满 —— 「电荷放出」可吃满 22.5%。':((S.charge||0)>=3?'★ 电荷 ≥3 层 ——「电荷放出」已能吃满 22.5%；生命压到 40% 以下即可解放「幻兽琥珀」。':'')));
     syncHud();
   },170);
 }
-/* ★ v391 新 2 技「电荷放出」：鹿紫云仍然没有格挡，这一招是「把电荷倒出体外」——
-   耗掉全部电荷换一发必中雷击，并在这一回合撑起电场减伤。用掉就等于把「幻兽琥珀」推迟几回合。
-   完美时机（0.5 秒窗口）按下 ⇒ 电流回冲，返还 2 层电荷。 */
+/* ★ v540 用户指定 · 2 技「电荷放出」：一次把身上所有电荷倒出体外，换一发必中雷击，
+   并在这一回合撑起电场。伤害按 3 层封顶计入（电荷可存 5 层，但最多只放出 3 层），
+   每层 7.5% 最大生命；电场减伤沿用旧公式 15% + 15%/层（3 层 = 60%）。
+   放完就清空 ⇒ 等于把「幻兽琥珀」的蓄电重新开始。 */
 function kashDischarge(){
-  if(S.amber<=0) return;
+  if(S.phase!=='fight') return;
   if(S.acted) return;
-  const _ch=Math.min(2,S.charge||0);   /* ★ v433 最多消耗 2 层 */
+  const _ch=Math.min(3,S.charge||0);   /* ★ v540 最多按 3 层计入伤害 */
   if(_ch<=0){ say('sys','身上没有电荷 —— 先用「咒力电击·雷」蓄电，才有东西可以放。'); return; }
-  if((S.kashimo.ce||0)<ceCost('kashimo','guard')){ say('sys','咒力不足 1 点——无法把电荷导出体外。'); return; }
+  if((S.kashimo.ce||0)<ceCost('kashimo','guard')){ say('sys','咒力不足 '+cePipFor('kashimo','guard')+' 点——无法把电荷导出体外。'); return; }
   S.kashimo.ce-=ceCost('kashimo','guard');
   const _perf=perfectWindowOpen();
-  const _refund=_perf?1:0;   /* ★ v393 上限 3 层：返还 1 层＝净耗 2/3，与旧制「5 层返 2」的 3/5 同比例 */
-  S.charge=Math.max(0,(S.charge||0)-_ch+_refund);   /* ★ v433 只倒出 2 层；完美时机返还 1 层 */
-  S.kashField=Math.min(0.75,0.15+0.15*_ch);   /* 本回合电场减伤：15% + 每层 15%（3 层 60%） */
+  S.charge=0;                                     /* ★ v540 用户指定：一次放光，全部清空 */
+  S.kashField=Math.min(0.75,0.15+0.15*_ch);       /* 本回合电场减伤：15% + 每层 15%（3 层 60%） */
   S.kashFieldT=S.turnN;
   markActed('guard');
   S.gojo.pose='cast'; S.gojo.poseT=0.5;
@@ -7740,26 +7810,23 @@ function kashDischarge(){
   say('kash',_perf?'「——回旋吧，雷。」':'「散开。」');
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    const d=SUK_MAXHP*0.075*_ch/HERO_DMG;   /* ★ v433 每层 7.5%（2 层 15%） */   /* ★ v395 口径统一：电荷放出 每层 5.3%（3 层 16%） */                             /* ★ v395 每层 5.3% 最大生命（3 层 16%），必中、无视适应 */
+    const d=SUK_MAXHP*0.075*_ch;   /* ★ v540 每层 7.5%，最多 3 层 */
     hitSukuna(d,true,'hollow',false,false,'kash_discharge',true);
-    say('sys','★ 电荷放出 —— 放出 '+_ch+' 层电荷，造成 '+Math.round(d*HERO_DMG)+' 点必中雷击（无视魔虚罗适应）；'
+    say('sys','★ 电荷放出 —— 一次性放光全部电荷（计入 '+_ch+' 层），造成 '+sukPct(d*(DF().heroDmg||1))+' 必中雷击（无视魔虚罗适应）；'
       +'本回合受到的伤害 −'+Math.round(S.kashField*100)+'%。'
-      +(_perf?'（完美时机：电流回冲，返还 1 层电荷）':''));
+      +(_perf?'（完美时机）':''));
     if(_perf){ S.perfectN=(S.perfectN||0)+1; perfectCine(); }   /* 只取演出与统计，不给格挡与额外行动 */
     syncHud();
   },160);
 }
 function kashUlt(){
   if(S.acted) return;                                       /* 本回合已出招 */
-  /* ★ v391 原作向：幻兽琥珀是「一生一次」的术式，代价是把四百年积下的电一次放完。
-     解锁条件三条，缺一不可：① 电荷满 3 层 ② 自己的生命 ≤40%（★ v480 45%→40%）③ 本局没用过。
-     ＊ 这一击不斩肉体，烧的是神经与灵魂 —— 宿傩即使舍弃伏黑惠的肉体，也换不掉这一刀。 */
+  /* ★ v541 定案：幻兽琥珀＝「一生一次」的变身，**不造成任何伤害**。
+     解锁条件：① 自己生命 ≤40%（★ v480 45%→40%）② 本局没用过（电荷门槛 v540 已废）。
+     作用：进入 2 回合强制续命（期间生命不被清空）＋ 每回合额外 +1 层电荷；代价是清空电荷、本局用尽。
+     ＊ 它不打断「受肉·崩坏」，也不吃适应 —— 因为它根本不打人。 */
   if(S.amberUsed){ say('sys','幻兽琥珀已经解放过了 —— 术式解放，一生只有一次。'); return; }
-  if(S.amber<=0) return;
-  if((S.charge||0)<3){
-    say('sys','电荷不足（'+(S.charge||0)+'/3）—— 幻兽琥珀需要 3 层以上的电荷，先用「雷」蓄电。');
-    return;
-  }
+  if(S.phase!=='fight') return;
   if(S.kashimo.hp>S.maxHp*0.40){   /* ★ v480 45% → 40% */
     say('sys','生命还有 '+Math.round(S.kashimo.hp)+'%（需 ≤40%）—— 这一击要拿命去换，还没到时候。');
     return;
@@ -7767,10 +7834,11 @@ function kashUlt(){
   S.amberUsed=true;
   /* ★ v456 用户提供原声：幻兽琥珀解放与演出同一 tick 起播 */
   try{ window.playSoloVoice('kashAmber', 0, 3.3, 0.92); }catch(e){}
-  S.charge=0;
-  /* ★ v433 用户指定：取消解放后 2 回合倒计时 —— 琥珀一旦解放就常驻，不再自灭 */
-  S.amber=999;  S.amberForever=1;   /* ★ v243j 使用技能后才开始 2 回合倒计时（未使用时完全不计时） */
-  S.amberTagHide=1;   /* ★ v70 解放后一回合：标签才出现、倒数才开始 */
+  S.charge=0;   /* ★ v540 琥珀仍以「清空电荷」为代价（电荷不再当解锁门票） */
+  /* ★ v540 用户指定：琥珀 = 强制续命 2 回合的限时形态（解放当回合不计数）：
+     期间生命不会被清空、每回合额外 +1 层电荷；结束时生命早已为空 ⇒ 立绘消散下场，
+     否则回到常态（术式解放本局已用尽，不再常驻）。 */
+  S.amber=2; S.amberOn=1; S.amberLethal=0; S.amberCastTurn=S.turnN; S.amberTagHide=0; S.amberForeverMsg=0;
   markActed('hollow');
   /* ★ v46 解放不再额外扣时间（琥珀本身已是 2 回合制） */
   S.gojo.pose='cast'; S.gojo.poseT=1.2;
@@ -7787,20 +7855,14 @@ function kashUlt(){
   },860);
   stageTimer(()=>{
     if(S.phase!=='fight') return;
-    fxManga('必中',SX()-30*SC,GY-262*SC,true,'#e030c8');
-    addFx({type:'amberBolt',dur:0.68});   /* ★ v115 0.85→0.68 */   /* ★ v113 咒力波贯穿：加长演出 */   /* ★ v76 雷光贯穿 */
-    /* ★ v391 finisher=true：这一击跳过「受肉·崩坏」——电烧的是灵魂，换一具身体也躲不掉。
-       这是鹿紫云一唯一能单独打穿宿傩的路，代价是必须在没有防御的情况下活到满电荷、且血量 ≤40%。 */
-    const _wasTrue=S.trueForm;
-    /* ★ v392 定案：琥珀**不跳过受肉崩坏**。它就是很大的一击（45% 最大生命、无视适应与减伤）：
-       打在受肉之躯上 ⇒ 躯体崩解、原身满血站起来，这张牌等于白扔；留到原身才是它该去的地方。 */
-    hitSukuna(SUK_MAXHP*0.50,true,'hollow',false,true,'kash_amber',true,false,false);
+    /* ★ v541 用户指定：幻兽琥珀**不再造成任何伤害** —— 它换的不是输出，是活命。
+       原「必中」大字＋雷光贯穿＋50% 最大生命一击整段撤除，第二拍只做「电自脚下升起」。 */
+    addFx({type:'kashAura',dur:0.95,x:GX(),y:GY-92*SC});
     say('kash','「——雷，还没停。」');
-    say('narr','旁白：四百年的咒力化作雷电，一次性贯穿了那具身体。');
-    say('sys','★ 幻兽琥珀·解放 —— '+Math.round(SUK_MAXHP*0.50)+' 点（50% 最大生命），无视适应、无视减伤。'
-      +(_wasTrue?'':'★ 可惜打的还是受肉之躯：他把这具身体丢了，原身会带着满血站起来。这一张，用早了。'));
+    say('narr','旁白：四百年的咒力在体内炸开。他没有朝对手出手 —— 这一次，他把所有的电都留给了自己。');
+    say('sys','★ 幻兽琥珀·解放 —— 进入形态：接下来 2 回合生命不会被清空（致命伤只把血压到 1），每回合额外 +1 层电荷。撑过去回到常态，撑不过去就消散下场。');
     syncHud();
-  },1000);
+  },1150);
   syncHud();
 }
 
@@ -8479,7 +8541,7 @@ function kashimoDeath(){
   S.kashimoDead=1;
   try{ clearHeroTimers(); }catch(e){}
   try{ stageReset(); }catch(e){}
-  S.phase='over'; S.amber=0;
+  S.phase='over'; S.amber=0; S.amberOn=0; S.amberLethal=0;
   /* 明确清掉五条悟死亡线的所有覆盖层，避免串场 */
   closeVowUI();
   $('yujiDomain').classList.remove('on');
@@ -9441,7 +9503,7 @@ function startKashimo(){
   $('subTag').style.background='#7c3aed';
   $('gjHp').parentElement.classList.add('khp');
   $('gjCe').classList.add('amb');
-  $('btnUlt').innerHTML=ICO('bolt')+'幻兽琥珀·解放<small>一生一次·逼出原身</small>';
+  $('btnUlt').innerHTML=ICO('bolt')+'幻兽琥珀·解放<small>一生一次·2 回合续命</small>';
   $('btnUlt').__hl=null;   /* 同上：换角色后要能重新渲染 */
   shake(); flash('fWhite');
   /* ★ v35 鹿紫云一的登场并进全角色出场页（原 kashIn 漫画页停用，素材与样式保留可回退） */
@@ -9455,7 +9517,7 @@ function startKashimo(){
       .concat([
       ['kash','「提高音量！！来场生前葬吧！！」'],
       ['kash','「魔眼——让我看看你的肉体。……完美无缺。」'],
-      ['sys','鹿紫云一登场！开局自带电荷 2 层（上限 4）—— 雷击蓄电、电荷放出折电减伤；他没有格挡也没有治疗，所有「防御」都要用电荷买。'],
+      ['sys','鹿紫云一登场！开局自带电荷 2 层（上限 5）—— 雷击蓄电、电荷放出一次放光换一发必中与一回合电场；他没有格挡也没有治疗，唯一的防御就是放电那一回合。'],
       ['suku',pick(['「雷神，是吗。」','「又一个来送死的。」'])]
     ]).forEach((l,i)=>{ setTimeout(()=>say(l[0],l[1]), i*430); });
   },INTRO_MS+240);
@@ -9670,7 +9732,7 @@ function qtePress(){
       : pick(['「……差一点。」','「——切。」','「太浅了。」']));   /* ★ v493 修：非五条不得念「苍」 */
     setTimeout(()=>{
       if(S.phase!=='fight') return;
-      hitSukuna(rnd(SUK_MAXHP*0.03,SUK_MAXHP*0.04)/HERO_DMG,false,'atk');   /* ★ v395 口径统一：五条普攻 3~4%（原写死 5~8 点） */
+      hitSukuna(rnd(SUK_MAXHP*0.03,SUK_MAXHP*0.04),false,'atk');   /* ★ v395 口径统一：五条普攻 3~4%（原写死 5~8 点） */
     },180);
   }
 }
@@ -9710,7 +9772,7 @@ const COPY_DEF={
   /* 虎杖悠仁 ③赤血操术·穿血：并附着血契（每回合持续侵蚀） */
   blood:{nm:'赤血操术·穿血', sub:'15~20% ．附着血契', exec:function(){
       try{ addFx({type:'bloodShot',dur:0.88,y:H*0.43}); }catch(e){}   /* ★ v350 只绝血柱 */
-      hitSukuna(rnd(SUK_MAXHP*0.15,SUK_MAXHP*0.20)/HERO_DMG,true,'hollow',false,false,'rika_copy_blood');   /* ★ v394 与虎杖版同口径 */
+      hitSukuna(rnd(SUK_MAXHP*0.15,SUK_MAXHP*0.20),true,'hollow',false,false,'rika_copy_blood');   /* ★ v394 与虎杖版同口径 */
       if(S.blood<3){ S.blood++; say('sys','血契附着 ×'+S.blood+'——宿傩每回合收到 '+(S.blood*3)+' 点持续侵蚀。'); }
       else say('sys','血契已满（×3），持续侵蚀 9 点/回合。');}},
   /* 言灵术式：定住宿傩（连同场上式神）一回合，并给乙骨追加一次行动；用后永久移出池子 */
@@ -9728,7 +9790,7 @@ const COPY_DEF={
       fxYutaKai();
       setTimeout(function(){
         if(S.phase!=='fight') return;
-        hitSukuna(rnd(SUK_MAXHP*0.14,SUK_MAXHP*0.18)/HERO_DMG,true,'hollow',false,false,'rika_copy_kai');   /* ★ v395 对齐文案：解＝14~18% */
+        hitSukuna(rnd(SUK_MAXHP*0.14,SUK_MAXHP*0.18),true,'hollow',false,false,'rika_copy_kai');   /* ★ v395 对齐文案：解＝14~18% */
         say('sys','「解」——没有形体的斩击，沿着空间的缝切开了宿傩。');
       },260);}},
   /* 宿傩「捌」：贴身连斩（动画与宿傩版互为镜像） */
@@ -9736,7 +9798,7 @@ const COPY_DEF={
       fxYutaHatsu();
       setTimeout(function(){
         if(S.phase!=='fight') return;
-        hitSukuna(rnd(SUK_MAXHP*0.17,SUK_MAXHP*0.21)/HERO_DMG,true,'hollow',false,false,'rika_copy_hatsu');   /* ★ v395 对齐文案：捌＝17~21% */
+        hitSukuna(rnd(SUK_MAXHP*0.17,SUK_MAXHP*0.21),true,'hollow',false,false,'rika_copy_hatsu');   /* ★ v395 对齐文案：捌＝17~21% */
         say('sys','「捌」——贴身的一刀，依对方的咒力量调整强度。');
       },260);}},
   /* 邪去侮天梯：动画同领域里的天降光柱；命中后没收宿傩一个常规技能（只此一次） */
@@ -9744,7 +9806,7 @@ const COPY_DEF={
       tenraiShow();
       setTimeout(function(){
         if(S.phase!=='fight') return;
-        hitSukuna(rnd(SUK_MAXHP*0.10,SUK_MAXHP*0.15)/HERO_DMG,true,'hollow',false,false,'rika_copy_tenrai');   /* ★ v395 对齐文案：天梯＝10~15% */
+        hitSukuna(rnd(SUK_MAXHP*0.10,SUK_MAXHP*0.15),true,'hollow',false,false,'rika_copy_tenrai');   /* ★ v395 对齐文案：天梯＝10~15% */
         say('sys','★ 邪去侮天梯从天而降——术式的「罪」被洗去。');
         if(S.suk.hp>0 && S.phase==='fight') sukuConfiscateOne();
         syncHud();
@@ -9866,7 +9928,7 @@ function tenraiShow(){
     if(S.phase!=='fight') return;
     shake(); S.hitStop=Math.max(S.hitStop||0,0.14);
     /* ★ v303 用户指定：领域里的邪去侮天梯也要造成 10~15% 伤害 */
-    hitSukuna(rnd(SUK_MAXHP*0.10,SUK_MAXHP*0.15)/HERO_DMG,true,'hollow',false,false,'okko_dom_tenrai');   /* ★ v395 对齐文案：领域天梯＝10~15% */
+    hitSukuna(rnd(SUK_MAXHP*0.10,SUK_MAXHP*0.15),true,'hollow',false,false,'okko_dom_tenrai');   /* ★ v395 对齐文案：领域天梯＝10~15% */
   },380);
 }
 /* ★ v295 天梯命中：没收宿傩一个常规技能（同处刑人之剑的没收效果） */
@@ -9895,9 +9957,10 @@ function rikaLeave(keepCopy){
   S.rikaCopy=''; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaCopyCd=0; S.rikaPool=null;
   S.rikaCd=4;
   S.ceCap=100;
+  S.gojo.ce=CE_PIP*3;   /* ★ v542 里香退场：咒力只余 3 点（召唤时被里香吸走大半） */
   if(S.target==='rika') S.target='sukuna';
   say('rika','「……忧太，我先回去了。」');
-  say('sys','里香退场：「模仿术式」随之消失，二技能回到「里香·召唤」（冷却 4 回合）；咒力上限恢复 100。');
+  say('sys','里香退场：「模仿术式」随之消失，二技能回到「里香·召唤」（冷却 4 回合）；咒力只余 3 点。');
   syncHud();
 }
 /* 咒力拳的目标：敌方任一在场单位（宿傩 / 魔虚罗 / 颚吐） */
@@ -10438,6 +10501,34 @@ function domMahaCollapse(){
   syncHud();
   return true;
 }
+/* ★ v540 幻兽琥珀·回合结算（每个宿傩回合结束时调用；解放当回合不计数）。
+   倒数到 0 时：期间生命被打空 ⇒ 立绘消散、下场进死亡黑幕；否则回到常态。
+   返回 true 表示「已下场」，调用方需立刻 return。 */
+function kashAmberTick(){
+  if(!S.amberOn || S.phase!=='fight') return false;
+  if((S.turnN||0)===S.amberCastTurn) return false;   /* 解放当回合不计数 */
+  S.amber=Math.max(0,(S.amber||0)-1);
+  if((S.charge||0)<5){
+    S.charge=Math.min(5,(S.charge||0)+1);            /* 强化自身：每回合额外 +1 层电荷 */
+    fxText(GX()+rnd(-16,16),GY-208*SC,'电荷 +1','#e030c8',false);
+  }
+  if(S.amber>0){
+    say('sys','★ 幻兽琥珀·强制续命 —— 还剩 '+S.amber+' 回合；每回合额外 +1 层电荷（现 '+(S.charge||0)+'/5）。');
+    return false;
+  }
+  S.amberOn=0; S.amberTagHide=0;
+  if(S.amberLethal){
+    S.kashimo.hp=0;
+    syncHud();
+    say('sys','★ 幻兽琥珀消散 —— 这具身体早就被打穿了，只是琥珀把命按到了最后一刻。');
+    heroDown();
+    return true;
+  }
+  S.amberLethal=0;
+  say('sys','★ 幻兽琥珀消散 —— 身体撑住了，回到常态（术式解放本局已用尽）。');
+  syncHud();
+  return false;
+}
 function sukunaTurn(){
   /* ★ v306 暂停 / 切出页面期间宿傩一律不出手 —— 否则交棒的 setTimeout 会穿透暂停照样攻击 */
   if(S.phase==='fight' && (S.paused || document.hidden)){
@@ -10771,22 +10862,8 @@ function sukunaTurn(){
   /* ★ v70 鹿紫云一咒力：每回合回复 15 */
   /* ★ v512 15 → 20：与「1 格 = 20 点」对齐（原 15 点是 0.75 格，账目不是整数） */
   if(S.hero==='kashimo' && S.phase==='fight') S.kashimo.ce=Math.min(100,(S.kashimo.ce||0)+CE_PER_TURN);
-  /* ★ v393 电荷反噬：电荷 2 层起，每回合结束电自己一下（2 层 −2、3 层 −4）。
-     这是他「攒电」的价钱：想留住满电荷去换幻兽琥珀，就得一路被自己的雷烧。 */
-  /* ★ v433 用户指定：反噬只在「幻兽琥珀」解放后才生效；2 层 −5%、3 层（含 4 层）−7% */
-  if(S.hero==='kashimo' && S.phase==='fight' && S.amberUsed && (S.charge||0)>=2 && S.kashimo.hp>1){
-    const _od=((S.charge||0)>=3?7:5);
-    S.kashimo.hp=Math.max(1,S.kashimo.hp-_od);
-    fxText(GX()+rnd(-14,14),GY-196*SC,'电击反噬 -'+_od,'#b024d3',false);
-    say('sys','★ 琥珀反噬——电荷 '+(S.charge)+' 层，电流在体内找不到出口：生命 −'+_od+'。');
-    syncHud();
-  }
-  /* ★ v433 用户指定：幻兽琥珀取消 2 回合倒计时（常驻、不再自灭）——
-     旧的 amberTagHide / amberSkip / amber-- 三段计时整体作废，只留一次启动提示。 */
-  if(S.hero==='kashimo' && S.phase==='fight' && S.amberUsed && !S.amberForeverMsg){
-    S.amberForeverMsg=1;
-    say('sys','★ 幻兽琥珀·常驻 —— 术式解放后不再倒计时；代价改为每回合的电荷反噬（2 层 −5%、3 层以上 −7%）。');
-  }
+  /* ★ v540 用户指定：琥珀 = 2 回合强制续命形态（解放当回合不计数，倒数逻辑见 kashAmberTick）。 */
+  if(S.hero==='kashimo' && S.phase==='fight' && S.amberOn && kashAmberTick()) return;   /* true＝本回合结算时消散下场 */
   /* ★ v77 旧「每回合自动弥须葛笼」已移除 —— 改由宿傩行动段每 2 回合发动一次（展开当回合立即一次） */
   /* ★ v40 式神行动（颚吐 鵺鸣·电荷/普攻 ＋ 魔虚罗 斩击 ＋ 圆鹿之愈） */
   if(!_stun && typeof shikigamiAct==='function') shikigamiAct();   /* ★ v295 言灵定身：式神也不行动 */
@@ -10802,8 +10879,8 @@ function sukunaTurn(){
     const _pd=Math.round((4+Math.random()*3)*_pn*10)/10;
     S.suk.hp=Math.max(0,S.suk.hp-_pd);
     addFx({type:'makiSlash',dur:0.5});
-    fxText(SX()+rnd(-16,16),GY-204*SC,'见切·反击 '+_pd,'#3a3f45',true);
-    say('sys','★ 见切·反击 —— 真希顺着架开的空档回敬 '+_pn+' 刀，造成 '+_pd+' 点伤害。');
+    fxText(SX()+rnd(-16,16),GY-204*SC,'见切·反击 '+sukPct(_pd),'#3a3f45',true);
+    say('sys','★ 见切·反击 —— 真希顺着架开的空档回敬 '+_pn+' 刀，造成 '+sukPct(_pd)+' 伤害。');
     syncHud();
   }
   S.makiParry=0;   /* ★ v390 只清反击计数；架势／龙骨改由「下一次宿傩回合开头」按回合戳清除 */
@@ -12995,6 +13072,9 @@ function nobaraLastStand(){
 }
 function itaSoulCut(){
   if(S.acted||S.phase!=='fight') return;
+  /* ★ v542 咒力：灵魂·解同样 1 点 */
+  if(S.gojo.ce<ceCost('itadori','atk')){ say('sys','咒力不足 '+cePipFor('itadori','atk')+' 点——解无法成形。'); return; }
+  S.gojo.ce-=ceCost('itadori','atk');
   const final=nobaraLastStand();   /* ★ v243 虎杖在场且此击能击杀 ⇒ 钉崎彩蛋 */
   if(final){
     /* ★ v243 黑屏演出期间：锁住操作、冻结读秒（含倒计时），且**不提前交棒宿傩** */
@@ -14264,8 +14344,8 @@ function drawSukuna(){
 
 /* ---------- 鹿紫云一（黑墨剪影 + 雷光） ---------- */
 function kashHeight(){ return Math.min(H*0.64,435*SC); }   /* ★ v322 用户指定：与五条悟普通形象同等 */   /* 半身立绘（★v39c 0.66→0.70, 375→405 放大） */
-function kashCut(){ return (S.amberUsed&&IMGS.kashBeast)?bfFeathered(IMGS.kashBeast)   /* ★ v371 幻兽姿径向羽化 */:IMGS.kashimo; }   /* ★v39 术式解放后切换琥珀形态 */
-function kashW(){ const g=kashCut(); return kashHeight()*(g?g.width/g.height:(S.amberUsed?1.062:0.887)); }
+function kashCut(){ return (S.amberOn&&IMGS.kashBeast)?bfFeathered(IMGS.kashBeast)   /* ★ v371 幻兽姿径向羽化 */:IMGS.kashimo; }   /* ★v39 术式解放后切换琥珀形态 */
+function kashW(){ const g=kashCut(); return kashHeight()*(g?g.width/g.height:(S.amberOn?1.062:0.887)); }
 function drawKashimo(){
   const s=SC, gy=GY, p=S.gojo.pose;
   const bob=Math.sin(S.t*2.1)*9*s;
@@ -14280,11 +14360,11 @@ function drawKashimo(){
   const cy=gy-h*0.5;
   shadow(x,gy,36);
   /* 雷光环（琥珀剩余越少越偏红；★ 解放后转为蓝白放电色） */
-  const warn=!S.amberForever && S.amber<=1 && S.phase==='fight';   /* ★ v433 取消倒计时后不再亮红灯 */
+  const warn=!!S.amberOn && (S.amber||0)<=1 && S.phase==='fight';   /* ★ v433 取消倒计时后不再亮红灯 */
   /* ★ v134 幻兽技能动画在鹿紫云一死亡后立即消失：
      退场演出（phase!=='fight'）期间不再画琥珀放电光晕 / 粉剪影外轮廓，
      只保留原黑墨立绘本身 —— 幻兽形态的一切附加动画当场收掉。 */
-  const rel=!!S.amberUsed && S.phase==='fight';                 /* 术式解放：肉体正在放电（死亡后立即停） */
+  const rel=!!S.amberOn && S.phase==='fight';                 /* 术式解放：肉体正在放电（死亡后立即停） */
   if(S.phase==='fight'){
     ctx.save();
     ctx.globalAlpha=(rel?0.42:0.32)+0.2*Math.sin(S.t*(rel?11:6));
@@ -14351,7 +14431,7 @@ function drawKashimo(){
   /* ★ v140 环绕粒子：幻兽琥珀解放后改「圆形光点绕身圆形排布」（原为折线状小方块，用户反馈太方）。
      未解放时仍保留 3 道折线雷电（原作鹿紫的放电视觉）。 */
   if(rel){
-    const P=(S.hero==='kashimo'&&S.amberUsed)?10:8;
+    const P=(S.hero==='kashimo'&&S.amberOn)?10:8;
     const rx=h*0.52, ry=h*0.30, cyOrb=-h*0.5;
     for(let i=0;i<P;i++){
       const a=S.t*2.1+(i/P)*Math.PI*2;
@@ -14443,12 +14523,15 @@ function drawItadori(){
 function itaAtk(){
   if(S.itaDom>0) return itaSoulCut();   /* ★ v47 领域内：普攻 → 灵魂·解 */
   if(S.acted) return;
+  /* ★ v542 咒力：径庭拳 1 点 */
+  if(S.gojo.ce<ceCost('itadori','atk')){ say('sys','咒力不足 '+cePipFor('itadori','atk')+' 点——连拳头都挥不出。'); return; }
+  S.gojo.ce-=ceCost('itadori','atk');
   /* ★ v205 用户指定：黑闪之束缚（必出黑闪）⇒ 点击技能的瞬间就播黑闪音效（原先到结算点才播） */
   if(S.vowBF){ SFX.black(); playBlackFlashSfx(false,true); }   /* ★ v459 虎杖一技能黑闪＝特别原声 */
   markActed('atk');
   S.gojo.pose='atk'; S.gojo.poseT=0.34;
   addRes(6);
-  const d1=rnd(SUK_MAXHP*0.0533,SUK_MAXHP*0.0747)/HERO_DMG;   /* ★ v395 口径统一：径庭拳 5.33~7.47%（原写死 10~14 点） */
+  const d1=rnd(SUK_MAXHP*0.0533,SUK_MAXHP*0.0747);   /* ★ v395 口径统一：径庭拳 5.33~7.47%（原写死 10~14 点） */
   const blackP=0.14+Math.min(0.15,S.blackChain*0.05);   /* 虎杖：被黑闪偏爱，基础概率更高 */
   const black=Math.random()<blackP;
   /* ★ v140 判定将打出黑闪 ⇒ 先暂停＋压暗＋出黄条 QTE（虎杖的黄条更长），点中才真的打出黑闪 */
@@ -14462,7 +14545,7 @@ function itaAtk(){
       else say('ita',pick(['「径庭拳！」','「重量，跟得上吗。」','「还没完——」']));
       /* 黑闪动画与「径庭拳」的技能动画同拍出现（特效在上面一行已经起来） */
       if(doBlack && typeof fxBlackCrack==='function') fxBlackCrack();
-      hitSukuna(doBlack?d1*2:d1, doBlack, doBlack?'black':'atk');
+      hitSukuna(doBlack?d1*2:d1, doBlack, doBlack?'black':'atk',false,false,doBlack?'ita_black':'ita_atk');
     },160);
     /* 咒力滞后一拍的第二段冲击（跟在结算之后，保持原来的二段语汇） */
     setTimeout(()=>{
@@ -14478,7 +14561,7 @@ function itaAtk(){
         }
         if(_landed){
           fxImpact(SX()-30*SC,GY-itaHeight()*0.62,false);
-          fxText(SX()-10*SC+rnd(-12,12),GY-166*SC,'二段 -'+d2,'#c0392b');
+          fxText(SX()-10*SC+rnd(-12,12),GY-166*SC,'二段 -'+sukPct(d2),'#c0392b');
           addRes(10); shake(); syncHud(); return;
         }
         fxText(SX()-10*SC+rnd(-12,12),GY-176*SC,'二段·落空','#8a8a8a');
@@ -14487,7 +14570,7 @@ function itaAtk(){
       S.suk.hp=Math.max(0,S.suk.hp-d2); S.total+=d2; streetAdd(d2);
       S.suk.pose='hurt'; S.suk.poseT=0.2;
       fxImpact(SX()-30*SC,GY-itaHeight()*0.62,false);   /* ★ v202 二段命中冲击对齐伸出的手 */
-      fxText(SX()-10*SC+rnd(-12,12),GY-166*SC,'二段 -'+d2,'#c0392b');
+      fxText(SX()-10*SC+rnd(-12,12),GY-166*SC,'二段 -'+sukPct(d2),'#c0392b');
       addRes(10);
       shake(); syncHud();
     },400);
@@ -14501,7 +14584,7 @@ function itaAtk(){
 function itaGuard(){
   if(S.acted) return;
   const first=!(S.itaSimpleDom>0);
-  if(first && S.gojo.ce<ceCost('itadori','guard')){ say('sys','咒力不足 1 点，无法展开简易领域！'); return; }
+  if(first && S.gojo.ce<ceCost('itadori','guard')){ say('sys','咒力不足 '+cePipFor('itadori','guard')+' 点，无法展开简易领域！'); return; }
   if(first) S.gojo.ce-=ceCost('itadori','guard');
   S.itaSimpleDom=1;
   /* ★ v197 需求①：使用简易领域后 3 回合内受伤 ×0.8（与既有减伤取更优者） */
@@ -14524,7 +14607,7 @@ function itaGuard(){
 function itaUlt(){
   if(S.acted) return;
   if(S.itaUltCd>0){ say('sys','赤血操术·穿血 冷却中（还需 '+S.itaUltCd+' 回合）'); return; }
-  if(S.gojo.ce<ceCost('itadori','hollow')){ say('sys','咒力不足 2 点，无法发动穿血！'); return; }
+  if(S.gojo.ce<ceCost('itadori','hollow')){ say('sys','咒力不足 '+cePipFor('itadori','hollow')+' 点，无法发动穿血！'); return; }
   S.gojo.ce-=ceCost('itadori','hollow'); S.itaUltCd=2;   /* ★ v47 12 秒 → 2 回合 */
   markActed('hollow');
   S.gojo.pose='cast'; S.gojo.poseT=0.9;
@@ -14541,8 +14624,8 @@ function itaUlt(){
     /* ★ v122 伤害数字与命中动画同步：结算延迟到血弹命中炸裂那一拍（0.44×880≈390ms） */
     setTimeout(()=>{
       if(S.phase!=='fight') return;
-      const d=rnd(SUK_MAXHP*0.15,SUK_MAXHP*0.20)/HERO_DMG;   /* ★ v394 对齐文案：穿血＝一阶段 15~20% 最大生命（150 基准 ⇒ 22.5~30 点） */
-      hitSukuna(d,true,'hollow');
+      const d=rnd(SUK_MAXHP*0.15,SUK_MAXHP*0.20);   /* ★ v541 sid 补齐：穿血独立适应 */   /* ★ v394 对齐文案：穿血＝一阶段 15~20% 最大生命（150 基准 ⇒ 22.5~30 点） */
+      hitSukuna(d,true,'hollow',false,false,'ita_blood');
       if(S.blood<3){
         S.blood++;
         say('sys','血契附着 ×'+S.blood+'——宿傩每回合受到 '+(S.blood*3)+' 点持续侵蚀。');
@@ -20223,7 +20306,7 @@ if(S.sukuBurn)     chips.push(['melt','red','宿傩·术式熔断']);       /* �
   /* ★ v520h 移除「共鸣 N%」：v77 起领域门槛改为「生命 <40%」，S.res 已无任何机制消费，
      留一个永远涨不完、也不影响任何判定的数字，只会让人以为漏看了什么。 */
   if(S.hero==='kashimo') chips.push(['bolt','gold','电荷 '+(S.charge||0)+'/5']);
-  if(S.hero==='kashimo' && S.amberUsed) chips.push(['bolt','gold','幻兽琥珀·常驻']);   /* ★ v391 没解放前不显示倒计时 */
+  if(S.hero==='kashimo' && S.amberOn) chips.push(['bolt','gold','幻兽琥珀·续命 '+Math.max(0,S.amber)+' 回合']);   /* ★ v391 没解放前不显示倒计时 */
   if(S.hero==='higuruma' && (S.guilt||0)>0) chips.push(['note','gold','罪状 '+(S.guilt||0)+'/3'+(((S.guilt||0)>=2)?'·死刑':'')]);
   if((S.soulStack||0)>0) chips.push(['blood','purple','灵魂损伤 '+S.soulStack+'/3']);   /* ★ v391 真希：释魂刀留下的永久伤 */
   if(S.rika) chips.push(['guard','purple','里香 · 残'+S.rikaT+'回合']);
@@ -20612,7 +20695,7 @@ function syncHud(){
   const sh=Math.max(0,S.suk.hp);
   const shp=Math.max(0,Math.min(100,sh/SUK_MAXHP*100));   /* ★v38：血条按上限换算成百分比 */
   $('skHp').style.width=shp+'%';
-  $('skHpTxt').textContent=shp.toFixed(1)+'%';
+  $('skHpTxt').textContent=(shp+(S.trueForm?100:0)).toFixed(1)+'%';   /* ★ v541 第二管＝100%+当前血条 ⇒ 原身期数值超过 100% */
   (function(){ var ab=$('adaptBar'); if(!ab) return; var ps=ab.querySelectorAll('i');
     var lv=(typeof adaptLevel==='function'?adaptLevel():0);
     var lit=Math.max(0,Math.min(ps.length,Math.round(lv/3*ps.length)));
@@ -20621,8 +20704,8 @@ function syncHud(){
   /* ★ v40 适应文案改为「最深技能适应层数 /3」，无魔虚罗时显示 — */
   $('skAdTxt').textContent=(typeof adaptLive==='function'&&adaptLive())?('适应 '+Math.round(adaptLevel()/3*100)+'%'):'适应 —';
   const gh=Math.max(0,S.gojo.hp);
-  $('gjHp').style.width=gh+'%';
-  $('gjHpTxt').textContent=gh.toFixed(1)+'%';
+  $('gjHp').style.width=Math.max(0,Math.min(100,gh/Math.max(1,S.maxHp||100)*100))+'%';
+  $('gjHpTxt').textContent=(gh/SUK_MAXHP*100).toFixed(1)+'%';   /* ★ v541 真实比例：满血 100 点＝66.7% */
   const ceCap=(S.ceCap||100);   /* ★ v60 里香在场 ⇒ 咒力上限 50 */
   /* ★ v512 咒力条＝五格离散显示（1 格 20 点），不再输出百分比/小数 */
   setCeGauge(S.gojo.ce, ceCap);
@@ -20633,16 +20716,16 @@ function syncHud(){
   /* ★ v480 魔虚罗登场后适应常驻：指示不再因击破而消失 */
   setAdaptBar(adaptLive());
   if(S.hero==='kashimo'){
-    $('gjHp').style.width=S.kashimo.hp+'%';
-    $('gjHpTxt').textContent=S.kashimo.hp.toFixed(1)+'%';
+    $('gjHp').style.width=Math.max(0,Math.min(100,S.kashimo.hp/Math.max(1,S.maxHp||100)*100))+'%';
+    $('gjHpTxt').textContent=(S.kashimo.hp/SUK_MAXHP*100).toFixed(1)+'%';
     /* ★ v70：条=咒力（与五条悟同款）；琥珀标签解放后一回合才出现 */
     setCeGauge(S.kashimo.ce||0, 100);
     $('subTag').innerHTML=(S.amberTagHide>0)
       ? '咒力解放<small>……</small>'
-      : (S.amberUsed ? '幻兽琥珀<small>常驻</small>' : '咒力电击<small>琥珀潜伏</small>');   /* ★ v243j 未使用前不显示倒计时 */
+      : (S.amberOn ? '幻兽琥珀<small>续命 '+Math.max(0,S.amber)+'</small>' : (S.amberUsed ? '咒力电击<small>解放已用尽</small>' : '咒力电击<small>琥珀潜伏</small>'));   /* ★ v243j 未使用前不显示倒计时 */
   }else if(S.hero==='itadori'){
-    $('gjHp').style.width=S.itadori.hp+'%';
-    $('gjHpTxt').textContent=S.itadori.hp.toFixed(1)+'%';
+    $('gjHp').style.width=Math.max(0,Math.min(100,S.itadori.hp/Math.max(1,S.maxHp||100)*100))+'%';
+    $('gjHpTxt').textContent=(S.itadori.hp/SUK_MAXHP*100).toFixed(1)+'%';
     $('subTag').innerHTML='咒力<small>CE</small>';   /* ★ v520 这条格条本来就是咒力，不该顶着「血契」标签 */
     try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +1 点（上限 5 点）｜血契 ×'+(S.blood||0)+'（每层每回合侵蚀宿傩 3 点）'; }catch(e){}
   }
@@ -20669,12 +20752,15 @@ function syncHud(){
     if(!b) b=PADBTN[a]=document.querySelector('#pad [data-act="'+a+'"]');
     if(!b) return;
     let dim=!!S.acted;
+    /* ★ v542 咒力/体力不足 ⇒ 直接置灰（束缚不吃这条；无限态跳过） */
+    if(!dim && a!=='vow' && !ceFree() && heroCe()<ceCost(S.hero,a)) dim=true;
     /* ★ v510 咒力格 / v513 点数化：按钮上沿中间标「N 点」，让「这招值不值」一眼可算 */
     try{
-      const _ct=(CE_TAG[S.hero]||{})[a];
+      const _ct=cePipFor(S.hero,a);   /* ★ v542 动态消耗：真希随咒具/架势变化 */
       /* ★ v518 六眼：三招全 0 消耗，标「…」——「不耗」要显式说出来，不能靠「没标」暗示。
          束缚 / 反转术式本来就不吃咒力（代价是别的东西），不标，免得按钮挂满符号。 */
-      const _tx=(S.hero==='gojo' && a!=='vow' && a!=='okkorct') ? '…' : cePipTxt(_ct);
+      const _inf=(S.hero==='gojo' && a!=='vow' && a!=='okkorct') || (S.hero==='okkotsu' && !!S.rika);
+      const _tx=_inf ? '…' : cePipTxt(_ct);
       if(b.__ce!==_tx){ b.__ce=_tx;
         if(_tx) b.setAttribute('data-ce',_tx); else b.removeAttribute('data-ce'); }
     }catch(e){}
@@ -20857,7 +20943,7 @@ function syncHud(){
 /* ★ v135 提示条按当前操控角色显示（旧版写死五条悟三招，虎杖/鹿紫等登场后出现无关文字） */
 const HERO_HINTS={
   gojo:    '点击下方按钮：术式顺转·苍 ／ 反转术式 ／ 虚式·茈（选定后本回合技能栏变灰）',
-  kashimo: '点击下方按钮：雷（蓄电荷，满 4 层附赠二段）／ 电荷放出（最多耗 2 层换减伤）／ 幻兽琥珀（3 层＋生命 ≤40%·一生一次必杀）',
+  kashimo: '点击下方按钮：雷（蓄电荷，满 4 层附赠二段）／ 电荷放出（放光电荷换必中雷击＋一回合电场）／ 幻兽琥珀（生命 ≤40%·一生一次·不造成伤害，换 2 回合续命）',
   itadori: '点击下方按钮：径庭拳 ／ 简易领域 ／ 赤血操术·穿血（濒死时解锁领域展开）',
   higuruma:'点击下方按钮：法槌·开廷（举证）／ 领域展延·锁定罪状（质询）／ 审判·下达（罪状 ≥3 才能发动，按钮下方三格充能即罪状数；第 1、2 次没收，第 3 次起变「处刑人之剑」直接死刑）',
   okkotsu: '点击下方按钮：复制术式 ／ 里香·全力 ／ 魂之绊（领域：真赝相爱）',
@@ -21427,7 +21513,7 @@ const HERO_INFO={
   higuruma:{nm:'日车宽见', tag:'HIGURUMA', color:'#c9961a',     acc:'#b8860b', tip:'领域「诛伏赐死」',  arch:'审判',   sig:'诛伏赐死', asz:1.42, adp:'20%', ady:'9%'}, /* ★ v471c 头像下移露手 */   /* ★ v443 用户指定：改金黄 + 立绘放大 */
   okkotsu: {nm:'乙骨忧太', tag:'OKKOTSU',  color:'#7c3aed',     acc:'#7c3aed', tip:'无限咒力·术式复制', arch:'模仿',   sig:'真赝相爱', asz:1.12, adp:'58%', ady:'4%'} /* ★ v471c 乙骨略放大 */,
   itadori: {nm:'虎杖悠仁', tag:'ITADORI',  color:'#8c2f24',     acc:'#d7263d', tip:'径庭拳·简易领域',  arch:'容器',   sig:'黑闪'},
-  maki:    {nm:'禅院真希', tag:'MAKI',     color:'#3a3f45',     acc:'#3a3f45', tip:'天与咒缚·释魂刀',  arch:'无咒力', sig:'天与咒缚', asz:1.10, adp:'18%', ady:'11%'} /* ★ v476 asz 1.32→1.10 减少过度放大 */
+  maki:    {nm:'禅院真希', tag:'MAKI',     color:'#3a3f45',     acc:'#3a3f45', tip:'天与咒缚·释魂刀',  arch:'咒具', sig:'天与咒缚', asz:1.10, adp:'18%', ady:'11%'} /* ★ v476 asz 1.32→1.10 减少过度放大 */
 };
 /* 按钮文案表：3 号位小字可以写成函数，用来显示实时进度 */
 /* ★ v26 三号位（ult）配色：日车金黄 / 真希黑 / 虎杖黑红，其余沿用茈的紫 */
@@ -21441,15 +21527,15 @@ const SEL_INFO={
     ['反转术式','回 25% 最大生命·修熔断·无量空处 +1 次（上限 2）'],
     ['虚式·茈','20~25% 最大生命，CD 3；连续 4 回合不用 ⇒ 解锁无限制·茈'],
     ['无量空处','对拼 50%；成立后宿傩无法攻击、每回合 −5%；魔虚罗在场仅撑 2 回合']]},
-  kashimo:{role:'纯输出型，没有格挡与治疗，靠电荷赌一次',rows:[
-    ['咒力电击·雷','10~15% ×（1+0.10×层）；命中 +1 层（宿傩上回合用术式则 +2），上限 5；受伤 −10%/层（3 层封顶）'],
-    ['电荷放出','最多耗 2 层换必中雷击（每层 7.5%，2 层 15%）＋ 本回合电场减伤 15%+15%×层；完美时机返还 1 层'],
-    ['电击反噬','仅在「幻兽琥珀」解放后生效：回合结束电荷 ≥2 层自损（2 层 −5%、3 层以上 −7%）'],
-    ['无防御','没有格挡技，也没有治疗 —— 所有「防御」都要用电荷买'],
-    ['幻兽琥珀·解放','电荷 ≥3 层＋生命 ≤40%：50% 最大生命，一生一次；解放后常驻、不再倒计时'],
+  kashimo:{role:'纯输出型，没有格挡与治疗，靠电荷赌一次；濒死时的琥珀只救命，不打人',rows:[
+    ['咒力电击·雷','2 点咒力；10~15% ×（1+0.10×层）；命中 +1 层（宿傩上回合用术式则 +2），上限 5；电荷只加输出，不再减伤'],
+    ['电荷放出','3 点咒力；一次放光全部电荷（最多计 3 层）换必中雷击：7.5%×层（3 层 22.5%）＋ 本回合电场减伤 15%+15%×层（3 层 60%）'],
+    ['无防御','没有格挡技，也没有治疗 —— 唯一的减伤是「电荷放出」那一回合的电场'],
+    ['幻兽琥珀·解放','不耗咒力；只要生命 ≤40%：不造成伤害，换来 2 回合强制续命（生命不被清空＋每回合额外 +1 层电荷）；一生一次，解放即清空电荷'],
+    ['续命结算','2 回合结束：生命早已被清空 ⇒ 立绘消散、下场进死亡黑幕；还活着 ⇒ 回到常态'],
     ['束缚','雷神之躯／魔眼·透视／限界放电']]},
   higuruma:{role:'审判型，靠举证与质询下判决',rows:[
-    ['法槌·开廷','8~12% 伤害；举证 +1（宿傩用过术式 ⇒ +2），证据上限 3'],
+    ['法槌·开廷','4.3~6.4% 伤害；举证 +1（宿傩用过术式 ⇒ +2），证据上限 3'],
     ['领域展延·锁定罪状','格挡 −30%；把证据锁成罪状（1 证据 = 1 罪状）'],
     ['完美格挡','抓现行犯 ⇒ 罪状直接 +3（一次填满，正好够开一次庭）'],
     ['罪状门槛','★ 三技能都要「罪状 ≥3」才能发动；每次判决后罪状清零，须重新累积'],
@@ -21460,25 +21546,28 @@ const SEL_INFO={
     ['没收优先级','咒具「神武解」→ 术式「解·捌·伏魔御厨子」→ 咒力「反转术式」→ 身体能力'],
     ['反转术式','濒死 ≤25% 时领悟，每局一次，回复 25%']]},
   okkotsu:{role:'万能型，里香在场时最强',rows:[
-    ['太刀·呪斩','近身斩击，可触发黑闪'],
-    ['里香·召唤','咒力上限 −50%，里香在场 5 回合；技能不耗咒力、分担半伤'],
+    ['太刀·呪斩','1 点咒力（里香在场免费）；近身斩击，可触发黑闪'],
+    ['里香·召唤','3 点咒力；咒力上限 −50%，里香在场 5 回合；期间乙骨所有技能免费（标「…」）、分担半伤；退场时咒力只余 3 点'],
     ['模仿术式','五招随机：穿血 15~20／言灵／解／捌／天梯 10~15'],
     ['轮换规则','每招冷却 1 回合自动换下一招；言灵与天梯全局各一次'],
-    ['领域·真赝相爱','对拼 70%（困难 50%）·伤害 ×1.5·每局一次']]},
+    ['领域·真赝相爱','3 点咒力（里香在场免费）·对拼 70%（困难 50%）·伤害 ×1.5·每局一次'],
+    ['反转术式','3 点咒力（里香在场免费）·回复 25%·CD 2·修熔断']]},
   itadori:{role:'曾为宿傩容器，可以造成灵魂重创',rows:[   /* ★ v443 用户指定 */
-    ['径庭拳','4~6% ＋ 滞后的二段追击'],
-    ['简易领域','中和必中；展开后常驻，可灭灶·开的场火'],
-    ['赤血操术·穿血','15~20% 最大生命，血契最多叠 ×3'],
-    ['领域展开','生命 <40% 解锁；展开瞬间震碎伏魔御厨子'],
+    ['径庭拳','1 点咒力（灵魂·解同价）；5.3~7.5% ＋ 滞后的二段追击'],
+    ['简易领域','2 点咒力；中和必中；展开后常驻，可灭灶·开的场火'],
+    ['赤血操术·穿血','3 点咒力；15~20% 最大生命，血契最多叠 ×3'],
+    ['领域展开','不耗咒力；生命 <40% 解锁；展开瞬间震碎伏魔御厨子'],
     ['共鸣（彩蛋）','灵魂·解足以击杀时触发，直接走向真结局']]},
-  maki:{role:'无咒力特化，三把咒具自选',rows:[
-    ['咒具切换','1 技右上角角标自由换刀，不消耗行动'],
-    ['释魂刀','杀伤 10%·宿傩受伤 +6%（2 回合）·无视适应'],
-    ['游云','杀伤 15%·用满 4 次本回合多一次行动（带咒力会被适应）'],
-    ['龙骨','杀伤 8%·架刀受伤 −35%，吸收的冲击蓄进下一击'],
+  maki:{role:'天与咒缚：零咒力，改用「体力」五格；三把咒具自选',rows:[
+    ['体力条','与咒力同为 5 格、每回合 +1；没有回复手段，只能等回合'],
+    ['咒具切换','1 技右上角角标自由换刀，换刀不耗体力'],
+    ['释魂刀','2 点体力·杀伤 10%·宿傩受伤 +6%（2 回合）·无视适应'],
+    ['游云','1 点体力·杀伤 15%·用满 4 次本回合多一次行动（带咒力会被适应）'],
+    ['龙骨','1 点体力·杀伤 8%·架刀受伤 −35%，吸收的冲击蓄进下一击'],
     ['灵魂损伤','释魂刀每命中 +1 层（上限 3）：宿傩受伤 +2%／反转 −34%／满 3 层 ⇒ 宿傩下一回合动不了；3 层时再打中一次就归零'],
-    ['天与咒缚','架势（CD 3）只让解／捌／领域必中／虎葬／魔虚罗斩击造成伤害；血量 ≤50% 可「全开」：输出 +25% 常驻，代价是全开后 3 回合受伤 +10%（架势仍可并存）'],
-    ['无声突袭','20%·CD 2·无视适应；灵魂损伤 ≥2 层时必定要害 ×(1+0.12×层数)']]}
+    ['天与咒缚·架势','1 点体力·CD 3：只让解／捌／领域必中／虎葬／魔虚罗斩击造成伤害'],
+    ['天与咒缚·全开','不耗体力·血量 ≤50% 可开：输出 +25% 常驻＋回 15% 生命，代价是全开后 3 回合受伤 +10%（架势仍可并存），一生一次'],
+    ['无声突袭','3 点体力·18%·CD 3·无视适应；灵魂损伤 3 层时必定要害 ×1.36，2 层仅 ×1.15']]}
 };
 let _siT=0;
 function siFill(h){
@@ -21525,8 +21614,8 @@ const HERO_BTN={
   gojo:{atk:['kai','术式顺转·苍','5%~7% · 可留引力标记'],
         guard:['spark','反转术式',S=>S.revCd>0?('CD '+S.revCd+' 回合'):'回复 25% 最大生命']},   /* ★ v80 还原原着 */
   kashimo:{atk:['bolt','咒力电击·雷',S=>'电荷 '+(S.charge||0)+'/5 · 每层 +10%'],
-        guard:['spark','电荷放出',S=>{ const c=Math.min(2,S.charge||0); return c>0?('放出 '+c+' 层 · 伤害 '+(7.5*c)+'% · 减伤 '+Math.round((0.15+0.15*c)*100)+'%'):'没有电荷 · 先用雷蓄电'; }],
-        ult:['bolt','幻兽琥珀·解放',S=>S.amberUsed?'已解放 · 常驻':(((S.charge||0)<3)?('电荷 '+(S.charge||0)+'/3 · 未满'):((S.kashimo.hp>S.maxHp*0.40)?'★ 待命 · 生命需 ≤40%':'★ 电荷足够 · 50% 一击'))]},
+        guard:['spark','电荷放出',S=>{ const c=Math.min(3,S.charge||0); return c>0?('放光全部 · 计 '+c+' 层 · 伤害 '+(7.5*c)+'% · 减伤 '+Math.round((0.15+0.15*c)*100)+'%'):'没有电荷 · 先用雷蓄电'; }],
+        ult:['bolt','幻兽琥珀·解放',S=>S.amberOn?('★ 续命 '+Math.max(0,S.amber)+' 回合'):(S.amberUsed?'已解放 · 本局用尽':((S.kashimo.hp>S.maxHp*0.40)?'★ 待命 · 生命需 ≤40%':'★ 不造成伤害 · 续命 2 回合'))]},
   /* ★ v462 用户指定：罪状数量移到 1 技标题右侧（黄字黑勾边、小一号），小字只留举证进度 */
   higuruma:{atk:['kai','法槌·开廷',S=>'需经锁定·转化罪状'],   /* ★ v470 用户指定：小字（证据 x/3）去掉，进度只看标题右侧「举证 x/3」 */
         guard:['guard','领域展延·锁定罪状',S=>'格挡 −30%'+(((S.evidence||0)>0)?'·可锁 '+(S.evidence||0)+' 条':'')],
@@ -21550,7 +21639,7 @@ const HERO_BTN={
           if((S.makiGcd||0)>0) return '冷却 '+S.makiGcd+' 回合';
           return '本回合免伤·CD 3';
         }],
-        ult:['blood','无声突袭',S=>S.makiCd>0?('CD '+S.makiCd+' 回合'):((S.soulStack||0)>=2?('灵魂损伤 '+S.soulStack+' 层·要害 ×'+(1+0.12*Math.min(3,S.soulStack||0)).toFixed(2)):'20% · 无视适应')],}
+        ult:['blood','无声突袭',S=>S.makiCd>0?('CD '+S.makiCd+' 回合'):((S.soulStack||0)>=2?('灵魂损伤 '+S.soulStack+' 层·要害 ×'+(1+0.12*Math.min(3,S.soulStack||0)).toFixed(2)):'18% · 无视适应')],}
 };
 /* ★ v25：登场顺序由玩家自由选择 —— nextHero 不再是固定顺序链。
    heroesLeft() 返回还没登过场的角色；nextHero 保留为「第一个剩余角色」的兼容入口。 */
@@ -21654,7 +21743,7 @@ function beginNext(h){
   S.downDone=false; try{ S.__downKick=0; S.__downForce=0; S.__downTok=(S.__downTok||0)+1; }catch(_e){}                    /* 换人：退场标记复位，允许再次退场 */
      
   S.gojo.hp=100; S.gojo.pose='idle'; S.gojo.poseT=0; S.gojo.hurtFx=0;
-  S.gojo.ce=(h==='maki')?0:(S.ceCap||100);          /* 天与咒缚：零咒力 */
+  S.gojo.ce=(S.ceCap||100);          /* ★ v542 真希同样吃「体力」五格资源（满格登场） */
   S.suk.pose='idle'; S.suk.poseT=0;
   $('redAlert').classList.remove('on','perfect');
   $('warnMark').classList.remove('on','perfect');
@@ -21832,7 +21921,7 @@ function startNext(h){
      而琥珀形态的立绘替换、紫粉光环、HUD 标签都挂在 amberUsed 上 ⇒ 一旦残留，
      新角色登场后仍会被判定成「琥珀解放中」。三个登场路径都经过这里，按目标角色判一次最稳。 */
   if(h!=='kashimo'){
-    try{ S.amberUsed=false; S.amber=0; S.amberTagHide=0;  S.charge=0; }catch(e){}
+    try{ S.amberUsed=false; S.amberOn=0; S.amberLethal=0; S.amberCastTurn=0; S.amber=0; S.amberTagHide=0;  S.charge=0; }catch(e){}
   }
   /* ★ v64 修复：领域「真赝相爱」的收束必须收进「选人」统一入口 —— 原本只在 beginNext 里清，
      而鹿紫云一 / 虎杖走各自的 start 函数（startKashimo / startItadori）会绕过它，
@@ -21926,7 +22015,7 @@ function higuAtk(){
      要再用「领域展延」质询，才能锁成罪状。 */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    hitSukuna(rnd(SUK_MAXHP*0.0427,SUK_MAXHP*0.064)/HERO_DMG,false,'atk');   /* ★ v395 口径统一：法槌·开廷 4.27~6.4% */
+      hitSukuna(rnd(SUK_MAXHP*0.0427,SUK_MAXHP*0.064),false,'atk',false,false,'higu_atk');   /* ★ v395 口径统一：法槌·开廷 4.27~6.4% */
     if(S.higuDom<=0){
       say('sys','领域已崩解 —— 法槌退化成普通咒力打击，审判无法推进。');
       syncHud(); return;
@@ -22032,7 +22121,7 @@ function higuUlt(){
                       :'直接执行死刑：100% 最大生命（本局仅此一次，受肉之躯当场被处刑）。'));
       }
     }else{
-      hitSukuna(SUK_MAXHP*0.20,true,'hollow',false,true);   /* ★ v480 25% → 20% */
+      hitSukuna(SUK_MAXHP*0.20,true,'hollow',false,true,'higu_verdict');   /* ★ v480 25% → 20% */
       const _left=Math.max(0,2-(S.higuVerdictN||0));
       say('sys','★ 审判·下达 ⇒ 没收刑成立（宿傩被没收一项能力、吃 20% 伤害）。'
         +(_n===1?'罪状保留 1 层（再累积 2 层即可开庭）':'罪状清零，需再累积 3 层才能开庭')
@@ -22099,11 +22188,16 @@ function okkoReverse(){
   if(S.acted && !_burn) return;
   if(S.okkoRevCd>0){ say('sys','「反转术式」冷却中 —— 还需 '+S.okkoRevCd+' 回合'); return; }
   if(S.gojo.hp>=S.maxHp && !_burn){ say('sys','生命已满，无需施展反转术式。'); return; }
+  /* ★ v542 咒力：反转术式 3 点；里香在场不耗 */
+  if(!S.rika){
+    if(S.gojo.ce<ceCost('okkotsu','okkorct')){ say('sys','咒力不足 '+cePipFor('okkotsu','okkorct')+' 点——反转术式施展不开。'); return; }
+    S.gojo.ce-=ceCost('okkotsu','okkorct');
+  }
   S.okkoRevCd=2;
   markActed('okkorct');   /* ★ v105 独立第 4 技标记 */
   healHero(S.maxHp*0.25);   /* ★ v480 30% → 25% */
   flash('fWhite'); shake();
-  fxText(GX()+46*SC,GY-238*SC,'+'+(Math.round(S.maxHp*0.25*10)/10),'#3fbf72',true,1);   /* ★ v480 显示值同步 25% */
+  fxText(GX()+46*SC,GY-238*SC,'+'+heroPct(S.maxHp*0.25),'#3fbf72',true,1);   /* ★ v541 显示值与同一基准的百分比一致 */
   say('okko','「反转术式——。」');
   if(_burn){
     S.okkBurn=false;  S.acted=false;
@@ -22218,6 +22312,11 @@ function okkoDomainClash(){
 function okkoAtk(){
   if(S.okkBurn){ say('sys','术式熔断——除「反转术式」外无法使用任何技能！'); return; }   /* ★ v387 */
   if(S.acted) return;
+  /* ★ v542 咒力：太刀 1 点；里香在场不耗 */
+  if(!S.rika){
+    if(S.gojo.ce<ceCost('okkotsu','atk')){ say('sys','咒力不足 '+cePipFor('okkotsu','atk')+' 点——连刀都握不稳。'); return; }
+    S.gojo.ce-=ceCost('okkotsu','atk');
+  }
   markActed('atk');
   /* ★ v393 乙骨一技能「太刀·咒斩」可自发黑闪（标准 8% 起，连闪 +5%/次、3 层封顶 +15%）。
      黑闪判定（QTE 金条）通过后才进入结算 —— 与五条「苍」/虎杖「径庭拳」同一套 v140 机制。 */
@@ -22227,7 +22326,7 @@ function okkoAtk(){
   try{ const _oc=document.getElementById('okkoCutIn'), _oi=document.getElementById('okkoCutImg');
     if(_oc&&_oi){ if(!_oi.getAttribute('src')) _oi.src=IMG.okkoCut; _oc.classList.remove('on'); void _oc.offsetWidth; _oc.classList.add('on');
       setTimeout(function(){ try{ _oc.classList.remove('on'); }catch(e){} }, 800); } }catch(e){}
-    let d=SUK_MAXHP*rnd(0.05,0.07)/HERO_DMG;   /* ★ v394 对齐文案：太刀·咒斩＝一阶段 5~7% 最大生命（150 基准 ⇒ 7.5~10.5 点） */
+    let d=SUK_MAXHP*rnd(0.05,0.07);   /* ★ v394 对齐文案：太刀·咒斩＝一阶段 5~7% 最大生命（150 基准 ⇒ 7.5~10.5 点） */
     if(doBlack){ d*=2; flash('fWhite'); shake(); S.blackN++; S.blackChain=Math.min(3,(S.blackChain||0)+1); }   /* ★ v204 音效已提到 QTE 点中瞬间 */
     S.gojo.pose='atk'; S.gojo.poseT=0.3;
     SFX.atk();
@@ -22242,7 +22341,7 @@ function okkoAtk(){
     }
     setTimeout(()=>{
       if(S.phase!=='fight') return;
-      hitSukuna(d,doBlack,'atk');
+      hitSukuna(d,doBlack,'atk',false,false,doBlack?'okko_black':'okko_atk');
       syncHud();
     },360);
   };
@@ -22263,6 +22362,9 @@ function okkoGuard(){
   }
   /* ★ v157 用户指定：里香语音略微提前 —— 先出声，视觉爆点（闪光/震屏/漫画字）晚 120ms 跟上，让语音引领演出 */
   try{ if(!window.__rikaT||performance.now()-window.__rikaT>800){ window.__rikaT=performance.now(); playDomSfx('yutaRika', 4.15, DOM_LEAD.yutaRika); } }catch(e){}
+  /* ★ v542 咒力：里香·召唤 3 点（此时里香尚未在场，照常收费） */
+  if(S.gojo.ce<ceCost('okkotsu','guard')){ say('sys','咒力不足 '+cePipFor('okkotsu','guard')+' 点——里香无法显形。'); return; }
+  S.gojo.ce-=ceCost('okkotsu','guard');
   markActed('guard');
   setTimeout(function(){
     if(S.phase!=='fight') return;
@@ -22276,7 +22378,7 @@ function okkoGuard(){
   copyInitOnSummon();   /* ★ v295 召唤当回合先抽一招存着，下回合揭晓成技能名 */
   say('okko','「里香——出来吧。」');
   say('rika','「忧太，我一直在。」');
-  say('sys','★ 式神·里香登场（不可被杀死；可存在 '+RIKA_TURNS+' 回合，或施展「无限制咒力解放」后即刻退场）。\n代价：乙骨的咒力上限减半（50）。里香在场期间：\n· 乙骨所有技能不消耗咒力\n· 二技能变为「模仿术式」（随机抽出五招之一：穿血／言灵术式／解／捌／邪去侮天梯；每招冷却 1 回合，言灵与天梯只能用一次）\n· 里香每回合以「咒力拳」出击，并替乙骨分担一半伤害\n里香退场后：「模仿术式」消失，二技能回到「里香·召唤」（冷却 4 回合）'); syncHud();
+  say('sys','★ 式神·里香登场（不可被杀死；可存在 '+RIKA_TURNS+' 回合，或施展「无限制咒力解放」后即刻退场）。\n代价：召唤当场耗 3 点、咒力上限减半（50）；退场时咒力只余 3 点。里香在场期间：\n· 乙骨所有技能不消耗咒力\n· 二技能变为「模仿术式」（随机抽出五招之一：穿血／言灵术式／解／捌／邪去侮天梯；每招冷却 1 回合，言灵与天梯只能用一次）\n· 里香每回合以「咒力拳」出击，并替乙骨分担一半伤害\n里香退场后：「模仿术式」消失，二技能回到「里香·召唤」（冷却 4 回合）'); syncHud();
 }
 /* 术式复制：复刻宿傩上一次用的招式（近战/斩击波/火焰），效果各不相同 */
 function okkoUlt(){
@@ -22374,6 +22476,9 @@ function makiAtk(){
   if(S.acted) return;
   /* ★ v390 天与咒缚·全开改为主动：这里不再自动觉醒（见 makiGuard 开头） */
   const W=makiWeapon();
+  /* ★ v542 体力：释魂刀 2 点 / 游云·龙骨 1 点 */
+  if(S.gojo.ce<ceCost('maki','atk')){ say('sys','体力不足 '+cePipFor('maki','atk')+' 点——挥不动这把咒具。'); return; }
+  S.gojo.ce-=ceCost('maki','atk');
   /* ★ v408 游云：用满 4 次 ⇒ 这一回合多一次行动。
      必须在 markActed 之前把 actsLeft +1，否则 markActed 已经把回合交出去了、加了也没用。 */
   let _yunExtra=0;
@@ -22389,13 +22494,13 @@ function makiAtk(){
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     S.noAdapt=!W.adapt;                 /* 释魂刀/龙骨属纯物理，魔虚罗无法适应；游云带咒力会被适应 */
-    let _md=Math.round(SUK_MAXHP*rnd(W.dmg[0],W.dmg[1])/HERO_DMG*10)/10;   /* ★ v395 口径统一：咒具伤害以最大生命百分比定义 */
+    let _md=Math.round(SUK_MAXHP*rnd(W.dmg[0],W.dmg[1])*10)/10;   /* ★ v395 口径统一：咒具伤害以最大生命百分比定义 */
     if(W.k==='龙骨' && (S.makiCharge||0)>0){
       _md+=Math.round(S.makiCharge);
-      say('sys','★ 龙骨·蓄冲释放 —— 刀背积蓄的冲击一次吐出（追加 '+Math.round(S.makiCharge)+' 点）！');
+      say('sys','★ 龙骨·蓄冲释放 —— 刀背积蓄的冲击一次吐出（追加 '+sukPct(S.makiCharge)+'）！');
       S.makiCharge=0;
     }
-    hitSukuna(_md,false,'atk');
+    hitSukuna(_md,false,'atk',false,false,'maki_w'+(S.makiW||0));
     /* ★ v408 用户指定：3 层状态下「打中一次」就把裂口彻底撕开 —— 这一击结算完层数清零。 */
     const _was3=(S.soulStack||0)>=3;
     if(_was3){
@@ -22458,6 +22563,9 @@ function makiGuard(){
      ★ v388：每架开一次记 1 层「见切」，回合末回敬一记反击。 */
   /* ★ v421：全开不再封锁架势 —— 两技并存，各自冷却 */
   if((S.makiGcd||0)>0){ say('sys','天与咒缚·架势 冷却中 —— 还需 '+S.makiGcd+' 回合。'); return; }
+  /* ★ v542 体力：架势 1 点（全开 0 点，见上方分支） */
+  if(S.gojo.ce<ceCost('maki','guard')){ say('sys','体力不足 '+cePipFor('maki','guard')+' 点——摆不起架势。'); return; }
+  S.gojo.ce-=ceCost('maki','guard');
   S.makiGcd=3;
   S.makiStance=1;
   S.makiStanceT=S.turnN;   /* ★ v390 回合戳：下一次宿傩回合开头才失效 */
@@ -22475,7 +22583,10 @@ function makiGuard(){
 function makiUlt(){
   if(S.acted) return;
   if(S.makiCd>0){ say('sys','无声突袭 冷却中 —— 还需 '+S.makiCd+' 回合'); return; }
-  S.makiCd=2;
+  /* ★ v542 体力：无声突袭 3 点；冷却 2 → 3 回合 */
+  if(S.gojo.ce<ceCost('maki','hollow')){ say('sys','体力不足 '+cePipFor('maki','hollow')+' 点——这一刀刺不出去。'); return; }
+  S.gojo.ce-=ceCost('maki','hollow');
+  S.makiCd=3;
   /* ★ v456 用户指定：无声突袭 50% 机率播放原声，与起手同一 tick */
   try{ if(Math.random()<0.5) window.playSoloVoice('makiSneak', 0, 0.8, 0.92); }catch(e){}
   markActed('hollow');
@@ -22484,26 +22595,30 @@ function makiUlt(){
   S.hitStop=Math.max(S.hitStop,0.16);   /* ★ v426 打击感：定格更久一点 */
   /* ★ v86 真希是「听不见」的斩击：顿挫最短、余韵最短（slow 0.32） */
   skillBeat({charge:380,cast:0.9,stop:0.11,flash:'fWhite',slow:0.32,word:''});
-  /* ★ v408 用户指定：取消见切 —— 要害只看灵魂损伤层数：>1 层（即 2 层起）必定要害，
-     伤害 ×(1 + 0.12×层数)：2 层 ×1.24、3 层 ×1.36。 */
+  /* ★ v460／v540：要害只看灵魂损伤层数 —— 3 层起必定要害（×1.36），2 层只有 ×1.15 小加成。 */
   const _ss=Math.min(3,S.soulStack||0);
-  const _crit=_ss>=2;
-  const _critMul=1+0.12*_ss;   /* ★ v460 用户指定：要害改 ×(1＋0.12×层数) —— 2 层 ×1.24、3 层 ×1.36 */
+  const _crit=_ss>=3;   /* ★ v540 用户指定：要害门槛 2 层 → 3 层 */
+  const _critMul=(_ss>=3)?(1+0.12*_ss):(_ss>=2?1.15:1);   /* ★ v540 用户指定：3 层 ×1.36／2 层仅 ×1.15 */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     S.noAdapt=true;
     addFx({type:'silentSlash',dur:0.78});
     /* ★ v426 打击感：命中同帧补一次震屏 + 胸口白爆 + 墨色冲击环 */
     try{ shake(1.35); fxImpact(SX()-24*SC, GY-150*SC, true); }catch(e){}
-    let _d=Math.round(SUK_MAXHP*0.20/HERO_DMG*10)/10;   /* ★ v408 用户指定：无声突袭固定 20%（要害再 ×1+0.2×层数） */
-    if(_crit){ _d=Math.round(_d*_critMul); flash('fWhite'); shake(); }
-    hitSukuna(_d,true,'hollow');
+    let _d=Math.round(SUK_MAXHP*0.18*10)/10;   /* ★ v540 用户指定：基础 20% → 18% */
+    if(_ss>=2){ _d=Math.round(_d*_critMul); }        /* ★ v540：2 层小加成也结算 */
+    if(_crit){ flash('fWhite'); shake(); }
+    hitSukuna(_d,true,'hollow',false,false,'maki_ult');
     S.noAdapt=false;
-    if(_ss>=3){ S.soulStack=0; S.soulWound=0; fxSoulDmg('归零');
-      say('sys','★ 灵魂损伤 3/3 引爆 —— 这一刀把裂口彻底撕开：层数清零。'); }
+    /* ★ v540 用户指定：无声突袭命中后**无条件**清零灵魂损伤 ——
+       原实现只有 3 层才清零，玩家可长期卡在 2 层反复吃要害加成。 */
+    if(_ss>0){ S.soulStack=0; S.soulWound=0; fxSoulDmg('归零');
+      say('sys','★ 无声突袭用掉了灵魂上的裂口 —— 灵魂损伤 '+_ss+'/3 层清零，需要重新用释魂刀叠层。'); }
     say('sys', _crit
-      ? '★ 灵魂损伤·要害 —— 灵魂上的裂口被一刀贯穿，无声突袭 ×'+_critMul.toFixed(1)+'（'+_d+'）！'
-      : '★ 无声突袭 —— 首造灵魂级创伤：宿傩受创，且魔虚罗无法适应这一击。');
+      ? '★ 灵魂损伤·要害 —— 3 层裂口被一刀贯穿，无声突袭 ×'+_critMul.toFixed(2)+'（'+_d+' 点）！'
+      : (_ss>=2
+          ? '★ 无声突袭 —— 灵魂损伤 '+_ss+' 层：裂口还没撕满，只有 ×1.15 的小加成（'+_d+' 点）。'
+          : '★ 无声突袭 —— 首造灵魂级创伤：宿傩受创，且魔虚罗无法适应这一击。'));
     syncHud();
   },620);
 }
@@ -26137,7 +26252,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v539', RK='jjk_ver_reload_'+B;
+  var B='v542', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
