@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v555">
+<meta name="jjk-build" content="v561">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -6142,10 +6142,19 @@ function gojoVoid(){
     try{ window.__clashSukuP=null; armClashAfterPlayer(function(){
       if(S.phase!=='fight') return;
       const _willCl=(typeof sukuCanOpenDomain==='function' && sukuCanOpenDomain(isHard()));
-      /* ★ v539 用户指定：两句都要完整念完 —— 五条 0.05~4.15s 有两段台词，
-         旧版在他一开口就同步起宿傩（fireClashPending 立刻回调），两人完全重叠，
-         听感就是「都没念完」。现在只记胜负，宿傩那句交给 4.25s 的 _sukuSfxFire 起播。 */
+      /* ★ v561 用户定案：小幅错开、同时念 —— 五条真出声后 240ms 宿傩跟上，
+         两句各自完整念完；不再像 v539 那样排队到 4.25s 才起宿傩。
+         startClashSukuVoice 内部幂等（__clashSukuP 窗口内复用），不会二次起播。 */
       if(!_willCl) domainSetWinner('player');
+      /* 先等五条真的在出声（currentTime>0.05），再延迟 240ms 起宿傩 —— 保证「五条略先」 */
+      (function _waitGojo(n){
+        if(n>12){ try{ startClashSukuVoice(); }catch(e){} return; }   /* 兜底：1.2s 后无论如何起宿傩 */
+        var ge=window.__gojoVoiceEl;
+        var live=false;
+        try{ live=!!(ge && !ge.ended && !ge.paused && ge.currentTime>0.05 && !ge.__warming && !ge.muted); }catch(e){}
+        if(!live || S.phase!=='fight'){ setTimeout(function(){ _waitGojo(n+1); },100); return; }
+        setTimeout(function(){ try{ if(S.phase==='fight') startClashSukuVoice(); }catch(e){} },240);
+      })(0);
       domainAudioSeal();
     },'gojoDom'); }catch(e){}
     /* ★ v494 领域曲等这一句真的念完才起（对拼中、暂停中都不起） */
@@ -6264,21 +6273,18 @@ function gojoVoid(){
     /* ===== 领域对拼：伏魔御厨子场景自右向左展开到画面中间 → 白色对拼线
        ★ v244 对拼胜率固定 50%（魔虚罗已被击破亦同，不再必胜）。 ===== */
     /* ★ v187 语音提早：先起播音效，台词/大字紧随（用户要求） */
-    /* ★ v495 用户指定：两句领域语音不再叠在一起。
-       实测 gojoDom 5.30s（0.05–1.25「领域展开」／2.90–4.15「无量空处」）、sukuDom 4.41s。
-       旧版宿傩语音在本段（五条展开后 2.5s）就起播，与五条那句 2.90–4.15 完全重叠 ⇒ 听感＝双方都没念完。
-       现在：宿傩延到 4.25s（五条念毕）才起，台词同步延后，领域曲改由语音 promise 驱动。 */
+    /* ★ v561 两句小幅错开（五条真出声后 240ms 宿傩跟上）、同时念、各自完整。
+       gojoDom 5.30s / sukuDom 4.41s；startClashSukuVoice 幂等复用，绝不二次起播掐回 0 秒。 */
     let _sukuSfxResolve=null;
     const _sukuSfx=new Promise(function(r){ _sukuSfxResolve=r; });
     const _sukuSfxFire=function(){
       let _p=null;
       if(S.phase!=='fight'){ if(_sukuSfxResolve) _sukuSfxResolve(); return; }   /* ★ v495 这 1.75s 内已退场／换人 ⇒ 不再补播语音与台词 */
-      /* ★ v501 复用 160ms 时已起播的那一句；没有才补播，绝不二次起播把前一句掐回 0 秒 */
-      try{ if(S.phase==='fight'){
-        _p=(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0))
-          ? window.__clashSukuP
-          : ((typeof startClashSukuVoice==='function')?startClashSukuVoice():window.playSoloVoice('sukuDom',0,5.80,0.92));
-      } }catch(e){}
+      /* ★ v561c 不在这里起播宿傩 —— 起播只由 armClashAfterPlayer 的「五条真出声后 240ms」回调负责。
+         这里只复用已起播的 Promise 收尾；两处竞速会让宿傩反过来抢在五条前面（实测 -16ms）。 */
+      try{
+        if(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0)) _p=window.__clashSukuP;
+      }catch(e){}
       if(_p&&_p.then){ _p.then(function(){ if(_sukuSfxResolve) _sukuSfxResolve(); }, function(){ if(_sukuSfxResolve) _sukuSfxResolve(); }); }
       else { if(_sukuSfxResolve) _sukuSfxResolve(); }
       say('suku','「领域展开——伏魔御厨子。」');
@@ -6286,7 +6292,9 @@ function gojoVoid(){
       /* v366 对拼后（语音毕）起领域曲 —— 不再写死 5000ms（那时语音仍在念，会盖尾） */
       _sukuSfx.then(function(){ try{ if(S.phase==='fight' && S.sukuDom>0 && sukuBgmEl && sukuBgmEl.paused && !bgmMuted) startSukuBgm(); }catch(e){} });
     };
-    setTimeout(_sukuSfxFire, 1750);   /* 2500 + 1750 = 4.25s：五条那句「无量空处」刚念完 */
+    /* ★ v561 移除 1750ms 排队延迟：宿傩语音已在 armClashAfterPlayer 回调里（五条真出声后 240ms）起播。
+       这里只做收尾 —— 复用同一 Promise，绝不二次起播把前一句掐回 0 秒。台词同步提前。 */
+    setTimeout(_sukuSfxFire, 280);
     /* ★ v82 对拼结束后的吞噬/扩展提速：winDur 0.9 → 0.45（宿傩胜吞没 / 五条胜扩回全屏共用此时长） */
     /* ★ v440 用户指定：对拼画面左右各一半，左＝无量空处、右＝伏魔御厨子 ——
        五条这一侧也要竖排自己的领域名，与右侧「伏魔御厨子」对称。 */
@@ -7960,18 +7968,17 @@ function mahaTurnStart(){
   }
   if(S.mahaSpaceCd>0) S.mahaSpaceCd--;
   if(S.mahaCopyCd>0) S.mahaCopyCd--;
-  /* ★ v546 超速适应再生：打空当回合不计时，从下一个回合开局才开始递减。
-     原作档 regen=2 ⇒ 第1次递减在打空后第1回合开局(2→1)、第2次在打空后第2回合开局(1→0)，
-     即「2 回合内没被击杀 ⇒ 第 3 回合开局回满」；其余档 regen=1 ⇒ 第 2 回合开局回满。 */
-  if(S.mahaRegen>0 && S.mahaDead && S.turnN>(S.mahaRegenAt||0)){
+  /* ★ v558 被动回血：挨打没死 ⇒ 从受击回合起算，原作2回合／其余1回合内没死就原地回满。
+     魔虚罗全程在场（可被继续攻击）；倒计时归零则回满血、立绘(mahaBlur)同步恢复，不放召唤动画。
+     若回血空档内被打空 ⇒ damageShiki 调 mahaSlain(true) 直接死亡，mahaRegen 归零，这里不再触发。 */
+  if(S.mahaRegen>0 && S.maha && !S.mahaDead && S.turnN>(S.mahaRegenAt||0)){
     S.mahaRegen--;
     if(S.mahaRegen<=0){
-      S.mahaHp=S.mahaMax; S.mahaDead=false; S.mahaFade=0;
-      S.mahaBlur=0;   /* ★ v543 回满血 ⇒ 形象还原 */
+      S.mahaHp=S.mahaMax; S.mahaBlur=0; S.mahaFade=0;
       S.mahaSlashCd=0; S.mahaRegen=0; S.mahaRegenAt=0;
       fxText(SX()-150*SC,GY-250*SC,'适 应','#8b5cf6',true,0,{sz:1.15});
       flash('fPurple'); shake();
-      say('sys','★ 魔虚罗·超速适应再生 —— 法轮重组，生命回满！');
+      say('sys','★ 魔虚罗·超速适应 —— 原地回满血，法轮重聚，立绘恢复！');
       syncHud();
     }
   }
@@ -8011,34 +8018,22 @@ function mahaCopySlash(){
 }
 function mahaSlain(direct){
   if(!S.maha&&S.mahaFade<=0) return;
+  void direct;
+  /* ★ v558 血条被打空 ⇒ 直接死亡下场：法轮碎裂、永久退场、不再重生 */
   S.mahaDead=true;
+  S.mahaRegen=0; S.mahaRegenAt=0;
   adaptOnMahaDown();                       /* ★ v484 */
   if(S.target==='maha') S.target='sukuna';
-  if(direct){
-    /* 单发直接打空血条＝直接杀死：法轮碎裂，永久下场 */
-    S.mahaFade=MAHA_FADE; S.mahaRegen=0;
-    fxShikFade('魔虚罗·法轮碎裂',SX()-102*SC,GY-258*SC,24);
-    say('sys','★ 魔虚罗被直接杀死 —— 法轮碎裂，不再重生；适应条归零，已被适应的招式仍减伤。');
-  }else{
-    /* ★ v543 未被直接杀死：进入再生倒计时，回合开始时满血归来 */
-    S.mahaFade=MAHA_FADE*0.45;
-    /* ★ v546 精确语义：原作档「2 回合内没被击杀 ⇒ 第 3 回合开局满血」；
-       其余档「1 回合内没被击杀 ⇒ 第 2 回合开局满血」。
-       记下打空当回合的回合戳；mahaTurnStart 只在回合戳严格大于它时才开始递减，
-       这样打空当回合末尾不会先扣 1 格（旧版正是这里早了一回合）。 */
-    /* 用户口径：原作档熬满 2 个回合后，在**第 3 个回合开局**回满；
-       其余档熬满 1 个回合后，在**第 2 个回合开局**回满。
-       从打空那一刻起要经历 3 / 2 次回合推进才归零，故倒计时初值直接取 3 / 2。 */
-    S.mahaRegen=(S.diff==='normal')?3:2;
-    S.mahaRegenAt=(typeof S.turnN==='number')?S.turnN:-1;
-    fxShikFade('魔虚罗·法轮重组中',SX()-102*SC,GY-258*SC,24);
-    say('sys','★ 魔虚罗被击破，但法轮未碎 —— '+S.mahaRegen+' 回合后「超速适应再生」满血归来；适应条归零，已被适应的招式仍减伤。');
-  }
+  S.mahaFade=MAHA_FADE;
+  fxShikFade('魔虚罗·法轮碎裂',SX()-102*SC,GY-258*SC,24);
+  say('sys','★ 魔虚罗血条被打空 —— 法轮碎裂，直接死亡下场；适应条归零，已被适应的招式仍减伤。');
   syncHud();
 }
+
 /* ---------- 式神受击 ---------- */
 function damageShiki(who,d,big){
-  if(who==='maha' && S.mahaDead) return;   /* ★ v543 重组中不可再被打 */
+  /* ★ v558 魔虚罗挨打没死仍留在场、可继续被攻击；只有被打空才死亡下场 */
+  if(who==='maha' && (S.mahaDead || !S.maha)) return;
   const dd=Math.max(1,Math.round(d*(SHIK_TAKEN[who]||1)*10)/10);
   if(who==='agyo'){
     S.agyoHp=Math.max(0,S.agyoHp-dd);
@@ -8057,7 +8052,14 @@ function damageShiki(who,d,big){
     S.mahaBlur=Math.min(0.92,Math.max(0,1-S.mahaHp/Math.max(1,S.mahaMax))*0.95);   /* ★ v543 掉血虚化 */
     fxImpact(SX()-150*SC,GY-130*SC,!!big);
     fxText(SX()-150*SC,GY-178*SC,'-'+dd,'#2b6cb0',!!big);
-    if(S.mahaHp<=0) mahaSlain(dd>=S.mahaMax-0.001);   /* ★ v543 单发足以打空满血＝直接杀死；累计磨血＝再生 */
+    if(S.mahaHp<=0){
+      /* ★ v558 血条被打空 ⇒ 直接死亡下场，法轮碎裂，不再重生 */
+      mahaSlain(true);
+    }else{
+      /* ★ v558 挨打没死 ⇒ 从这一回合起算回血倒计时：原作2回合／其余1回合内没死就回满 */
+      S.mahaRegen=(S.diff==='normal')?2:1;
+      S.mahaRegenAt=(typeof S.turnN==='number')?S.turnN:-1;
+    }
   }
   syncHud();
 }
@@ -8543,13 +8545,10 @@ function heroDown(){
       const _dvEl=window.__lastSoloVoice;
       if(_dvEl&&_dvEl.play) window.__deathVoiceGuard={el:_dvEl, until:S.deathVoiceUntil};
     }catch(e){}
-    if(_dvP&&_dvP.then){
-      _dvP.then(function(){
-        try{ window.__deathVoiceGuard=null; }catch(e){}
-        try{ S.deathVoiceUntil=0; }catch(e){}
-        try{ if(typeof startBGM==='function') startBGM(0.8); }catch(e){}
-      });
-    }
+    /* ★ v556 删掉「_dvP.then 就解锁」——play() resolve 只代表起播，不代表念完；
+       旧版 resolve 立刻清 guard + deathVoiceUntil + 起 BGM ⇒ 三句尾音被 BGM 盖掉。
+       现在解锁交给播放器 fin()（真 ended / 超时兜底），见 playSoloVoice 末尾统一处理。 */
+    void _dvP;
   }catch(e){}
   /* ★ v132 退场统一入口：先作废本棒所有延时演出、再复位演出层 ——
      否则鹿紫幻兽那一击的粒子 / 漫画页会在下一棒登场后才姗姗来迟地补播，
@@ -12996,7 +12995,9 @@ function update(dt){
       /* ★ 魔虚罗被抹除：MAHA_FADE 秒渐隐后退场（渐隐期间仍绘制，只是 alpha 递减） */
       if(S.mahaFade>0){
         S.mahaFade=Math.max(0,S.mahaFade-dt);
-        if(S.mahaFade<=0){ S.maha=false; }
+        /* ★ v557 再生倒计时中的淡出只是视觉退场，不能把 S.maha 清掉：
+           清掉后 drawMahoBody() 直接 return，回满血立绘永远不出现、攻击技能也用不了。 */
+        if(S.mahaFade<=0 && S.mahaDead){ S.maha=false; }   /* ★ v558 只有真死亡才退场；回血期间从不清场 */
       }
       if(S.maha){
         /* ★ v40 适应已改为「按技能 ID」：使用技能时即时累积，不再走 15 秒定时器 */
@@ -23705,8 +23706,12 @@ function fireClashPending(){
    这里只等五条念完 + 宿傩起播后再缓 2.2s（约 6.5s）推进，宿傩的尾音留在背景继续念，
    领域 BGM 由 domainVoicesBusy() 闸门自动让位到它念完。 */
 function clashVoiceGate(pa,pb){
-  const cap=new Promise(function(r){ setTimeout(r,2200); });
-  return Promise.all([Promise.resolve(pa), Promise.race([Promise.resolve(pb),cap])]);
+  /* ★ v556 用户第 N 次报「对拼时五条被宿傩截断 / 两人都要念完」：
+     旧版 Promise.race([pb, 2200ms cap]) —— 宿傩那句没念完，2.2s 就放行推进回合、切 BGM，
+     尾音必被盖掉。现在两条 Promise 都等真结束（playSoloVoice 内部已顺延到 ended），
+     兜底拉到 9s 只为防音轨异常卡死，正常情况下不会触发。 */
+  const cap=new Promise(function(r){ setTimeout(r,9000); });
+  return Promise.all([Promise.race([Promise.resolve(pa),cap]), Promise.race([Promise.resolve(pb),cap])]);
 }
 function armClashAfterPlayer(cb, key){
   window.__clashPendingKey=key||'gojoDom';
@@ -23795,15 +23800,20 @@ function playSoloVoice(key, lead, fallbackSec, vol){
     /* ★ v501：对拼双方都要完整念完，切页/暂停巡检的 hardStopVoices 不得掐掉这两条 */
     /* ★ v536 死亡语音（宿傩击杀后那三句）也进白名单：用户要求「黑幕结束回到选人界面
        也要把话念完」——不设守卫的话，切选人页的 hardStopVoices 会把它连 currentTime 一起归零。 */
-    if(key==='gojoDom'||key==='sukuDom'||key==='yutaDomain'||key==='gojoVoice2'
-       ||key==='sukuDeathA'||key==='sukuDeathB'||key==='sukuDeathC'){
-      el.__guardUntil=Date.now()+Math.max(7000,((fallbackSec||0)*1000)+1500);
-      if(key==='gojoDom') window.__gojoVoiceEl=el;
-    } }catch(e){}
+    /* ★ v556 守卫不再只给白名单：任何语音（含 kashAmber / 鹿紫云 3 技能、kash 各招、
+       各角色 ult）在念的时候都不能被 hardStopVoices 归零 —— 这是「语音没念完」的通用根因。 */
+    el.__guardUntil=Date.now()+Math.max(7000,((fallbackSec||0)*1000)+1800);
+    el.__voiceKey=key;
+    if(key==='gojoDom') window.__gojoVoiceEl=el; }catch(e){}
   return new Promise(function(res){
     let done=false, timer=null;
     const fin=function(){ if(done) return; done=true; try{ el.removeEventListener('ended',fin); }catch(e){}
       try{ el.__live=0; }catch(e){}
+      /* ★ v556 死亡语音：真正念完（ended / 兜底超时）才解锁并接 BGM，不再被 play() resolve 提前掐断 */
+      try{ if(key==='sukuDeathA'||key==='sukuDeathB'||key==='sukuDeathC'){
+        window.__deathVoiceGuard=null; S.deathVoiceUntil=0;
+        if(typeof startBGM==='function') startBGM(0.8);
+      } }catch(e){}
       /* ★ v536 本句念完 ⇒ 摘掉自己的语音窗口（另一条人声还在念就保留它的窗口） */
       try{ if(_domV){ const _vm=window.__domVoiceEls||{}; if(_vm[key]===el) delete _vm[key];
             let _mx=0; for(const _vk in _vm){ const _ve=_vm[_vk]; if(_ve&&!_ve.ended&&!_ve.error) _mx=Math.max(_mx,_ve.__voiceWinUntil||0); }
@@ -24129,10 +24139,34 @@ function playDomSfx(key, fallbackSec, lead, _retry, trim){
     el.addEventListener('ended',fin,{once:true});
     const dur=isFinite(el.duration)&&el.duration>0?el.duration:(fallbackSec||0);
     const remain=Math.max(0.3, dur-(lead?lead:0)-(trim?trim:0));
-    const t=setTimeout(fin, Math.max(300,(remain+0.25)*1000));
+    /* ★ v560 与 playSoloVoice 的 v491 修复对齐：到点先查音轨是否还在播，
+       还在就顺延到真 ended —— 旧版到点直接 fin 放行 BGM，解码慢/起播晚时尾音被盖掉。
+       trim>0 是宿傩领域语音刻意掐尾，保持原样不顺延。 */
+    let t=null;
+    const arm=function(){
+      t=setTimeout(function(){
+        if(!(trim>0)){
+          try{
+            if(el && !el.ended && !el.paused && el.duration && isFinite(el.duration) && el.currentTime < el.duration-0.06){
+              const left=Math.max(0.25, el.duration-el.currentTime);
+              t=setTimeout(arm2, Math.min(4000, left*1000+320));
+              return;
+            }
+          }catch(e){}
+        }
+        fin();
+      }, Math.max(300,(remain+0.25)*1000));
+    };
+    const arm2=function(){
+      try{ if(el && !el.ended && !el.paused){ t=setTimeout(arm2,260); return; } }catch(e){}
+      fin();
+    };
+    arm();
     if(_audStale(_ag)){ try{ res(); }catch(e){} return; }   /* ★ v462：起播前最后一道代次闸 */
     _sfxGate(el);
     domCur=el;
+    /* ★ v559 与 playSoloVoice 一致：所有语音都设守卫，念完前不被 hardStopVoices/_sfxGate 归零 */
+    try{ el.__guardUntil=Date.now()+Math.max(800,(remain+0.4)*1000); el.__voiceKey=key; }catch(e){}
     try{ domVoiceUntil=Date.now()+Math.max(800,remain*1000); }catch(e){}   /* ★ v411 */
     try{ const p=el.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){}
   });
@@ -26360,7 +26394,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v555';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v561';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26396,7 +26430,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v555</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v561</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26414,7 +26448,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v555', RK='jjk_ver_reload_'+B;
+  var B='v561', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
