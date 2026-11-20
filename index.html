@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v552">
+<meta name="jjk-build" content="v555">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -14085,7 +14085,7 @@ function drawBg(){
   const _bs=bgStatic();
   if(_bs) ctx.drawImage(_bs,0,0,W,H);
   drawStreetDamage();   /* ★ v450 街道破坏度：裂缝／粉尘逐级叠加 */
-  speedLines(S.speed);
+  /* ★ v555 用户指定：删除宿傩攻击时的黑色放射线群（S.speed 保留，其余特效不受影响） */
 }
 
 /* ★ v463 街道破坏度：改用 V3「瓦砾带」——整条街被砸穿的碎石带。
@@ -15288,72 +15288,48 @@ function _fxArcBand(cx, cy, R, a0, a1, wA, wB, col, alpha) {
    排版原则：特效一律放在「身前＝画面右侧」的空档，不压脸、不压躯干；底色是白素描城市 ⇒ 以墨黑为主体。
    原作依据：0 咒力，靠肉体与五感在斩击到达前架开（连宿傩贴脸直斩也只轻伤）。 */
 function drawFxMakiStance(f) {
-  /* ★ v551 用户指定：涟漪要**有缺口、不规则**。
-     5 道环从丹田（腰腹）向外扩散，每道拆成 2~3 段、缺口大小不等且随时间漂移；
-     半径用双频扰动 + 低频偏心，做成不规则水纹而非完美同心圆。柔和墨灰、不做流线/脚下雾。 */
-  const TAU=Math.PI*2;
-  const k=Math.max(0,Math.min(1,f.t/(f.dur||1.05)));
-  const s=SC, hx=GX(), gy=GY, H0=itaHeight();
-  const cx=hx, cy=gy-H0*0.34;          /* 丹田 */
-  const fadeIn=Math.min(1,k/0.08), fadeOut=Math.max(0,(k-0.74)/0.26);
+  /* ★ v553 用户指定：仿言灵术式——全场聚焦**当前真希立绘**（正常站位 GX，不移到中央），
+     四周压暗、白色发光勾边。两张立绘(maki / makiLow)按各自宽高比分别适配。 */
+  const p=Math.max(0,Math.min(1,f.t/(f.dur||1.05)));
+  const fadeIn=Math.min(1,p/0.12), fadeOut=Math.max(0,(p-0.80)/0.20);
   const al=Math.max(0,Math.min(fadeIn,1-fadeOut));
   if(al<=0.01) return;
-  const INK='rgba(78,82,90,';
-  const INK2='rgba(120,124,132,';
-
+  /* 正常站位：与 drawMaki 同一锚点 GX()、GY；按当前血量选立绘（和 drawMaki 一致） */
+  const low=(S.gojo && S.gojo.hp<=S.maxHp*0.70);
+  const im=low?IMGS.makiLow:IMGS.maki;
+  const cx=GX(), gy=GY;
+  const hh0=itaHeight()*(low?0.72:0.90);   /* 与 drawCutHero 的 h 口径一致 */
+  const cx2=cx, cy=gy-hh0*0.52;
   ctx.save();
-  ctx.translate(cx,cy);
-
-  const RINGS=3;   /* ★ v552 环数 5→3，避免过密 */
-  for(let r=0;r<RINGS;r++){
-    const lp=Math.max(0,Math.min(1,(k-0.03-r*0.05)/0.40));
-    if(lp<=0) continue;
-    const rr=H0*(0.11+0.175*r)*lp;   /* ★ v552 间距 0.105→0.175 身高，三道明显拉开 */
-    if(rr<2) continue;
-    const phase=k*1.9+r*1.7;
-    /* 每道环 2~3 段，缺口大小不等（0.22~0.55 弧度），段与段之间明显断开 */
-    const segCount=2+(r%2);
-    const baseA=r*0.78+k*0.34;
-    for(let g=0;g<segCount;g++){
-      const gapA=0.22+0.33*(0.5+0.5*Math.sin(phase+g*2.1));   /* 缺口角度随时间变 */
-      const segStart=baseA+g*(TAU/segCount)+0.14*Math.sin(phase+g);
-      const segSpan=TAU/segCount-gapA;
-      if(segSpan<=0.05) continue;
-      const steps=32;
-      const width=(2.0-0.20*r)*s;
-      const baseA2=0.92-0.14*r;
-      /* 不规则半径：双频起伏 + 一个方向的偏心，让环不是正圆 */
-      const pt=function(a){
-        const wob=1+0.11*Math.sin(a*3+phase)+0.06*Math.sin(a*5-phase*0.8)
-                    +0.05*Math.cos(a*2-phase*0.5);
-        const ex=0.06*rr*Math.cos(phase*0.7), ey=0.06*rr*Math.sin(phase*0.7);
-        return {x:Math.cos(a)*rr*wob+ex, y:Math.sin(a)*rr*wob+ey};
-      };
-      const drawArc=function(w,col,alpha){
-        ctx.globalAlpha=al*alpha*lp;
-        ctx.lineWidth=w; ctx.strokeStyle=col;
-        ctx.beginPath();
-        for(let t=0;t<=steps;t++){
-          const p=pt(segStart+segSpan*t/steps);
-          if(t===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
-        }
-        ctx.stroke();
-      };
-      drawArc(width+4*s, INK2+'0.28)', baseA2*0.45);
-      drawArc(width,     INK+'0.90)',  baseA2);
-      drawArc(Math.max(0.6*s,width-1.2*s), 'rgba(252,252,252,0.64)', baseA2*0.5);
+  ctx.globalAlpha=al;
+  /* 四周压暗，中心透明——聚焦窗口贴在真希身上，不居中 */
+  const R0=Math.max(W,H)*0.80, R1=Math.min(W,H)*0.34;
+  const R=R0+(R1-R0)*Math.min(1,p/0.55);
+  const g=ctx.createRadialGradient(cx2,cy,R*0.18,cx2,cy,R);
+  g.addColorStop(0,'rgba(8,8,12,0)');
+  g.addColorStop(0.58,'rgba(8,8,12,.68)');
+  g.addColorStop(1,'rgba(4,4,8,.95)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  /* 中央立绘：按各自宽高比适配，白色发光勾边 */
+  if(im&&im.width){
+    const sc=0.90+0.12*Math.min(1,p/0.40);
+    let hh=hh0*sc, ww=hh*im.width/im.height;
+    const wMax=W*0.46;
+    if(ww>wMax){ ww=wMax; hh=ww*im.height/im.width; }
+    ctx.save();
+    if(!FX_LITE){
+      ctx.shadowColor='rgba(255,255,255,.98)'; ctx.shadowBlur=32*SC;
+      ctx.drawImage(im,cx2-ww/2,cy-hh/2,ww,hh);
+      ctx.shadowBlur=18*SC;
+      ctx.drawImage(im,cx2-ww/2,cy-hh/2,ww,hh);
     }
+    ctx.drawImage(im,cx2-ww/2,cy-hh/2,ww,hh);
+    ctx.restore();
   }
-
-  /* 中心小水花点 */
-  const cr=H0*0.05*Math.min(1,k/0.2);
-  const cg=ctx.createRadialGradient(0,0,0,0,0,Math.max(1,cr));
-  cg.addColorStop(0,INK+'0.40)');
-  cg.addColorStop(0.55,INK2+'0.13)');
-  cg.addColorStop(1,INK2+'0)');
-  ctx.globalAlpha=al; ctx.fillStyle=cg;
-  ctx.beginPath(); ctx.arc(0,0,Math.max(1,cr),0,TAU); ctx.fill();
-
+  /* 一道细白收束环，不做多余文字标注 */
+  ctx.globalAlpha=al*0.26;
+  ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=1.6*SC;
+  ctx.beginPath(); ctx.arc(cx2,cy,R*0.34,0,Math.PI*2); ctx.stroke();
   ctx.restore();
 }
 function drawFxMakiAwaken(f) {
@@ -15442,64 +15418,54 @@ function drawFxMakiAwaken(f) {
    原作依据：领域展延＝把未赋予术式的领域缠在身上，让对手术式流入中和，不必中断生得术式。
    环境：常开在「法廷」黑白高密度线稿上 ⇒ 金环带白边、膜面用白色薄纱才读得到。 */
 function drawFxHiguExtend(f) {
-  /* ★ v547 用户指定：2 技能「领域展延」重做为黑白司法风。
-     原作里这是让对手术式流入自身并中和 —— 不是金色魔法罩。
-     这里画：宿傩侧的斜向术式墨线流入日车身前，被一道竖直的「裁判线」压断、散成墨点。 */
+  /* ★ v553 用户指定：线条太僵硬、动画不明显——改成柔和曲线导流 + 明显的中和拍。
+     原作＝让术式流入自身中和：弯曲墨线沿弧线汇入，不用笔直裁判线。 */
   const TAU=Math.PI*2;
-  const k=Math.max(0,Math.min(1,f.t/(f.dur||1.25)));
-  const s2=SC, hx=GX(), gy=GY, hgt=itaHeight();
-  const ink='#17181c', paper='#ffffff', red='#b4232b';
-  const cy=gy-hgt*0.50;
-  const fade=Math.min(1,k/0.12)*Math.max(0,1-(k-0.80)/0.20);
+  const p=Math.max(0,Math.min(1,f.t/(f.dur||1.25)));
+  const s2=SC, hx=GX(), gy=GY, H0=itaHeight();
+  const ink='rgba(28,29,34,', red='rgba(180,35,43,';
+  const fade=Math.min(1,p/0.09)*Math.max(0,1-(p-0.84)/0.16);
   if(fade<=0.01) return;
+  const cx=hx+H0*0.42, cy=gy-H0*0.50;   /* ★ v553b 汇入点移到两人之间，红色中和更显眼 */
   ctx.save();
-  /* ① 竖直裁判线：一条墨线从天到地，把画面分作「原告/被告」两侧 */
-  const jx=W*0.50;   /* ★ v548c 裁判线放在两人之间的画面中央（旧版贴着玩家侧，几乎看不见） */
-  const jp=Math.min(1,k/0.20);
-  ctx.globalAlpha=fade*0.85;
-  ctx.strokeStyle=ink; ctx.lineWidth=2.6*s2;
-  ctx.beginPath(); ctx.moveTo(jx,gy-hgt*1.02); ctx.lineTo(jx,gy+hgt*0.04*jp); ctx.stroke();
-  /* 顶端小横帽（读作裁判席的界标，不是魔法符号） */
-  ctx.lineWidth=3.4*s2;
-  ctx.beginPath(); ctx.moveTo(jx-9*s2,gy-hgt*1.02); ctx.lineTo(jx+9*s2,gy-hgt*1.02); ctx.stroke();
-  /* ② 宿傩侧飞来的术式墨线（4 条，斜向右下 → 被裁判线挡住） */
-  for(let i=0;i<4;i++){
-    const p=Math.max(0,Math.min(1,(k-0.06-i*0.045)/0.26));
-    if(p<=0) continue;
-    const y0=gy-hgt*(0.86-i*0.16), x0=W*(0.86-i*0.04);   /* ★ v548c 从右侧宿傩方向飞向中线 */
-    const x1=jx+4*s2, y1=cy-hgt*(0.18-i*0.09);
-    const x=x0+(x1-x0)*p, y=y0+(y1-y0)*p;
-    if(p<1){
-      ctx.globalAlpha=fade*0.88;
-      ctx.strokeStyle=ink; ctx.lineWidth=(2.6-i*0.35)*s2;
-      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x,y); ctx.stroke();
-      /* 白描边压住白底 */
-      ctx.globalAlpha=fade*0.55; ctx.strokeStyle=paper; ctx.lineWidth=(4.8-i*0.4)*s2;
-      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x,y); ctx.stroke();
-    }else{
-      /* 触线后散成墨点，沿裁判线往下淌 */
-      const q=Math.min(1,Math.max(0,(k-(0.34+i*0.045))/0.42));
-      if(q<1){
-        ctx.globalAlpha=fade*(1-q)*0.72;
-        ctx.fillStyle=ink;
-        for(let d=0;d<5;d++){
-          const dy=q*hgt*0.30+d*4*s2;
-          const dx=Math.sin(d*2.3+i)*(6+10*q)*s2;
-          ctx.beginPath(); ctx.arc(jx+dx,y1+dy,(1.2+0.8*Math.abs(Math.sin(d+i)))*s2,0,TAU); ctx.fill();
-        }
+  /* ① 五道柔和墨线：自右侧沿二次贝塞尔曲线汇入日车身前 */
+  for(let i=0;i<5;i++){
+    const q=Math.max(0,Math.min(1,(p-0.02-i*0.04)/0.40));
+    if(q<=0) continue;
+    const y0=cy-H0*(0.34-i*0.16), x0=W*0.94;
+    const bend=H0*(0.42+0.10*i);   /* ★ v553b 曲率加大，明显弧线不再僵硬 */
+    const draw=function(w,col,alpha){
+      ctx.globalAlpha=fade*alpha*q; ctx.lineWidth=w; ctx.strokeStyle=col; ctx.lineCap='round';
+      ctx.beginPath();
+      const N=30;
+      for(let t=0;t<=N;t++){
+        const u=q*t/N;
+        const x=(1-u)*(1-u)*x0+2*(1-u)*u*(x0-bend)+u*u*cx;
+        const y=(1-u)*(1-u)*y0+2*(1-u)*u*(y0+H0*0.30)+u*u*cy;
+        if(t===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
-    }
+      ctx.stroke();
+    };
+    draw((5.0-i*0.4)*s2, ink+'0.16)', 0.55);
+    draw((2.6-i*0.24)*s2, ink+'0.92)', 0.95);
   }
-  /* ③  neutralization 横断：一道短朱红印记（全画面唯一彩色，作判决点缀） */
-  const sp=Math.min(1,Math.max(0,(k-0.24)/0.16));
-  if(sp>0){
-    ctx.globalAlpha=fade*sp*0.9;
-    ctx.strokeStyle=red; ctx.lineWidth=2.2*s2;
-    ctx.beginPath(); ctx.moveTo(jx-12*s2,cy-hgt*0.22); ctx.lineTo(jx+12*s2,cy-hgt*0.22); ctx.stroke();
-    ctx.fillStyle=red; ctx.font=`900 ${Math.round(13*s2)}px sans-serif`;
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('中 和',jx,cy-hgt*0.30);
+  /* ★ v554 用户指定：红圈改为竖线 —— 一道朱红竖线自上方落下盖章，配短横印发「中和」的截击感 */
+  const hp=Math.max(0,Math.min(1,(p-0.28)/0.20));
+  if(hp>0){
+    const half=H0*(0.10+0.20*hp);          /* 竖线由短到长地「刷」出来 */
+    ctx.globalAlpha=fade*(1-Math.max(0,(p-0.62)/0.30))*0.98;
+    ctx.strokeStyle=red+'0.98)'; ctx.lineCap='round';
+    ctx.lineWidth=(5.0-1.8*hp)*s2;
+    ctx.beginPath(); ctx.moveTo(cx,cy-half); ctx.lineTo(cx,cy+half); ctx.stroke();
+    ctx.globalAlpha=fade*0.90*(1-Math.max(0,(p-0.58)/0.30));
+    ctx.lineWidth=2.8*s2;
+    ctx.beginPath(); ctx.moveTo(cx-15*s2,cy); ctx.lineTo(cx+15*s2,cy); ctx.stroke();
   }
+  /* ③ 汇入点淡墨晕 */
+  const cr=H0*0.10*Math.min(1,p/0.28), cg=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(1,cr));
+  cg.addColorStop(0,ink+'0.24)'); cg.addColorStop(0.6,ink+'0.09)'); cg.addColorStop(1,ink+'0)');
+  ctx.globalAlpha=fade; ctx.fillStyle=cg;
+  ctx.beginPath(); ctx.arc(cx,cy,Math.max(1,cr),0,TAU); ctx.fill();
   ctx.restore();
 }
 function drawFxItaSimpleDom(f) {
@@ -15901,15 +15867,6 @@ function drawFx(){
       }
       /* ★ v431 用户指定：捌「动画不明显」—— 开爆瞬间叠一层 nanoAI 的赤斩芒（加亮混合，只烧 0.1 秒），
          把「多道斩同时落下」的第一印象拉满；之后仍由逐道生长的墨红斩线收尾。 */
-      if(t<0.10 && IMGS.batsuStar){
-        const q0=Math.min(1,t/0.045), a0=(1-t/0.10)*0.9;
-        const R0=Math.min(W,H)*0.60*(0.55+0.60*q0);
-        ctx.save(); ctx.globalAlpha=a0;
-        ctx.globalCompositeOperation='lighter';
-        ctx.translate(cx,cy); ctx.rotate((f.seed||0)*0.7);
-        ctx.drawImage(IMGS.batsuStar,-R0,-R0,R0*2,R0*2);
-        ctx.restore();
-      }
       const bc=Math.max(0,1-t/0.14);
       if(bc>0.01){
         ctx.save(); ctx.globalAlpha=bc*0.9;
@@ -16066,34 +16023,6 @@ function drawFx(){
          无等距红弧、无 round 圆头、无规则圆环、无圆形火星。 */
       const s=SC, sl=f.slashes||[];
       ctx.lineCap='butt'; ctx.lineJoin='miter';
-      /* ★ v444 用户指定：撕裂感 —— 命中最初 0.12s 叠一枚白色撕裂星芒（四向撕口 + 内圈白热） */
-      if(f.tear){
-        const kt=f.t/f.dur;
-        if(kt<0.17){
-          const q0=kt/0.17, gx0=sl.length?sl[0].x:0, gy0=sl.length?sl[0].y:0;
-          ctx.save();
-          ctx.globalCompositeOperation='lighter';
-          ctx.translate(gx0,gy0);
-          ctx.rotate((f.t*7.3)%6.283);
-          ctx.globalAlpha=(1-q0)*0.95;
-          const R0=(26+120*q0)*s;
-          const gr=ctx.createRadialGradient(0,0,0,0,0,R0*0.55);
-          gr.addColorStop(0,'rgba(255,255,255,0.95)');
-          gr.addColorStop(0.55,'rgba(255,236,226,0.45)');
-          gr.addColorStop(1,'rgba(255,210,190,0)');
-          ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(0,0,R0*0.55,0,6.283); ctx.fill();
-          ctx.strokeStyle='rgba(255,255,255,'+(0.9*(1-q0)).toFixed(3)+')';
-          ctx.lineWidth=(1.6+2.4*(1-q0))*s; ctx.lineCap='butt';
-          for(let j=0;j<4;j++){
-            const aa=j*1.5708+0.22, r0=R0*0.18, r1=R0*1.5;
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(aa)*r0,Math.sin(aa)*r0*0.8);
-            ctx.lineTo(Math.cos(aa+0.05)*r1,Math.sin(aa+0.05)*r1*0.8);
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
-      }
       for(let i=0;i<sl.length;i++){
         const s2=sl[i];
         const q=(f.t-s2.t)/(f.dur*0.62);
@@ -17135,16 +17064,24 @@ else if(f.type==='lightPillar'){
         const ey=gy-(1-fall)*(gy+H*0.44);
         const al=Math.min(1,u/0.04)*Math.max(0,1-Math.max(0,(u-0.175)/0.115));
         if(al>0.01){
-          const L=82*s2;
-          ctx.save(); ctx.globalAlpha=al; ctx.translate(cx,ey); ctx.rotate(-0.95*(1-fall));
-          ctx.strokeStyle='#141216'; ctx.lineWidth=8*s2; ctx.lineCap='round';
+          const L=118*s2;   /* ★ v553 槌头加大 82→118，下落更明显 */
+          /* 下落拖尾：几道竖直淡墨线，强调速度 */
+          ctx.save(); ctx.globalAlpha=al*0.42*fall;
+          ctx.strokeStyle='rgba(28,26,32,.8)'; ctx.lineWidth=2*s2; ctx.lineCap='round';
+          for(let t=0;t<4;t++){
+            const ox=(-1.5+t)*10*s2;
+            ctx.beginPath(); ctx.moveTo(cx+ox,ey-L*1.5); ctx.lineTo(cx+ox,ey-L*0.6); ctx.stroke();
+          }
+          ctx.restore();
+          ctx.save(); ctx.globalAlpha=al; ctx.translate(cx,ey); ctx.rotate(-1.15*(1-fall));
+          ctx.strokeStyle='#141216'; ctx.lineWidth=11*s2; ctx.lineCap='round';
           ctx.beginPath(); ctx.moveTo(0,-L*0.26); ctx.lineTo(0,L*0.64); ctx.stroke();
           ctx.fillStyle='#1d1a20';
-          ctx.fillRect(-L*0.31,-L*0.54,L*0.62,L*0.32);
-          ctx.strokeStyle='rgba(255,255,255,.24)'; ctx.lineWidth=2*s2;
-          ctx.strokeRect(-L*0.31,-L*0.54,L*0.62,L*0.32);
-          ctx.strokeStyle=acc; ctx.lineWidth=3.2*s2;
-          ctx.beginPath(); ctx.moveTo(-L*0.31,-L*0.40); ctx.lineTo(L*0.31,-L*0.40); ctx.stroke();
+          ctx.fillRect(-L*0.33,-L*0.56,L*0.66,L*0.36);
+          ctx.strokeStyle='rgba(255,255,255,.36)'; ctx.lineWidth=2.4*s2;
+          ctx.strokeRect(-L*0.33,-L*0.56,L*0.66,L*0.36);
+          ctx.strokeStyle=acc; ctx.lineWidth=4*s2;
+          ctx.beginPath(); ctx.moveTo(-L*0.33,-L*0.42); ctx.lineTo(L*0.33,-L*0.42); ctx.stroke();
           ctx.restore();
         }
       }
@@ -17169,6 +17106,32 @@ else if(f.type==='lightPillar'){
           ctx.stroke();
         }
         ctx.restore();
+      }
+      /* ★ v553 宿傩身上：红色「审判」竖排斜体大字，字号大、覆在立绘上，随技能结束淡出 */
+      {
+        const jp=Math.max(0,Math.min(1,(u-0.16)/0.18));
+        const jOut=Math.max(0,1-Math.max(0,(u-0.82)/0.18));
+        if(jp>0&&jOut>0){
+          const jx=SX(), jy=GY-H*0.44;
+          const sz=Math.round(Math.min(H*0.17, 96*s2));
+          ctx.save();
+          ctx.globalAlpha=jOut*0.94;
+          ctx.translate(jx,jy);
+          ctx.transform(1,0,-0.16,1,0,0);   /* 斜体 */
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.font='900 '+sz+'px serif';
+          ctx.lineJoin='round';
+          const ch=['审','判'];
+          for(let i=0;i<2;i++){
+            const drop=(1-jp)*-40*s2;
+            ctx.save(); ctx.translate(0,i*sz*1.06+drop);
+            ctx.lineWidth=sz*0.16; ctx.strokeStyle='rgba(12,10,14,.9)'; ctx.strokeText(ch[i],0,0);
+            ctx.lineWidth=sz*0.06; ctx.strokeStyle='#b4232b'; ctx.strokeText(ch[i],0,0);
+            ctx.fillStyle='#d7263d'; ctx.fillText(ch[i],0,0);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
       }
       /* ③ 判词：竖排两字砸入（纯描边，无底板） */
       const word=death?'处刑':'没收';
@@ -26397,7 +26360,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v552';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v555';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26433,7 +26396,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v552</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v555</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26451,7 +26414,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v552', RK='jjk_ver_reload_'+B;
+  var B='v555', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
