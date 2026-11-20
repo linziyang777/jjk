@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v545">
+<meta name="jjk-build" content="v547">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1548,6 +1548,14 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 /* ★ v264 用户指定：玩家血条贴回技能框上方 —— 底部 HUD 吃掉剩余空间
    （v263 画布满铺后不再占 flex 流，需要它把玩家 HUD 压回底部） */
 #stage>.hud.bottom{margin-top:auto;}
+/* ★ v546 玩家条组 : 宿傩条组 ≈ 2:1 —— 顶部宿傩整行只占一半宽，底部玩家整行满宽。
+   两行本就在不同的 .hud 容器里，无法用同一 flex 权重比，这里直接限宽。
+   居中对齐保持原视觉重心；窄屏下用 min-width 保证读数不被挤没。 */
+#stage>.hud:not(.bottom){width:50%;max-width:50%;min-width:240px;margin-left:auto;margin-right:auto;}
+#stage>.hud.bottom{width:100%;}
+@media (max-width:640px){
+  #stage>.hud:not(.bottom){width:62%;max-width:62%;min-width:0;}
+}
 /* ★ v263 满铺：整个战斗介面共用同一张背景 */
 #cv{position:absolute;inset:0;display:block;}
 
@@ -4805,7 +4813,7 @@ const S={
   rika:false, rikaT:0, rikaCopy:'', ceCap:100, rikaCd:0, rikaCopyCd:0, rikaRevCd:0, okkoRevCd:0, rikaCopyKeep:false,   /* ★ v55 式神·里香 */   /* ★ v212 rikaCopyKeep：里香「时限到」退场 ⇒ 模仿术式仍可用；「血量耗尽」被击破 ⇒ 不可用 */   /* ★ v46 agyoUsed：一场只召唤一次式神 */
   mahaHp:0, mahaMax:0, mahaSlashCd:0,
   /* ★ v543 魔虚罗新机制：超速再生 / 两招习得 */
-  mahaRegen:0, mahaMaxTaken:0, mahaLearnGojo:0, mahaLearnOther:0,
+  mahaRegen:0, mahaRegenAt:0, mahaMaxTaken:0, mahaLearnGojo:0, mahaLearnOther:0,
   mahaBlur:0,   /* ★ v543 掉血虚化程度 0~1：每次受击上升，满血再生时归零 */
   mahaSpace:false, mahaCopy:false, mahaSpaceCd:0, mahaCopyCd:0,
   para:0,                             /* ★ v393 我方「麻痹」剩余回合：1 回合无法行动，不因受伤解除 */
@@ -7956,13 +7964,15 @@ function mahaTurnStart(){
   }
   if(S.mahaSpaceCd>0) S.mahaSpaceCd--;
   if(S.mahaCopyCd>0) S.mahaCopyCd--;
-  /* 超速适应再生：被打空但非一击秒杀 ⇒ 倒计时结束回满血 */
-  if(S.mahaRegen>0 && S.mahaDead){
+  /* ★ v546 超速适应再生：打空当回合不计时，从下一个回合开局才开始递减。
+     原作档 regen=2 ⇒ 第1次递减在打空后第1回合开局(2→1)、第2次在打空后第2回合开局(1→0)，
+     即「2 回合内没被击杀 ⇒ 第 3 回合开局回满」；其余档 regen=1 ⇒ 第 2 回合开局回满。 */
+  if(S.mahaRegen>0 && S.mahaDead && S.turnN>(S.mahaRegenAt||0)){
     S.mahaRegen--;
     if(S.mahaRegen<=0){
       S.mahaHp=S.mahaMax; S.mahaDead=false; S.mahaFade=0;
       S.mahaBlur=0;   /* ★ v543 回满血 ⇒ 形象还原 */
-      S.mahaSlashCd=0; S.mahaRegen=0;
+      S.mahaSlashCd=0; S.mahaRegen=0; S.mahaRegenAt=0;
       fxText(SX()-150*SC,GY-250*SC,'适 应','#8b5cf6',true,0,{sz:1.15});
       flash('fPurple'); shake();
       say('sys','★ 魔虚罗·超速适应再生 —— 法轮重组，生命回满！');
@@ -8016,7 +8026,15 @@ function mahaSlain(direct){
   }else{
     /* ★ v543 未被直接杀死：进入再生倒计时，回合开始时满血归来 */
     S.mahaFade=MAHA_FADE*0.45;
-    S.mahaRegen=(S.diff==='normal')?2:1;   /* 原作档 2 回合 / 苦战·绝境 1 回合 */
+    /* ★ v546 精确语义：原作档「2 回合内没被击杀 ⇒ 第 3 回合开局满血」；
+       其余档「1 回合内没被击杀 ⇒ 第 2 回合开局满血」。
+       记下打空当回合的回合戳；mahaTurnStart 只在回合戳严格大于它时才开始递减，
+       这样打空当回合末尾不会先扣 1 格（旧版正是这里早了一回合）。 */
+    /* 用户口径：原作档熬满 2 个回合后，在**第 3 个回合开局**回满；
+       其余档熬满 1 个回合后，在**第 2 个回合开局**回满。
+       从打空那一刻起要经历 3 / 2 次回合推进才归零，故倒计时初值直接取 3 / 2。 */
+    S.mahaRegen=(S.diff==='normal')?3:2;
+    S.mahaRegenAt=(typeof S.turnN==='number')?S.turnN:-1;
     fxShikFade('魔虚罗·法轮重组中',SX()-102*SC,GY-258*SC,24);
     say('sys','★ 魔虚罗被击破，但法轮未碎 —— '+S.mahaRegen+' 回合后「超速适应再生」满血归来；适应条归零，已被适应的招式仍减伤。');
   }
@@ -10390,7 +10408,7 @@ function summonMaha(withLog){
     S.mahaMax=SUK_MAXHP*MAHO_PCT.hp*(typeof shikHalveFor==='function'?shikHalveFor('maha'):1);
     S.mahaHp=S.mahaMax; S.mahaSlashCd=0;
     /* ★ v543 每次新召唤重置倒计时；习得状态保留（魔虚罗自己学会的） */
-    S.mahaRegen=0; S.mahaSpaceCd=0; S.mahaCopyCd=0; S.mahaMaxTaken=0; S.mahaBlur=0;
+    S.mahaRegen=0; S.mahaRegenAt=0; S.mahaSpaceCd=0; S.mahaCopyCd=0; S.mahaMaxTaken=0; S.mahaBlur=0;
     if(typeof sukPaySuk==='function') sukPaySuk(MAHO_PCT.cost);
     if(S.target==='sukuna' && S.agyo) say('sys','魔虚罗生命 '+Math.round(S.mahaMax)+'（与颚吐同场：后召唤者生命减半）。');
     flash('fPurple'); shake();
@@ -15274,86 +15292,73 @@ function _fxArcBand(cx, cy, R, a0, a1, wA, wB, col, alpha) {
    排版原则：特效一律放在「身前＝画面右侧」的空档，不压脸、不压躯干；底色是白素描城市 ⇒ 以墨黑为主体。
    原作依据：0 咒力，靠肉体与五感在斩击到达前架开（连宿傩贴脸直斩也只轻伤）。 */
 function drawFxMakiStance(f) {
-  const TAU = Math.PI * 2;
-  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.05)));
-  const s = SC, hx = GX(), gy = GY, hgt = itaHeight();
-  const ink = '#1b1d22', wht = '#ffffff';
-  const cy = gy - hgt * 0.52;
-  /* 架开点：完全落在她身前（右侧）的空档，不压躯干 */
-  const C = { x: hx + hgt * 0.52, y: cy - hgt * 0.02 };
-  /* ① 刀光：以她为心的大弧，只在右半侧（cos>0）扫，保证整条弧都在身外 */
-  const p1 = Math.min(1, Math.max(0, (k - 0.02) / 0.32));
-  if (p1 > 0 && k < 0.92) {
-    const hold = 1 - Math.max(0, (k - 0.50) / 0.40);
-    const al = Math.min(1, hold) * Math.min(1, p1 * 3.2);
-    const ax = hx, ay = cy + hgt * 0.06, R = hgt * 0.46;
-    const headA = 0.84 - 1.68 * p1;                 /* 右下 → 右上 */
-    const tailLen = 0.92 * Math.min(1, p1 * 2.2);
-    const tA = headA + tailLen, hA = headA, mA = tA + (hA - tA) * 0.58;
-    const gw = 0.72 + 0.28 * p1;
-    /* 三层同弧（透镜形：两头收细、中段最厚）⇒ 白外光 / 墨刀身 / 白热刀芯 */
-    const band = (w0, w1, w2, col, alpha) => {
-      _fxArcBand(ax, ay, R, tA, mA, w0, w1, col, alpha);
-      _fxArcBand(ax, ay, R, mA, hA, w1, w2, col, alpha);
-    };
-    band(7 * s, 42 * s * gw, 9 * s, wht, al * 0.86);
-    band(2.4 * s, 34 * s * gw, 3.4 * s, ink, al * 0.96);
-    band(1.0 * s, 9 * s * gw, 1.6 * s, wht, al);
+  /* ★ v547 用户指定：重写为「角色脚下环状不规则气流」——
+     原作里真希是零咒力的天与咒缚，架势靠的是身体与咒具，不该有刀光/飞斩。
+     这里只画她脚下三四圈墨色气流，半径带随机起伏、缓慢旋动，黑白两色 + 极淡灰。 */
+  const TAU=Math.PI*2;
+  const k=Math.max(0,Math.min(1,f.t/(f.dur||1.05)));
+  const s=SC, hx=GX(), gy=GY;
+  const fadeIn=Math.min(1,k/0.16), fadeOut=Math.max(0,(k-0.72)/0.28);
+  const al=Math.max(0,Math.min(fadeIn,1-fadeOut));
+  if(al<=0.01) return;
+  /* 脚下的椭圆环（透视压扁），三四层不同相位与起伏 */
+  const rings=[
+    {rx:0.34, ry:0.09, ph:0.00, sp: 0.9, w:2.2, a:0.92},
+    {rx:0.26, ry:0.07, ph:1.30, sp:-1.2, w:1.7, a:0.72},
+    {rx:0.42, ry:0.11, ph:2.60, sp: 0.6, w:1.4, a:0.56},
+    {rx:0.18, ry:0.05, ph:0.70, sp: 1.6, w:1.1, a:0.48}
+  ];
+  ctx.save();
+  ctx.translate(hx,gy-2*s);
+  for(let r=0;r<rings.length;r++){
+    const R=rings[r];
+    const grow=0.72+0.30*Math.min(1,k/0.34);
+    const rx=R.rx*hgt()*grow, ry=R.ry*hgt()*grow;
+    const rot=k*R.sp*0.55+R.ph;
+    ctx.save(); ctx.rotate(rot*0.10);
+    ctx.globalAlpha=al*R.a;
+    ctx.lineWidth=R.w*s;
+    ctx.strokeStyle=(r%2===0)?'#17181c':'rgba(60,62,68,.86)';
+    ctx.beginPath();
+    const STEPS=44;
+    for(let i=0;i<=STEPS;i++){
+      const a=i/STEPS*TAU;
+      /* 不规则：两个不同频率的正弦叠加，保证环不是完美椭圆 */
+      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
+      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
+    /* 气流断口：在环上留一小段空白，读起来像「流动」而非静止圆圈 */
+    ctx.globalAlpha=al*R.a*0.8;
+    ctx.lineWidth=(R.w+0.8)*s;
+    ctx.strokeStyle='#fff';
+    const a0=rot*1.8+r*0.9, a1=a0+0.16;
+    ctx.beginPath();
+    for(let i=0;i<=8;i++){
+      const a=a0+(a1-a0)*i/8;
+      const wob=1+0.16*Math.sin(a*3+rot*2.4)+0.09*Math.sin(a*5-rot*1.6+r);
+      const x=Math.cos(a)*rx*wob, y=Math.sin(a)*ry*wob;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.restore();
   }
-  /* ② 三条黑斩自宿傩侧飞来（短促、带白边，才压得住白背景） */
-  for (let i = 0; i < 3; i++) {
-    const p = Math.max(0, Math.min(1, (k - 0.06 - i * 0.06) / 0.22));
-    if (p <= 0) continue;
-    const Cs = { x: C.x + (i - 1) * 7 * s, y: C.y + (i - 1) * 16 * s };
-    const S0 = { x: Cs.x + (150 - i * 22) * s, y: Cs.y - (58 - i * 8) * s };
-    if (p < 1) {
-      const x = S0.x + (Cs.x - S0.x) * p, y = S0.y + (Cs.y - S0.y) * p;
-      _fxBarW(S0.x, S0.y, x, y, 6.2 * s, ink, 0.95, 2.8);
-      _fxTaper(x, y, x + (S0.x - Cs.x) * 0.16, y + (S0.y - Cs.y) * 0.16, 6.2 * s, 1.4 * s, ink, 0.95);
-    } else {
-      /* ④ 残段被架开：向右上弹出 */
-      const q = Math.min(1, Math.max(0, (k - (0.34 + i * 0.05)) / 0.36));
-      if (q < 1) {
-        const al = 1 - q, L = (30 + 40 * q) * s;
-        const dx2 = 0.52, dy2 = -1;
-        _fxBarW(Cs.x, Cs.y, Cs.x + dx2 * L, Cs.y + dy2 * L, 4.6 * s, ink, 0.90 * al, 2.4);
-        _fxDot(Cs.x + dx2 * L, Cs.y + dy2 * L, 3.2 * s, ink, 0.90 * al);
-      }
+  /* 少量上升的墨色碎屑，贴地、不飘高 */
+  if(k>0.12){
+    for(let i=0;i<6;i++){
+      const q=((k-0.12)*0.9+i*0.16)%1;
+      const a=i*1.9+q*2.2;
+      const rr=hgt()*(0.34+0.30*q);
+      const x=Math.cos(a)*rr, y=Math.sin(a)*rr*0.22-q*hgt()*0.10;
+      ctx.globalAlpha=al*(1-q)*0.55;
+      ctx.fillStyle='#17181c';
+      ctx.beginPath(); ctx.arc(x,y,(1.2+1.0*Math.abs(Math.sin(i)))*s,0,TAU); ctx.fill();
     }
   }
-  /* ③ 接触点：白底 + 墨爆星（双脉冲）+ 白芯 + 放射火花（白边让它从素描背景上「浮起来」） */
-  for (let n = 0; n < 2; n++) {
-    const bp = Math.min(1, Math.max(0, (k - (0.26 + n * 0.24)) / 0.38));
-    if (bp <= 0 || bp >= 1) continue;
-    const al = Math.sin(Math.PI * bp), R1 = (22 + 40 * bp) * s * (n ? 0.66 : 1);
-    _fxStar(C.x, C.y, R1 * 1.26, 11, 0.50, wht, 0.92 * al, 0.22 + n * 0.3);
-    _fxStar(C.x, C.y, R1, 10, 0.54, '#15161a', 0.96 * al, 0.22 + n * 0.3);
-    _fxStar(C.x, C.y, R1 * 0.44, 7, 0.40, wht, al, 0.22 + n * 0.3);
-    for (let i = 0; i < 8; i++) {
-      const a = i / 8 * TAU + 0.30 + n * 0.2;
-      _fxSpike(C.x, C.y, a, R1 * 0.92, R1 * 1.80, 4.0 * s, '#15161a', al * 0.82, 0.2);
-    }
-    for (let i = 0; i < 6; i++) {
-      const a = -0.9 + i * 0.42, r = (30 + 46 * bp) * s;
-      _fxDot(C.x + Math.cos(a) * r, C.y + Math.sin(a) * r * 0.9, (3.0 * (1 - bp) + 1.1) * s, '#3a3d44', al);
-    }
-  }
-  /* ⑤ 收束：身前残留细弧 + 脚边扬尘 */
-  if (k > 0.50 && k < 1) {
-    const q = Math.min(1, (k - 0.50) / 0.44), al = Math.sin(Math.PI * q) * 0.60;
-    _fxRing(hx + hgt * 0.16, cy + hgt * 0.08, hgt * 0.34, hgt * 0.34, 2.4 * s, ink, al, -0.84, 0.30);
-  }
-  if (k < 0.80) {
-    const p = Math.min(1, k / 0.80);
-    _fxRing(hx, gy - 2 * s, (30 + 92 * p) * s, (30 + 92 * p) * s * 0.24, (6 * (1 - p) + 1.6) * s, ink, (1 - p) * 0.50);
-  }
+  ctx.restore();
+  function hgt(){ return itaHeight(); }
 }
-
-/* ★ v420 真希·天与咒缚·全开
-   分镜（1.45s）：① 四周墨角收束 ② 背后（左侧）墨爆星 + 白芯 ③ 放射墨刺
-                 ④ 上升墨点／气流 ⑤ 横向速度线（后段主力，保证 k≥0.8 不空）
-   排版原则：爆心放在她身后偏左，避免白色爆星盖住脸与躯干。
-   原作依据：真依死后成为完全天与咒缚者（0 咒力、肉体超规格），全开＝解放肉体规格。 */
 function drawFxMakiAwaken(f) {
   const TAU = Math.PI * 2;
   const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.45)));
@@ -15440,122 +15445,66 @@ function drawFxMakiAwaken(f) {
    原作依据：领域展延＝把未赋予术式的领域缠在身上，让对手术式流入中和，不必中断生得术式。
    环境：常开在「法廷」黑白高密度线稿上 ⇒ 金环带白边、膜面用白色薄纱才读得到。 */
 function drawFxHiguExtend(f) {
-  const TAU = Math.PI * 2;
-  const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.25)));
-  const s = SC, hx = GX(), gy = GY, hgt = itaHeight();
-  const gold = '#c9a227', lime = '#fff6d8', wht = '#ffffff', ink = '#17181c';
-  const cy = gy - hgt * 0.50;
-  /* ① 白金薄膜自下而上缠身 */
-  const fp = Math.min(1, Math.max(0, (k - 0.02) / 0.30));
-  if (fp > 0) {
-    const fade = Math.min(1, Math.max(0, 1 - (k - 0.90) / 0.10));
-    const e = fp * fp * (3 - 2 * fp);
-    /* ★ v426 用户指定：膜原本只有 0.198 身高宽、贴在身上 ⇒ 外扩到 0.285、加高到 0.66 */
-    const RH = hgt * 0.66 * e;
-    const RW = (hgt * 0.285) * (0.74 + 0.26 * e);
-    const myc = gy - RH * 0.96;
-    /* 膜面：淡白雾（低透明度，不雾脸）+ 环带厚度 */
-    ctx.save();
-    ctx.globalAlpha = 0.10 * fade * Math.min(1, e * 1.8);
-    const gg = ctx.createLinearGradient(hx, myc - RH, hx, gy);
-    gg.addColorStop(0, 'rgba(255,255,255,.95)');
-    gg.addColorStop(0.55, 'rgba(255,252,236,.60)');
-    gg.addColorStop(1, 'rgba(255,255,255,.15)');
-    ctx.fillStyle = gg;
-    ctx.beginPath(); ctx.ellipse(hx, myc, RW, RH, 0, 0, TAU, false); ctx.fill();
-    ctx.restore();
-    /* 膜的厚度：外缘 30% 宽的白金环带（读作「缠身的膜」） */
-    _fxRing(hx, myc, RW, RH, RW * 0.26, wht, 0.26 * fade);
-    _fxRing(hx, myc, RW * 0.88, RH * 0.88, RW * 0.09, gold, 0.20 * fade);
-    /* 三层金环（外圈自带白边） */
-    _fxRing(hx, myc, RW + 2.6 * s, RH + 1.8 * s, 2.6 * s, wht, 0.70 * fade);
-    _fxRing(hx, myc, RW, RH, 4.4 * s, gold, 0.95 * fade);
-    _fxRing(hx, myc, RW * 0.80, RH * 0.82, 2.4 * s, gold, 0.62 * fade);
-    _fxRing(hx, myc, RW * 0.58, RH * 0.60, 1.6 * s, gold, 0.44 * fade);
-    /* 金格（横 5 / 经 6），线更细、避免像笼子 */
-    for (let i = -2; i <= 2; i++) {
-      const yy = myc + i * RH * 0.33;
-      const w2 = RW * Math.sqrt(Math.max(0.06, 1 - Math.pow(i * 0.33, 2)));
-      _fxBar(hx - w2, yy, hx + w2, yy, 1.5 * s, gold, 0.42 * fade);
-    }
-    for (let i = 0; i < 6; i++) {
-      const a = -Math.PI * 0.76 + i * (Math.PI * 1.52 / 5);
-      _fxBar(hx + Math.cos(a) * RW * 0.34, myc + Math.sin(a) * RH * 0.34,
-             hx + Math.cos(a) * RW * 0.995, myc + Math.sin(a) * RH * 0.995, 1.4 * s, gold, 0.44 * fade);
-    }
-    /* 底部翻卷：两道短弧（膜的「下摆」） */
-    const pb = Math.min(1, Math.max(0, (k - 0.18) / 0.30));
-    if (pb > 0) {
-      const aa = -Math.PI * 0.30 + pb * Math.PI * 0.6;
-      _fxRing(hx, gy - RH * 0.12, RW * 1.02, RH * 0.30, 3.0 * s, gold, 0.62 * fade, aa - 0.5, aa + 0.5);
-      _fxRing(hx, gy - RH * 0.12, RW * 1.02, RH * 0.30, 1.4 * s, wht, 0.80 * fade, aa - 0.5, aa + 0.5);
-    }
-    /* 上升金屑 */
-    if (k > 0.22) {
-      for (let i = 0; i < 7; i++) {
-        const q = ((k - 0.22) * 0.85 + i * 0.14) % 1;
-        const al = Math.sin(Math.PI * q) * 0.85 * fade;
-        if (al <= 0.03) continue;
-        const gx2 = hx + Math.sin(i * 2.1 + q * 4) * RW * 0.92;
-        const gy2 = gy - 8 * s - q * RH * 1.55;
-        _fxDot(gx2, gy2, (1.8 + 1.6 * Math.abs(Math.sin(i))) * s, gold, al);
+  /* ★ v547 用户指定：2 技能「领域展延」重做为黑白司法风。
+     原作里这是让对手术式流入自身并中和 —— 不是金色魔法罩。
+     这里画：宿傩侧的斜向术式墨线流入日车身前，被一道竖直的「裁判线」压断、散成墨点。 */
+  const TAU=Math.PI*2;
+  const k=Math.max(0,Math.min(1,f.t/(f.dur||1.25)));
+  const s2=SC, hx=GX(), gy=GY, hgt=itaHeight();
+  const ink='#17181c', paper='#ffffff', red='#b4232b';
+  const cy=gy-hgt*0.50;
+  const fade=Math.min(1,k/0.12)*Math.max(0,1-(k-0.80)/0.20);
+  if(fade<=0.01) return;
+  ctx.save();
+  /* ① 竖直裁判线：一条墨线从天到地，把画面分作「原告/被告」两侧 */
+  const jx=hx-hgt*0.30;
+  const jp=Math.min(1,k/0.20);
+  ctx.globalAlpha=fade*0.85;
+  ctx.strokeStyle=ink; ctx.lineWidth=2.6*s2;
+  ctx.beginPath(); ctx.moveTo(jx,gy-hgt*1.02); ctx.lineTo(jx,gy+hgt*0.04*jp); ctx.stroke();
+  /* 顶端小横帽（读作裁判席的界标，不是魔法符号） */
+  ctx.lineWidth=3.4*s2;
+  ctx.beginPath(); ctx.moveTo(jx-9*s2,gy-hgt*1.02); ctx.lineTo(jx+9*s2,gy-hgt*1.02); ctx.stroke();
+  /* ② 宿傩侧飞来的术式墨线（4 条，斜向右下 → 被裁判线挡住） */
+  for(let i=0;i<4;i++){
+    const p=Math.max(0,Math.min(1,(k-0.06-i*0.045)/0.26));
+    if(p<=0) continue;
+    const y0=gy-hgt*(0.86-i*0.16), x0=jx+hgt*(0.95-i*0.05);
+    const x1=jx+4*s2, y1=cy-hgt*(0.18-i*0.09);
+    const x=x0+(x1-x0)*p, y=y0+(y1-y0)*p;
+    if(p<1){
+      ctx.globalAlpha=fade*0.88;
+      ctx.strokeStyle=ink; ctx.lineWidth=(2.6-i*0.35)*s2;
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x,y); ctx.stroke();
+      /* 白描边压住白底 */
+      ctx.globalAlpha=fade*0.55; ctx.strokeStyle=paper; ctx.lineWidth=(4.8-i*0.4)*s2;
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x,y); ctx.stroke();
+    }else{
+      /* 触线后散成墨点，沿裁判线往下淌 */
+      const q=Math.min(1,Math.max(0,(k-(0.34+i*0.045))/0.42));
+      if(q<1){
+        ctx.globalAlpha=fade*(1-q)*0.72;
+        ctx.fillStyle=ink;
+        for(let d=0;d<5;d++){
+          const dy=q*hgt*0.30+d*4*s2;
+          const dx=Math.sin(d*2.3+i)*(6+10*q)*s2;
+          ctx.beginPath(); ctx.arc(jx+dx,y1+dy,(1.2+0.8*Math.abs(Math.sin(d+i)))*s2,0,TAU); ctx.fill();
+        }
       }
     }
   }
-  /* ② 「解」黑斩打上膜被中和 */
-  for (let i = 0; i < 3; i++) {
-    const p = Math.max(0, Math.min(1, (k - 0.12 - i * 0.07) / 0.28));
-    if (p <= 0) continue;
-    const S0 = { x: SX() - 40 * s, y: gy - hgt * (0.92 - i * 0.15) };
-    const C0 = { x: hx + hgt * 0.20, y: gy - hgt * (0.40 + i * 0.11) };
-    if (p < 1) {
-      const x = S0.x + (C0.x - S0.x) * p, y = S0.y + (C0.y - S0.y) * p;
-      _fxBarW(S0.x, S0.y, x, y, 6.4 * s, ink, 0.90 * (1 - p * 0.35), 3.0);
-    } else {
-      const q = Math.min(1, Math.max(0, (k - (0.44 + i * 0.07)) / 0.30));
-      if (q < 1) {
-        const al = 1 - q, RR = (12 + 30 * q) * s;
-        _fxRing(C0.x, C0.y, RR, RR, 3.4 * s, gold, 0.95 * al);
-        _fxRing(C0.x, C0.y, RR, RR, 1.3 * s, wht, 0.85 * al);
-        _fxDot(C0.x, C0.y, (4.4 * (1 - q) + 1.2) * s, lime, al);
-      }
-    }
+  /* ③  neutralization 横断：一道短朱红印记（全画面唯一彩色，作判决点缀） */
+  const sp=Math.min(1,Math.max(0,(k-0.24)/0.16));
+  if(sp>0){
+    ctx.globalAlpha=fade*sp*0.9;
+    ctx.strokeStyle=red; ctx.lineWidth=2.2*s2;
+    ctx.beginPath(); ctx.moveTo(jx-12*s2,cy-hgt*0.22); ctx.lineTo(jx+12*s2,cy-hgt*0.22); ctx.stroke();
+    ctx.fillStyle=red; ctx.font=`900 ${Math.round(13*s2)}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('中 和',jx,cy-hgt*0.30);
   }
-  /* ③ 左肩小天平 */
-  if (k > 0.09 && k < 0.99) {
-    const pin = Math.min(1, (k - 0.09) / 0.15);
-    const fade = Math.min(1, Math.max(0, 1 - (k - 0.82) / 0.17));
-    const tilt = 0.30 * Math.min(1, Math.max(0, (k - 0.22) / 0.30)) - 0.05;
-    const bx = hx - hgt * 0.21, by = gy - hgt * 0.74, RW = 16 * s;
-    const ca = Math.cos(tilt), sa = Math.sin(tilt);
-    const pp = (dx, dy) => [bx + dx * ca - dy * sa, by + dx * sa + dy * ca];
-    const p1 = pp(-RW, 0), p2 = pp(RW, 0);
-    _fxBarW(p1[0], p1[1], p2[0], p2[1], 3.0 * s, ink, 0.95 * pin * fade, 2.6);
-    const p3 = pp(0, -7 * s), p4 = pp(0, 10 * s);
-    _fxBarW(p3[0], p3[1], p4[0], p4[1], 2.6 * s, ink, 0.95 * pin * fade, 2.4);
-    for (const sd of [-1, 1]) {
-      const a1 = pp(sd * RW, 0), a2 = pp(sd * RW, 8 * s);
-      _fxBarW(a1[0], a1[1], a2[0], a2[1], 1.9 * s, ink, 0.90 * pin * fade, 2.0);
-      const a3 = pp(sd * RW, 11 * s);
-      _fxDot(a3[0], a3[1], 4.2 * s, gold, 0.95 * pin * fade);
-      _fxDot(a3[0], a3[1], 1.8 * s, wht, 0.85 * pin * fade);
-    }
-  }
-  /* ④ 收束：白金弧掠过膜面 */
-  if (k > 0.46 && k < 1) {
-    const p = Math.min(1, (k - 0.46) / 0.50);
-    const al = Math.sin(Math.PI * p);
-    const a0 = -Math.PI * 0.62 + p * Math.PI * 1.24;
-    _fxRing(hx, cy, hgt * 0.30, hgt * 0.44, 6.0 * s, wht, 0.90 * al, a0 - 0.34, a0 + 0.34);
-    _fxRing(hx, cy, hgt * 0.30, hgt * 0.44, 2.4 * s, gold, 1.0 * al, a0 - 0.34, a0 + 0.34);
-  }
+  ctx.restore();
 }
-
-/* ★ v420 虎杖·简易领域（新·阴流）
-   分镜（1.30s）：① 地面咒纹环亮起 ② 半球结界升起（墨线 + 白内衬 + 玻璃高光 + 经线）
-                 ③ 宿傩「解」打上壁面被弹开（墨爆星 + 白芯 + 沿壁外弹）④ 壁面裂纹 → 自愈
-   排版原则：结界只画上半球，底环压成极扁的椭圆并快速淡出，避免「闭合蛋」观感。
-   原作依据：简易领域＝以自身为中心的简易结界，抵销领域的必中效果。 */
 function drawFxItaSimpleDom(f) {
   const TAU = Math.PI * 2;
   const k = Math.max(0, Math.min(1, f.t / (f.dur || 1.30)));
@@ -17156,7 +17105,7 @@ else if(f.type==='lightPillar'){
       const u=Math.max(0,Math.min(1,f.t/f.dur));
       const death=!!f.death;
       const s2=SC, cx=W*0.5, gy=GY-16*s2;
-      const acc=death?'#b4232b':'#c9a227';
+      const acc=death?'#b4232b':'#17181c';   /* ★ v547 没收＝墨黑，死刑＝朱红，其余不用金 */
       /* ★ v413 用户指定：恢复「处刑人之剑」漫画格，图层压在所有文字与技能动画之下（最底层）。
          尺寸沿用 v407 的口径（560×SC×0.56，对标虎杖穿血的漫画格），位置仍在画面中央。 */
       if(death){
@@ -17171,9 +17120,9 @@ else if(f.type==='lightPillar'){
             const _sc=0.94+0.06*Math.min(1,u/0.26);
             ctx.save();
             const _gl=ctx.createRadialGradient(_cx,_cy,0,_cx,_cy,_w*0.86);
-            _gl.addColorStop(0,'rgba(250,226,150,'+(0.30*_a).toFixed(3)+')');
-            _gl.addColorStop(0.52,'rgba(245,197,66,'+(0.14*_a).toFixed(3)+')');
-            _gl.addColorStop(1,'rgba(245,197,66,0)');
+            _gl.addColorStop(0,'rgba(235,235,235,'+(0.22*_a).toFixed(3)+')');
+            _gl.addColorStop(0.52,'rgba(210,210,210,'+(0.10*_a).toFixed(3)+')');
+            _gl.addColorStop(1,'rgba(200,200,200,0)');
             ctx.fillStyle=_gl; ctx.beginPath(); ctx.arc(_cx,_cy,_w*0.86,0,Math.PI*2); ctx.fill();
             ctx.globalAlpha=_a;
             ctx.translate(_cx,_cy); ctx.rotate(-0.03); ctx.scale(_sc,_sc);
@@ -17269,7 +17218,7 @@ else if(f.type==='lightPillar'){
         ctx.globalAlpha=Math.max(0,1-Math.max(0,(p-0.70)/0.30));
         ctx.strokeStyle=acc; ctx.lineWidth=(5-2*p)*s2;
         ctx.beginPath(); ctx.ellipse(px,py,R,R*1.16,0,0,Math.PI*2); ctx.stroke();
-        ctx.lineWidth=2.2*s2; ctx.strokeStyle='rgba(255,240,190,.85)';
+        ctx.lineWidth=2.2*s2; ctx.strokeStyle='rgba(245,245,245,.85)';
         ctx.beginPath(); ctx.ellipse(px,py,R*0.70,R*0.82,0,0,Math.PI*2); ctx.stroke();
         for(let i=0;i<4;i++){
           const ang=-Math.PI/2+i*Math.PI/2+p*0.6;
@@ -17304,7 +17253,7 @@ else if(f.type==='lightPillar'){
         ctx.globalAlpha=Math.max(0,1-Math.max(0,(u-0.88)/0.12));
         ctx.lineCap='round'; ctx.lineJoin='round';
         /* 剑身：宽墨边 + 白热芯（带光晕） */
-        try{ ctx.shadowColor='rgba(255,238,190,.95)'; ctx.shadowBlur=18*s2; }catch(e){}
+        try{ ctx.shadowColor='rgba(240,240,240,.95)'; ctx.shadowBlur=18*s2; }catch(e){}
         ctx.strokeStyle='rgba(14,12,16,.92)'; ctx.lineWidth=12*s2;
         ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ex,ey); ctx.stroke();
         ctx.strokeStyle='rgba(255,253,246,.98)'; ctx.lineWidth=6.5*s2;
@@ -20866,8 +20815,8 @@ function syncHud(){
     var lit=Math.max(0,Math.min(ps.length,Math.round(lv/3*ps.length)));
     for(var i=0;i<ps.length;i++) ps[i].classList.toggle('on',i<lit);
   })();   /* ★ v518 3 格＝3 层适应 */
-  /* ★ v40 适应文案改为「最深技能适应层数 /3」，无魔虚罗时显示 — */
-  $('skAdTxt').textContent=(typeof adaptLive==='function'&&adaptLive())?('适应 '+Math.round(adaptLevel()/3*100)+'%'):'适应 —';
+  /* ★ v547 适应文案统一交给 syncAdaptBar()：这里旧版每帧写「适应 N%」，
+     与 syncAdaptBar 的「N%」互相覆盖，解析阶段还会被 adaptLevel()=0 抹成 0% ⇒ 显示乱跳。 */
   const gh=Math.max(0,S.gojo.hp);
   $('gjHp').style.width=Math.max(0,Math.min(100,gh/Math.max(1,S.maxHp||100)*100))+'%';
   $('gjHpTxt').textContent=(gh/SUK_MAXHP*100).toFixed(1)+'%';   /* ★ v541 真实比例：满血 100 点＝66.7% */
@@ -21958,7 +21907,7 @@ const GUIDE_STEPS=[
   {sel:'#turnBar', t:'回合 / TURN', d:'每回合 10 秒。读秒归零，宿傩就会出手，所以别把时间耗光。用不完的行动力不会累积到下一回合。'},
   {sel:'#heroRow', t:'血条与咒力点数', d:'左边是你的血条；右边那排方块就是你的咒力点数，上限 5 点、每回合自动回 1 点。满 5 点后多出来的回复会浪费 —— 该花就花。'},
   {sel:'#pad .btn', t:'消耗 = 点数', d:'技能上沿中间的数字，就是这一招要花几点咒力。点数不够时按钮会变灰 —— 先攒一回合，或者用不花点的普攻过渡。'},
-  {sel:'#heroRow', t:'生命值与咒力/体力', d:'左边长条是生命值，归零就得换人。右边五格：多数术师是咒力点数，技能花点数；五条悟有六眼随便打，真希是天与咒缚，这一条算体力 —— 她的技能花的是体力，不是咒力。'},
+  {sel:'#heroRow', t:'生命值与咒力/体力', d:'左边长条是生命值，归零就得换人。右边五格：多数术师是咒力点数，技能花点数；五条悟有六眼随便打，真希是体力缚，这一条算体力 —— 她的技能花的是体力，不是咒力。'},
   {sel:'#pad',   t:'出招 / SKILL', d:'三个技能各有冷却与消耗，变灰就是现在用不了。最右是「立下束缚」——代价大，但能把局面整个翻过来。'},
   {sel:'#skRow', t:'宿傩 / SUKUNA', d:'打空这条血，他会进入「原身」第二阶段。上方的小图示是他这一局还能用的术式，被没收的会划掉。'}
 ];
@@ -26493,7 +26442,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v545', RK='jjk_ver_reload_'+B;
+  var B='v547', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
