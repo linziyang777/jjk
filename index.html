@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v561">
+<meta name="jjk-build" content="v562">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1520,7 +1520,7 @@ html.rot #resultScreen .srvCard,html.land #resultScreen .srvCard{padding:9px 11p
 .bar.hp i{background:repeating-linear-gradient(135deg,var(--red) 0 9px,#b01c30 9px 18px);}
 .bar.adapt i{background:repeating-linear-gradient(135deg,var(--purple) 0 9px,#6d3ee0 9px 18px);}
 .bar.ghp i{background:repeating-linear-gradient(135deg,var(--blue) 0 9px,#1e4e80 9px 18px);}
-.bar.ce  i{background:repeating-linear-gradient(135deg,var(--cyan) 0 9px,#1598a8 9px 18px);}
+.bar.ce  i{background:repeating-linear-gradient(135deg,#0485f2 0 9px,#0a5fae 9px 18px);}
 /* ★ v99 咒力条碎裂：斜向裂缝 + 抖动 + 灰化（纯 CSS，无外部图） */
 .bar.ce{position:relative;}
 .bar.ce.cracked{animation:ceShake 1.1s ease-in-out infinite;filter:grayscale(.45) brightness(.85);}
@@ -2420,10 +2420,10 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 .bar.ce.pips::after{display:none;}
 .bar.ce.pips i{
   flex:1 1 0;width:auto;height:calc(7px*var(--k));
-  border:calc(1.4px*var(--k)) solid #12343b;background:#e6e1d5;
+  border:calc(1.4px*var(--k)) solid #000415;background:#e6e1d5;
   transform:skewX(-12deg);transition:background .14s ease,box-shadow .14s ease;
 }
-.bar.ce.pips i.on{background:linear-gradient(180deg,#57dbe8,#0e8496);box-shadow:inset 0 calc(-1.4px*var(--k)) 0 rgba(0,0,0,.22);}
+.bar.ce.pips i.on{background:linear-gradient(180deg,#3ea6ff,#0485F2);box-shadow:inset 0 calc(-1.4px*var(--k)) 0 rgba(0,0,0,.22);}
 /* ★ v518 宿傩适应/解析＝3 格（正好对应适应上限 3 层），血条让出的宽度回到主血条 */
 .bar.adapt.pips{display:flex;align-items:center;gap:calc(3px*var(--k));padding:0 calc(4px*var(--k));
   height:calc(16px*var(--k));border-width:calc(2px*var(--k));background:#f6f3ea;overflow:hidden;}
@@ -3819,7 +3819,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
         <div class="nametag" id="heroTag" style="background:var(--blue)">五条悟<small>GOJO</small></div>
         <div class="bar ghp"><i id="gjHp"></i><b id="gjHpTxt">100%</b></div>
         <div class="nametag" id="subTag" style="background:var(--cyan)">咒力<small>CE</small></div>
-        <div class="bar ce thin pips" id="gjCe" title="咒力点数 · 每回合 +1 点（上限 5 点）"><i></i><i></i><i></i><i></i><i></i><b id="gjCeTxt">5</b></div>
+        <div class="bar ce thin pips" id="gjCe" title="咒力点数 · 每回合 +2 点（上限 5 点）"><i></i><i></i><i></i><i></i><i></i><b id="gjCeTxt">5</b></div>
       </div>
       <div class="hint" id="hint">每回合限出一招（选定后本回合技能栏变灰）</div>
     </div>
@@ -4572,7 +4572,7 @@ function noUsableSkill(){
    否则回合一变长，每回合白送 7.5 点咒力，整个经济就松掉了。 */
 /* ★ v510 小数字决策：1 格 = 20 点咒力。上限 100 = 5 格，每回合正好回 1 格（原 22.5 点 ≈ 1.125 格，
    账目不是整数，玩家心算不出来）。净影响约 −11% 回复量，与 v509 的 heroDmg 1.00 相抵。 */
-const CE_PER_TURN=20;
+const CE_PER_TURN=40;
 const CE_PIP=20;
 /* ★ v512 咒力＝五格（1 格 = 20 点 = 一个回合的自然回复量）。
    这里是**唯一口径**：按钮角标、按下判定、HUD 格数全部取自这张表 ——
@@ -4585,7 +4585,7 @@ const CE_COST={
   kashimo: {atk:2, guard:3, hollow:0},                 /* ★ v542 雷 2 点 / 电荷放出 3 点 / 琥珀 0 点（代价是清空电荷） */
   itadori: {atk:1, guard:2, hollow:3},                 /* ★ v542 径庭拳·灵魂解 1 / 简易领域 2 / 穿血 3（领域展开 0） */
   higuruma:{atk:0, guard:1, hollow:2},                 /* 法槌 0 / 领域展延 1 / 审判·下达 2 */
-  okkotsu: {atk:1, guard:3, hollow:3, okkorct:3},       /* ★ v542 太刀 1 / 里香·召唤 3 / 真赝相爱 3 / 反转术式 3（里香在场全免） */
+  okkotsu: {atk:1, guard:3, hollow:3, okkorct:2},       /* ★ v542 太刀 1 / 里香·召唤 3 / 真赝相爱 3 / 反转术式 3（里香在场全免） */
   maki:    {atk:2, guard:1, hollow:3}                   /* ★ v542 真希＝体力：释魂刀 2 / 游云·龙骨 1（见 cePipFor） / 架势 1 / 全开 0 / 突袭 3 */
 };
 const CE_TAG=CE_COST;
@@ -4639,7 +4639,7 @@ function setCeGauge(ce,cap){
   /* 悬停说明：把「为什么没有格子 / 为什么是 ∞」直接写清楚，不靠玩家猜 */
   const ti=(hero==='gojo')?'六眼·不消耗咒力（还原原作）'
     :(inf?'里香在场：技能不耗咒力'
-    :(hero==='maki'?'体力点数 · 每回合 +1 点（上限 5 点）':'咒力点数 · 每回合 +1 点（上限 5 点）'));
+    :(hero==='maki'?'体力点数 · 每回合 +2 点（上限 5 点）':'咒力点数 · 每回合 +2 点（上限 5 点）'));
   if(el.title!==ti) el.title=ti;
 }
 function ceRegenRate(){ return CE_PER_TURN/turnSec(); }
@@ -6404,7 +6404,10 @@ function domainShiftResolve(){
   $('redAlert').classList.remove('on'); $('warnMark').classList.remove('on');
   say('sys','★ 领域展开 —— 时间暂停，宿傩的回合被跳过；新回合开始，并获得 1 次额外行动！');
   /* ★ v539 用户指定：额外行动力必须「看得见」——砸一行金色浮字，配合右上角行动力胶囊。 */
-  try{ fxText(W*0.5, H*0.30, '行动力 +1', '#ffd54a', true); }catch(e){}
+  try{ /* ★ v562 白字黑勾边、贴在玩家立绘右上角、字号略小不遮挡 */
+        var _hx=GX()+gojoW()*0.34, _hy=GY-gojoHeight()*0.78;
+        fxText(_hx, _hy, '行动力 +1', '#ffffff', false, 0, {sz:0.78, inkOnly:true, dur:1.15, rise:true});
+      }catch(e){}
   syncHud();
 }
 /* =========================================================
@@ -20802,7 +20805,7 @@ function syncHud(){
     $('gjHp').style.width=Math.max(0,Math.min(100,S.itadori.hp/Math.max(1,S.maxHp||100)*100))+'%';
     $('gjHpTxt').textContent=(S.itadori.hp/SUK_MAXHP*100).toFixed(1)+'%';
     $('subTag').innerHTML='咒力<small>CE</small>';   /* ★ v520 这条格条本来就是咒力，不该顶着「血契」标签 */
-    try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +1 点（上限 5 点）｜血契 ×'+(S.blood||0)+'（每层每回合侵蚀宿傩 3 点）'; }catch(e){}
+    try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +2 点（上限 5 点）｜血契 ×'+(S.blood||0)+'（每层每回合侵蚀宿傩 3 点）'; }catch(e){}
   }
   renderRite();
   renderStatus();
@@ -26394,7 +26397,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v561';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v562';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26430,7 +26433,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v561</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v562</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26448,7 +26451,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v561', RK='jjk_ver_reload_'+B;
+  var B='v562', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
