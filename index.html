@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v563">
+<meta name="jjk-build" content="v564">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1908,7 +1908,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   animation:gzVig .8s cubic-bezier(.45,.05,.55,.95) forwards;}   /* ★ v244 前半段加速：2s → 1s */
 @keyframes gzVig{from{box-shadow:inset 0 0 0 0 #000;}to{box-shadow:inset 0 0 55vmax 55vmax #000;}}
 /* ★ v428 用户指定：先虚影（模糊放大）→ 清晰 → 停在原尺寸（取消 v417 的缩小收进） */
-#gzFinPic{position:absolute;inset:0;background:#000 center/contain no-repeat;opacity:0;   /* ★ v563 用户新图为竖幅 ⇒ contain 完整显示，不裁掉仰躺立绘 */
+#gzFinPic{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;
   transform-origin:50% 48%;will-change:transform,filter,opacity;
   animation:gzPicIn 2.05s cubic-bezier(.30,.06,.22,1) .62s forwards, gzKen 12s ease-in-out 2.7s forwards;
   /* ★ v423 用户指定：胜利图案四边虚化 —— 中央实、四边渐隐融入黑场 */
@@ -4313,7 +4313,7 @@ IMG.gojoSel='assets/49e4ce9404c5.webp';
 IMG.makiOld='assets/996dc7265270.webp';
 IMG.higuOld='assets/530c54c1b3c9.webp';
 /* ★ v63 五条悟终幕立绘（击败宿傩演出用）：独立常量，不进 IMG/IMGS 抠图链 */
-const GOJO_WIN_IMG='assets/796e25468fcd.webp';
+const GOJO_WIN_IMG='assets/83de9f6b9d66.webp';
 /* ★ v407 日车握剑立绘（剑.png 去绿幕、760×1825）与处刑人之剑中心图（900×870） */
 IMG.higuSword='assets/eb155e89de0e.webp';
 IMG.higuExecArt='assets/c5fd30bc607b.webp';
@@ -7401,7 +7401,7 @@ function actHollow(){
   if(S.acted) return;                                       /* 本回合已出招 */
   if(S.hollowFree){ if(gojoKillSoon()){ gojoFinisherLead(function(){ hollowUnlimited(); }); return; } return hollowUnlimited(); }
   if(S.hollowCd>0){ say('sys','虚式·茈 冷却中 —— 还需 '+S.hollowCd+' 回合'); return; }
-  /* ★ v563 击杀前先播终幕图，1.6s 后重入正常出招 */
+  /* ★ v564 击杀前先播终幕图，1.6s 后重入正常出招 */
   if(gojoKillSoon()){ gojoFinisherLead(function(){ actHollow(); }); return; }
   /* ★ v512 六眼：茈不消耗咒力 */
   S.gojo.ce=100;   /* ★ v512 六眼：咒力消耗归零（还原原作「无消耗」） */ S.hollowCd=HOLLOW_CD;   /* ★ v80 六眼：极低消耗 */
@@ -13223,7 +13223,7 @@ function nobaraCut(n,dur){
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   setTimeout(()=>el.classList.remove('on'), dur||1700);
 }
-/* ★ v563 五条「击杀前终幕」：宿傩残血在一击内 ⇒ 先播终幕图再正常出招（仿钉崎） */
+/* ★ v564 五条「击杀前终幕」：宿傩残血在一击内 ⇒ 先播终幕图再正常出招（仿钉崎） */
 function gojoKillSoon(){
   return S.hero==='gojo' && S.phase==='fight' && S.suk.hp>0 && S.suk.hp<=SUK_MAXHP*0.25
          && !S.__gzFinPending && !S.__gzFinShown;
@@ -26420,7 +26420,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v563';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v564';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26456,7 +26456,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v563</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v564</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26474,7 +26474,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v563', RK='jjk_ver_reload_'+B;
+  var B='v564', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
