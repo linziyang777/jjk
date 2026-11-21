@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v564">
+<meta name="jjk-build" content="v565">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -4563,6 +4563,23 @@ function turnSec(){ return (DIFFS[S.diff]||DIFFS.normal).turn; }
    ① 麻痹 ⇒ 完全不能行动；
    ② 术式熔断（五条 gojoBurn／乙骨 okkBurn）⇒ 只剩反转术式，而它还在 CD。
    命中时宿傩不等读秒归零，剩 5 秒就直接出手结束这一回合。 */
+/* ★ v565 宿傩本回合是否完全无法行动（与 noUsableSkill 对称）：
+   ① 无量空处内附身形态（伏黑惠肉体）被无限情报锁死；
+   ② 言灵术式定身 copyStun / 灵魂损伤 soulStun / 灵魂·解打穿肉体 sukuDown；
+   ③ 日车法庭禁令（本体未判决前不得攻击）与宿傩熔断。 */
+function sukuCantAct(){
+  try{
+    if(S.hero==='gojo' && (S.gojoDom||0)>0 && !S.trueForm && !S.sukuBurn) return true;
+    if((S.copyStun||0)>0 || (S.soulStun||0)>0 || (S.sukuDown||0)>0) return true;
+    if(S.hero==='higuruma' && (S.higuDom||0)>0 && !S.higuDomVerdict && (S.turnN||1)<5) return true;
+    if(!!S.sukuBurn) return true;
+  }catch(e){}
+  return false;
+}
+/* 玩家已出完本回合全部行动、且宿傩无法行动 ⇒ 死锁空转，提前到剩 5s 结束 */
+function bothIdle(){
+  return !!(S.acted && (S.actsLeft||0)<=0) && sukuCantAct();
+}
 function noUsableSkill(){
   try{
     if(S.para>0) return true;
@@ -6041,8 +6058,8 @@ function handOverToSukuna(){
   /* ★ v150：附身形态的宿傩在五条悟「无量空处」内完全无法行动 ⇒ 立即结束当前回合 */
   const _hostLocked=(S.hero==='gojo' && S.gojoDom>0 && !S.trueForm && !S.sukuBurn);
   if(_hostLocked){
-    S.turn=turnSec(); S.turnWarn=false;
-    say('sys','★ 无量空处 —— 附身（伏黑惠肉体）的宿傩无法行动，本回合立即结束。');
+    S.turn=Math.min(S.turn||turnSec(),5); S.turnWarn=false;   /* ★ v565 不再重置回满，压到 ≤5s 由主循环立刻收掉 */
+    say('sys','★ 无量空处 —— 附身（伏黑惠肉体）的宿傩无法行动，本回合提前结束。');
   }
   /* ★ v226：防御/回血没有招式动画时不必等满 1150ms —— 只用 420ms 的缓冲就交棒 */
   /* ★ v301 用户指定：五条悟「反转术式」的特写还在播时，宿傩不要提前出手 ⇒ 等特写收完再交棒 */
@@ -12966,7 +12983,8 @@ function update(dt){
       }
       /* ★ v243 用户指定：玩家处于麻痹（无法行动）时，宿傩在倒计时剩 5 秒就出手，不再空等到 0 */
       /* ★ v411：麻痹之外，「术式熔断 ＋ 反转术式在 CD」同样是死锁 —— 一并在剩 5 秒放行 */
-      if((S.turn<=0 || (noUsableSkill() && S.turn<=5)) && !S.turnWait){
+      /* ★ v565：宿傩无法行动且玩家已出完招 ⇒ 剩 5s 就结束回合，避免双方空转 */
+      if((S.turn<=0 || (noUsableSkill() && S.turn<=5) || (bothIdle() && S.turn<=5)) && !S.turnWait){
         /* ★ v28：读秒结束还没选定 → 这回合白费，宿傩照常出手；
            未用掉的行动次数攒下来，下回合可以连发（以此类推）
            ★ v115：先等当前回合的招式动画播完，才重开读秒并让宿傩出手（双方动画不重叠）。 */
@@ -26420,7 +26438,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v564';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v565';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26456,7 +26474,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v564</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v565</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26474,7 +26492,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v564', RK='jjk_ver_reload_'+B;
+  var B='v565', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
