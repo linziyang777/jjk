@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v562">
+<meta name="jjk-build" content="v563">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1908,7 +1908,7 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   animation:gzVig .8s cubic-bezier(.45,.05,.55,.95) forwards;}   /* ★ v244 前半段加速：2s → 1s */
 @keyframes gzVig{from{box-shadow:inset 0 0 0 0 #000;}to{box-shadow:inset 0 0 55vmax 55vmax #000;}}
 /* ★ v428 用户指定：先虚影（模糊放大）→ 清晰 → 停在原尺寸（取消 v417 的缩小收进） */
-#gzFinPic{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;
+#gzFinPic{position:absolute;inset:0;background:#000 center/contain no-repeat;opacity:0;   /* ★ v563 用户新图为竖幅 ⇒ contain 完整显示，不裁掉仰躺立绘 */
   transform-origin:50% 48%;will-change:transform,filter,opacity;
   animation:gzPicIn 2.05s cubic-bezier(.30,.06,.22,1) .62s forwards, gzKen 12s ease-in-out 2.7s forwards;
   /* ★ v423 用户指定：胜利图案四边虚化 —— 中央实、四边渐隐融入黑场 */
@@ -2012,13 +2012,13 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   font-weight:900;letter-spacing:8px;font-size:clamp(13px,3.2vw,20px);
   text-shadow:0 2px 12px rgba(0,0,0,.9);animation:none;opacity:0;}
 #itaDomIn.on .idiTxt{animation:idiTxt 3.3s ease-out forwards;}
-#itaDomIn .idiTxt b{display:block;font-size:clamp(28px,8vw,58px);letter-spacing:12px;margin:6px 0 4px;}
+#itaDomIn .idiTxt b{display:block;font-size:clamp(24px,6.8vw,48px);letter-spacing:10px;margin:4px 0 3px;}
 #itaDomIn .idiTxt i{display:block;font-style:normal;font-size:clamp(9px,2.4vw,13px);opacity:.85;letter-spacing:3px;}
 @keyframes idiTxt{0%,30%{opacity:0}42%{opacity:1}78%{opacity:1}96%{opacity:0}}
 /* ★ v79 领域展开字样通用化：任何角色开领域都显示大字；小字仅虎杖 */
 #itaDomIn.txtOnly .idiBall,#itaDomIn.txtOnly .idiHands{display:none;}
 #itaDomIn.noSub .idiTxt i{display:none;}
-#itaDomIn.txtOnly .idiTxt{top:clamp(30px,5.2vh,54px);}   /* ★ v300 上移 */
+#itaDomIn.txtOnly .idiTxt{top:clamp(26px,4.4vh,46px);}   /* ★ v300 上移 */
 #itaDomIn.on.txtOnly .idiTxt{animation:idiTxtS 2.1s ease-out forwards;}
 @keyframes idiTxtS{0%,18%{opacity:0}34%{opacity:1}82%{opacity:1}100%{opacity:0}}
 /* ---------- 虚式·茈 漫画抠图闪屏（白底已透明，保留字与特效） ---------- */
@@ -2460,7 +2460,10 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   content:attr(data-ce);display:inline-flex;align-items:center;justify-content:center;
   width:calc(15px*var(--k));height:calc(17px*var(--k));margin-right:calc(4px*var(--k));
   padding:0 0 calc(1px*var(--k));box-sizing:border-box;vertical-align:middle;
-  background:#111;color:#fff;font-size:calc(8px*var(--k));font-weight:900;line-height:1;
+  /* ★ v563e 内部青蓝渐变（参考图 #02AED6）：上亮下暗，保留暗色层次 */
+  background:linear-gradient(160deg,#5fe0ff 0%,#02aed6 42%,#006887 78%,#003a52 100%);
+  color:#fff;font-size:calc(9px*var(--k));font-weight:900;line-height:1;
+  text-shadow:0 1px 2px rgba(0,10,25,.95),0 0 3px rgba(0,20,40,.85);   /* 白字黑描边，显眼 */
   clip-path:polygon(50% 0%,68% 22%,84% 45%,92% 64%,88% 80%,74% 94%,50% 100%,26% 94%,12% 80%,8% 64%,16% 45%,32% 22%);
 }
 /* 五条悟：浅色 ∞ 单独一行放在小字下方，不显示水滴 */
@@ -3919,7 +3922,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <!-- ★ v63 五条悟终幕演出：击败宿傩时——四周收黑 → 立绘显现 -->
     <div id="gzFin"><div id="gzFinVig"></div><div id="gzFinPic"></div><div id="gzFinGlow"></div><div id="gzFinDust"></div></div>
     <!-- ★ v48 虎杖领域展开动画（双手结印 → 黑色球体包裹 → 故乡风景浮现） -->
-    <div id="itaDomIn"><div class="idiBall"></div><div class="idiHands"><img alt id="itaDomSeal"></div><div class="idiTxt"><b>「领域展开」</b><i>—— 给这轮回的诅咒，做个了结吧 ——</i></div></div>
+    <div id="itaDomIn"><div class="idiBall"></div><div class="idiHands"><img alt id="itaDomSeal"></div><div class="idiTxt"><b>「領域展開」</b><i>—— 给这轮回的诅咒，做个了结吧 ——</i></div></div>
     <div id="yujiDomain">
       <div class="ydK">领域展开</div>
       <div class="ydN">领域展开</div>
@@ -4310,7 +4313,7 @@ IMG.gojoSel='assets/49e4ce9404c5.webp';
 IMG.makiOld='assets/996dc7265270.webp';
 IMG.higuOld='assets/530c54c1b3c9.webp';
 /* ★ v63 五条悟终幕立绘（击败宿傩演出用）：独立常量，不进 IMG/IMGS 抠图链 */
-const GOJO_WIN_IMG='assets/83de9f6b9d66.webp';
+const GOJO_WIN_IMG='assets/796e25468fcd.webp';
 /* ★ v407 日车握剑立绘（剑.png 去绿幕、760×1825）与处刑人之剑中心图（900×870） */
 IMG.higuSword='assets/eb155e89de0e.webp';
 IMG.higuExecArt='assets/c5fd30bc607b.webp';
@@ -4867,7 +4870,7 @@ function resetBattle(){
   S.suk.ce=100; S.suk.adaptMap={};
   S.hollowCd=0; S.blockT=0; S.guardFx=0;   
   S.diff=DIFF_PICK; window.__hardPick=null; S.hitStop=0;   /* ★ v480 换难度重开时重置随机池 */ S.negUntil=0; S.gojoNegUntil=0; S.worldBlack=false;
-  try{ domainAudioReset(); }catch(e){}   /* ★ v503 新局清掉上一局残留的音频闸门 */   /* ★ v468 负片旗标 */ S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.nbPlayed=false; S.soulKill=false;   /* ★ v250 钉崎彩蛋是否已播（避免真结局重复播） */ S.heroJolt=0;
+  try{ domainAudioReset(); }catch(e){}   /* ★ v503 新局清掉上一局残留的音频闸门 */   /* ★ v468 负片旗标 */ S.fushiN=0; S.perfect=false; S.perfectOn=false; S.perfectFocusAt=0; S.reported=0; S.nbPlayed=false; S.soulKill=false; S.__gzFinPending=false; S.__gzFinShown=false;   /* ★ v250 钉崎彩蛋是否已播（避免真结局重复播） */ S.heroJolt=0;
   S.sukuShadowUsed=false; S.shadowTurnN=0; S.dmgTaken=0; S.perfectN=0;   /* ★ v266 影法术与段位统计重置 */ S.makiStance=0; S.makiHalf=0; S.sukuDomUsed=0; S.sukuDomFirst=false;
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 清慢动作 */
   S.stagger=0; S.staggerUsed=false;
@@ -7396,8 +7399,10 @@ function actHollow(){
   /* ★ v92 术式熔断：「茈」无法使用（五条悟） */
   if(S.gojoBurn){ say('sys','术式熔断——「茈」无法发动，请先用「反转术式」治愈！'); return; }
   if(S.acted) return;                                       /* 本回合已出招 */
-  if(S.hollowFree) return hollowUnlimited();                /* ★ 解锁态：无视冷却，直接放 */
+  if(S.hollowFree){ if(gojoKillSoon()){ gojoFinisherLead(function(){ hollowUnlimited(); }); return; } return hollowUnlimited(); }
   if(S.hollowCd>0){ say('sys','虚式·茈 冷却中 —— 还需 '+S.hollowCd+' 回合'); return; }
+  /* ★ v563 击杀前先播终幕图，1.6s 后重入正常出招 */
+  if(gojoKillSoon()){ gojoFinisherLead(function(){ actHollow(); }); return; }
   /* ★ v512 六眼：茈不消耗咒力 */
   S.gojo.ce=100;   /* ★ v512 六眼：咒力消耗归零（还原原作「无消耗」） */ S.hollowCd=HOLLOW_CD;   /* ★ v80 六眼：极低消耗 */
   S.hollowUsedTurn=S.turnN; S.hollowSkip=0;
@@ -7764,7 +7769,7 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     finisherSlow();
     /* ★ v427 用户指定：五条终幕动画「保持不变」，但只在用茈以外的技能击杀时播；
        用茈收掉 ⇒ 不播终幕，直接进胜利对白（专属图＋台词）。 */
-    const gzFinGo=(S.hero==='gojo' && !S.__winByHollow);
+    const gzFinGo=(S.hero==='gojo' && !S.__winByHollow && !S.__gzFinShown);
     if(gzFinGo) gojoFinisherShow();
     say('suku','「……不可能。」');
     say('narr','旁白：宿傩——被击倒了。');
@@ -8602,7 +8607,6 @@ function heroDownGeneric(h){
   const _dbLines=[];
   if(ln) ln.forEach(x=>_dbLines.push(x));   /* ★ v243h 支援多句退场对白 */
   _dbLines.push(['narr','旁白：'+info.nm+'倒下了——但战斗还没有结束。']);
-  if(h==='okkotsu') _dbLines.push(['sys','领域「真赝相爱」收束 —— 剑林散去。']);   /* ★ v64 乙骨退场：领域崩解提示 */
   const el=$('kashFall');
   el.querySelector('.kf').textContent=info.nm+'，力尽';
   el.querySelector('.kf2').textContent='但诅咒之王，也已经是强弩之末——';
@@ -13218,6 +13222,25 @@ function nobaraCut(n,dur){
   if(im && !im.getAttribute('src')) im.setAttribute('src', IMG['nobara'+n]);
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   setTimeout(()=>el.classList.remove('on'), dur||1700);
+}
+/* ★ v563 五条「击杀前终幕」：宿傩残血在一击内 ⇒ 先播终幕图再正常出招（仿钉崎） */
+function gojoKillSoon(){
+  return S.hero==='gojo' && S.phase==='fight' && S.suk.hp>0 && S.suk.hp<=SUK_MAXHP*0.25
+         && !S.__gzFinPending && !S.__gzFinShown;
+}
+function gojoFinisherLead(then){
+  if(S.__gzFinPending) return false;
+  S.__gzFinPending=true; S.__gzFinShown=true;
+  S.acted=true; S.lastAct='cutin'; S.guardUp=false; S.blockT=0;
+  S.turnWait=1; S.hitStop=Math.max(S.hitStop||0,0.12);
+  syncHud(); gojoFinisherShow();
+  setTimeout(function(){
+    S.__gzFinPending=false;
+    if(S.phase!=='fight') return;
+    S.turnWait=0; S.acted=false;
+    then();
+  },1600);
+  return true;
 }
 function nobaraLastStand(){
   /* ★ v243 用户指定：只要「场上是虎杖」且这一刀能击杀宿傩（灵魂·解＝宿傩最大生命 30%）就触发彩蛋，
@@ -26397,7 +26420,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v562';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v563';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26433,7 +26456,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v562</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v563</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26451,7 +26474,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v562', RK='jjk_ver_reload_'+B;
+  var B='v563', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
