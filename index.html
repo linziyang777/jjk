@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v577">
+<meta name="jjk-build" content="v578">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3793,9 +3793,9 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
    ============================================================ */
 
 /* 选人页：彩蛋卡与 3 列卡阵同一行，垂直居中在卡阵左侧 */
-.selStage{display:flex;align-items:center;justify-content:center;gap:calc(var(--selw)*0.16);}
+.selStage{display:flex;align-items:center;justify-content:center;gap:calc(var(--selw)*0.34);}
 /* 右侧补一块等宽空白：彩蛋卡出现时卡阵仍然居中，不会整体右移 */
-.selStage::after{content:"";flex:0 0 auto;width:calc(var(--selw)*1.18);}
+.selStage::after{content:"";flex:0 0 auto;width:calc(var(--selw)*0.98);}
 #eggSlot{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;cursor:pointer;
   width:calc(var(--selw)*1.02);transition:transform .2s ease;}
 #eggSlot.hide{display:none !important;}
@@ -27413,7 +27413,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v577';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v578';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27449,7 +27449,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v577</b><span>黑闪大字改纯黑字＋朱红描边；首次通关后解锁彩蛋角色：虎杖悠仁【68年后】</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v578</b><span>彩蛋角色选人页排布调整：68 虎杖左移、其余六人右移，不再贴在一起</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27467,7 +27467,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v577', RK='jjk_ver_reload_'+B;
+  var B='v578', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
