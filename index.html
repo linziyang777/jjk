@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v581">
+<meta name="jjk-build" content="v582">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3875,6 +3875,30 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 
 /* 条子变细后状态徽标行跟着回收 2px，避免压住血条 */
 #statusRow{top:max(calc(19px * var(--k)), 21px);}
+</style>
+<style id="v582fix">
+/* ============================================================
+   v582 · 血条读数缩小 / 咒力条去数字 / 格边角度对齐 / 三条款再细一档
+   ============================================================ */
+
+/* ① 血条读数再小一档（12.5/12px → 10.5/10px），仍保留最低像素下限防糊 */
+.hud .bar.hp > b,
+.hud .bar.ghp > b{font-size:max(calc(8.5px * var(--k)), 10.5px);}
+
+/* ② 咒力／体力条的读数抹掉（保留占位，布局不跳）；「∞」是状态不是数字，仍然显示 */
+.hud .bar.ce.pips > b{opacity:0;}
+.hud .bar.ce.pips.inf > b{opacity:1;}
+
+/* ③ 每个格子的左右边与外框同角度：旧版 i 自带 skewX(-12deg)，外层再 -8° ⇒ 实际 -20°，
+      与外框对不齐。这里清掉自身 skew，让它们完全跟随外框的 -8°。 */
+.hud .bar.ce.pips > i{transform:none !important;}
+
+/* ④ 三条款再细一档：血条 12→10、咒力条 14→12（格内 8→6）、适应条 12→10 */
+.hud .bar.hp,
+.hud .bar.ghp{height:max(calc(7.5px * var(--k)), 10px);}
+.hud .bar.ce.pips{height:max(calc(9.5px * var(--k)), 12px);}
+.hud .bar.ce.pips > i{height:max(calc(5px * var(--k)), 6px) !important;}
+.hud .bar.adapt{height:max(calc(7.5px * var(--k)), 10px);}
 </style>
 </head>
 <body>
@@ -27496,7 +27520,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v581';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v582';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27532,7 +27556,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v581</b><span>乙骨「无限制咒力解放」伤害翻倍（20%→40%）；数值条改平行四边形、适应条连续填充</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v582</b><span>血条读数缩小、咒力条去掉数字、格边与外框同角度，三条数值条再细一档</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27550,7 +27574,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v581', RK='jjk_ver_reload_'+B;
+  var B='v582', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
