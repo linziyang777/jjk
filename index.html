@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v571">
+<meta name="jjk-build" content="v574">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3708,6 +3708,61 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 /* ⑤ 对话气泡为空时不留残影（引导页左下角那块「多余图形」＝空气泡＋尾巴） */
 #bubble:empty{display:none !important;}
 </style>
+<style id="v572fix">
+/* ============================================================
+   v572 · 血量条去刻度、改细；技能框去网点
+   —— 只做覆盖，v570/v571 的其余视觉语言保持不动
+   ============================================================ */
+
+/* ① 血量条：从「10 段刻度条 + 斜纹填充」改回连续条
+      v570 的 .bar:not(.pips)::before 是那 10 道分隔线（白 + 墨成对），
+      填充层又是 135° 斜纹 —— 两样叠起来就是用户说的「格子形式」。 */
+.hud .bar.hp::before,
+.hud .bar.ghp::before{ content:none !important; }
+
+.hud .bar.hp > i,
+.hud .bar.ghp > i{
+  clip-path:none;                 /* 去掉右下笔锋斜切，回归直角连续条 */
+  background-image:none !important;
+}
+.hud .bar.hp > i{ background:linear-gradient(180deg,#ef4358 0%,#d7263d 46%,#a81c30 100%) !important; }
+.hud .bar.ghp > i{ background:linear-gradient(180deg,#4288e8 0%,#2f6fd0 46%,#1e4e80 100%) !important; }
+/* 填充层顶上那条 40% 白高光也一并撤掉（细条上只会显脏） */
+.hud .bar.hp > i::after,
+.hud .bar.ghp > i::after{ content:none !important; }
+
+/* ② 血量条变细：v571 为了读数可读把条抬到 22px，观感偏粗。
+      现在 16px（描边 3→2px），内部仍留 12px 给读数。 */
+.hud .bar.hp,
+.hud .bar.ghp{
+  height:max(calc(12px * var(--k)), 16px);
+  border-width:2px;
+  border-radius:2px;
+  box-shadow:2px 2px 0 rgba(17,17,17,.30), 0 0 0 1px rgba(17,17,17,.38);
+}
+.hud .bar.hp{ box-shadow:2px 2px 0 rgba(17,17,17,.30), 0 0 0 1px rgba(215,38,61,.42); }
+.hud .bar.ghp{ box-shadow:2px 2px 0 rgba(17,17,17,.30), 0 0 0 1px rgba(47,111,208,.42); }
+
+/* 读数：条细了但字号不能跟着掉，行高压到 1 保证不出格 */
+.hud .bar.hp b,
+.hud .bar.ghp b{
+  font-size:max(calc(10px * var(--k)), 12px);
+  line-height:1;
+  padding:0 4px;
+  border-radius:2px;
+}
+.hud .bar.hp b{ background:rgba(96,6,18,.90); }
+.hud .bar.ghp b{ background:rgba(8,30,58,.90); }
+
+/* 条子回到 16px 后，状态徽标行跟着回收一点（v571 曾压到 27px） */
+#statusRow{ top:max(calc(22px * var(--k)), 24px); }
+
+/* ③ 技能框：去掉网点底纹，只留卡片描边与硬投影 */
+#pad .btn::before{ content:none !important; }
+
+/* ④ 出手顺位条（①宿傩 ②颚吐 ③魔虚罗）：用户要求去掉这个显示 */
+#v570ord{ display:none !important; }
+</style>
 </head>
 <body>
 <div id="ghLoad" aria-hidden="true">
@@ -3876,7 +3931,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
   <div class="rpHead"><span class="rpT">战斗规则<small>BATTLE RULES</small></span><button aria-label="关闭" id="rpClose">×</button></div>
   <div class="rpBody">
     <h3 style="--hc:#a04038">共通机制<small>BASICS</small></h3>
-    <p><b>数值口径</b>　全站所有数值只有一个基准：<b>玩家满血 = 100</b>，一律<b>不带百分号</b>。宿傩一阶段满血＝<b>150</b>、原身两管合计＝<b>300</b>，所以进入原身后他的血条读数会<b>高于 150</b>。技能文案里的数字、命中飘出的伤害、血条读数三者完全一致 —— 写多少就是打多少（苦战/绝境档我方输出另有难度系数，见标题页）。<b>相对增减</b>（如「受伤 −35%」「输出 +25%」「减伤 15%」）仍按百分比写，它表示的是比例、不是血量。</p>
+    <p><b>数值口径</b>　全站所有数值只有一个基准：<b>玩家满血 = 100</b>，一律<b>不带百分号</b>。宿傩每条血满值＝<b>150</b>：一阶段打完会现出原身、<b>再满一条</b>，读数<b>从 150 重新往下掉</b>（不累加成 300）。技能文案里的数字、命中飘出的伤害、血条读数三者完全一致 —— 写多少就是打多少（苦战/绝境档我方输出另有难度系数，见标题页）。<b>相对增减</b>（如「受伤 −35%」「输出 +25%」「减伤 15%」）仍按百分比写，它表示的是比例、不是血量。</p>
     <p>
 <b>咒力／体力（五格资源）</b>　六名术师共用同一套资源：满格 <b>5 点</b>，每回合自然回复 <b>1 点</b>；按钮左上角的小数字就是这一招的消耗，不够就会变灰。五条悟（六眼）与「里香在场的乙骨」<b>不消耗</b>，标记为「…」。禅院真希身为天与咒缚、零咒力，同一根五格条改称 <b>体力</b>：释魂刀 2 点、游云／龙骨 1 点、架势 1 点、全开 0 点、无声突袭 3 点。里香退场时，乙骨的咒力只余 <b>3 点</b>。</p>
     <p><b>回合制·行动力</b>　每回合基本 1 次行动（选定后本回合技能栏变灰）；宿傩每回合行动一次。<b>多 1 点行动力＝这一回合能多出一次招</b>：完美格挡 ⇒ 下回合 +1；五条悟展开领域、乙骨领域成立、游云用满 4 次 ⇒ 当回合追加 1 次。行动力 &gt;1 时右上角出现「行动力 ×N」胶囊，获得那一刻还会砸出一行金色「行动力 +1」，出招后仍留在本回合，用完才交棒宿傩。<b>回合真正开始的判定</b>　宿傩与在场式神的攻击动画<b>全部播完</b>之后才进入下一回合 —— 技能栏重新亮起、能再点技能的那一刻，才是你出手的时机（提前点会被记下来，解锁瞬间自动补发）。</p>
@@ -3910,14 +3965,15 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>原身／附身形态</b>　受肉之躯被打空 ⇒ 躯体崩解、原身满血登场。原身可使用全部术式 —— 无量空处内原身的「非笼罩回合」也能照常攻击，随机使用常规技能（仍受信息洪流侵蚀）；★ 每个「能正常活动的回合」有 <b>25%</b> 机率直接展开「伏魔御厨子」粉碎无量空处（每局至多一次）；附身（伏黑惠肉体）在无量空处内完全无法行动。</p>
     <p><b>领域展延</b>　在五条悟领域内以自身领域包裹己身，强行挣脱无限情报的束缚、恢复行动。</p>
     <h3 style="--hc:#2b6cb0">五条悟<small>GOJO · 无下限·术式顺转</small></h3>
-    <p><b>术式顺转·苍／苍·拳（1 技）</b>　默认<b>「苍·拳」</b>：瞬身近击，<b>10%~14%</b> 最大生命，不留引力残留；按技能框<b>右上角角标</b>可切回「苍」——<b>5%~7%</b>，引力残留 2 回合，用「赫」引爆 +50%。无下限（不可侵）期间锁定为「苍」，切换角标<b>隐藏</b>；不可侵结束后恢复「苍·拳」。</p>
+    <p><b>术式顺转·苍／苍·拳（1 技）</b>　默认<b>「苍·拳」</b>：瞬身近击，<b>10%~14%</b> 最大生命，<b>黑闪率额外 +5%</b>；按技能框<b>右上角角标</b>可切回「苍」——<b>5%~7%</b>，并在身前凝成一枚<b>引力锚点</b>。无下限（不可侵）期间锁定为「苍」，切换角标<b>隐藏</b>；不可侵结束后恢复「苍·拳」。</p>
+    <p><b>引力锚点</b>　蓝黑小光球悬在身前，<b>耐久 2</b>：宿傩普通攻击命中时<b>减伤 50%</b>并消耗 1 点；式神（颚吐／魔虚罗／玉犬／嵌合兽）攻击<b>伤害归零</b>并消耗 2 点。<b>「解」「捌」与伏魔御厨子的领域必中属斩击，不受锚点影响</b>。耐久耗尽即碎裂，<b>1 回合后</b>才能再生成（同时只有 1 枚）。</p>
     <p><b>无下限·不可侵（2 技）</b>　3 回合内一切攻击在身前停止、伤害归零。<b>魔虚罗与五条同时在场满 2 回合</b>后，「适应」完成，将其<b>破解</b>——破解后永久失效，1 技自此默认「苍·拳」。魔虚罗先登场、五条后上场的，从五条上场那一刻重新起算 2 回合。这两回合内不可侵仍然有效（展开中的会被当场打断）。</p>
     <p><b>反转术式（2 技·形态二）</b>　生命 ≤40%、<b>不可侵被破解后</b>、或<b>术式熔断时</b>随时可用（不再看血线）：回复 <b>25%</b> 最大生命，CD 2 回合；可治愈熔断的术式，并使「无量空处」可再多展开 1 次（每用一次 +1，本局上限 2 次）。</p>
     <p><b>虚式·茈</b>　CD 3 回合／不消耗咒力（六眼），<b>20%~25% 最大生命</b>（实际结算值）；连续 4 回合不动用茈 ⇒ 解锁「无限制·茈」。</p>
     <p><b>无限制·茈</b>　解锁后无视冷却直接放：<b>30%~35% 最大生命</b>，并抹除魔虚罗与颚吐。代价是解除上限的茈会波及自身 —— 失去<b>当前生命的 20%</b>（不会致死）。</p>
-    <p><b>术式反转·赫</b>　红色按钮，CD 1 回合：伤害为「苍」的 1.5 倍（7.5%~10.5% 最大生命）；引爆「苍」标记再 +50%。</p>
+    <p><b>术式反转·赫</b>　红色按钮，CD 1 回合：<b>两段式</b> —— 第一段 <b>5%~7%</b> 立即结算，并在宿傩身后留下一枚红点；<b>下一回合开始时炸开</b>，再造成第一段 70% 的伤害（合计约 <b>8.5%~11.9%</b>）。若场上存在引力锚点，赫会与锚点<b>一同射出（紫）</b>：<b>10%~14%</b>、立即命中、<b>耗尽整枚锚点</b>、不再留红点，并连带扫掉颚吐。</p>
     <p><b>无量空处</b>　蓝色「领域展开」按钮：不消耗咒力（六眼）·<b>本局最多 2 次</b> —— 初始 1 次，每使用一次「反转术式」解锁 +1 次（封顶 2 次）。展开后计时暂停并跳过宿傩回合，额外获得 1 次行动力；五条悟退场时双方领域一并消散、场景复原。★ 领域内的原身宿傩在「能正常活动的回合」有 <b>25%</b> 机率展开「伏魔御厨子」，当场粉碎无量空处（每局至多一次，不再受领域使用次数限制）。</p>
-    <p><b>束缚</b>　术式公开（本棒每一发「茈」<b>×1.6</b>、首发冷却 −1，普通茈与无限制·茈皆生效／本棒受伤 ×1.3）·不设防之束缚（本棒伤害 ×1.5／本棒无法使用反转术式）·魂之代偿（回复 45% 生命＋茈冷却清零／生命上限 −25%，仅生命 ≤50% 可立）。</p>
+    <p><b>束缚</b>　术式公开（本棒每一发「茈」<b>×1.6</b>、首发冷却 −1，普通茈与无限制·茈皆生效／本棒受伤 ×1.3）·不设防之束缚（本棒伤害 ×1.5／本棒无法使用反转术式）·魂之代偿（回复 45% 生命＋茈冷却清零；若已满血则改为本棒受伤 ×0.75／生命上限 −25%）。</p>
     <h3 style="--hc:#b8860b">鹿紫云一<small>KASHIMO · 咒力电击·幻兽琥珀</small></h3>
     <p><b>咒力电击·雷（1 技·2 点咒力）</b>　<b>10%~15%</b> 最大生命 ×（1＋0.10×电荷层数）；命中 <b>+1 层电荷</b>（宿傩上回合用过术式 ⇒ +2），<b>上限 5 层</b>。每层电荷让输出 +10% —— 电荷<b>不再减伤</b>，它只是电压。</p>
     <p><b>无防御</b>　鹿紫云一<b>没有格挡、没有治疗</b> —— 二技能「电荷放出」也不是防御，是拿全部电荷换一回合的电场。</p>
@@ -3933,7 +3989,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>审判·下达（判决）</b>　第 <b>1、2 次</b>只判「没收」：宿傩被没收一项能力并吃 <b>20%</b> 伤害；<b>第 3 次起</b>自动化为「<b>处刑人之剑</b>」（本局只能出鞘一次）。<br>　　死刑·一阶段：剑触及受肉之躯 ⇒ <b>直接处刑</b>，造成 <b>100%</b> 最大生命（当场崩解、宿傩现原身）；死刑·二阶段：原身承受 <b>60%</b> 最大生命。<br>　　没收按原作优先级：咒具「神武解」→ 术式「解·捌·伏魔御厨子」→ 咒力「反转术式」→ 身体能力（输出 −15%）。</p>
     <p><b>领域·判决闸门</b>　「诛伏赐死」成立后<b>领域内禁止暴力</b>：宿傩<b>本体</b>按兵不动（式神不受此限），直到日车发动<b>一次三技能「审判·下达」</b>开庭为止；判决落地当下解锁，领域重新展开会再次上锁。★ 这道禁令（法庭纪律）<b>只持续到第 5 回合开始就失效</b>。这是攒证据、锁罪状的安全窗口。</p>
     <p><b>反转术式</b>　濒死（≤25% 生命）时领悟，每局一次，回复 25% 生命。</p>
-    <p><b>束缚</b>　没收·神武解（宿傩本局永久失去「神武解：电击」，适应清零且本棒无法再适应／本棒输出 ×0.85）·有罪判决（罪状 +3，立刻可开庭／本棒受伤 ×1.3）·辩护人之束缚（本棒受伤 ×0.72／输出 ×0.85）。</p>
+    <p><b>束缚</b>　没收·神武解（宿傩本局永久失去「神武解：电击」，适应清零且本棒无法再适应／本棒输出 ×0.85）·有罪判决（罪状 +3，立刻可开庭／本棒受伤 ×1.3）·辩护人之束缚（回复 25% 生命＋本棒受伤 ×0.85；满血则受伤改 ×0.75／输出 ×0.85）。</p>
     <h3 style="--hc:#7c3aed">乙骨忧太<small>OKKOTSU · 无限咒力·术式复制</small></h3>
     <p><b>太刀·呪斩（1 技·1 点咒力）</b>　<b>5%~7%</b> 最大生命，可自发黑闪。</p>
     <p><b>里香·召唤（2 技·3 点咒力）</b>　召唤当场耗 3 点、咒力上限 −50%，里香登场 <b>5 回合</b>。<b>里香没有生命值、无法被杀死</b>；5 回合到期或施展「无限制咒力解放」后退场。在场期间：乙骨所有技能不消耗咒力；二技能变为「模仿术式」；里香每回合以「咒力拳」出击，并替乙骨分担一半伤害（领域「真赝相爱」期间里香受守护、不再分担）。★ 里香离场后乙骨仍保有已学的模仿术式，但咒力条只剩 <b>3 点</b>残留（要等每回合 +1 慢慢爬回来）。</p>
@@ -3941,14 +3997,14 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>领域·真赝相爱</b>　3 点咒力（里香在场不消耗）·葛笼封锁＋伤害 ×1.5，每局一次。展开时 <b>100% 必定触发对拼</b>：胜率由推挤结束当下的指针位置决定（起点 70%／苦战·无量 50%）；★ 宿傩中过无量空处 ⇒ <b>乙骨必胜（100%）</b>：<b>胜</b> ⇒ 伏魔御厨子的结界当场碎裂、宿傩陷入术式熔断；<b>败</b> ⇒ 乙骨术式熔断、伏魔御厨子成立。成立后宿傩立即被笼罩，每 2 回合发动一次弥须葛笼；★ 乙骨的「真赝相爱」<b>不会被魔虚罗从外侧击碎</b>（对拼获胜后持续到乙骨退场）。</p>
     <p><b>反转术式（4 技·3 点咒力）</b>　回复 <b>25%</b> 最大生命，CD 2 回合，术式熔断中也可用。</p>
     <p><b>无限制咒力解放</b>　里香在场时立束缚卡第二选项：对全体敌人 <b>20%</b> 最大生命伤害，之后里香立即退场。</p>
-    <p><b>束缚</b>　复制术式（本棒伤害 ×1.35／本棒受伤 ×1.2）·里香·全力（本棒受伤 ×0.78、每回合反伤宿傩 3%／每回合自损 3）·魂之绊（回复 40% 生命／生命上限 −15%，仅生命 ≤50% 可立）。</p>
+    <p><b>束缚</b>　复制术式（本棒伤害 ×1.35／本棒受伤 ×1.2）·里香·全力（本棒受伤 ×0.78、每回合反伤宿傩 3%／每回合自损 3）·魂之绊（回复 40% 生命；若已满血则改为本棒受伤 ×0.80／生命上限 −15%）。</p>
     <h3 style="--hc:#8c2f24">虎杖悠仁<small>ITADORI · 径庭拳·简易领域</small></h3>
     <p><b>径庭拳（1 技·1 点咒力）</b>　<b>5.3%~7.5%</b> ＋ 二段追击（滞后的第二段冲击，2.7%~4.7%）。领域内的「灵魂·解」同样 1 点。</p>
     <p><b>简易领域（2 技·2 点咒力）</b>　中和必中，可灭「灶·开」的场火。<b>一旦展开即常驻</b>—— 今后宿傩「伏魔御厨子」的领域必中斩击不再伤到虎杖；每次使用后 3 回合内受伤 ×0.8。</p>
     <p><b>赤血操术·穿血（3 技·3 点咒力）</b>　<b>15%~20%</b>，留下血契（最多 ×3，每回合侵蚀 3%/层）。</p>
     <p><b>领域展开（不消耗咒力）</b>　生命低于 40% 最大生命时，第 4 个按钮变为「领域展开」—— 濒死之际的最后反击；展开瞬间若宿傩正维持「伏魔御厨子」，其结界当场碎裂（领域必中斩击一并解除），对拼胜率 <b>100%</b>。领域持续到虎杖退场。</p>
     <p><b>钉崎·共鸣（彩蛋）</b>　虎杖在场、且「灵魂·解」这一刀足以击杀宿傩时触发：全场黑屏播放钉崎野蔷薇的共鸣画面（读秒暂停），播毕再出「解」。<b>一阶段（受肉之躯）</b>：只打穿肉体 —— 宿傩舍弃伏黑惠现出原身，且<b>下一回合完全无法行动</b>（真结局不在此阶段成立）；<b>二阶段（原身）</b>：直接讨伐宿傩，走向真结局。</p>
-    <p><b>束缚</b>　黑闪之束缚（下一击必出黑闪、×2.2／接下来 2 回合受伤 ×1.3）·不屈之魂（生命 ≤35% 时输出 ×1.5／其余时候输出 ×0.95）·魂之境界（本棒伤害 ×1.4／每回合自损 2.5）。</p>
+    <p><b>束缚</b>　黑闪之束缚（下一击必出黑闪、×2.2／接下来 2 回合受伤 ×1.3）·不屈之魂（生命 ≤35% 时输出 ×1.5／其余时候输出 ×0.95）·魂之境界（回复 35% 生命＋本棒伤害 ×1.15；满血则伤害改 ×1.35／生命上限 −20%）。</p>
     <h3 style="--hc:#3a3f45">禅院真希<small>MAKI · 天与咒缚·释魂刀</small></h3>
     <p><b>咒具切换</b>　1 技右上角角标可自由换刀（换刀本身不消耗行动，但出手要付体力）：<b>释魂刀</b>（<b>2 点</b>·<b>10%</b> 最大生命·灵魂损伤·无视适应）／<b>游云</b>（<b>1 点</b>·<b>15%</b> 最大生命·用满 4 次本回合多一次行动，带咒力可被适应）／<b>龙骨</b>（<b>1 点</b>·<b>8%</b> 最大生命·架刀受伤 −35%，吸收的冲击蓄进下一击）。</p>
     <p><b>灵魂损伤（释魂刀专属）</b>　释魂刀切的是灵魂，<b>伤口不会愈合</b>：每命中一次累积 1 层灵魂损伤（上限 3，本局永久、换人也不消）。每层 ⇒ 宿傩受到的伤害 +2%、反转术式回复 −34%；<b>满 3 层</b> ⇒ 宿傩下一个回合无法行动（反转术式也完全无效）；3 层状态下再打中一次（或直接用「无声突袭」命中）⇒ 层数归零。这是真希一个人能留给整队的最大遗产。</p>
@@ -5048,7 +5104,8 @@ const S={
   mahaSpace:false, mahaCopy:false, mahaSpaceCd:0, mahaCopyCd:0,
   para:0,                             /* ★ v393 我方「麻痹」剩余回合：1 回合无法行动，不因受伤解除 */
   heroVulnT:0,                        /* 虎葬·碎击：我方防御力 -10% 剩余回合 */
-  cangMark:0, heCd:0,                 /* 五条悟：苍标记层数 / 赫 冷却 */
+  cangMark:0, heCd:0,                 /* 五条悟：苍标记层数（v574 起停用）/ 赫 冷却 */
+  anchor:0, anchorCd:0, heTrap:0,     /* ★ v574 引力锚点耐久 / 锚点冷却 / 赫红点延迟伤害 */
   muLimit:0, muBroken:false,          /* ★ v230 无下限·不可侵剩余回合 / 是否被魔虚罗破解 */
   muBreakAt:0,           /* ★ v243 muBreakIn=显示用；muBreakAt=绝对回合戳（登场后满2个完整回合才破解） */
   gojoVanish:0,                       /* ★ v231 苍·拳瞬身：1=立绘消失 0=在位 */
@@ -5072,7 +5129,58 @@ const QTE={active:false,t:0,dur:1.5,g0:0,g1:0,cb:null};
 let IS_TOUCH=false;
 try{ window.addEventListener('touchstart',function(){ IS_TOUCH=true; },{once:true,passive:true}); }catch(e){}   /* ★ v140 cb＝黑闪结算回调 */
 
-const GX=()=>W*0.225, SX=()=>W*0.79;   /* 略微外移：给中间的魔虚罗留出更大空间 */
+const GX=()=>W*0.225, SX=()=>W*0.79;
+/* ★ v574 引力锚点位置（玩家立绘右上、朝敌一侧） */
+function anchorPos(){ return {x:GX()+gojoW()*0.34, y:GY-gojoHeight()*0.62}; }
+function drawAnchorFx(){
+  const t=(typeof S!=='undefined'&&S)?(S.t||0):0;
+  if((S.anchor||0)>0){
+    const p=anchorPos(), x=p.x, y=p.y+Math.sin(t*1.6)*3*SC;
+    ctx.save();
+    const g=ctx.createRadialGradient(x,y,0,x,y,16*SC);
+    g.addColorStop(0,'rgba(255,255,255,.92)');
+    g.addColorStop(0.22,'rgba(120,170,255,.85)');
+    g.addColorStop(0.55,'rgba(26,38,108,.88)');
+    g.addColorStop(1,'rgba(6,8,26,0)');
+    ctx.globalAlpha=0.62+0.14*Math.sin(t*2.4);
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,16*SC,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=0.78;
+    ctx.strokeStyle='rgba(140,205,255,.75)'; ctx.lineWidth=1.2*SC;
+    ctx.beginPath(); ctx.arc(x,y,(11*Math.sin(t*1.9)+14)*SC,0,Math.PI*2); ctx.stroke();
+    for(let i=0;i<3;i++){
+      const a=t*1.2+i*2.1, d=(17-((t*22+i*7)%17))*SC;
+      ctx.globalAlpha=0.5; ctx.fillStyle='#9fc8ff';
+      ctx.beginPath(); ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,1.4*SC,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  if((S.heTrap||0)>0){
+    /* ★ v574 赫·红点：宿傩身后（再往外挪、加黑描边，白纸底上才看得见） */
+    const x=SX()+sukW()*0.48, y=GY-sukHeight()*0.52;
+    const pu=0.62+0.38*Math.sin(t*6.5);
+    const R=(9+2.2*pu)*SC;
+    ctx.save();
+    const g=ctx.createRadialGradient(x,y,0,x,y,R*2.6);
+    g.addColorStop(0,'rgba(255,255,255,'+(0.95*pu).toFixed(2)+')');
+    g.addColorStop(0.22,'rgba(255,110,96,'+(0.92*pu).toFixed(2)+')');
+    g.addColorStop(0.60,'rgba(200,26,46,'+(0.72*pu).toFixed(2)+')');
+    g.addColorStop(1,'rgba(120,6,24,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,R*2.6,0,Math.PI*2); ctx.fill();
+    /* 墨线描边（漫画风，浅底可辨） */
+    ctx.globalAlpha=0.55+0.25*pu;
+    ctx.strokeStyle='rgba(70,4,12,.85)'; ctx.lineWidth=1.4*SC;
+    ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2); ctx.stroke();
+    /* 外圈倒计时环 */
+    ctx.globalAlpha=0.5+0.3*pu;
+    ctx.strokeStyle='rgba(215,38,61,.85)'; ctx.lineWidth=1.2*SC;
+    ctx.beginPath(); ctx.arc(x,y,R*(1.55+0.35*pu),0,Math.PI*2); ctx.stroke();
+    /* 白芯 */
+    ctx.globalAlpha=1;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(x,y,R*0.34,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}   /* 略微外移：给中间的魔虚罗留出更大空间 */
 /* 立绘尺寸基准（宿傩稍作放大；宽度按抠图后的真实比例推算，用于排布不重叠） */
 const SUK_H=0.68, SUK_HPX=480, GOJO_H=0.68, GOJO_HPX=480;   /* ★ v264 用户指定：满铺后立绘缩小，不与上下框线遮挡 */   /* 两人完全等高（★v36 0.70→0.76：对话框迁入战场后腾出的高度还给立绘） */
 /* 魔虚罗右缘压入宿傩身后的比例（相对本体宽度）。
@@ -5109,8 +5217,8 @@ function resetBattle(){
   S.guilt=0; S.okoUsed=false; S.okkoDomCast=false; S.makiCd=0; S.sukLast='';
   S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false; S.sukuSummonForm=false; S.yujiEndAt=0;   /* ★ v291 换装／结局背景重置 */
   S.anaPct=0; S.anaHero='';               /* ★ v484 魔虚罗死后的解析进度 */
-  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.mahaBornTurn=-1; S.agyoBornTurn=-1; S.yugyoBonus=0; S.kanju=false; S.kanjuHp=0; S.kanjuMax=0; S.kanjuPhase=''; S.kanjuUsed=false; S.okkoDom=0;  S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.voidDomBroken=false; S.okkoVoiceUntil=0; S.deathVoiceUntil=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.higuDomVerdict=0; S.shikWait=0; S.higuExecUsed=false; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 对拼状态一并清空／★ v92 熔断状态重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false;   S.rikaT=0; S.rikaCopy=''; S.ceCap=100;  S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.makiUsed=0; S.makiGSel=null; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重开一局清掉新机制残留 */
-  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.muLimit=0; S.muBroken=false;  S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null; S.muSaid=0;   /* ★ v80 反转术式 CD */
+  S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.mahaBornTurn=-1; S.agyoBornTurn=-1; S.yugyoBonus=0; S.kanju=false; S.kanjuHp=0; S.kanjuMax=0; S.kanjuPhase=''; S.kanjuUsed=false; S.okkoDom=0;  S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.gojoHeUntil=0; S.voidDomBroken=false; S.okkoVoiceUntil=0; S.deathVoiceUntil=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.higuDomVerdict=0; S.shikWait=0; S.higuExecUsed=false; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 对拼状态一并清空／★ v92 熔断状态重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false;   S.rikaT=0; S.rikaCopy=''; S.ceCap=100;  S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.makiUsed=0; S.makiGSel=null; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重开一局清掉新机制残留 */
+  S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.anchor=0; S.anchorCd=0; S.heTrap=0; S.muLimit=0; S.muBroken=false;  S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null; S.muSaid=0;   /* ★ v80 反转术式 CD */
   S.hollowSkip=0; S.hollowUsedTurn=-1; S.hollowFree=false; S.usedUnlimited=false;
    
   S.dom={active:false,seq:[],idx:0,correct:0,t:0,marks:[]}; S.domainUsed=false;
@@ -5970,14 +6078,17 @@ function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v419 第 7 参 opt：{sz 字号倍数／dur 覆盖停留时间／stamp 印章式落地（大字用）} */
   opt=opt||{};
   /* ★ v491 新增 opt.inkOnly：只留黑色粗勾边（不再加白细边），供「蓝字 + 黑边」用 */
-  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,rise:!!opt.rise});   /* ★ v498 opt.rise：自下而上显现 */
+  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,rise:!!opt.rise,inkW:opt.inkW||0,risePx:opt.risePx||0});   /* ★ v498 opt.rise：自下而上显现 */
 }   /* ★ v407 第 6 参数 dir：+1 往右消散、−1 往左消散 */
 /* ★ v496 用户指定：五条的咒词在「释放技能那一刻」显现 —— 立绘上方浮出咏唱（白字＋黑勾边，往左缓飘）。 */
 function fxChant(txt,col){
-  const _k=(txt.length>11?0.80:(txt.length>9?0.88:1.0));
-  /* 贴在立绘头顶上方：用画面高度定位（GY-270*SC 在窄屏会被推到顶部血条里） */
-  /* ★ v498 用户指定：不再左上飘 —— 原位自下而上浮起显现，退场只做透明度渐隐。 */
-  fxText(GX()-8*SC, H*0.125, txt, col||'#e5e7eb', false, 0, {sz:0.92*_k, dur:1.35, inkOnly:true, rise:true});
+  /* ★ v572 用户指定：①字号略放大 ②居中于人物形象正上方（原先是 H*0.125 贴画面顶部）
+     ③自下而上渐显 ④黑色勾边加粗 */
+  const _k=(txt.length>11?0.82:(txt.length>9?0.90:1.0));
+  const _h=(typeof gojoHeight==='function')?gojoHeight():H*0.62;
+  /* 立绘头顶再往上 12*SC；下限 H*0.075 保证小窗里不压到顶部血条（条底≈H*0.048） */
+  const _y=Math.max(GY-_h-5*SC, H*0.085);
+  fxText(GX(), _y, txt, col||'#e9e7e2', false, 0, {sz:1.04*_k, dur:1.5, inkOnly:true, inkW:0.36, rise:true, risePx:36});
 }
 function fxRing(x,y,col){ addFx({type:'ring',dur:0.45,x:x,y:y,col:col||'#111'}); }
 function fxShards(x,y,rgb,big){
@@ -6673,6 +6784,23 @@ function hurtHero(d,kind){
     gojoMuBlock();
     return;
   }
+  /* ★ v574 引力锚点：拽走宿傩的动作（解/捌 与伏魔御厨子必中属斩击，不受影响） */
+  if(S.hero==='gojo' && (S.anchor||0)>0 && d>0){
+    const _shiki=(kind==='agyo'||kind==='maha'||kind==='maha_space'||kind==='yugyo');
+    const _slash=(kind==='kai'||kind==='dom');
+    if(_shiki){
+      S.anchor=0; S.anchorCd=1;
+      fxText(GX()+34*SC,GY-196*SC,'引力·拽走','#3b4b8f',true);
+      flash('fWhite');
+      say('sys','引力锚点把式神的攻击整个拽走 —— 伤害归零（锚点耗尽）。');
+      syncHud();
+      return;
+    } else if(!_slash){
+      d*=0.5; S.anchor=Math.max(0,(S.anchor||0)-1);
+      if(S.anchor<=0){ S.anchorCd=1; fxText(GX()+34*SC,GY-196*SC,'锚点碎裂','#3b4b8f'); }
+      else fxText(GX()+34*SC,GY-196*SC,'引力·减伤','#3b4b8f');
+    }
+  }
   /* ★ v450 遗志继承：登场后的首次实质打击（≥5% 最大生命）完全免伤，用完即消耗。
      只挡「会真疼」的一击 —— 灼烧／碎击这类小额补刀不会白白吃掉它。 */
   if((S.legacyBlock||0)>0 && d>=(S.maxHp||100)*0.05){
@@ -7168,7 +7296,9 @@ function actAtk(allowBlack){
   /* ★ v92 术式熔断：五条悟除「反转术式」外无法使用任何技能（含术式顺转·苍） */
   if(S.gojoBurn){ say('sys','术式熔断——连「苍」都无法发动，请先用「反转术式」治愈！'); return; }
   markActed('atk');
-  const blackP=0.08+Math.min(0.15,S.blackChain*0.05);   /* ★ v393 黑闪连锁：每次黑闪后概率 +5%，3 层封顶 +15% */
+  /* ★ v574 用户指定：苍·拳（近身殴打）黑闪率额外 +5% */
+  const _fistNow=gojoFistMode();
+  const blackP=0.08+Math.min(0.15,S.blackChain*0.05)+(_fistNow?0.05:0);   /* ★ v393 黑闪连锁：每次黑闪后概率 +5%，3 层封顶 +15% */
   const black=(allowBlack!==false)&&Math.random()<blackP;
   /* ★ v140 判定将打出黑闪 ⇒ 先暂停＋压暗＋出黄条 QTE，点中才真的打出黑闪 */
   const gojoApply=(doBlack)=>{
@@ -7176,7 +7306,7 @@ function actAtk(allowBlack){
     /* ★ v230 用户指定：无下限未展开时，1 技变为「术式顺转·苍·拳」——伤害 ×2、但无法挂引力标记 */
     /* ★ v231：无下限被破解后改由玩家用 1 技左上角的切换角标自选；未破解时跟随无下限状态 */
     /* ★ v232：形态判定收敛到 gojoFistMode()，按钮文案与此处共用同一判断 */
-    const _muOff = gojoFistMode();
+    const _muOff = _fistNow;
     /* ★ v232 用户指定：苍·拳是近身殴打，不再抛出蓝色「苍」球（fxOrb 只给远距离的苍用） */
     if(!_muOff) fxOrb();
     SFX.atk();
@@ -7245,7 +7375,16 @@ function actAtk(allowBlack){
         say('gojo',pick(['「术式顺转·苍。」','「术式顺转·苍，术式反转·赫。」','「看不见吧。」','「够得着吗。」']));
       }
       hitSukuna(d,doBlack,doBlack?'black':'atk',false,false, doBlack?'gojo_black':'gojo_cang');
-      if(!doBlack && !_muOff){ S.cangMark=2; say('sys','「苍」的引力残留 —— 2 回合内用「赫」引爆，伤害 +50%。'); }
+      if(!doBlack && !_muOff){
+        /* ★ v574 引力锚点：苍命中后在身前凝成蓝黑光球（耐久 2） */
+        if(!((S.anchor||0)>0) && !((S.anchorCd||0)>0)){
+          S.anchor=2;
+          fxText(GX()+46*SC,GY-210*SC,'引力锚点','#3b4b8f');
+          say('sys','「苍」在身前凝成引力锚点 —— 宿傩的普通攻击伤害减半、式神攻击被整个拽走（耐久 2）。');
+        } else {
+          say('sys','引力锚点仍在（耐久 '+S.anchor+'）或在冷却中 —— 本发「苍」只造成伤害。');
+        }
+      }
       else if(!doBlack && _muOff) say('sys','「苍·拳」—— 纯粹的殴打：伤害 ×2，但不会留下引力残留（无法用「赫」引爆）。');
       if(!doBlack && Math.random()<0.35) say('narr',pick(['旁白：宿傩侧身闪过，斩击划过衣角。','旁白：苍的引力撕开地面，碎石悬浮。','旁白：空气被压缩成一瞬的真空。']));
     },doBlack?60:180);
@@ -7367,7 +7506,7 @@ function syncHeBtn(){
   if(b.__hide!==(!on)){ b.__hide=(!on); b.style.display=on?'':'none'; }
   if(!on) return;
   const cd=S.heCd||0;
-  const k='he'+cd+(S.cangMark>0?'M':'');
+  const k='he'+cd+(S.anchor>0?'A':'');
   if(b.__hhl!==k){
     b.__hhl=k;
     b.innerHTML=ICO('bolt')+'术式反转·赫<small>'+(cd>0?('CD '+cd+' 回合'):'引爆苍合并为茈')+'</small>';
@@ -7607,22 +7746,55 @@ function actHe(){
   say('gojo','「位相——菠萝蜜——光之柱。」');
   fxChant('位相——菠萝蜜——光之柱','#fecdd3');
   say('gojo','「术式反转——赫。」');
-  fxManga('术式反转·赫',SX()-140*SC,GY-246*SC,true,'#d7263d');   /* ★ v122 字样移到宿傩侧 */
-  addFx({type:'heRed',dur:0.95,x:SX()-46*SC,y:GY-142*SC,x1:SX()+60*SC});   /* ★ v122 红光球+排斥冲击移到宿傩侧，方向向右 */
-  SFX.atk();
-  setTimeout(()=>{
-    if(S.phase!=='fight') return;
-    /* ★ v230 用户指定上调：3.2~5.1% 实际 → 7.0~9.0%（raw 0.10~0.128 × HERO_DMG 0.70） */
-    let d=rnd(SUK_MAXHP*0.075, SUK_MAXHP*0.105);   /* ★ v541 赫 = 苍的 1.5 倍 = 7.5%~10.5%（引爆苍标记时再 ×1.5） */
-    if(S.cangMark>0){
-      d*=1.5; S.cangMark=0;
-      if(S.agyo) agyoDown();   /* ★ v52 「苍赫相撞」连颚吐一起扫掉 */
-      fxText(W*0.5,H*0.30,'苍赫相撞 ×1.5','#d7263d',true);
-      say('sys','引爆「苍」标记——赫的伤害额外 +50%！');
+  /* ★ v572 赫的演出：指尖聚 → 射出 → 命中；★ v574 分「两段式」与「苍赫·相撞」两条 */
+  const _heX=GX()+gojoW()*0.30, _heY=GY-gojoHeight()*0.30;
+  const _heTX=SX()-46*SC, _heTY=GY-142*SC;
+  S.gojoHeUntil=performance.now()+1750;   /* ★ v573 赫演出期间换成「无下限」那张立绘 */
+  if((S.anchor||0)>0){
+    /* ---- 相撞：锚点与赫一同射出（紫） ---- */
+    const _ap=anchorPos();
+    S.anchor=0; S.anchorCd=1;              /* 整枚锚点被抽干 */
+    fxManga('术式反转·赫',SX()-140*SC,GY-246*SC,true,'#7c3aed');
+    addFx({type:'heCharge',dur:0.22,x:_ap.x,y:_ap.y,pur:true});
+    SFX.atk();
+    setTimeout(()=>{
+      if(S.phase!=='fight'||S.hero!=='gojo') return;
+      addFx({type:'heBolt',dur:0.26,x0:_ap.x,y0:_ap.y,x1:_heTX,y1:_heTY,pur:true});
+    },200);
+    setTimeout(()=>{
+      if(S.phase!=='fight'||S.hero!=='gojo') return;
+      addFx({type:'heViolet',dur:1.0,x:_heTX,y:_heTY});
+      fxText(W*0.5,H*0.30,'苍赫·相撞','#a855f7',true,0,{inkOnly:true,inkW:0.44});
       shake(); flash('fWhite');
-    }
-    hitSukuna(d,true,'hollow',false,false,'gojo_he');
-  },460);
+    },470);
+    setTimeout(()=>{
+      if(S.phase!=='fight') return;
+      let d=rnd(SUK_MAXHP*0.05,SUK_MAXHP*0.07)*2.0;   /* ★ v574 用户指定：倍率 2.0 */
+      if(S.agyo) agyoDown();
+      hitSukuna(d,true,'hollow',false,false,'gojo_he');
+      say('sys','苍赫·相撞 —— 引力锚点被牵引进赫里：伤害 ×2，锚点耗尽（不再留红点）。');
+    },520);
+  }else{
+    /* ---- 两段式：第一段立即 + 身后埋红点，下一回合开始炸 ---- */
+    fxManga('术式反转·赫',SX()-140*SC,GY-246*SC,true,'#d7263d');
+    addFx({type:'heCharge',dur:0.34,x:_heX,y:_heY});
+    SFX.atk();
+    setTimeout(()=>{
+      if(S.phase!=='fight'||S.hero!=='gojo') return;
+      addFx({type:'heBolt',dur:0.30,x0:_heX,y0:_heY,x1:_heTX,y1:_heTY});
+    },330);
+    setTimeout(()=>{
+      if(S.phase!=='fight'||S.hero!=='gojo') return;
+      addFx({type:'heRed',dur:0.95,x:_heTX,y:_heTY,x1:SX()+60*SC});
+    },605);
+    setTimeout(()=>{
+      if(S.phase!=='fight') return;
+      const d1=rnd(SUK_MAXHP*0.05,SUK_MAXHP*0.07);   /* 第一段 5%~7% */
+      S.heTrap=d1*0.7;                                /* 第二段 = 70%，下一回合开始炸 */
+      hitSukuna(d1,true,'hollow',false,false,'gojo_he');
+      say('sys','「赫」第一段命中 —— 宿傩身后留下一枚红点，下一回合开始时炸开（第二段 70%）。');
+    },640);
+  }
   syncHud();
 }
 function actHollow(){
@@ -11336,7 +11508,16 @@ function sukunaTurn(){
        下一回合开始时从外侧斩碎（见宿傩回合的 voidMahaT 分支）。没被击碎的情况下，无量空处同样撑到五条悟下场。
      · 宿傩的伏魔御厨子：持续到「玩家当前操控的那一位术师」下场（见角色下场与换人两处的清场）。 */
   /* ★ v54 乙骨领域：持续到离场，不再按回合收束 */
-  if(S.cangMark>0) S.cangMark--;         /* ★ v40 苍标记：2 回合内有效 */
+  /* ★ v574 引力锚点冷却 / 「赫」红点延迟引爆（用户指定：玩家下一回合开始时炸） */
+  if((S.anchorCd||0)>0) S.anchorCd--;
+  if((S.heTrap||0)>0 && S.phase==='fight' && S.suk.hp>0){
+    const _td=S.heTrap; S.heTrap=0;
+    addFx({type:'heRed',dur:0.85,x:SX()-44*SC,y:GY-150*SC,x1:SX()+56*SC});
+    fxText(W*0.5,H*0.30,'赫·延迟引爆','#d7263d',true);
+    say('sys','宿傩身后的红点炸开 —— 「赫」第二段命中。');
+    shake();
+    hitSukuna(_td,true,'hollow',false,false,'gojo_he');
+  }
   if((S.muLimit||0)>0) S.muLimit--;      /* ★ v230 无下限·不可侵：每回合 -1，归零自动解除 */
   /* ★ v243 魔虚罗的「适应」倒计时：改用绝对回合戳，避免召唤当回合就被 tick 吃掉一格（显得一登场就失效） */
   if(!S.muBroken && (S.muBreakAt||0)>0){
@@ -11751,8 +11932,8 @@ const VOWS_BY_HERO={
      gain:'本棒所有伤害 ×1.5',                    cost:'本棒永久无法使用「反转术式」',
      line:'「不设防——这一局，我只进攻。」',
      sys:'不设防之束缚：本棒伤害 ×1.5 —— 代价：本棒无法使用「反转术式」（不能回血、不能完璧）。'},
-    {id:'pay',     name:'魂之代偿',   ico:'blood', who:'gojo', hpMax:0.5,
-     gain:'立刻回复 45% 血量，茈冷却清零',          cost:'生命上限 −25%（永久，满血不可立）',
+    {id:'pay',     name:'魂之代偿',   ico:'blood', who:'gojo',
+     gain:'回复 45% 血量（满血则改为本棒受伤 ×0.75），茈冷却清零', cost:'生命上限 −25%（永久）',
      line:'「以身体为代价——把咒力，全给我。」',
      sys:S=>'魂之代偿：回复 45% 血量、茈冷却清零——代价：生命上限 −25%（现 '+S.maxHp+'%）。'}
   ],
@@ -11782,9 +11963,9 @@ const VOWS_BY_HERO={
      line:'「——有罪。罪状，即刻累加。」',
      sys:S=>'有罪判决：罪状 +3（现 '+Math.min(3,S.guilt)+'/3）——代价：本棒受伤 ×1.3。'},
     {id:'defense',  name:'辩护人之束缚',    ico:'guard',who:'higu',
-     gain:'本棒受伤 ×0.72',                     cost:'本棒输出 ×0.85（分心护身）',
+     gain:'回复 25% 生命，本棒受伤 ×0.85（满血则受伤改 ×0.75）', cost:'本棒输出 ×0.85（分心护身）',
      line:'「我是律师——也懂得保护当事人。」',
-     sys:'辩护人之束缚：本棒受伤 ×0.72 —— 代价：本棒输出 ×0.85。'}
+     sys:S=>'辩护人之束缚：回复 25% 生命、本棒受伤 ×0.85 —— 代价：本棒输出 ×0.85。'}
   ],
   /* 乙骨忧太：无限咒力＋术式复制＋里香；领域「真赝相爱」每局一次 */
   okkotsu:[
@@ -11796,8 +11977,8 @@ const VOWS_BY_HERO={
      gain:'本棒受伤 ×0.78，每回合反伤宿傩 3%',     cost:'每回合自损 3%（永久）',
      line:'「里香，一直陪着我——那就一起上。」',
      sys:'里香·全力：本棒受伤 ×0.78、每回合反伤 3% —— 代价：每回合自损 3%。'},
-    {id:'bond', name:'魂之绊',     ico:'blood', who:'okko', hpMax:0.5,
-     gain:'回复 40% 体力',                          cost:'生命上限 −15%（满血不可立）',
+    {id:'bond', name:'魂之绊',     ico:'blood', who:'okko',
+     gain:'回复 40% 体力（满血则改为本棒受伤 ×0.80）', cost:'生命上限 −15%（永久）',
      line:'「就算被两断——我也会回去。」',
      sys:S=>'魂之绊：回复 40% 体力——代价：生命上限 −15%（现 '+S.maxHp+'%）。'}
   ],
@@ -11812,9 +11993,9 @@ const VOWS_BY_HERO={
      line:'「还没——还没结束呢。」',
      sys:'不屈之魂：血量 ≤35% 时输出 ×1.5 —— 代价：其余时候输出 ×0.95。'},
     {id:'soul',   name:'魂之境界', ico:'domain',who:'ita',
-     gain:'本棒伤害 ×1.4',                    cost:'每回合自损 2.5%（永久）',
+     gain:'回复 35% 生命，本棒伤害 ×1.15（满血则伤害改 ×1.35）', cost:'生命上限 −20%（永久）',
      line:'「你的灵魂，和惠的——我来分开。」',
-     sys:'魂之境界：本棒伤害 ×1.4 —— 代价：每回合自损 2.5% 生命。'}
+     sys:S=>'魂之境界：回复 35% 生命、本棒伤害 ×1.15 —— 代价：生命上限 −20%（现 '+S.maxHp+'%）。'}
   ],
   /* 禅院真希：天与咒缚（零咒力超人肉体）＋释魂刀（斩灵魂） */
   maki:[
@@ -12106,8 +12287,11 @@ function vowChoose(id){
   }else if(id==='noguard'){
     S.vowNoGuard=VP;
   }else if(id==='pay'){
+    /* ★ v573：满血立誓时回复会被上限吃掉 ⇒ 改为「本棒受伤 ×0.75」，任何时候都能立 */
+    const _fullPay=(curHp()>=S.maxHp*0.98);
     S.maxHp=Math.max(40,S.maxHp-25); _clamp();
-    healHero(Math.round(S.maxHp*0.45));
+    if(_fullPay){ S.vowDefMul=0.75; S.vowDefT=VP; say('sys','魂之代偿：已满血，回复转为「本棒受伤 ×0.75」。'); }
+    else healHero(Math.round(S.maxHp*0.45));
     S.hollowCd=0;
   }
   /* ---- 鹿紫云一 ---- */
@@ -12121,17 +12305,34 @@ function vowChoose(id){
   }else if(id==='guilty'){
     S.guilt=Math.min(3,S.guilt+3); S.vowFragT=VP;
     flash('fWhite'); shake(); say('higu','「——有罪。」');
-  }else if(id==='defense'){ S.vowDefMul=0.72; S.vowDefT=VP; S.vowOutMul=0.85; }
+  }else if(id==='defense'){
+    /* ★ v574 用户指定（D 案）：辩护人改带回复；满血时把回复折成更硬的减伤 */
+    const _fullDef=(curHp()>=S.maxHp*0.98);
+    S.vowOutMul=0.85;
+    if(_fullDef){ S.vowDefMul=0.75; S.vowDefT=VP; say('sys','辩护人之束缚：已满血，回复转为「本棒受伤 ×0.75」。'); }
+    else { healHero(Math.round(S.maxHp*0.25)); S.vowDefMul=0.85; S.vowDefT=VP; }
+  }
   /* ---- 乙骨忧太 ---- */
   else if(id==='copy'){ S.vowAtkMul=1.35; S.vowAtkT=VP; S.vowFragT=VP; S.vowFragMul=1.2; }
   else if(id==='rika'){
     if(S.rika){ rikaRelease(); return; }   /* 里香在场 ⇒ 卡片已被 vowList 换成「无限制咒力解放」 */
     S.vowDefMul=0.78; S.vowDefT=VP; S.vowCounter=SUK_MAXHP*0.03; S.vowCounterT=VP; S.vowSelf=3; S.vowSelfT=VP;
-  }else if(id==='bond'){ S.maxHp=Math.max(40,S.maxHp-15); _clamp(); healHero(Math.round(S.maxHp*0.40)); }
+  }else if(id==='bond'){
+    const _fullBond=(curHp()>=S.maxHp*0.98);
+    S.maxHp=Math.max(40,S.maxHp-15); _clamp();
+    if(_fullBond){ S.vowDefMul=0.80; S.vowDefT=VP; say('sys','魂之绊：已满血，回复转为「本棒受伤 ×0.80」。'); }
+    else healHero(Math.round(S.maxHp*0.40));
+  }
   /* ---- 虎杖悠仁 ---- */
   else if(id==='black'){ S.vowBF=true; S.vowNextMul=2.2; S.vowFragT=2; S.vowFragMul=1.3; }
   else if(id==='unyield'){ S.vowLowHp=true; S.vowOutMul=0.95; }
-  else if(id==='soul'){ S.vowAtkMul=1.4; S.vowAtkT=VP; S.vowSelf=2.5; S.vowSelfT=VP; }
+  else if(id==='soul'){
+    /* ★ v574 用户指定（A 案）：以魂换命 —— 满血时回复无意义，转为更高的伤害加成 */
+    const _fullSoul=(curHp()>=S.maxHp*0.98);
+    S.maxHp=Math.max(40,S.maxHp-20); _clamp();
+    if(_fullSoul){ S.vowAtkMul=1.35; S.vowAtkT=VP; say('sys','魂之境界：已满血，回复转为「本棒伤害 ×1.35」。'); }
+    else { healHero(Math.round(S.maxHp*0.35)); S.vowAtkMul=1.15; S.vowAtkT=VP; }
+  }
   /* ---- 禅院真希 ---- */
   else if(id==='vowbody'){ S.vowAtkMul=1.55; S.vowAtkT=VP; S.vowNoGuard=VP; }
   else if(id==='soulcut'){ S.vowNextMul=2.2; S.vowPierce=true; S.vowFragT=2; S.vowFragMul=1.2; }
@@ -14515,6 +14716,7 @@ function drawGojo(){
   if(_clashCut) cut=cutFeatherB(IMGS.clashGojoArt,0.82);
   else if(S.gojoVoidT>0 && IMGS.gojoVoidSign) cut=IMGS.gojoVoidSign;
   else if(S.gojoDom>0 && IMGS.gojoVoidPose) cut=IMGS.gojoVoidPose;
+  else if(performance.now()<(S.gojoHeUntil||0) && IMGS.gojoVoidSign) cut=IMGS.gojoVoidSign;   /* ★ v573 「赫」演出期间立绘 */
   else if(S.hero==='gojo'){
     /* ★ v296 用户指定：立绘跟随「1 技形态」——
        仓·拳（满血）＝现有普通立绘；仓·拳（受伤）＝蓝焰拳姿；仓＝拇指握手立绘。 */
@@ -14535,7 +14737,7 @@ function drawGojo(){
   const hurt=Math.max(0,S.gojo.hurtFx);
   const jit=hurt>0?rnd(-4,4)*s:0;
   const x=GX()+lunge+jit+(S.heroShove||0);   /* ★ v408 打击感第 2 层：攻击前冲／受击后退 */
-  const h=gojoHeight()*(_clashCut?1.0:(cut===IMGS.gojoFistPose)?0.95:((cut===IMGS.gojoVoidSign)?0.90:((cut===IMGS.gojoVoidPose)?1.08:1)));   /* ★ v298 领域姿略大于满血仓拳 */   /* ★ v297 苍拳立绘缩到与满血普通立绘同尺寸 */   /* ★ v296 幅面比不同的立绘各自缩一点，避免实型过宽 */
+  const h=gojoHeight()*(_clashCut?1.0:(cut===IMGS.gojoFistPose)?0.95:((cut===IMGS.gojoVoidSign)?0.82:((cut===IMGS.gojoVoidPose)?1.00:1)));   /* ★ v298 领域姿略大于满血仓拳 */   /* ★ v297 苍拳立绘缩到与满血普通立绘同尺寸 */   /* ★ v296 幅面比不同的立绘各自缩一点，避免实型过宽 */
   const w=h*cut.width/cut.height;
   const cy=gy-h*0.5;
   shadow(x,gy,36);
@@ -18994,6 +19196,127 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       }
       ctx.restore();
     }
+        else if(f.type==='heCharge'){
+      /* ★ v572 用户指定：赫的前序 —— 五条悟指尖先凝出一枚红色小光球（闪烁），
+         外面套几圈向内吸附的排斥环，再配合十字星芒。参考用户给的两张原作截图。 */
+      const tt=Math.max(0,Math.min(1,f.t/f.dur)), sc=SC, TAUR=Math.PI*2;
+      const hx=f.x, hy=f.y;
+      const PU=!!f.pur;   /* ★ v574 苍赫相撞：整段转紫 */
+      const flick=0.78+0.22*Math.sin(tt*52)+0.12*Math.sin(tt*17.7);
+      const R=(2.6+4.6*tt)*sc;
+      const gA=Math.min(1,tt*3);
+      ctx.save();
+      /* 向内收的排斥环（越靠内越亮） */
+      for(let i=0;i<3;i++){
+        const ph=(tt*1.3+i*0.34)%1, rr=(34-24*ph)*sc;
+        if(rr<=1) continue;
+        ctx.globalAlpha=(1-ph)*(0.62-i*0.12)*gA;
+        ctx.strokeStyle=i?(PU?'rgba(150,110,255,.80)':'rgba(226,58,72,.80)'):(PU?'rgba(196,181,253,.90)':'rgba(255,142,120,.90)');
+        ctx.lineWidth=1.6*sc;
+        ctx.beginPath();ctx.arc(hx,hy,rr,0,TAUR);ctx.stroke();
+      }
+      /* 外晕 + 白芯 */
+      ctx.globalAlpha=gA;
+      const gg=ctx.createRadialGradient(hx,hy,0,hx,hy,R*3.0);
+      gg.addColorStop(0,'rgba(255,255,255,1)');
+      if(PU){
+        gg.addColorStop(0.15,'rgba(196,170,255,'+(0.95*flick).toFixed(3)+')');
+        gg.addColorStop(0.38,'rgba(147,51,234,'+(0.74*flick).toFixed(3)+')');
+        gg.addColorStop(0.66,'rgba(91,33,182,'+(0.36*flick).toFixed(3)+')');
+        gg.addColorStop(1,'rgba(40,8,80,0)');
+      }else{
+        gg.addColorStop(0.15,'rgba(255,132,110,'+(0.95*flick).toFixed(3)+')');
+        gg.addColorStop(0.38,'rgba(232,52,64,'+(0.74*flick).toFixed(3)+')');
+        gg.addColorStop(0.66,'rgba(190,20,44,'+(0.36*flick).toFixed(3)+')');
+        gg.addColorStop(1,'rgba(120,6,24,0)');
+      }
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(hx,hy,R*3.0,0,TAUR);ctx.fill();
+      /* 墨线暗边：白纸底上把红球的轮廓勾出来（漫画风） */
+      ctx.globalAlpha=gA*0.42;
+      ctx.strokeStyle=PU?'rgba(26,8,52,.85)':'rgba(88,4,14,.85)';ctx.lineWidth=1.1*sc;
+      ctx.beginPath();ctx.arc(hx,hy,R*1.35,0,TAUR);ctx.stroke();
+      ctx.globalAlpha=gA;
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(hx,hy,R*0.46*(1+0.24*Math.sin(tt*44)),0,TAUR);ctx.fill();
+      /* 十字星芒：闪烁的主要来源 */
+      ctx.globalAlpha=gA*flick*0.85;
+      ctx.strokeStyle=PU?'rgba(236,226,255,.95)':'rgba(255,232,226,.95)';ctx.lineWidth=1.3*sc;
+      const L=R*(2.0+1.6*Math.abs(Math.sin(tt*26)));
+      ctx.beginPath();
+      ctx.moveTo(hx-L,hy);ctx.lineTo(hx+L,hy);
+      ctx.moveTo(hx,hy-L*0.78);ctx.lineTo(hx,hy+L*0.78);
+      ctx.stroke();
+      ctx.restore();
+    }
+        else if(f.type==='heBolt'){
+      /* ★ v572 用户指定：光球射向宿傩 —— 亮芯沿弧线飞行，身后拖红色能量丝带，
+         命中后由原来的 heRed 爆炸接续（击打表现保持原样）。 */
+      const tt=Math.max(0,Math.min(1,f.t/f.dur)), sc=SC, TAUR=Math.PI*2;
+      const PU=!!f.pur;   /* ★ v574 苍赫相撞：紫色弹体 */
+      const e=tt*tt*(3-2*tt);
+      const x0=f.x0,y0=f.y0,x1=f.x1,y1=f.y1;
+      const cx=(x0+x1)*0.5, cy=Math.min(y0,y1)-42*sc;
+      const P=function(u){return [(1-u)*(1-u)*x0+2*(1-u)*u*cx+u*u*x1,(1-u)*(1-u)*y0+2*(1-u)*u*cy+u*u*y1];};
+      const bp=P(e);
+      ctx.save();
+      /* 残影拖尾 */
+      for(let i=1;i<=10;i++){
+        const q=Math.max(0,e-i*0.048), pp=P(q);
+        ctx.globalAlpha=(1-i/11)*0.50;
+        ctx.fillStyle=(i%2)?(PU?'rgba(180,150,255,.85)':'rgba(255,118,98,.85)'):(PU?'rgba(124,58,237,.72)':'rgba(215,38,61,.72)');
+        ctx.beginPath();ctx.arc(pp[0],pp[1],(5.0-i*0.40)*sc,0,TAUR);ctx.fill();
+      }
+      /* 两条红色飘带（贴着飞行轨迹扭动） */
+      ctx.globalAlpha=0.52;ctx.strokeStyle=PU?'#7c3aed':'#d7263d';ctx.lineCap='round';
+      for(let b=0;b<2;b++){
+        const w=(b?1:-1);
+        ctx.lineWidth=(2.4-b*0.8)*sc;
+        ctx.beginPath();
+        for(let i=0;i<=16;i++){
+          const u=Math.max(0,e-0.42+i*0.026), pp=P(u);
+          const nx=Math.sin(i*0.9+tt*9+b*2.1)*9*sc*w;
+          const ny=Math.cos(i*0.7+tt*7+b)*7*sc;
+          if(i===0) ctx.moveTo(pp[0]+nx,pp[1]+ny); else ctx.lineTo(pp[0]+nx,pp[1]+ny);
+        }
+        ctx.stroke();
+      }
+      /* 亮芯 */
+      ctx.globalAlpha=1;
+      const gg=ctx.createRadialGradient(bp[0],bp[1],0,bp[0],bp[1],18*sc);
+      gg.addColorStop(0,'rgba(255,255,255,1)');
+      if(PU){ gg.addColorStop(0.20,'rgba(214,196,255,.96)'); gg.addColorStop(0.55,'rgba(147,51,234,.70)'); gg.addColorStop(1,'rgba(50,10,90,0)'); }
+      else { gg.addColorStop(0.20,'rgba(255,170,140,.96)'); gg.addColorStop(0.55,'rgba(226,58,72,.70)'); gg.addColorStop(1,'rgba(140,10,30,0)'); }
+      ctx.fillStyle=gg;ctx.beginPath();ctx.arc(bp[0],bp[1],18*sc,0,TAUR);ctx.fill();
+      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bp[0],bp[1],4.2*sc,0,TAUR);ctx.fill();
+      ctx.restore();
+    }
+        else if(f.type==='heViolet'){
+      /* ★ v574 苍赫·相撞：紫白爆发 + 黑描边环 + 外推紫环（只给相撞用） */
+      const tt=Math.max(0,Math.min(1,f.t/f.dur)), sc=SC, TAUR=Math.PI*2;
+      const hx=f.x, hy=f.y, e=tt*tt*(3-2*tt), R=(40+220*e)*sc;
+      ctx.save();
+      const g=ctx.createRadialGradient(hx,hy,0,hx,hy,R);
+      g.addColorStop(0,'rgba(255,255,255,'+(0.95*(1-tt*0.65)).toFixed(2)+')');
+      g.addColorStop(0.18,'rgba(216,180,254,'+(0.85*(1-tt*0.55)).toFixed(2)+')');
+      g.addColorStop(0.50,'rgba(147,51,234,'+(0.62*(1-tt*0.45)).toFixed(2)+')');
+      g.addColorStop(1,'rgba(40,8,80,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(hx,hy,R,0,TAUR); ctx.fill();
+      ctx.strokeStyle='rgba(20,8,30,'+(0.8*(1-tt)).toFixed(2)+')'; ctx.lineWidth=3*sc;
+      ctx.beginPath(); ctx.arc(hx,hy,R*0.92,0,TAUR); ctx.stroke();
+      for(let i=0;i<3;i++){
+        ctx.globalAlpha=(1-tt)*(0.55-i*0.12);
+        ctx.strokeStyle=i%2?'rgba(167,139,250,.90)':'rgba(109,40,217,.85)';
+        ctx.lineWidth=(3.4-i*0.8)*sc;
+        ctx.beginPath(); ctx.arc(hx,hy,R*(0.55+i*0.22),0,TAUR); ctx.stroke();
+      }
+      ctx.globalAlpha=(1-tt)*0.85;
+      for(let i=0;i<18;i++){
+        const a=i/18*TAUR+tt*1.6, d=R*(0.70+0.50*Math.abs(Math.sin(i*1.7)));
+        ctx.fillStyle=(i%3===0)?'#c4b5fd':'#7c3aed';
+        ctx.beginPath(); ctx.arc(hx+Math.cos(a)*d,hy+Math.sin(a)*d*0.85,(2.6-i*0.05)*sc,0,TAUR); ctx.fill();
+      }
+      ctx.restore();
+    }
         else if(f.type==='heRed'){
       /* ★ v385 重做：四幕·无字·大正圆红球·无白色区块
          赫＝反转／排斥（正无穷）；指尖小而极亮的红球 → 急胀成大正圆 →
@@ -20111,7 +20434,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       /* ★ v419 stamp：印章式落地 —— 从 1.62 倍砸回 1.0，比原本的弹入更「重」 */
       const pop=_rise?1:(f.stamp?(1.62-0.62*eIn)
                       :(0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn))));
-      const y=_rise?(f.y+(1-eIn)*30*SC)
+      const y=_rise?(f.y+(1-eIn)*(f.risePx||30)*SC)
                   :(f.y-(_d?k*8*SC:k*30*SC)-tOut*tOut*(_d?0:22*SC));
       const x=_rise?f.x:(f.x+_d*k*62*SC);
       ctx.save();
@@ -20121,7 +20444,7 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       ctx.translate(x,y); ctx.scale(pop,pop);
       ctx.font='900 '+size+'px "Noto Sans SC",sans-serif';
       ctx.textAlign='center'; ctx.lineJoin='round';
-      ctx.lineWidth=size*0.30; ctx.strokeStyle='rgba(14,12,14,.92)'; ctx.strokeText(f.txt,0,0);
+      ctx.lineWidth=size*(f.inkW||0.30); ctx.strokeStyle='rgba(14,12,14,.92)'; ctx.strokeText(f.txt,0,0);
       /* ★ v491 inkOnly：跳过白色细描边，保持「纯蓝字 + 黑勾边」 */
       if(!f.inkOnly){ ctx.lineWidth=size*0.13; ctx.strokeStyle='rgba(255,255,255,.92)'; ctx.strokeText(f.txt,0,0); }
       ctx.fillStyle=f.col; ctx.fillText(f.txt,0,0);
@@ -20663,6 +20986,7 @@ function render(){
     drawSukuna();   /* ★ v191 用户指定：宿傩头顶的魔虚罗转轮已移除（不再呼叫 drawMahoraga） */
     drawMakiBlink();   /* ★ v399 真希释魂刀瞬身立绘（画在宿傩之后 ⇒ 压在宿傩右上侧） */
     drawGuardCutin();
+    try{ drawAnchorFx(); }catch(e){}
   }
   drawFx();   /* ★v29 修复：phase='over' 后特效整段被跳过（世界斩不可见的根因），移出条件块 */
   try{ drawPushBar(); }catch(e){}   /* ★ v417 推挤层收尾（槽本体是 DOM） */
@@ -20699,7 +21023,8 @@ if(S.sukuBurn)     chips.push(['melt','red','宿傩·术式熔断']);       /* �
   if(S.blood>0)      chips.push(['blood','red','血契 ×'+S.blood]);
   if(S.burn>0)       chips.push(['flame','fire','燃烧 '+S.burn+' 回合']);
   if(S.para>0)       chips.push(['para','purple','麻痹·无法行动']);
-  if(S.cangMark>0)   chips.push(['cang','red','苍标记 ×1.5']);
+  if((S.anchor||0)>0) chips.push(['cang','red','引力锚点 ×'+S.anchor]);
+  if((S.heTrap||0)>0) chips.push(['flame','fire','赫·红点 待爆']);
   if(S.heroVulnT>0)  chips.push(['vuln','red','防御力 −10%']);
   if(S.trueForm)     chips.push(['flame','red','宿傩原身']);   /* ★ 原身形态 */
   if(S.vowNoGuard>0) chips.push(['guard','red','不设防 '+(S.vowNoGuard>=50?'本局':'残'+S.vowNoGuard)]);
@@ -21105,7 +21430,10 @@ function syncHud(){
   const sh=Math.max(0,S.suk.hp);
   const shp=Math.max(0,Math.min(100,sh/SUK_MAXHP*100));   /* ★v38：血条按上限换算成百分比 */
   $('skHp').style.width=shp+'%';
-  $('skHpTxt').textContent=(sh/(S.maxHp||100)*100+(S.trueForm?150:0)).toFixed(1);   /* ★ v568 统一刻度：满血150，第二管+150 ⇒ 原身期 150~300 */
+  /* ★ v573 用户报「二阶段写着 200 多，却被 66 伤害的茈打死」：旧式 = sh/S.maxHp*100 + (原身?150:0)，
+     既把两条血累加、又拿「玩家当前血量上限」当分母（立过魂之代偿会把分母拉低，读数更虚高）。
+     现在按宿傩自己的单管上限换算 ⇒ 每条血 150，原身再满一条时读数从 150 重新往下掉，与刀刀到肉的实测一致。 */
+  $('skHpTxt').textContent=(sh/SUK_MAXHP*150).toFixed(1);
   (function(){ var ab=$('adaptBar'); if(!ab) return; var ps=ab.querySelectorAll('i');
     var lv=(typeof adaptLevel==='function'?adaptLevel():0);
     var lit=Math.max(0,Math.min(ps.length,Math.round(lv/3*ps.length)));
@@ -26902,7 +27230,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v571';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v574';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26938,7 +27266,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v571</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v574</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26956,7 +27284,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v571', RK='jjk_ver_reload_'+B;
+  var B='v574', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
