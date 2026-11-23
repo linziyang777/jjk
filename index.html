@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v584">
+<meta name="jjk-build" content="v585">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3794,8 +3794,10 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 
 /* 选人页：彩蛋卡与 3 列卡阵同一行，垂直居中在卡阵左侧 */
 .selStage{display:flex;align-items:center;justify-content:center;gap:calc(var(--selw)*0.34);}
-/* 右侧补一块等宽空白：彩蛋卡出现时卡阵仍然居中，不会整体右移 */
-.selStage::after{content:"";flex:0 0 auto;width:calc(var(--selw)*0.98);}
+/* 右侧补一块等宽空白：彩蛋卡出现时卡阵仍然居中，不会整体右移。
+   ★ v585 用户反馈：未通关时彩蛋卡不显示，但这块配重原本常驻 ⇒ 六人卡阵被推左、
+   右侧空出一个「第七个位置」。改成只在 .hasEgg 时生效。 */
+.selStage.hasEgg::after{content:"";flex:0 0 auto;width:calc(var(--selw)*0.98);}
 #eggSlot{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;cursor:pointer;
   width:calc(var(--selw)*1.02);transition:transform .2s ease;}
 #eggSlot.hide{display:none !important;}
@@ -7932,7 +7934,18 @@ function actHe(){
   fxChant('位相——菠萝蜜——光之柱','#fecdd3');
   say('gojo','「术式反转——赫。」');
   /* ★ v572 赫的演出：指尖聚 → 射出 → 命中；★ v574 分「两段式」与「苍赫·相撞」两条 */
-  const _heX=GX()+gojoW()*0.30, _heY=GY-gojoHeight()*0.30;
+  /* ★ v585 用户指定：赫的起手点挪到立绘指尖（前景左手），落点 _heTX/_heTY 完全不变。
+     做法＝对 drawGojo 的绘制变换做反算，不写死像素：
+       立绘以「底边中点」为锚点、按 w×h 整幅绘制（drawImage(cut,-w/2,-h,w,h)），
+       指尖在图内的归一化坐标 u=0.88 / v=0.41（对 900×1275 原图逐列扫描取的前景手掌上缘顶点），
+       ⇒ 局部 lx = w*(u-0.5)、ly = h*(v-1)。
+     施放时 pose='cast' ⇒ 前冲 lunge=12*SC、绕锚点旋转 rot=-0.05rad：
+       x = GX + 12*SC + lx*cos - ly*sin ,  y = GY + lx*sin + ly*cos
+     保留 gojoHeight() 现算，窗口缩放/横竖屏都跟着走。bob 只影响 ±2.25px，忽略。 */
+  const _hH=gojoHeight(), _hW=_hH*(900/1275), _hU=0.885, _hV=0.432, _hRot=-0.05;   /* gojoCang 图幅比 900/1275；指尖归一化 u=0.88 / v=0.41（像素扫描所得） */
+  const _hLx=_hW*(_hU-0.5), _hLy=_hH*(_hV-1);
+  const _heX=GX()+12*SC+_hLx*Math.cos(_hRot)-_hLy*Math.sin(_hRot);
+  const _heY=GY+_hLx*Math.sin(_hRot)+_hLy*Math.cos(_hRot);
   const _heTX=SX()-46*SC, _heTY=GY-142*SC;
   S.gojoHeUntil=performance.now()+1750;   /* ★ v584 赫演出期间切 gojoCang（拇指握手那张）；截止用 performance.now() 真实时间，别用 dt */
   if((S.anchor||0)>0){
@@ -7941,6 +7954,7 @@ function actHe(){
     S.anchor=0; S.anchorCd=1;              /* 整枚锚点被抽干 */
     fxManga('术式反转·赫',SX()-140*SC,GY-246*SC,true,'#7c3aed');
     addFx({type:'heCharge',dur:0.22,x:_ap.x,y:_ap.y,pur:true});
+    addFx({type:'heGather',dur:0.34,x:_ap.x,y:_ap.y,pur:true});
     SFX.atk();
     setTimeout(()=>{
       if(S.phase!=='fight'||S.hero!=='gojo') return;
@@ -7963,6 +7977,7 @@ function actHe(){
     /* ---- 两段式：第一段立即 + 身后埋红点，下一回合开始炸 ---- */
     fxManga('术式反转·赫',SX()-140*SC,GY-246*SC,true,'#d7263d');
     addFx({type:'heCharge',dur:0.34,x:_heX,y:_heY});
+    addFx({type:'heGather',dur:0.55,x:_heX,y:_heY});   /* ★ v585 形成阶段的汇聚光带（跟着起手点走） */
     SFX.atk();
     setTimeout(()=>{
       if(S.phase!=='fight'||S.hero!=='gojo') return;
@@ -9511,6 +9526,8 @@ function eggSlotSync(){
     const slot=document.getElementById('eggSlot'); if(!slot) return;
     const on=eggUnlocked();
     slot.classList.toggle('hide',!on);
+    const stage=slot.parentNode;            /* ★ v585 配重跟随解锁状态，未通关时卡阵居中 */
+    if(stage && stage.classList) stage.classList.toggle('hasEgg',on);
     if(on){ const art=slot.querySelector('.egArt'); if(art && !art.__img){ art.__img=1; art.style.backgroundImage='url('+IMG_ITA68+')'; } }
   }catch(e){}
 }
@@ -19505,6 +19522,106 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       ctx.stroke();
       ctx.restore();
     }
+    else if(f.type==='heGather'){
+      /* ★ v585 用户指定：赫「形成」阶段的汇聚特效 —— 参考原作分镜：
+         多条粉红咒力光带从四周螺旋卷入指尖、指尖核心极亮、环绕光环内收、火星飘散、画面轻微泛红。
+         注意：战场是白纸底，加色混合(lighter)在白底上等于看不见，这里统一用普通混合。
+         f.pur=true 时整段转紫（苍赫相撞）。 */
+      const p=Math.max(0,Math.min(1,f.t/f.dur));
+      const sc=SC, cx=f.x, cy=f.y, TAU=Math.PI*2, PU=!!f.pur;
+      const ease=1-Math.pow(1-p,2.4);      /* 收束进度：先快后慢 */
+      const fade=1-Math.pow(p,3.4);        /* 整体淡出 */
+      const C_RIB_HI=PU?'rgba(196,120,255,.95)':'rgba(238,54,86,.95)';
+      const C_RIB   =PU?'rgba(139,60,230,.62)':'rgba(224,32,60,.58)';
+      const C_RING  =PU?'rgba(170,110,245,.75)':'rgba(226,52,84,.70)';
+      const C_SPK_HI=PU?'rgba(228,196,255,.95)':'rgba(255,196,206,.95)';
+      const C_SPK   =PU?'rgba(120,50,220,.85)':'rgba(206,24,52,.80)';
+      const W0=PU?'rgba(150,96,255,':'rgba(240,60,88,';
+      const W1=PU?'rgba(110,40,200,':'rgba(200,24,50,';
+      const K1=PU?'rgba(226,200,255,':'rgba(255,158,176,';
+      const K2=PU?'rgba(168,85,247,':'rgba(226,30,64,';
+      ctx.save();
+      /* ① 环境泛红：起得快、收得也快 */
+      const wash=Math.sin(Math.min(1,p*1.15)*Math.PI)*0.20;
+      if(wash>0.002){
+        const wg=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.50);
+        wg.addColorStop(0,W0+(wash*1.5).toFixed(3)+')');
+        wg.addColorStop(0.40,W1+(wash*0.45).toFixed(3)+')');
+        wg.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=wg; ctx.fillRect(0,0,W,H);
+      }
+      /* ② 螺旋光带：每条由若干短段拼成，越靠近指尖越粗越实 */
+      ctx.lineCap='round';
+      const N=12;
+      for(let i=0;i<N;i++){
+        const a0=i*(TAU/N)+f.t*(1.25+(i%3)*0.22);
+        const bias=(i%2)?1:-1;
+        const rStart=(85+(i%4)*34)*sc;
+        const rNow=rStart*(1-0.86*ease);
+        const spin=(1.05+(i%3)*0.24)*bias;
+        const SEG=15;
+        for(let k=0;k<SEG;k++){
+          const u0=k/SEG, u1=(k+1)/SEG;
+          const rr0=rNow*Math.pow(1-u0,1.10), rr1=rNow*Math.pow(1-u1,1.10);
+          const th0=a0+spin*u0-ease*0.38*bias, th1=a0+spin*u1-ease*0.38*bias;
+          const x0=cx+Math.cos(th0)*rr0*1.16, y0=cy+Math.sin(th0)*rr0*0.74;
+          const x1=cx+Math.cos(th1)*rr1*1.16, y1=cy+Math.sin(th1)*rr1*0.74;
+          ctx.globalAlpha=(0.22+0.70*u0)*fade*(0.60+0.40*Math.sin(i*1.7+k*0.6));
+          ctx.strokeStyle=(i%3===0)?C_RIB_HI:C_RIB;
+          ctx.lineWidth=(1.7+4.9*u0*(0.72+0.28*(i%3)))*sc;
+          ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+        }
+      }
+      /* ②b 近芯高光流线：贴着指尖的短线，让「吸入」的读感更明确 */
+      ctx.globalAlpha=0.85*fade;
+      for(let i=0;i<8;i++){
+        const ang=i*(TAU/8)+f.t*1.9, r1=(30+10*(i%3))*sc*(1-0.5*ease)+8*sc;
+        const x1=cx+Math.cos(ang)*r1*1.05, y1=cy+Math.sin(ang)*r1*0.8;
+        const x2=cx+Math.cos(ang+0.26)*r1*1.55, y2=cy+Math.sin(ang+0.26)*r1*1.18;
+        ctx.strokeStyle=C_RIB_HI; ctx.lineWidth=2.4*sc;
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      }
+      /* ③ 环绕光环：三圈椭圆同时向内收 */
+      for(let i=0;i<3;i++){
+        const ph=((p*1.6)+i*0.33)%1;
+        const rr=(118-92*ph)*sc;
+        if(rr<=2) continue;
+        ctx.globalAlpha=(1-ph)*0.55*fade;
+        ctx.strokeStyle=C_RING;
+        ctx.lineWidth=2.0*sc;
+        ctx.beginPath(); ctx.ellipse(cx,cy,rr*1.34,rr*0.70,0,0,TAU); ctx.stroke();
+      }
+      /* ④ 指尖核心：白芯 + 外晕 */
+      const coreR=(6+10*ease)*sc;
+      const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,coreR*3.2);
+      cg.addColorStop(0,'rgba(255,255,255,'+(0.98*fade).toFixed(3)+')');
+      cg.addColorStop(0.20,K1+(0.92*fade).toFixed(3)+')');
+      cg.addColorStop(0.52,K2+(0.62*fade).toFixed(3)+')');
+      cg.addColorStop(1,PU?'rgba(120,40,220,0)':'rgba(226,30,64,0)');
+      ctx.globalAlpha=1;
+      ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(cx,cy,coreR*3.2,0,TAU); ctx.fill();
+      /* ⑤ 十字星芒：只在起手前半段出现 */
+      if(p<0.5){
+        const q=1-p/0.5, L=(42+34*ease)*sc;
+        ctx.globalAlpha=q*0.85*fade;
+        ctx.strokeStyle=C_RIB_HI; ctx.lineWidth=2.0*sc;
+        ctx.beginPath();
+        ctx.moveTo(cx-L,cy); ctx.lineTo(cx+L,cy);
+        ctx.moveTo(cx,cy-L*0.8); ctx.lineTo(cx,cy+L*0.8);
+        ctx.stroke();
+      }
+      /* ⑥ 火星：确定性伪随机，向外飘散 */
+      for(let i=0;i<20;i++){
+        const s1=((i*37)%97)/97, s2=((i*53)%89)/89;
+        const ang=s1*TAU+f.t*0.8;
+        const rr=(24+s2*140)*(0.35+0.9*ease)*sc;
+        const px=cx+Math.cos(ang)*rr*1.2, py=cy+Math.sin(ang)*rr*0.62;
+        ctx.globalAlpha=(0.25+0.60*s2)*fade;
+        ctx.fillStyle=(i%4===0)?C_SPK_HI:C_SPK;
+        ctx.beginPath(); ctx.arc(px,py,(1.0+s2*1.8)*sc,0,TAU); ctx.fill();
+      }
+      ctx.restore();
+    }
         else if(f.type==='heBolt'){
       /* ★ v572 用户指定：光球射向宿傩 —— 亮芯沿弧线飞行，身后拖红色能量丝带，
          命中后由原来的 heRed 爆炸接续（击打表现保持原样）。 */
@@ -27540,7 +27657,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v584';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v585';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27576,7 +27693,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v584</b><span>修正「赫」的施放立绘：换回拇指握手／左手前伸那张（原误接成格挡特写，满脸血＋台词气泡）</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v585</b><span>「赫」的起手点移到立绘指尖、并加上汇聚特效（螺旋光带／光环／火星）；未通关时选人页不再留出彩蛋空位</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27594,7 +27711,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v584', RK='jjk_ver_reload_'+B;
+  var B='v585', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
