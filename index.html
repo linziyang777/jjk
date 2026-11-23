@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v576">
+<meta name="jjk-build" content="v577">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3787,6 +3787,65 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 }
 #actsChip.on{ transform:translate(-50%,-100%) translateY(-4px); }
 </style>
+<style id="v577fix">
+/* ============================================================
+   v577 · 彩蛋角色「虎杖悠仁【68年后】」/ 结算页彩蛋气泡
+   ============================================================ */
+
+/* 选人页：彩蛋卡与 3 列卡阵同一行，垂直居中在卡阵左侧 */
+.selStage{display:flex;align-items:center;justify-content:center;gap:calc(var(--selw)*0.16);}
+/* 右侧补一块等宽空白：彩蛋卡出现时卡阵仍然居中，不会整体右移 */
+.selStage::after{content:"";flex:0 0 auto;width:calc(var(--selw)*1.18);}
+#eggSlot{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;cursor:pointer;
+  width:calc(var(--selw)*1.02);transition:transform .2s ease;}
+#eggSlot.hide{display:none !important;}
+@media (hover:hover){#eggSlot:hover{transform:translateY(-5px);}}
+.egPane{position:relative;width:100%;height:calc(var(--selw)*1.34);overflow:hidden;background:#0c0c0e;
+  border:3px solid #C20001;
+  box-shadow:calc(var(--selw)*0.030) calc(var(--selw)*0.028) 0 rgba(17,17,17,.92);}
+.egArt{position:absolute;inset:0;background-repeat:no-repeat;background-size:cover;
+  background-position:center 38%;filter:contrast(1.06);}
+.egTone{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,10,12,.55) 0%,rgba(10,10,12,0) 30%,rgba(10,10,12,0) 58%,rgba(10,10,12,.88) 100%);}
+.egSeal{position:absolute;left:calc(var(--selw)*0.03);top:calc(var(--selw)*0.03);
+  background:#C20001;color:#fff;font-weight:900;letter-spacing:2px;
+  font-size:calc(var(--selw)*0.060);padding:2px calc(var(--selw)*0.026);transform:skewX(-8deg);}
+.egCap{margin-top:calc(var(--selw)*0.042);font-weight:900;letter-spacing:2px;color:#C20001;
+  font-size:calc(var(--selw)*0.056);}
+.egNm{margin-top:calc(var(--selw)*0.018);width:100%;text-align:center;background:#111;color:#fff;
+  font-weight:900;font-size:calc(var(--selw)*0.072);letter-spacing:2px;line-height:1.15;
+  padding:calc(var(--selw)*0.024) 0 calc(var(--selw)*0.026);
+  box-shadow:calc(var(--selw)*0.018) calc(var(--selw)*0.014) 0 rgba(194,0,1,.92);}
+.egNm span{display:block;font-size:calc(var(--selw)*0.050);letter-spacing:1px;opacity:.86;margin-top:2px;color:#f6dede;}
+
+/* 「未完待续」全屏黑幕 */
+#eggOv{position:fixed;inset:0;z-index:88;background:#000;display:flex;align-items:center;justify-content:center;
+  animation:egFade .28s ease-out;}
+#eggOv.hide{display:none !important;}
+@keyframes egFade{from{opacity:0}to{opacity:1}}
+#eggOv .egBK{display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2.6vh,26px);padding:0 6%;}
+#eggOv .egTxt{color:#fff;font-weight:900;line-height:1;white-space:nowrap;
+  font-size:clamp(34px,7.6vw,92px);letter-spacing:clamp(6px,2vw,24px);text-indent:clamp(6px,2vw,24px);
+  text-shadow:0 0 24px rgba(255,255,255,.16);}
+#eggOv .egSub{color:rgba(255,255,255,.40);font-weight:700;letter-spacing:6px;
+  font-size:clamp(9px,1.5vw,13px);font-family:ui-monospace,Consolas,monospace;}
+#eggOv .cta{margin-top:clamp(8px,2vh,20px);background:#f7f4ef;color:#111;border-color:#111;
+  box-shadow:5px 5px 0 #C20001;}
+#eggOv .cta:active{transform:skewX(-6deg) translate(3px,3px);}
+
+/* 结算页：世界线跳跃按钮上方的彩蛋气泡 */
+#eggTip{position:relative;align-self:flex-start;width:max-content;margin:0 0 9px;max-width:min(430px,88%);text-align:left;
+  background:#fbf7ee;color:#14171c;border:2.5px solid #111;border-radius:4px;
+  box-shadow:4px 4px 0 rgba(17,17,17,.55);padding:10px 34px 11px 12px;
+  font-weight:800;font-size:clamp(11px,1.7vw,13px);line-height:1.5;letter-spacing:.2px;
+  animation:etIn .26s ease-out;}
+#eggTip.hide{display:none !important;}
+#eggTip .etX{position:absolute;right:5px;top:5px;width:20px;height:20px;border:0;padding:0;line-height:20px;
+  background:transparent;color:#111;font:900 15px/1 system-ui,sans-serif;cursor:pointer;opacity:.66;}
+#eggTip .etX:hover{opacity:1;}
+#eggTip .etB{color:#C20001;}
+@keyframes etIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
 </head>
 <body>
 <div id="ghLoad" aria-hidden="true">
@@ -3959,7 +4018,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p>
 <b>咒力／体力（五格资源）</b>　六名术师共用同一套资源：满格 <b>5 点</b>，每回合自然回复 <b>1 点</b>；按钮左上角的小数字就是这一招的消耗，不够就会变灰。五条悟（六眼）与「里香在场的乙骨」<b>不消耗</b>，标记为「…」。禅院真希身为天与咒缚、零咒力，同一根五格条改称 <b>体力</b>：释魂刀 2 点、游云／龙骨 1 点、架势 1 点、全开 0 点、无声突袭 3 点。里香退场时，乙骨的咒力只余 <b>3 点</b>。</p>
     <p><b>回合制·行动力</b>　每回合基本 1 次行动（选定后本回合技能栏变灰）；宿傩每回合行动一次。<b>多 1 点行动力＝这一回合能多出一次招</b>：完美格挡 ⇒ 下回合 +1；五条悟展开领域、乙骨领域成立、游云用满 4 次 ⇒ 当回合追加 1 次。行动力 &gt;1 时右上角出现「行动力 ×N」胶囊，获得那一刻还会在你名字正上方砸出一行金色「行动力 +1」，出招后仍留在本回合，用完才交棒宿傩。<b>回合真正开始的判定</b>　宿傩与在场式神的攻击动画<b>全部播完</b>之后才进入下一回合 —— 技能栏重新亮起、能再点技能的那一刻，才是你出手的时机（提前点会被记下来，解锁瞬间自动补发）。</p>
-    <p><b>黑闪</b>　五条悟「苍」8%／「苍·拳」13%／虎杖「径庭拳」14%／乙骨「太刀·呪斩」8% 起（鹿紫云一、日车宽见、真希不会自发黑闪）；<b>每引发一次 +5%，上限 +15%</b>（整棒累计，不随回合清零）。引发时时间冻结、画面转暗并出现金色计量条（1.5 秒内点击，虎杖的条更长）——点中 ⇒ 该击伤害 ×2；没点中 ⇒ 普通伤害。虎杖打出的黑闪还会把宿傩打成<b>硬直</b>：<b>当回合他无法发动攻击</b>（场上式神照常行动）。<b>完美格挡不会引发黑闪</b>——它的收益是必定架开这一击、仪式回退 1 段、下回合行动力 +1；立束缚「黑闪之束缚」可让下一击必出黑闪、伤害 ×2.2。</p>
+    <p><b>黑闪</b>　五条悟「苍」8%／「苍·拳」13%／虎杖「径庭拳」14%／乙骨「太刀·呪斩」8% 起（鹿紫云一、日车宽见、真希不会自发黑闪）；<b>黑闪连锁</b>＝这一棒已经打出的黑闪次数（状态栏「黑闪连锁 ×N」），<b>每成功一次，之后所有出招的基础概率 +5%</b>，最多叠到 <b>3 层（+15%）</b>，换棒或整局结束清零 —— 所以同一棒里越打越容易再闪。引发时时间冻结、画面转暗并出现金色计量条（1.5 秒内点击，虎杖的条更长）——点中 ⇒ 该击伤害 ×2；没点中 ⇒ 普通伤害。虎杖打出的黑闪还会把宿傩打成<b>硬直</b>：<b>当回合他无法发动攻击</b>（场上式神照常行动）。<b>完美格挡不会引发黑闪</b>——它的收益是必定架开这一击、仪式回退 1 段、下回合行动力 +1；立束缚「黑闪之束缚」可让下一击必出黑闪、伤害 ×2.2。</p>
     <p><b>立束缚</b>　每位术师<b>一棒只能立 1 道</b>，立下即在本棒<b>永久生效</b>（代价同样永久），<b>不消耗行动</b>；同一棒可「解缚」，但吃 18% 反噬且这一棒不能再立。条款见各角色。</p>
     <p><b>适应</b>　魔虚罗<b>在场时</b>宿傩才具适应能力与适应条：同一技能第 1 次正常／第 2 次 <b>80%</b>／第 3 次起 <b>50%</b>（<b>最低 50% 伤害</b>，只减伤、不会失效）。<b>魔虚罗死亡时适应条归零，但已被适应的技能仍保留减伤。</b></p>
     <p><b>魔虚罗·超速适应再生</b>　★ v543：魔虚罗被打空血条时，若不是被<b>单发直接打空</b>（法轮碎裂），就不会永久下场 —— 它进入重组倒计时：<b>原作难度 2 回合／苦战·绝境 1 回合</b>，每个回合<b>开始时</b>自动推进，归零即<b>满血复活</b>。这是被动，不占用魔虚罗当回合的攻击；重组期间不可被继续攻击。直接杀死（单发打空）才永久下场。★ 它每次受击都会<b>从右下至左上斜向消失</b>（伤越重消失越多），满血再生的瞬间形象还原。</p>
@@ -4315,7 +4374,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <div class="mgHead"><div class="mgBig">术师名簿<em>SHINJUKU ROSTER</em><i class="mgSeal" id="mgSeal">首发</i></div><div class="selTitle" id="selTitle">请选择登场的术师 —— 顺序由你决定</div></div>
     <div id="selHint"><span class="shT">长按头像可查看术师信息</span><span class="shM">滑鼠移到头像上可查看术师信息</span></div>
     <div class="selNote" id="selNote" style="display:none"></div>
-    <div class="selRow" id="selRow"></div>
+    <div class="selStage"><div id="eggSlot" class="hide" role="button" aria-label="虎杖悠仁 68年后"><div class="egPane"><div class="egArt"></div><div class="egTone"></div><div class="egSeal">彩蛋</div></div><div class="egCap">68 YEARS LATER</div><div class="egNm">虎杖悠仁<span>【68年后】</span></div></div><div class="selRow" id="selRow"></div></div>
     <button class="cta" id="btnFinish">直接结算</button>
   </div>
 
@@ -5628,11 +5687,11 @@ function S4(){
   g.beginPath();g.ellipse(0,0,224,94,0,0,TAU);g.fill();
   /* 时间断裂：极小位移的上下重影（保留，换朱红） */
   g.save();g.globalAlpha=0.16;
-  g.translate(-3,-2);txtCore('黑闪',88,{col:'#C20001',fill:'#040000',layers:[{w:3,c:'#C20001'}]});
-  g.translate(6,4);txtCore('黑闪',88,{col:'#C20001',fill:'#040000',layers:[{w:3,c:'#C20001'}]});
+  g.translate(-3,-2);txtCore('黑闪',88,{col:'#C20001',fill:'#000000',layers:[{w:3,c:'#C20001'}]});
+  g.translate(6,4);txtCore('黑闪',88,{col:'#C20001',fill:'#000000',layers:[{w:3,c:'#C20001'}]});
   g.restore();
   /* 主字：墨黑字身 ＋ 朱红粗描边 */
-  txtCore('黑闪',88,{col:'#C20001',fill:'#040000',layers:[{w:4,c:'#C20001'}]});
+  txtCore('黑闪',88,{col:'#C20001',fill:'#000000',layers:[{w:4,c:'#C20001'}]});
   /* 朱红火花 */
   g.fillStyle='#C20001';
   for(let i3=0;i3<22;i3++){
@@ -9349,6 +9408,57 @@ function startAvaAnim(){
 /* ★ v32 isFirst=true：开局第一棒（由 start() 直接调起），此时还没有退场者 ——
    不能把占位的 S.hero 记进名单，否则第一位候选会被凭空吃掉一个。
    其余调用（afterHeroDown / 世界斩 / gojoDown）都不传参 → isFirst 为假，行为与 v31 一致。 */
+/* ★ v577 彩蛋角色：虎杖悠仁【68年后】—— 首次通关后解锁；本版只到「未完待续」 */
+const IMG_ITA68='assets/b27630443b10.webp';
+function eggUnlocked(){ try{ return !!(SAVE && SAVE.best && SAVE.best.heroes!=null); }catch(e){ return false; } }
+function eggSlotSync(){
+  try{
+    const slot=document.getElementById('eggSlot'); if(!slot) return;
+    const on=eggUnlocked();
+    slot.classList.toggle('hide',!on);
+    if(on){ const art=slot.querySelector('.egArt'); if(art && !art.__img){ art.__img=1; art.style.backgroundImage='url('+IMG_ITA68+')'; } }
+  }catch(e){}
+}
+function eggOpen(){
+  try{
+    if(!eggUnlocked()) return;
+    let ov=document.getElementById('eggOv');
+    if(!ov){
+      ov=document.createElement('div'); ov.id='eggOv';
+      ov.innerHTML='<div class="egBK"><div class="egTxt">未完待续</div><div class="egSub">TO BE CONTINUED</div>'
+        +'<button class="cta" id="eggJump">世界线跳跃<span class="ctaSub">回到难度选择</span></button></div>';
+      (document.getElementById('app')||document.body).appendChild(ov);
+      const jb=ov.querySelector('#eggJump');
+      if(jb) jb.addEventListener('click',function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        ov.classList.add('hide');
+        try{ _btnAgainGo(); }catch(_){}
+      });
+    }
+    ov.classList.remove('hide');
+  }catch(e){}
+}
+function eggTipShow(){
+  try{
+    if(!eggUnlocked()) return;
+    if(SAVE.eggTipDone) return;
+    const btn=document.getElementById('btnAgain'); if(!btn||!btn.parentNode) return;
+    let tip=document.getElementById('eggTip');
+    if(!tip){
+      tip=document.createElement('div'); tip.id='eggTip';
+      tip.innerHTML='<div class="etTx">新增彩蛋角色：<span class="etB">虎杖悠仁【68年后】</span>。</div>'
+        +'<button class="etX" aria-label="关闭">×</button>';
+      const x=tip.querySelector('.etX');
+      if(x) x.addEventListener('click',function(e){
+        try{ e.preventDefault(); e.stopPropagation(); }catch(_){}
+        tip.classList.add('hide'); SAVE.eggTipDone=1; try{ putSave(SAVE); }catch(_){}
+      });
+    }
+    /* 直接插在世界线跳跃按钮前面：不依赖任何坐标，竖屏旋转/滚动都不会错位 */
+    if(btn.previousElementSibling!==tip) btn.parentNode.insertBefore(tip,btn);
+    tip.classList.remove('hide');
+  }catch(e){}
+}
 function showSelect(isFirst){
   try{ var _sn=document.getElementById('selNote'); if(_sn){ if(isHard()){ _sn.style.display=''; _sn.textContent=DF().label+'模式：本次仅能选择 '+DF().lim+' 位术师 —— 全员倒下或击败宿傩，方进入结算。'; } else { _sn.style.display='none'; } } }catch(e){}   /* __selNoteSync v446 */
   S.phase='select';
@@ -9438,6 +9548,7 @@ const CANON_POS={gojo:1,kashimo:2,higuruma:3,itadori:4,okkotsu:4,maki:5};   /* �
   }
   { const _ib=$('selInfo'); if(_ib){ _ib.classList.remove('on'); _ib.__h=''; } }
   $('selectUI').classList.remove('hide');
+  try{ eggSlotSync(); const _es=document.getElementById('eggSlot'); if(_es && !_es.__b){ _es.__b=1; _es.addEventListener('click',eggOpen); } }catch(e){}
   { const _sb=$('selInfo');   /* ★ v304 滑到卡上保持展开，离开才收 */
     if(_sb && !_sb.__siHov){ _sb.__siHov=1;
       _sb.addEventListener('mouseenter',()=>clearTimeout(_siT));
@@ -13167,6 +13278,7 @@ function showResultInternal(){
   /* ★ v537 世界线跳跃用了 inline display:none 硬藏，进结算时必须复原 */
   try{ $('resultScreen').style.display=''; }catch(e){}
   $('resultScreen').classList.remove('hide');
+  try{ setTimeout(eggTipShow,80); setTimeout(eggTipShow,420); }catch(e){}
   try{ rsResetScroll(); }catch(e){}
   setTimeout(fitResult,20); setTimeout(fitResult,320);   /* ★ v240 一页内：两次兜底（等字体/战况载入） */
   /* ★ v306 内容高度会随字体／全服战况非同步长高，多量几次 */
@@ -27301,7 +27413,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v575';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v577';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27337,7 +27449,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v575</b><span>黑闪改墨字朱红描边；虎杖黑闪打出硬直；行动力提示移到名字上方</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v577</b><span>黑闪大字改纯黑字＋朱红描边；首次通关后解锁彩蛋角色：虎杖悠仁【68年后】</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27355,7 +27467,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v576', RK='jjk_ver_reload_'+B;
+  var B='v577', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
