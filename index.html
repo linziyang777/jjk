@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v580">
+<meta name="jjk-build" content="v581">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -4109,7 +4109,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>模仿术式</b>　里香在场时，二技能变为「模仿术式」，池中五招随机抽取：<b>赤血操术·穿血</b>（15%~20%，附着血契）／<b>言灵术式</b>（定住宿傩一回合·自身追加一次行动，用后永久移出）／<b>宿傩的「解」</b>（14%~18%，墨痕斩，与宿傩版镜像）／<b>宿傩的「捌」</b>（17%~21%，多道赤红斩生于对手身上）／<b>邪去侮天梯</b>（10%~15%，消除宿傩一个常规技能；领域里那次也造成同等伤害，用后永久移出）。<br>　　★ 言灵与天梯（领域里那次除外）全局各只能使用一次，用过即从池子永久移出。<br>　　除言灵与天梯外，每招冷却 1 回合，冷却结束自动切换到池中下一招；技能框的大字与小字会同步换成当前招式。</p>
     <p><b>领域·真赝相爱</b>　3 点咒力（里香在场不消耗）·葛笼封锁＋伤害 ×1.5，每局一次。展开时 <b>100% 必定触发对拼</b>：胜率由推挤结束当下的指针位置决定（起点 70%／苦战·无量 50%）；★ 宿傩中过无量空处 ⇒ <b>乙骨必胜（100%）</b>：<b>胜</b> ⇒ 伏魔御厨子的结界当场碎裂、宿傩陷入术式熔断；<b>败</b> ⇒ 乙骨术式熔断、伏魔御厨子成立。成立后宿傩立即被笼罩，每 2 回合发动一次弥须葛笼；★ 乙骨的「真赝相爱」<b>不会被魔虚罗从外侧击碎</b>（对拼获胜后持续到乙骨退场）。</p>
     <p><b>反转术式（4 技·3 点咒力）</b>　回复 <b>25%</b> 最大生命，CD 2 回合，术式熔断中也可用。</p>
-    <p><b>无限制咒力解放</b>　里香在场时立束缚卡第二选项：对全体敌人 <b>20%</b> 最大生命伤害，之后里香立即退场。</p>
+    <p><b>无限制咒力解放</b>　里香在场时立束缚卡第二选项：对全体敌人 <b>40%</b> 最大生命伤害，之后里香立即退场。</p>
     <p><b>束缚</b>　复制术式（本棒伤害 ×1.35／本棒受伤 ×1.2）·里香·全力（本棒受伤 ×0.78、每回合反伤宿傩 3%／每回合自损 3）·魂之绊（回复 40% 生命；若已满血则改为本棒受伤 ×0.80／生命上限 −15%）。</p>
     <h3 style="--hc:#8c2f24">虎杖悠仁<small>ITADORI · 径庭拳·简易领域</small></h3>
     <p><b>径庭拳（1 技·1 点咒力）</b>　<b>5.3%~7.5%</b> ＋ 二段追击（滞后的第二段冲击，2.7%~4.7%）。领域内的「灵魂·解」同样 1 点。</p>
@@ -10893,7 +10893,7 @@ function rikaRelease(){
   }
   setTimeout(function(){
     if(S.phase!=='fight') return;
-    const d=SUK_MAXHP*0.20;   /* ★ v75 伤害下调：30% → 20% 最大生命 */
+    const d=SUK_MAXHP*0.40;   /* ★ v581 用户指定：数值翻倍（20% → 40% 最大生命） */
     flash('fWhite'); shake(); shake();
     say('sys','★ 无限制咒力解放：里香释放全部咒力，对全体敌人造成 '+sukPct(d)+' 最大生命伤害！');
     hitSukuna(d,true,'hollow',false,true,'rika_release',true);
@@ -12221,9 +12221,9 @@ function vowList(){
     if(v.id!=='rika') return v;
     const o={}; for(const k in v) o[k]=v[k];
     o.name='无限制咒力解放'; o.ico='hollow';
-    o.gain='里香释放全部咒力：全体敌人 20% 最大生命'; o.cost='使用后里香立即退场';
+    o.gain='里香释放全部咒力：全体敌人 40% 最大生命'; o.cost='使用后里香立即退场';
     o.line='「忧太——全部给你。」';
-    o.sys='无限制咒力解放：对全体敌人 20% 最大生命伤害，之后里香立即退场。';
+    o.sys='无限制咒力解放：对全体敌人 40% 最大生命伤害，之后里香立即退场。';
     return o;
   });
   return base;
@@ -27496,7 +27496,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v580';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v581';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27532,7 +27532,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v579</b><span>修复血量归零却不退场（式神／领域必中路径漏判死亡），并把退场排程加了超时逃生</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v581</b><span>乙骨「无限制咒力解放」伤害翻倍（20%→40%）；数值条改平行四边形、适应条连续填充</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27550,7 +27550,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v580', RK='jjk_ver_reload_'+B;
+  var B='v581', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
