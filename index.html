@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v565">
+<meta name="jjk-build" content="v568">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -1675,7 +1675,16 @@ body.kashimo-noGuard #pad .btn[data-act="guard"]{}
 .btn small{font-size:calc(10px*var(--k));font-weight:700;opacity:.6;letter-spacing:0;
   white-space:nowrap;}
 .btn:active{transform:translate(4px,4px);box-shadow:1px 1px 0 var(--ink);}
-.btn.dim{opacity:.4;}
+/* ★ v567 技能持续生效中（不可侵／架势／全开等）：金框 + 无斜纹无✕，与 CD 的灰斜纹明确区分 */
+.btn.effecting{opacity:1!important;filter:none!important;
+  background-image:none!important;outline:none!important;}
+.btn.effecting::after{content:'生效中';position:absolute;right:calc(2px*var(--k));top:calc(2px*var(--k));
+  font-size:calc(8px*var(--k));font-weight:900;color:#7a5a00;line-height:1;pointer-events:none;}
+.btn.dim{opacity:.62;filter:grayscale(.85);   /* ★ v566 CD/不可用时：不能只靠变淡，加斜纹遮罩＋叉角，一眼可辨 */
+  background-image:repeating-linear-gradient(135deg,rgba(20,24,32,.16) 0 6px,transparent 6px 12px)!important;
+  outline:calc(2px*var(--k)) dashed rgba(20,24,32,.45);outline-offset:calc(-3px*var(--k));}
+.btn.dim::after{content:"✕";position:absolute;right:calc(3px*var(--k));top:calc(2px*var(--k));
+  font-size:calc(11px*var(--k));font-weight:900;color:#1a1d24;opacity:.8;line-height:1;pointer-events:none;}
 /* ★ v419 用户指定：领域对拼（推挤）期间技能栏整体锁住 —— 灰阶＋降透明＋不吃指针事件，
    避免玩家在对拼这 2.5~4.3 秒里点到「立束缚」（立束缚面板层级低于推挤槽，会延后才弹出）。 */
 #pad.locked .btn{pointer-events:none;opacity:.40;filter:saturate(.25);}
@@ -2438,14 +2447,15 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
 .hud .row.merged .bar.hp{flex:1 1 auto;min-width:0;}
 .bar.ce.pips b{
   position:static;transform:none;color:#12262b;text-shadow:none;
-  font-size:calc(9px*var(--k));line-height:1;min-width:calc(9px*var(--k));text-align:right;
+  font-size:clamp(12px,calc(13px*var(--k)),16px);font-weight:900;line-height:1;min-width:calc(12px*var(--k));text-align:right;
+  -webkit-text-stroke:calc(.6px*var(--k)) rgba(255,255,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.45);
 }
 /* 覆盖 .hud .row.merged .bar.ce 的 flex:0 1 32%（那条特异性更高，压住了上面的 flex） */
 .hud .row.merged .bar.ce.pips{flex:0 1 calc(94px*var(--k));}
 .bar.ce.pips.amb i.on{background:linear-gradient(180deg,#dcbcff,#7c3aed);}
 .bar.ce.pips.amb b{color:#5a2ea6;}
-.bar.ce.pips.inf i{border-color:#8a6d1e;background:linear-gradient(180deg,#fff2bd,#e6bb3d);box-shadow:0 0 calc(3px*var(--k)) rgba(230,187,61,.7);}
-.bar.ce.pips.inf b{color:#7a5a00;font-weight:900;}
+.bar.ce.pips.inf i{border-color:transparent!important;background:transparent!important;box-shadow:none!important;}
+.bar.ce.pips.inf b{position:absolute!important;left:0;right:0;top:50%;transform:translateY(-50%);color:#000!important;font-size:calc(15px*var(--k))!important;font-weight:900;text-align:center;text-shadow:none;}
 .bar.ce.pips.none{background:repeating-linear-gradient(135deg,#eae6dc 0 5px,#ded9cc 5px 10px);}
 .bar.ce.pips.none i{display:none;}
 .bar.ce.pips.none b{min-width:0;color:#5b5548;font-size:calc(8px*var(--k));letter-spacing:.4px;margin-left:auto;}
@@ -2458,12 +2468,13 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
    实体元素会被冲掉，伪元素始终跟着 small 走。 */
 #pad .btn small[data-ce]::before{
   content:attr(data-ce);display:inline-flex;align-items:center;justify-content:center;
-  width:calc(15px*var(--k));height:calc(17px*var(--k));margin-right:calc(4px*var(--k));
+  width:calc(21px*var(--k));height:calc(23px*var(--k));margin-right:calc(4px*var(--k));
   padding:0 0 calc(1px*var(--k));box-sizing:border-box;vertical-align:middle;
   /* ★ v563e 内部青蓝渐变（参考图 #02AED6）：上亮下暗，保留暗色层次 */
   background:linear-gradient(160deg,#5fe0ff 0%,#02aed6 42%,#006887 78%,#003a52 100%);
-  color:#fff;font-size:calc(9px*var(--k));font-weight:900;line-height:1;
-  text-shadow:0 1px 2px rgba(0,10,25,.95),0 0 3px rgba(0,20,40,.85);   /* 白字黑描边，显眼 */
+  color:#fff;font-size:clamp(10px,calc(10px*var(--k)),13px);font-weight:900;line-height:1;
+  -webkit-text-stroke:calc(.8px*var(--k)) #000415;   /* ★ v566 黑色描边，浅底上也看得清 */
+  text-shadow:0 1px 2px rgba(0,4,21,.95),0 0 3px rgba(0,4,21,.9);   /* 白字黑描边，显眼 */
   clip-path:polygon(50% 0%,68% 22%,84% 45%,92% 64%,88% 80%,74% 94%,50% 100%,26% 94%,12% 80%,8% 64%,16% 45%,32% 22%);
 }
 /* 五条悟：浅色 ∞ 单独一行放在小字下方，不显示水滴 */
@@ -3750,7 +3761,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
     <p><b>无声突袭（3 技·3 点体力）</b>　<b>18%</b> 最大生命·无视适应，<b>CD 3 回合</b>。<b>命中后灵魂损伤一律清零</b>——这一刀把攒下的裂口用掉，想再打要害必须重新用释魂刀叠。<b>3 层</b>时必定要害：<b>×1.36</b>；<b>2 层</b>只有 <b>×1.15</b> 的小加成。这是她在世界斩预警回合里打空血条的唯一手段。</p>
     <p><b>体力条（HUD）</b>　真希的资源条是<b>体力</b>而非咒力（天与咒缚·零咒力），同样是五格、每回合 +1 点：释魂刀 2 点／游云·龙骨 1 点／架势 1 点／无声突袭 3 点，全开免费。她没有任何回复体力的手段，只能靠回合自然回复。</p>
     <p>
-<b>龙骨·蓄（HUD 仪表）</b>　血条下方左边三格是「灵魂损伤」，右边一条是「龙骨·蓄」——<b>数字为百分比，100% ＝宿傩一阶段的整条血（150 点）</b>，满蓄（20%）时转金，这一击会把积蓄的冲击一次吐出。</p>
+<b>龙骨·蓄（HUD 仪表）</b>　血条下方左边三格是「灵魂损伤」，右边一条是「龙骨·蓄」——<b>数值统一以<b>玩家满血＝100</b>为刻度，宿傩一阶段满血＝<b>150</b>、原身两管合计＝<b>300</b>（无百分号）</b>，满蓄（20%）时转金，这一击会把积蓄的冲击一次吐出。</p>
     <p><b>天与咒缚·全开（2 技切换态·不消耗体力）</b>　生命 ≤50%（或未手动选择时的预设）⇒ 2 技变为「天与咒缚·全开」。按下后输出 +25%（本局常驻）＋回复 15% 生命；代价是全开后 3 回合受伤 +10%（架势仍可并存）。一生一次。</p>
     <p><b>束缚</b>　天与咒缚·极致（本棒伤害 ×1.55／本棒无法使用 2 技「天与咒缚」）·魂斩·一闪（下一刀 ×2.2 且无视适应／接下来 2 回合受伤 ×1.2）·静寂（本棒受伤 ×0.72／输出 ×0.85）。</p>
     <p class="rpNote">数值以游戏内实际结算为准；里香、式神与领域的详细互动见各角色条目。</p>
@@ -4456,12 +4467,12 @@ function streetCheck(){
                 魔虚罗护卫回血 40%）一律按 SUK_MAXHP 等比换算，保证文案里的百分数仍然成立；
              ③ 被动 / 附带伤害（里香反伤、血契侵蚀、完美格挡反伤、脆弱追击）不参与系数下调。 */
 const SUK_MAXHP=150;   /* ★ v393 用户指定：宿傩单管血回到 150 点＝100%（v99 曾加至 165，现还原为基准值） */
-/* ★ v541 统一口径：全站一切百分比都以「宿傩一阶段满血 150 点 = 100%」为基准。
-   我方满血 100 点 ⇒ 66.7%；宿傩两阶段合计 300 点 ⇒ 200%。*/
-/* ★v39：把「对宿傩的伤害值」换算成「最大生命 %」字串（四舍五入取整）；
-        我方 maxHp／咒力上限均为 100，数值即百分比，无需换算。 */
-function heroPct(v){ return (Math.round(v/SUK_MAXHP*100*10)/10).toFixed(1)+'%'; }   /* ★ v541 我方掉血／回血也按同一基准换算 */
-function sukPct(v){ return (Math.round(v/SUK_MAXHP*100*10)/10).toFixed(1)+'%'; }   /* ★ v541 一位小数，免得 0.4% 被截成 0% */
+/* ★ v567 统一数值口径（不带 % 符号）：
+   玩家→宿傩/式神：以 SUK_MAXHP=150 为 100（sukPct）
+   宿傩/式神→玩家：以玩家当前最大生命 S.maxHp 为 100（heroPct）
+   两者都只返回数字本身，界面不再挂百分号。 */
+function heroPct(v){ return (Math.round(v/(S.maxHp||100)*100*10)/10).toFixed(1); }
+function sukPct(v){ return (Math.round(v/(S.maxHp||100)*100*10)/10).toFixed(1); }   /* ★ v568 与 heroPct 同基准：玩家满血=100，宿傩满血读数150 */
 
 /* ★ v40 式神数值模板（以宿傩最大生命为 100% 参照）
    · 颚吐：HP 18% / 攻 45% / 防 70% / 速 85% / 召唤消耗当前咒力 20%
@@ -4648,13 +4659,13 @@ function setCeGauge(ce,cap){
   const capN=Math.max(0,Math.min(CE_MAX,Math.round((cap||100)/CE_PIP)));
   let n=Math.floor(Math.max(0,ce)/CE_PIP+1e-6);
   if(n>capN) n=capN;
-  if(inf) n=CE_MAX;
+  if(inf) n=0;   /* ★ v566 无限态：格子全空，中央只显示黑色 ∞ */
   for(let i=0;i<pips.length;i++){
     const on=i<n;
     if(pips[i].__on!==on){ pips[i].__on=on; pips[i].classList.toggle('on',on); }
   }
   const b=document.getElementById('gjCeTxt');
-  const txt=none?'无咒力':(inf?'…':String(n));
+  const txt=none?'无咒力':(inf?'∞':String(n));
   if(b && b.textContent!==txt) b.textContent=txt;
   /* 悬停说明：把「为什么没有格子 / 为什么是 ∞」直接写清楚，不靠玩家猜 */
   const ti=(hero==='gojo')?'六眼·不消耗咒力（还原原作）'
@@ -4662,7 +4673,15 @@ function setCeGauge(ce,cap){
     :(hero==='maki'?'体力点数 · 每回合 +2 点（上限 5 点）':'咒力点数 · 每回合 +2 点（上限 5 点）'));
   if(el.title!==ti) el.title=ti;
 }
-function ceRegenRate(){ return CE_PER_TURN/turnSec(); }
+/* ★ v567 回合开始一次性恢复 2 格咒力／体力（不再按秒爬）—— 所有角色统一走这里 */
+function ceRegenOnTurnStart(){
+  if(S.phase!=='fight') return;
+  try{
+    if(S.hero==='kashimo') S.kashimo.ce=Math.min(100,(S.kashimo.ce||0)+CE_PER_TURN);
+    else S.gojo.ce=Math.min((S.ceCap||100),(S.gojo.ce||0)+CE_PER_TURN);
+  }catch(e){}
+}
+function ceRegenRate(){ return 0; }   /* ★ v567 停用按秒恢复：改由 ceRegenOnTurnStart 在回合开始一次性给 */
 function diffDmg(){ return (DIFFS[S.diff]||DIFFS.normal).dmg; }
 /* ★ v36 移动端 UI 自适应：
    #app 高度在手机横屏只有约 390px、竖屏旋转约 421px，桌面却可达 800px+。
@@ -6415,6 +6434,7 @@ function gojoVoid(){
 }
 function domainShiftResolve(){
   S.turnN++;                                           /* 直接开始新回合 */
+  try{ ceRegenOnTurnStart(); }catch(e){}                /* ★ v567 回合开始立即恢复 2 格咒力／体力 */
   try{ mahaTurnStart(); }catch(e){}                    /* ★ v543 魔虚罗回合开始被动 */
   S.actsLeft=1+(S.bonus||0)+1;                         /* 新回合行动 + 领域奖励 1 次行动力 */
   if(S.bonus>0) say('sys','★ 未用完的行动攒下 —— 本回合可行动 '+S.actsLeft+' 次！');
@@ -6903,7 +6923,7 @@ function fireFlame(){
     }else{
       hurtHero(12);
       S.gojo.pose='hurt'; S.gojo.poseT=0.45; S.gojo.hurtFx=0.55;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-12%','#e0561c');
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(12),'#e0561c');
       fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：我方受击不再糊大墨爆 */
       SFX.hurt(); shake();
       say('narr','旁白：火焰缠上肩头——那是宿傩的「灶·开」。');
@@ -7192,6 +7212,11 @@ function syncGuardBtn(){
   const revMode=(k==='rev'||k.indexOf('muX')===0);
   if(b.__rev){ b.__rev=false; b.classList.remove('b-rev'); }   /* ★ v242 反转术式技能框保持白底，不再染绿 */
   if(b.__sgd!==dim){ b.__sgd=dim; b.classList.toggle('dim',dim); }
+  /* ★ v567 不可侵持续中 ⇒ 金框「生效中」而不是 CD 斜纹 */
+  try{
+    const _eff=!!dim && /剩\s*\d+\s*回合/.test(b.textContent||'');
+    if(b.__seff!==_eff){ b.__seff=_eff; b.classList.toggle('effecting',_eff); }
+  }catch(e){}
   const selNow=!!(S.acted&&S.lastAct==='guard');
   if(b.__sgs!==selNow){ b.__sgs=selNow; b.classList.toggle('sel',selNow); }
 }
@@ -7618,7 +7643,7 @@ function gojoFinisherShow(){
   e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');   /* 重排一次以重启动画 */
   /* ★ v145 用户指定：五条悟击败宿傩终幕演出播「你是这里的挑战者」 */
   /* ★ v428 用户报「五条胜利动画没语音」：改走独立通道，不被 stopDomSfx 掐掉 */
-  try{ window.playSoloVoice('challenge',0,3.8,0.92); }catch(err){}
+  try{ window.playSoloVoice('challenge',0,5.9,0.92); }catch(err){}
 }
 function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostBreak,exec,noNum){
   /* ★ v266 十种影法术：影子回合免疫伤害（真·秒杀/结算类 finisher 不挡） */
@@ -8020,9 +8045,9 @@ function mahaSpaceSlash(){
       say('sys','你在那一瞬踩住了地面 —— 空间斩从身侧擦过，没有伤到你。');
     }else{
       hurtHero(base,'maha_space');
-      fxText(GX(),GY-176*SC,'-'+Math.round(base)+'%','#111',false,0,{sz:0.95});
+      fxText(GX(),GY-176*SC,'-'+heroPct(base),'#111',false,0,{sz:0.95});
       flash('fRed'); shake();
-      say('sys','空间在你脚下裂开 —— 小型空间斩命中，受到 '+sukPct(base)+' 最大生命伤害！');
+      say('sys','空间在你脚下裂开 —— 小型空间斩命中，受到 '+heroPct(base)+' 最大生命伤害！');
     }
     syncHud();
   },'maha'); }catch(e){ say('sys','魔虚罗的空间斩被中断了。'); }
@@ -8037,9 +8062,9 @@ function mahaCopySlash(){
     S.shikWait=Math.max(S.shikWait||0,0.95);
     addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#b8860b',tag:'返斩'});
     hurtHero(d,'maha');
-    fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#b8860b',false,0,{sz:0.95});
+    fxText(GX(),GY-176*SC,'-'+heroPct(d),'#b8860b',false,0,{sz:0.95});
   });
-  say('sys','魔虚罗「同型返斩」—— 把挨过的最重一击还给你：'+sukPct(d)+' 最大生命。');
+  say('sys','魔虚罗「同型返斩」—— 把挨过的最重一击还给你：'+heroPct(d)+' 最大生命。');
 }
 function mahaSlain(direct){
   if(!S.maha&&S.mahaFade<=0) return;
@@ -8143,7 +8168,7 @@ function yugyoAttack(){
       if(S.phase!=='fight') return;
       S.hitStop=Math.max(S.hitStop,0.1);
       hurtHero(d,'yugyo');            /* 必中、不可格挡；真希天与咒缚仍免疫咒力 */
-      fxText(GX()+rnd(-8,8),GY-178*SC,'-'+Math.round(d)+'%','#111',false,0,{sz:0.84});   /* 黑白小字 */
+      fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroPct(d),'#111',false,0,{sz:0.84});   /* 黑白小字 */
       fxShards(GX()+18*SC,GY-140*SC,'20,20,24',false);
       SFX.slash(); shake();
     });
@@ -8178,7 +8203,7 @@ function kanjuCharge(){
     S.shikWait=Math.max(S.shikWait||0,1.0);
     S.hitStop=Math.max(S.hitStop,0.12);
     hurtHero(d,'phys');              /* 冲撞＝物理，真希也吃 */
-    fxText(GX()+rnd(-8,8),GY-178*SC,'-'+Math.round(d)+'%','#111',false,0,{sz:0.86});
+    fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
     fxShards(GX()+18*SC,GY-140*SC,'24,22,26',false);
     SFX.slash(); shake();
   });
@@ -8213,9 +8238,9 @@ function shikigamiAct(){
         S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
         addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e030c8',tag:'鵺鸣·电荷'});
         hurtHero(d);
-        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#111',false,0,{sz:0.86});
+        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
       });
-      say('sys','颚吐「鵺鸣·电荷」——造成 '+sukPct(d)+' 最大生命伤害。');
+      say('sys','颚吐「鵺鸣·电荷」——造成 '+heroPct(d)+' 最大生命伤害。');
       if(Math.random()<0.15){   /* ★ v217 用户指定：颚吐「鵺鸣·电荷」的麻痹概率减半（0.30 → 0.15） */
         S.para=1;
         say('sys','★ 麻痹！下一回合无法行动（1 回合）。');
@@ -8228,7 +8253,7 @@ function shikigamiAct(){
         S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
         addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e0561c',tag:'颚吐'});
         hurtHero(d);
-        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#111',false,0,{sz:0.86});
+        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
       });
       if(Math.random()<0.30){
         const d2=SUK_MAXHP*AGYO_S3_PCT;
@@ -8236,7 +8261,7 @@ function shikigamiAct(){
           hurtHero(d2,'agyo');          /* ★ v191 颚吐「虎葬·碎击」（真希架势下可穿透） */ S.heroVulnT=1;
           fxManga('虎葬·碎击',GX()+96*SC,GY-236*SC,false,'#e0561c');
         });
-        say('sys','颚吐「虎葬·碎击」——追加 '+sukPct(d2)+' 伤害，我方防御力 -10%（1 回合）。');
+        say('sys','颚吐「虎葬·碎击」——追加 '+heroPct(d2)+' 伤害，我方防御力 -10%（1 回合）。');
       }
     }
   }
@@ -8261,9 +8286,9 @@ function shikigamiAct(){
         S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
         addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#8b5cf6',tag:'斩击'});
         hurtHero(d,'maha');           /* ★ v191 魔虚罗「斩击」（真希架势下可穿透） */
-        fxText(GX(),GY-176*SC,'-'+Math.round(d)+'%','#111',false,0,{sz:0.86});
+        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
       });
-      say('sys','魔虚罗「斩击」——造成 '+sukPct(d)+' 最大生命物理伤害。');
+      say('sys','魔虚罗「斩击」——造成 '+heroPct(d)+' 最大生命物理伤害。');
     }else{
       S.mahaSlashCd--;
     }
@@ -8563,7 +8588,7 @@ function heroDown(){
     const _pool=['sukuDeathA','sukuDeathB','sukuDeathC'];
     const _dvK=_pool[Math.floor(Math.random()*_pool.length)];
     const _dvSec=_dvL[_dvK]||3.3;
-    S.deathVoiceUntil=Date.now()+((typeof bgmMuted!=='undefined'&&bgmMuted)?600:(_dvSec*1000+900));
+    S.deathVoiceUntil=Date.now()+((typeof bgmMuted!=='undefined'&&bgmMuted)?600:(_dvSec*1000+2200));   /* ★ v568 跳过对白也要念完，留足余量 */
     try{ window.__lastSoloVoice=null; }catch(e){}
     const _dvP=window.playSoloVoice(_dvK, 0, _dvSec+0.6, 0.92);
     try{
@@ -9485,8 +9510,8 @@ function playHeroIntro(h){
      真实浏览器里完全看不见（jsdom 只断言 class 存在，覆盖不到此病灶）。
      播放前先把内联样式清掉，让 .on 的样式表规则重新生效。 */
   e.style.animation=''; e.style.display='';
-  e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');   /* 重排一次以重启动画 */
-  S.cutin=Math.max(S.cutin, INTRO_MS/1000-0.25);
+ e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');   /* 重排一次以重启动画 */
+ S.cutin=Math.max(S.cutin, INTRO_MS/1000-0.25);
   clearTimeout(S.introHold);
   S.introHold=setTimeout(()=>e.classList.remove('on'), INTRO_MS+80);
   const cv=$('hiCanvas'); if(!cv) return;
@@ -9756,7 +9781,7 @@ function sukunaAttack(){
       }
       hurtHero(d,'kai');          /* ★ v191 近身斩击＝宿傩「解」/「捌」（真希架势下伤害减半） */
       S.gojo.pose='hurt'; S.gojo.poseT=0.4; S.gojo.hurtFx=0.5;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+d+'%','#d7263d');
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(d),'#d7263d');
       fxShards(GX()+20*SC,GY-130*SC,'163,38,45',false);
       SFX.hurt(); shake();
       say('suku',pick(['「太慢了。」','「你不过是生在没有我的时代的，凡夫。」','「斩。」','「就这样？」']));
@@ -9788,12 +9813,12 @@ function sukuShinbu(){
   setTimeout(()=>{
     if(S.phase!=='fight'||(S.heroGen||0)!==_hg) return;   /* ★ v243 这段延迟命中若跨过换人 ⇒ 不再把麻痹套到新角色 */
     hurtHero(d);
-    fxText(GX()+rnd(-10,10),GY-176*SC,'-'+sukPct(d),'#e030c8',true);
+    fxText(GX()+rnd(-10,10),GY-176*SC,'-'+heroPct(d),'#e030c8',true);
     fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：同上 */
     SFX.hurt(); shake();
     S.para=1;                         /* ★ v393 麻痹 1 回合：纯粹无法行动，不因受伤解除 */
     say('suku','「神武解——电击。」');
-    say('sys','★ 神武解：电击 —— 造成 '+sukPct(d)+' 最大生命伤害；我方**麻痹**：下一回合无法行动（1 回合，不因受伤解除）。');
+    say('sys','★ 神武解：电击 —— 造成 '+heroPct(d)+' 最大生命伤害；我方**麻痹**：下一回合无法行动（1 回合，不因受伤解除）。');
     const curHp=S.hero==='kashimo'?S.kashimo.hp:(S.hero==='itadori'?S.itadori.hp:S.gojo.hp);
     if(curHp<=0){ syncHud(); heroDown(); return; }
     syncHud();
@@ -9809,7 +9834,7 @@ function tryHeal(){
   S.gojo.hp=Math.min(S.maxHp,S.gojo.hp+25);
   SFX.heal(); flash('fWhite');
   fxRing(GX(),GY-130*SC,'#2b6cb0');
-  fxText(GX(),GY-210*SC,'反转术式 +25%','#2b6cb0',true);
+  fxText(GX(),GY-210*SC,'反转术式 +'+heroPct(25),'#2b6cb0',true);
   say('gojo','「反转术式——术式熔断，修复完毕。」');
   say('sys','反转术式发动：恢复 25% 血量'+(wasBurn?'，并修复了术式熔断——所有技能恢复可用':'')+'（每局仅一次）。');
   syncHud();
@@ -10484,7 +10509,7 @@ function fireWave(){
       S.hitStop=Math.max(S.hitStop,0.09);      /* ★ 被斩击波命中：同样定格 */
       hurtHero(15,'kai');         /* ★ v191 斩击波＝宿傩「解」（真希架势下伤害减半） */
       S.gojo.pose='hurt'; S.gojo.poseT=0.4; S.gojo.hurtFx=0.5;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-15%','#d7263d');
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(15),'#d7263d');
       fxShards(GX()+20*SC,GY-130*SC,'163,38,45',false);
       SFX.hurt(); shake();
       say('suku',pick(['「解——够不着吧。」','「这一刀，看得见吗。」']));
@@ -11030,7 +11055,7 @@ function sukunaTurn(){
   /* ★ v46 幻兽琥珀回合制：鹿紫云一每次行动结算后 -1 回合；归零 ⇒ 琥珀消散、鹿紫云一阵亡 */
   /* ★ v70 鹿紫云一咒力：每回合回复 15 */
   /* ★ v512 15 → 20：与「1 格 = 20 点」对齐（原 15 点是 0.75 格，账目不是整数） */
-  if(S.hero==='kashimo' && S.phase==='fight') S.kashimo.ce=Math.min(100,(S.kashimo.ce||0)+CE_PER_TURN);
+  /* ★ v567 鹿紫云咒力恢复并入回合开始统一处理（ceRegenOnTurnStart），此处不再单独加 */
   /* ★ v540 用户指定：琥珀 = 2 回合强制续命形态（解放当回合不计数，倒数逻辑见 kashAmberTick）。 */
   if(S.hero==='kashimo' && S.phase==='fight' && S.amberOn && kashAmberTick()) return;   /* true＝本回合结算时消散下场 */
   /* ★ v77 旧「每回合自动弥须葛笼」已移除 —— 改由宿傩行动段每 2 回合发动一次（展开当回合立即一次） */
@@ -11136,6 +11161,7 @@ function sukunaTurnTail(){
   /* ★ v543 空间斩 QTE 未结算完不推进回合（1.5s 后自动超时，不会永久卡住） */
   if(QTE.active){ setTimeout(sukunaTurnTail,260); return; }
 S.turnN++;
+  try{ ceRegenOnTurnStart(); }catch(e){}                /* ★ v567 回合开始立即恢复 2 格咒力／体力 */
   try{ mahaTurnStart(); }catch(e){}                    /* ★ v543 魔虚罗回合开始被动 */
   try{ analyzeTick(); }catch(e){}   /* ★ v484 魔虚罗死后：解析进度每回合 +10%（同一术师） */
   /* ★ v450 看破 / 激怒：同一术师在场超过 10 回合 ⇒ 宿傩看破其术式（对其减伤 10%，不累加）；
@@ -11353,7 +11379,7 @@ function endDomain(){
   }else{
     hurtHero(20,'dom');
     S.gojo.pose='hurt'; S.gojo.poseT=0.5; S.gojo.hurtFx=0.6;
-    fxText(GX(),GY-210*SC,'-20%','#d7263d',true);
+    fxText(GX(),GY-210*SC,'-'+heroPct(20),'#d7263d',true);
     addFx({type:'crack',dur:0.9});
     flash('fWhite'); shake(); SFX.hurt(); SFX.slash();
     say('suku','「无量空处——不过如此，凡夫。」');
@@ -12836,6 +12862,8 @@ function resumeAllAudio(force){
      的快照，回来时不能无脑全部 play —— 领域曲要确认旗标与领域是否还在，主 BGM 要确认没被领域压住。
      旧版把已经停掉的伏魔御厨子曲照样拉起来，而旗标早已是 false ⇒ 再没有路径去停它，整局叠着放。 */
   try{ _audioResumeEls.forEach(function(a){ try{ if(!a||!a.paused||a.ended) return;
+    /* ★ v568 死亡语音守卫期内不暂停（跳过对白后仍要念完） */
+    if((window.__deathVoiceGuard&&a===window.__deathVoiceGuard.el) || (a.__guardUntil&&a.__guardUntil>Date.now())) return;
     /* ★ v462：语音不续播（语境已过），只有 BGM 家族允许被拉回来 */
     if(!isBgmEl(a)){ try{ a.pause(); }catch(_){} return; }
     if(typeof sukuBgmEl!=='undefined' && a===sukuBgmEl && !(sukuBgmOn && S && S.sukuDom>0)) return;
@@ -12961,7 +12989,7 @@ function update(dt){
       if(S.hero==='kashimo'){
         /* ★ v46 幻兽琥珀改为回合制：不再按秒扣，改由 sukunaTurn 回合结束时 -1 */
       }else{
-        S.gojo.ce=Math.min((S.ceCap||100),S.gojo.ce+ceRegenRate()*dt);   /* ★ v112 咒力回复改为「每回合 22.5 点」按回合时长折算（★ v60 不得超过当前上限） */
+        /* ★ v567 咒力回复移到回合开始时一次性 +2 格（ceRegenOnTurnStart），此处不再按秒累加 */
       }
       if(S.blockT>0) S.blockT-=dt;
       /* ===== 回合制：每回合 TURN_SEC 秒，玩家自由出招，回合结束宿傩随机攻击 ===== */
@@ -13243,7 +13271,8 @@ function nobaraCut(n,dur){
 }
 /* ★ v564 五条「击杀前终幕」：宿傩残血在一击内 ⇒ 先播终幕图再正常出招（仿钉崎） */
 function gojoKillSoon(){
-  return S.hero==='gojo' && S.phase==='fight' && S.suk.hp>0 && S.suk.hp<=SUK_MAXHP*0.25
+  /* ★ v566 只有二阶段（原身）残血才算真能击杀 —— 一阶段打空是现原身满血，不是胜利（修误播终幕 BUG） */
+  return S.trueForm && S.hero==='gojo' && S.phase==='fight' && S.suk.hp>0 && S.suk.hp<=SUK_MAXHP*0.25
          && !S.__gzFinPending && !S.__gzFinShown;
 }
 function gojoFinisherLead(then){
@@ -20236,15 +20265,15 @@ function drawYujiEndBg(){
 function drawMahoBody(){
   if(!S.maha||!IMGS.maho) return;
   const s=SC, im=smartFeather(IMGS.maho);   /* ★ v538 四边虚化 */
-  /* 尺寸：取「五条悟右边界 ~ 宿傩左边界」之间的可用宽度，尽量放大 */
+  /* ★ v568 尺寸改「高度基准」（与宿傩/贯牛同款）：旧版用角色间隙 avail 当主尺寸，
+     窄画幅时 avail 触底 60*s ⇒ 魔虚罗暴跌到很小。现在只按 H/SC 等比缩放，比例变化不再缩小。 */
   const gap=Math.max(6*s, H*0.02);
-  const gEdge=GX()+gojoW()/2;                         /* 五条悟右边界 */
   const sEdge=SX()-sukW()/2;                          /* 宿傩左边界 */
-  const avail=Math.max(60*s, sEdge-gEdge-2*gap);
-  /* ★ v286 换新立绘（比例≈0.95，已裁紧）：放宽一档，否则同一宽度下比以前矮 */
-  let w=Math.min(W*0.44, 440*s, avail);
-  let h=w*im.height/im.width;
-  if(h>H*0.90){ h=H*0.90; w=h*im.width/im.height; }   /* 高度上限（矮画幅时生效，★v36 0.68→0.72） */
+  const ar=im.height/im.width;                        /* 立绘高/宽比 ≈0.95 */
+  let h=Math.min(H*0.62, 435*s);                      /* 高度基准 */
+  let w=h/ar;
+  if(w>W*0.44){ w=W*0.44; h=w*ar; }                   /* 保留原宽度上限 */
+  if(h>H*0.90){ h=H*0.90; w=h/ar; }                   /* 保留高度兜底 */
   const bob=Math.sin(S.t*1.3)*4*s;
   const x0=sEdge-gap-w/2+w*MAHO_INTO_SUKU;             /* 右移：右缘压入宿傩身后，视觉上贴近 */
   const cy0=GY-h*0.58;
@@ -20558,7 +20587,7 @@ function syncMakiMeter(){
   }
   const t=box.querySelector('#mmChargeTxt');
   /* ★ v440 用户指定：改为百分比显示，100% ＝宿傩一阶段血量（SUK_MAXHP=150）。 */
-  if(t) t.textContent=Math.round(ch/SUK_MAXHP*100)+'%';
+  if(t) t.textContent=(Math.round(ch/(S.maxHp||100)*100*10)/10).toFixed(1);   /* ★ v568 统一刻度、去% */
   const ub=$('btnUlt'); if(ub) ub.classList.toggle('b-crit',rd>=2&&(S.makiCd||0)<=0);
 }
 /* ★ v432 用户指定：「行动力每多一个就是能多行动一次」要看得见 —— 右上角常驻胶囊 */
@@ -20814,7 +20843,7 @@ function syncHud(){
   const sh=Math.max(0,S.suk.hp);
   const shp=Math.max(0,Math.min(100,sh/SUK_MAXHP*100));   /* ★v38：血条按上限换算成百分比 */
   $('skHp').style.width=shp+'%';
-  $('skHpTxt').textContent=(shp+(S.trueForm?100:0)).toFixed(1)+'%';   /* ★ v541 第二管＝100%+当前血条 ⇒ 原身期数值超过 100% */
+  $('skHpTxt').textContent=(sh/(S.maxHp||100)*100+(S.trueForm?150:0)).toFixed(1);   /* ★ v568 统一刻度：满血150，第二管+150 ⇒ 原身期 150~300 */
   (function(){ var ab=$('adaptBar'); if(!ab) return; var ps=ab.querySelectorAll('i');
     var lv=(typeof adaptLevel==='function'?adaptLevel():0);
     var lit=Math.max(0,Math.min(ps.length,Math.round(lv/3*ps.length)));
@@ -20824,7 +20853,7 @@ function syncHud(){
      与 syncAdaptBar 的「N%」互相覆盖，解析阶段还会被 adaptLevel()=0 抹成 0% ⇒ 显示乱跳。 */
   const gh=Math.max(0,S.gojo.hp);
   $('gjHp').style.width=Math.max(0,Math.min(100,gh/Math.max(1,S.maxHp||100)*100))+'%';
-  $('gjHpTxt').textContent=(gh/SUK_MAXHP*100).toFixed(1)+'%';   /* ★ v541 真实比例：满血 100 点＝66.7% */
+  $('gjHpTxt').textContent=(gh/(S.maxHp||100)*100).toFixed(1);   /* ★ v541 真实比例：满血 100 点＝66.7% */
   const ceCap=(S.ceCap||100);   /* ★ v60 里香在场 ⇒ 咒力上限 50 */
   /* ★ v512 咒力条＝五格离散显示（1 格 20 点），不再输出百分比/小数 */
   setCeGauge(S.gojo.ce, ceCap);
@@ -20836,7 +20865,7 @@ function syncHud(){
   setAdaptBar(adaptLive());
   if(S.hero==='kashimo'){
     $('gjHp').style.width=Math.max(0,Math.min(100,S.kashimo.hp/Math.max(1,S.maxHp||100)*100))+'%';
-    $('gjHpTxt').textContent=(S.kashimo.hp/SUK_MAXHP*100).toFixed(1)+'%';
+    $('gjHpTxt').textContent=(S.kashimo.hp/(S.maxHp||100)*100).toFixed(1);
     /* ★ v70：条=咒力（与五条悟同款）；琥珀标签解放后一回合才出现 */
     setCeGauge(S.kashimo.ce||0, 100);
     $('subTag').innerHTML=(S.amberTagHide>0)
@@ -20844,7 +20873,7 @@ function syncHud(){
       : (S.amberOn ? '幻兽琥珀<small>续命 '+Math.max(0,S.amber)+'</small>' : (S.amberUsed ? '咒力电击<small>解放已用尽</small>' : '咒力电击<small>琥珀潜伏</small>'));   /* ★ v243j 未使用前不显示倒计时 */
   }else if(S.hero==='itadori'){
     $('gjHp').style.width=Math.max(0,Math.min(100,S.itadori.hp/Math.max(1,S.maxHp||100)*100))+'%';
-    $('gjHpTxt').textContent=(S.itadori.hp/SUK_MAXHP*100).toFixed(1)+'%';
+    $('gjHpTxt').textContent=(S.itadori.hp/(S.maxHp||100)*100).toFixed(1);
     $('subTag').innerHTML='咒力<small>CE</small>';   /* ★ v520 这条格条本来就是咒力，不该顶着「血契」标签 */
     try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +2 点（上限 5 点）｜血契 ×'+(S.blood||0)+'（每层每回合侵蚀宿傩 3 点）'; }catch(e){}
   }
@@ -21045,6 +21074,11 @@ function syncHud(){
     }
     const selNow=!!(S.acted&&S.lastAct===a);
     if(b.__dim!==dim){ b.__dim=dim; b.classList.toggle('dim',dim); }
+    /* ★ v567 持续生效中的技能（文案含「剩 N 回合」）改金框「生效中」，与 CD 区分 */
+    try{
+      const _sm=b.querySelector('small'), _eff=!!dim && !!_sm && /剩\s*\d+\s*回合/.test(_sm.textContent||'');
+      if(b.__eff!==_eff){ b.__eff=_eff; b.classList.toggle('effecting',_eff); }
+    }catch(e){}
     if(b.__sel!==selNow){ b.__sel=selNow; b.classList.toggle('sel',selNow); }
   });
   if(typeof syncHeBtn==='function') syncHeBtn();          /* ★ v40 五条悟专属「赫」按钮 */
@@ -21410,6 +21444,8 @@ try{ window.__extraBgmDbg=function(){ return { key:extraBgmKey, els:Object.keys(
 function playExtraBgm(k,fade){
   /* ★ v502 领域曲（ujaku/yuji）在语音期间不起；结算曲 specialz/finish 不受影响 */
   if((k==='ujaku'||k==='yuji') && domainVoicesBusy()) return;
+  /* ★ v568 宿傩领域期间：不让别的额外音轨顶掉伏魔御厨子曲（技能语音念完就消失的根因之一） */
+  if(S && S.phase==='fight' && (S.sukuDom||0)>0 && (k==='ujaku'||k==='yuji')) return;
   /* ★ v494 用户报「五条开领域时点暂停，领域音乐照样响」：_goUjaku 是语音 promise 的回调，
      暂停只会 pause 既有元素，挡不住之后才发起的 playExtraBgm。暂停中只记下待播，取消暂停再补。 */
   if(typeof S!=='undefined' && S && S.paused){ try{ window.__pendingExtraBgm={k:k,fade:fade}; }catch(e){} return; }
@@ -21432,7 +21468,8 @@ if(window.__appHidden && document.hidden) return; /*x*/
   stopExtraBgm(0.55,true);
   extraBgmKey=k;
   try{ suspendMainBgm(0.5); }catch(e){}
-  try{ stopSukuBgm(); }catch(e){}
+  /* ★ v568 宿傩领域仍开着就不淡出它的领域曲 */
+  if(!(S && S.phase==='fight' && (S.sukuDom||0)>0)){ try{ stopSukuBgm(); }catch(e){} }
   const el=getExtraBgm(k);
   if(!el){ extraBgmKey=''; return; }
   /* ★ v508 startBGM 里 `if(extraBgmKey) return;` 是全局闸门：只要这条额外音轨没真正响起来，
@@ -22687,7 +22724,7 @@ function makiGuard(){
     S.makiAwaken=1; S.makiUsed=1; S.makiFull=3; S.makiGSel=0;   /* ★ v480 全开后 3 回合受伤 +10% */
     /* ★ v426b 用户指定：全开时肉体极限解放，回复自身 15% 最大生命 */
     try{ healHero(S.maxHp*0.15); }catch(e){}
-    try{ fxText(GX()+46*SC,GY-238*SC,'+15%','#3a3f45',true,1); }catch(e){}
+    try{ fxText(GX()+46*SC,GY-238*SC,'+'+heroPct(S.maxHp*0.15),'#3a3f45',true,1); }catch(e){}
     S.gojo.pose='cast'; S.gojo.poseT=0.7;
     flash('fWhite'); shake(); SFX.hollow();
     addFx({type:'makiAwaken',dur:1.45});   /* ★ v420 全开动画重做 */
@@ -23802,6 +23839,10 @@ function playSoloVoice(key, lead, fallbackSec, vol){
   /* ★ v506 领域展开会冻结战斗逻辑（freezeCine / domainShift），但音频按真实时间轴走；
      这三句领域语音不因 S.paused 早退，否则手机事件循环一抖整句就没了。 */
   const _domV=(key==='gojoDom'||key==='sukuDom'||key==='yutaDomain');
+  /* ★ v568 宿傩技能语音（开/解/捌）登记一个短窗口：领域曲核对器在这期间不抢播，
+     否则会被重新 startSukuBgm 把曲子拉回 0 秒 ⇒ 听感就是「被技能语音截断然后消失」。 */
+  const _sukuSkill=(key==='sukuOpen'||key==='sukuKai'||key==='sukuSaku');
+  if(_sukuSkill) window.__sukuSkillVoiceUntil=Date.now()+Math.max(1200,((fallbackSec||1)*1000)+500);
   /* ★ v462：切在后台/暂停时只保留时间线，不出声（否则回前台会一齐爆响） */
   if(document.hidden || (!_domV && (typeof S!=='undefined' && S && S.paused))) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
   let el=null, src='';
@@ -23851,10 +23892,11 @@ function playSoloVoice(key, lead, fallbackSec, vol){
     if(key==='gojoDom') window.__gojoVoiceEl=el; }catch(e){}
   return new Promise(function(res){
     let done=false, timer=null;
-    const fin=function(){ if(done) return; done=true; try{ el.removeEventListener('ended',fin); }catch(e){}
+    const fin=function(natural){ if(done) return; done=true; try{ el.removeEventListener('ended',fin); }catch(e){}
       try{ el.__live=0; }catch(e){}
-      /* ★ v556 死亡语音：真正念完（ended / 兜底超时）才解锁并接 BGM，不再被 play() resolve 提前掐断 */
-      try{ if(key==='sukuDeathA'||key==='sukuDeathB'||key==='sukuDeathC'){
+      /* ★ v568 死亡语音只有「真实念完」才解锁并接 BGM；fallback 超时（音轨被暂停/跳过对白）不解锁，
+         让 220ms 拉回巡检继续把语音播完 —— 修「点跳过死亡对白 ⇒ 宿傩胜利语音消失」。 */
+      try{ if(natural && (key==='sukuDeathA'||key==='sukuDeathB'||key==='sukuDeathC')){
         window.__deathVoiceGuard=null; S.deathVoiceUntil=0;
         if(typeof startBGM==='function') startBGM(0.8);
       } }catch(e){}
@@ -23863,7 +23905,8 @@ function playSoloVoice(key, lead, fallbackSec, vol){
             let _mx=0; for(const _vk in _vm){ const _ve=_vm[_vk]; if(_ve&&!_ve.ended&&!_ve.error) _mx=Math.max(_mx,_ve.__voiceWinUntil||0); }
             window.__domVoiceUntil=_mx; } }catch(_){}
       if(timer) clearTimeout(timer); res(); };
-    try{ el.addEventListener('ended',fin,{once:true}); }catch(e){}
+    /* ★ v568 ended 才是真实念完 */
+    try{ el.addEventListener('ended',function(){ fin(true); },{once:true}); }catch(e){}
     const _dur=Math.max(0.8,(fallbackSec||4)-(lead||0));
     /* ★ v491 用户报「乙骨对拼时宿傩领域展开语音没播完」：
        旧版到 fallback 时间就 resolve，呼叫方立刻起领域 BGM（4.4s 判胜负），
@@ -23877,14 +23920,16 @@ function playSoloVoice(key, lead, fallbackSec, vol){
             return;
           }
         }catch(e){}
-        fin();
+        fin(false);
       }, Math.max(900,_dur*1000+250));
     };
     const _armTimer2=function(){
       try{
-        if(el && !el.ended && !el.paused){ timer=setTimeout(_armTimer2, 260); return; }
+        /* ★ v568 死亡语音被跳过对白暂时 paused：顺延，等 220ms 巡检拉回，绝不提前判死 */
+        const _isDeath=(key==='sukuDeathA'||key==='sukuDeathB'||key==='sukuDeathC');
+        if(el && !el.ended && (!el.paused || (_isDeath && window.__deathVoiceGuard))){ timer=setTimeout(_armTimer2, 260); return; }
       }catch(e){}
-      fin();
+      fin(false);
     };
     _armTimer();
     /* ★ v504 手机端「领域对拼语音不响」根因：手机 WebView 首次解码音源慢，
@@ -24344,7 +24389,9 @@ setInterval(function(){
     }
   }catch(e){}
   try{
-    if(!sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused && Date.now()-(window.__sukuFadeAt||0)>900){
+    /* ★ v568 语音窗口（领域语音/技能语音）内不硬停：否则刚认回的领域曲被当成鬼影归零 */
+    if(Date.now()<(window.__domVoiceUntil||0) || Date.now()<(window.__sukuSkillVoiceUntil||0)) { /* 语音期放行 */ }
+    else if(!sukuBgmOn && sukuBgmEl && !sukuBgmEl.paused && Date.now()-(window.__sukuFadeAt||0)>900){
       sukuBgmEl.pause(); sukuBgmEl.volume=0; sukuBgmEl.currentTime=0;
       console.warn('[bgm] stale suku domain track force-stopped');
     }
@@ -24401,7 +24448,13 @@ function domainBgmReconcile(){
   if(playing){ _domBgmFixTry=0; return; }
   _domBgmFixTry++;
   try{
-    if(want==='suku') startSukuBgm(0,0.50);
+    if(want==='suku'){
+      /* ★ v568 元素其实在响、只是 sukuBgmOn 被误清 ⇒ 认回并补 play，绝不归零重播 */
+      if(sukuBgmEl && !sukuBgmEl.paused && !sukuBgmEl.error && (sukuBgmEl.currentTime||0)>0.05){
+        if(!sukuBgmOn) sukuBgmOn=true;
+        try{ const _p=sukuBgmEl.play(); if(_p&&_p.catch) _p.catch(function(){}); }catch(e){}
+      } else startSukuBgm(0,0.50);
+    }
     else if(want==='okko') startOkkoDomainBgm();
     else{
       /* ★ v536 元素其实在响、只是 extraBgmKey 被误清（4s 守护／换轨）⇒ 把 key 认回来，
@@ -26066,7 +26119,8 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
   background:linear-gradient(to top,#efece6 0%,rgba(239,236,230,.78) 40%,rgba(239,236,230,0) 100%);pointer-events:none;}
 #selectUI .mgPane::after{content:'';position:absolute;left:-9%;right:-9%;bottom:-3%;height:32%;
   background:var(--hc,#d7263d);opacity:.22;transform:skewY(-7deg);pointer-events:none;}
-#selectUI .mgOrd{position:absolute;left:0;top:0;z-index:3;background:#d7263d;color:#fff;font-weight:900;
+#selectUI .mgOrd{display:none!important;   /* ★ v566 用户指定：删掉选人卡左上角那枚多余的符号（原「首发／第N棒」角标） */
+  position:absolute;left:0;top:0;z-index:3;background:#d7263d;color:#fff;font-weight:900;
   font-size:calc(var(--selw)*0.055);letter-spacing:1px;line-height:1.25;
   padding:calc(var(--selw)*0.012) calc(var(--selw)*0.052) calc(var(--selw)*0.012) calc(var(--selw)*0.03);
   clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%);}
@@ -26438,7 +26492,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v565';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v568';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26474,7 +26528,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v565</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v568</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26492,7 +26546,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v565', RK='jjk_ver_reload_'+B;
+  var B='v568', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
