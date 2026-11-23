@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v583">
+<meta name="jjk-build" content="v584">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -7934,7 +7934,7 @@ function actHe(){
   /* ★ v572 赫的演出：指尖聚 → 射出 → 命中；★ v574 分「两段式」与「苍赫·相撞」两条 */
   const _heX=GX()+gojoW()*0.30, _heY=GY-gojoHeight()*0.30;
   const _heTX=SX()-46*SC, _heTY=GY-142*SC;
-  S.gojoHeUntil=performance.now()+1750;   /* ★ v573 赫演出期间换成「无下限」那张立绘 */
+  S.gojoHeUntil=performance.now()+1750;   /* ★ v584 赫演出期间切 gojoCang（拇指握手那张）；截止用 performance.now() 真实时间，别用 dt */
   if((S.anchor||0)>0){
     /* ---- 相撞：锚点与赫一同射出（紫） ---- */
     const _ap=anchorPos();
@@ -14961,7 +14961,7 @@ function drawGojo(){
   if(_clashCut) cut=cutFeatherB(IMGS.clashGojoArt,0.82);
   else if(S.gojoVoidT>0 && IMGS.gojoVoidSign) cut=IMGS.gojoVoidSign;
   else if(S.gojoDom>0 && IMGS.gojoVoidPose) cut=IMGS.gojoVoidPose;
-  else if(performance.now()<(S.gojoHeUntil||0) && IMGS.gojoGuard) cut=IMGS.gojoGuard;   /* ★ v580 用户指定：赫施放切「无下限」立绘（原误用结印图） */
+  else if(performance.now()<(S.gojoHeUntil||0) && IMGS.gojoCang) cut=IMGS.gojoCang;   /* ★ v584 用户指定：赫改用 gojoCang（拇指握手／左手前伸那张，与参考图同一张）；v580 误接 gojoGuard＝格挡特写（满脸血特写＋台词气泡），完全不是这张 */
   else if(S.hero==='gojo'){
     /* ★ v296 用户指定：立绘跟随「1 技形态」——
        仓·拳（满血）＝现有普通立绘；仓·拳（受伤）＝蓝焰拳姿；仓＝拇指握手立绘。 */
@@ -27540,7 +27540,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v583';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v584';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27576,7 +27576,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v583</b><span>玩家血条改黑色，两条血条加粗一档</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v584</b><span>修正「赫」的施放立绘：换回拇指握手／左手前伸那张（原误接成格挡特写，满脸血＋台词气泡）</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27594,7 +27594,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v583', RK='jjk_ver_reload_'+B;
+  var B='v584', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
