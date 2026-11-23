@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v575">
+<meta name="jjk-build" content="v576">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3762,6 +3762,30 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 
 /* ④ 出手顺位条（①宿傩 ②颚吐 ③魔虚罗）：用户要求去掉这个显示 */
 #v570ord{ display:none !important; }
+</style>
+<style id="v576fix">
+/* ============================================================
+   v576 · ① 血条读数去墨底  ② 行动力胶囊改贴玩家名牌正上方
+   —— 只在末尾覆盖，不动 v570/v571/v572 的其余视觉语言
+   ============================================================ */
+
+/* ① 用户指定：血条上的 100.0 / 150.0 读数不要黑色底块。
+      白字 + 四向黑描边已经压得住红/蓝填充，去掉墨底更干净。 */
+.hud .bar.hp b,
+.hud .bar.ghp b{ background:none !important; box-shadow:none !important; }
+
+/* ② 行动力胶囊：宿主已换到 #stage，旧 #turnBar 锚点全部失效。
+      改为「JS 写 left/top + 自身 transform」：left/top 指向名牌正上方那个点，
+      再由 translate(-50%,-100%) 把胶囊摆到该点上方居中。 */
+#actsChip{
+  position:absolute !important;
+  left:0; top:0; right:auto !important; bottom:auto !important;
+  margin:0 !important;
+  z-index:26;
+  transform:translate(-50%,-100%) translateY(-9px);
+  transition:opacity .18s ease, transform .18s ease;
+}
+#actsChip.on{ transform:translate(-50%,-100%) translateY(-4px); }
 </style>
 </head>
 <body>
@@ -21209,15 +21233,35 @@ function syncActsChip(){
   try{
     let el=document.getElementById('actsChip');
     if(!el){
-      const host=document.getElementById('turnBar')||document.getElementById('app')||document.body;   /* ★ v443 挂进回合条，紧跟倒计时右侧 */
+      const host=document.getElementById('stage')||document.getElementById('app')||document.body;   /* ★ v576 改挂舞台层，由 JS 贴到玩家名牌正上方 */
       el=document.createElement('div'); el.id='actsChip'; host.appendChild(el);
     }
     const n=(S.actsLeft||0);
     const show=(S.phase==='fight' && n>1);
     el.innerHTML='<b>行动力</b><i>×'+n+'</i>';   /* ★ v440 用户指定：「行动力」加粗 */
     el.classList.toggle('on',show);
+    actsChipPlace(el);   /* ★ v576 胶囊贴到玩家名牌正上方 */
   }catch(e){}
 }
+/* ★ v576 用户指定：行动力胶囊本体移到左下角玩家名牌（#heroTag）正上方居中。
+   只挪胶囊位置，浮字「行动力 +1」的动画与落点一律不动。 */
+function actsChipPlace(el){
+  try{
+    el=el||document.getElementById('actsChip');
+    const tag=document.getElementById('heroTag');
+    if(!el||!tag||!el.parentElement) return;
+    const r=tag.getBoundingClientRect(), p=el.parentElement.getBoundingClientRect();
+    if(r.width<=0||p.width<=0) return;
+    el.style.left=((r.left+r.width*0.5)-p.left)+'px';
+    el.style.top=(r.top-p.top)+'px';
+  }catch(e){}
+}
+/* ★ v576 窗口尺寸 / 旋屏后 --k 会重排，名牌位置跟着变，等一帧再贴一次 */
+try{
+  const _acpLater=function(){ setTimeout(function(){ actsChipPlace(); },160); };
+  window.addEventListener('resize',_acpLater);
+  window.addEventListener('orientationchange',_acpLater);
+}catch(e){}
 /* ★ v470 日车三技能「审判·下达」罪状充能：等分 3 格，颜色随层数变（0 灰 → 1 蓝 → 2 橙 → 3 红）。
    做法：在 #pad 底下挂一层绝对定位浮层 #chgBar，用 getBoundingClientRect 对齐三技按钮。
    为什么不放在按钮里：① 按钮 innerHTML 每次重绘都会洗掉子元素；② .btn.dim 的整体 opacity 会把色阶洗淡。
@@ -27311,7 +27355,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v575', RK='jjk_ver_reload_'+B;
+  var B='v576', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
