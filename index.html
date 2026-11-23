@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v578">
+<meta name="jjk-build" content="v580">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -3846,6 +3846,36 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 #eggTip .etB{color:#C20001;}
 @keyframes etIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
+<style id="v580fix">
+/* ============================================================
+   v580 · ① 适应条改连续填充  ② 血/咒力/体力/适应条变细 + 平行四边形
+   —— 只在末尾覆盖
+   ============================================================ */
+
+/* ① 适应条：与血条同一套「填充层」模型 */
+.hud .bar.adapt{display:block;padding:0;background:#f6f3ea;border-color:#4a2b8a;
+  height:max(calc(9px * var(--k)), 12px);}
+.hud .bar.adapt::after,
+.hud .bar.adapt::before{content:none !important;}
+.hud .bar.adapt > i{display:block;height:100%;width:0%;
+  background:linear-gradient(180deg,#c39bff 0%,#8b5cf6 48%,#5b2fb0 100%);
+  transition:width .28s cubic-bezier(.2,.8,.3,1);}
+.hud .bar.adapt > b{position:absolute;right:4px;top:50%;}
+
+/* ② 再细一档：血条 16→12、咒力格 18→14（像素下限同步下调） */
+.hud .bar.hp,
+.hud .bar.ghp{height:max(calc(9px * var(--k)), 12px);}
+.hud .bar.ce.pips{height:max(calc(11px * var(--k)), 14px);}
+.hud .bar.ce.pips > i{height:max(calc(6px * var(--k)), 8px) !important;}
+
+/* ③ 平行四边形：整条用 skew，读数反向 skew 保持正立（角度与名牌一致 -8°） */
+.hud .bar{transform:skewX(-8deg);}
+.hud .bar > b{transform:skewX(8deg) translateY(-50%);}
+.hud .bar.ce.pips > b{transform:skewX(8deg);}
+
+/* 条子变细后状态徽标行跟着回收 2px，避免压住血条 */
+#statusRow{top:max(calc(19px * var(--k)), 21px);}
+</style>
 </head>
 <body>
 <div id="ghLoad" aria-hidden="true">
@@ -4117,7 +4147,7 @@ html.rot #ghLoad{inset:auto;top:0;left:0;
         <div class="nametag sk">两面宿傩<small>SUKUNA</small></div>
         <div class="bar hp"><i id="skHp"></i><b id="skHpTxt">100%</b></div>
         <div class="nametag" id="adaptTag" style="background:var(--purple); display:none">适应<small>ADAPT</small></div>
-        <div class="bar adapt pips" id="adaptBar" style="display:none"><i></i><i></i><i></i><b id="skAdTxt">适应 —</b></div>
+        <div class="bar adapt" id="adaptBar" style="display:none"><i></i><b id="skAdTxt">—</b></div>
       </div>
       <!-- ★ v536 用户指定：仪式条上移到「宿傩血条＋适应条」正下方（紧挨着），
            位于意图条／倒计时／标记之上；文案回到早期的日文「世界を断つ斬撃」。 -->
@@ -4877,9 +4907,11 @@ function syncAdaptBar(){
   setAdaptBar(ph!=='off');
   const pct=(ph==='analyze')?analyzePct():(ph==='adapt'?(adaptLevel()/3*100):0);
   const bar=$('adaptBar');
+  /* ★ v580 用户指定：适应条改成和血条一样的连续填充（原来 3 格跳动，格子只占条子左端一小段，
+     看起来像「只涨了三个小方块」）。现在 i 就是填充层，宽度＝进度。 */
   if(bar){
-    const ps=bar.querySelectorAll('i'); const lit=Math.max(0,Math.min(ps.length,Math.round(pct/100*ps.length)));
-    for(let i=0;i<ps.length;i++) ps[i].classList.toggle('on',i<lit);
+    const fill=bar.querySelector('i');
+    if(fill) fill.style.width=Math.max(0,Math.min(100,pct))+'%';
   }
   const txt=$('skAdTxt'); if(txt) txt.textContent=String(Math.round(pct));
   const tag=$('adaptTag');
@@ -7020,6 +7052,22 @@ function hurtHero(d,kind){
     say('higu','「——反转术式。」');
     say('sys','★ 濒死领悟反转术式 —— 回复 25% 生命（每局一次）。');
   }
+  /* ★ v579 死亡判定收口（用户报「连续放技能后动画大于一切、拒绝死亡」）。
+     根因：hurtHero 只扣血、不判死，死亡全靠每条攻击路径自己写一遍 `hp<=0 → heroDown()`；
+     16 处扣血点里只有 6 处写了，式神（颚吐／魔虚罗／玉犬／贯牛）与伏魔御厨子领域必中
+     （kind='dom'）等整条线都漏了 ⇒ 血量归零但 phase 仍是 fight，玩家还能继续出招。
+     现在统一在这里收口：只要这一拍结束时血仍 ≤0、且没有别处已经排程退场，就走退场。
+     延迟一拍是为了让调用方把飘字 / 台词先播完，并用 curHp() 复查 —— 复活、治疗、
+     幻兽琥珀把血压到 1 这类路径都能正常改写结果。 */
+  if(_hpAfter<=0 && S.phase==='fight' && !S.downDone){
+    setTimeout(function(){
+      try{
+        if(S.phase!=='fight' || S.downDone) return;
+        if(curHp()>0) return;
+        syncHud(); heroDown();
+      }catch(e){}
+    },0);
+  }
 }
 /* 共鸣：虎杖悠仁的领域充能（0~100） */
 function addRes(v){
@@ -9051,14 +9099,17 @@ function heroDown(){
      既不去选择界面、也不去结算，画面就此永久停住。改用独立的 downDone 标记防重入，
      退场流程一定能走完。 */
   if(S.downDone) return;
-  if(S.__downKick) return;                    /* ★ v536 已排程退场：慢放余韵期间不重入 */
+  /* ★ v579 逃生窗口：排程标记最多挡 4s。旧版只有布尔标记，一旦排程链被中断（重开／
+     换人／回调被 phase 守卫吞掉），标记会永久停在 1，此后所有判死全部被这里挡掉。 */
+  if(S.__downKick && Date.now()-(S.__downKickT||0)<4000) return;
+  if(S.__downKick){ S.__downKick=0; }
   /* ★ v536 用户指定：被击杀时要慢放的是「最后那一下攻击的动画」。
      旧版命中同一帧就走完整退场：stageReset() 把致命一击的特效整批清掉、随即盖黑幕，
      慢放（S.slowT）虽然一直在设，屏幕上却已经没有任何东西在慢 —— 看到的就是「直接黑屏」。
      现在把整段退场（清场景／死亡语音／黑幕对白）延后到慢放余韵走完（slowT 降到 0.9 以下，
      约 2.1s 真实时间；期间特效照常以 timeScale 0.10→0.45 推进），退场时才清场、才亮黑幕。 */
   if(!S.__downForce && (S.slowT||0)>0.42){   /* ★ v539 慢放缩短后，退场门槛同步从 0.9 降到 0.42（约 0.8s 顿挫） */
-    S.__downKick=1;
+    S.__downKick=1; S.__downKickT=Date.now();
     const _dtk=(S.__downTok=(S.__downTok||0)+1), _dt0=Date.now();
     (function _dw(){
       if(_dtk!==S.__downTok){ S.__downKick=0; return; }
@@ -14866,7 +14917,7 @@ function drawGojo(){
   if(_clashCut) cut=cutFeatherB(IMGS.clashGojoArt,0.82);
   else if(S.gojoVoidT>0 && IMGS.gojoVoidSign) cut=IMGS.gojoVoidSign;
   else if(S.gojoDom>0 && IMGS.gojoVoidPose) cut=IMGS.gojoVoidPose;
-  else if(performance.now()<(S.gojoHeUntil||0) && IMGS.gojoVoidSign) cut=IMGS.gojoVoidSign;   /* ★ v573 「赫」演出期间立绘 */
+  else if(performance.now()<(S.gojoHeUntil||0) && IMGS.gojoGuard) cut=IMGS.gojoGuard;   /* ★ v580 用户指定：赫施放切「无下限」立绘（原误用结印图） */
   else if(S.hero==='gojo'){
     /* ★ v296 用户指定：立绘跟随「1 技形态」——
        仓·拳（满血）＝现有普通立绘；仓·拳（受伤）＝蓝焰拳姿；仓＝拇指握手立绘。 */
@@ -19417,7 +19468,9 @@ const _bfUp=-13*SC; try{ ctx.translate(0,_bfUp); }catch(e){}   /* ★ v326 裂�
       const PU=!!f.pur;   /* ★ v574 苍赫相撞：紫色弹体 */
       const e=tt*tt*(3-2*tt);
       const x0=f.x0,y0=f.y0,x1=f.x1,y1=f.y1;
-      const cx=(x0+x1)*0.5, cy=Math.min(y0,y1)-42*sc;
+      /* ★ v580b 用户指定：赫的射出轨迹要**直线**（先前改成弧线，现在改回）。
+         控制点取两点中点 ⇒ 二次贝塞尔退化为直线段，亮芯与拖尾都沿同一条直线推进。 */
+      const cx=(x0+x1)*0.5, cy=(y0+y1)*0.5;
       const P=function(u){return [(1-u)*(1-u)*x0+2*(1-u)*u*cx+u*u*x1,(1-u)*(1-u)*y0+2*(1-u)*u*cy+u*u*y1];};
       const bp=P(e);
       ctx.save();
@@ -24617,6 +24670,21 @@ function playSoloVoice(key, lead, fallbackSec, vol){
   const _sukuSkill=(key==='sukuOpen'||key==='sukuKai'||key==='sukuSaku');
   if(_sukuSkill) window.__sukuSkillVoiceUntil=Date.now()+Math.max(1200,((fallbackSec||1)*1000)+500);
   /* ★ v462：切在后台/暂停时只保留时间线，不出声（否则回前台会一齐爆响） */
+  /* ★ v580 「两人语音没念完整」的通用根因：同一 key 二次起播会把 currentTime 归零，
+     前半句直接被吞，后半句重念 —— 听感就是「话没说完就断了」。
+     凡是该音轨仍在念（未 ended、未 paused、已过 0.15s），一律不重起，只等它念完。 */
+  try{
+    const _run=domAudioEls['__solo_'+key];
+    if(_run && !_run.paused && !_run.ended && !_run.__warming && !_run.muted && (_run.volume||0)>0.02 && _run.currentTime>0.15){
+      try{ _run.__guardUntil=Math.max(_run.__guardUntil||0, Date.now()+7000); }catch(_){}
+      return new Promise(function(res){
+        let fin=false;
+        const done=function(){ if(fin) return; fin=true; try{ _run.removeEventListener('ended',done); }catch(e){} res(); };
+        try{ _run.addEventListener('ended',done); }catch(e){}
+        setTimeout(done, Math.max(1500,((fallbackSec||5)*1000)+400));
+      });
+    }
+  }catch(e){}
   if(document.hidden || (!_domV && (typeof S!=='undefined' && S && S.paused))) return new Promise(function(r){ setTimeout(r,(fallbackSec||0)*1000); });
   let el=null, src='';
   try{
@@ -24803,6 +24871,8 @@ try{ window.playSoloVoice=playSoloVoice; }catch(e){}
 function startClashSukuVoice(){
   try{
     if(window.__clashSukuP && Date.now()<(window.__clashSukuUntil||0)) return window.__clashSukuP;
+    /* ★ v580 双保险：窗口过期但音轨还在念（长句）时也不能二次起播 */
+    try{ const _e=domAudioEls['__solo_sukuDom']; if(_e && !_e.paused && !_e.ended && _e.currentTime>0.05) return window.__clashSukuP||Promise.resolve(); }catch(_){}
     if(typeof window.playSoloVoice!=='function') return null;
     /* ★ v504 第二声部 0.70（0.92 会盖住五条）；渐入循环在手机 WebView 会被定时器节流
        卡在 volume=0 ⇒ 整句静音，改为固定值 + 400ms 兜一次 */
@@ -24858,6 +24928,17 @@ function domainVoice(key,lead,fb,vol){
   return p||Promise.resolve();
 }
 function domainVoicesBusy(){
+  /* ★ v580 兜底：__domVoiceEls 可能被新一轮 domainAudioBegin 清空，但音轨其实还在念。
+     这里直接扫 __solo_* 实例的真实状态，避免「领域曲抢在语音尾巴前响起」。 */
+  try{
+    for(const _k in domAudioEls){
+      if(_k.indexOf('__solo_')!==0) continue;
+      const _e=domAudioEls[_k];
+      if(!_e || _e.paused || _e.ended || _e.currentTime<=0.05) continue;
+      if(_e.__warming || _e.muted || (_e.volume||0)<=0.02) continue;   /* 预热空跑不算 */
+      return true;
+    }
+  }catch(e){}
   try{
     /* ★ v536 独立语音通道也要算「正在念」：宿傩／五条／乙骨自主展开的 solo 音轨不走
        domainAudioBegin()，phase 恒为 idle ⇒ 旧判据完全看不见，900ms 的领域曲核对器
@@ -26279,8 +26360,10 @@ V570.spawn = function (box, txt, leftPct, topPct, cls) {
 };
 
 /* ---------- ⑧ 回合翻页转场 ---------- */
+V570.pageOn = false;   /* ★ v580 用户指定：暂时取消回合翻页转场；改回 true 即可恢复 */
 V570.page = function () {
   if (typeof S === 'undefined' || !S) return;
+  if (!V570.pageOn) return;
   if (V570._turn === null) { V570._turn = S.turnN; return; }
   if (S.turnN === V570._turn) return;
   V570._turn = S.turnN;
@@ -27413,7 +27496,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v578';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v580';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -27449,7 +27532,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v578</b><span>彩蛋角色选人页排布调整：68 虎杖左移、其余六人右移，不再贴在一起</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v579</b><span>修复血量归零却不退场（式神／领域必中路径漏判死亡），并把退场排程加了超时逃生</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -27467,7 +27550,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v578', RK='jjk_ver_reload_'+B;
+  var B='v580', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
