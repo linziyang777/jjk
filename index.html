@@ -1066,7 +1066,7 @@
 
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v568">
+<meta name="jjk-build" content="v569">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <style>
@@ -4893,6 +4893,7 @@ function resetBattle(){
   try{ if(typeof prewarmBlackFlashSfx==='function'){ prewarmBlackFlashSfx(); prewarmBlackFlashSfx(true); } }catch(e){}   /* ★ v306 黑闪音效预热（★ v492 终结专属版一起预热，避免首次播放时还在建链） */
   /* ★ v164 世界线跳跃自暂停页进入：新局必须解除冻结并收掉暂停遮罩（S 是 const 对象，resetBattle 负责复位） */
   S.paused=false;
+  try{ vowResetAll(); }catch(e){}   /* ★ v569 束缚归零（不依赖后面的逐项赋值是否跑到） */
   S.guideShown=false;   /* ★ v446 每局第一次进入战斗都会走一次引导 */
   (function(){ var b=document.getElementById('pauseBtn'),o=document.getElementById('pauseOv');
     if(b) b.classList.remove('paused'); if(o) o.classList.remove('on'); })();
@@ -8214,94 +8215,131 @@ function kanjuCharge(){
 /* ---------- 式神行动（挂在宿傩回合） ---------- */
 function shikigamiAct(){
   if(S.phase!=='fight') return;
-  /* ★ v393 用户指定：麻痹＝纯粹「1 回合无法行动」，不再有「受到伤害后解除」，
-     也不再因此让魔虚罗斩击 +50%。这里只负责在宿傩回合结束时把麻痹自然归零。 */
+  /* ★ v393 用户指定：麻痹＝纯粹「1 回合无法行动」 */
   S.para=0;
-  /* ★ v493 用户指定：式神召唤登场的那个回合只「显现」不出手（贯牛本来就有蓄力回合，不受此限）。 */
+  /* ★ v493：式神召唤登场的那个回合只「显现」不出手 */
   const _nowTn=(typeof S.turnN==='number')?S.turnN:-99;
   const _agyoDebut=(S.agyo && S.agyoBornTurn===_nowTn);
   const _mahaDebut=(S.maha && !S.mahaDead && S.mahaBornTurn===_nowTn);
-  /* ★ v495 用户指定：不出提示字，机制照留（同回合跳过行动） */
-  /* ★ v474 贯牛：蓄力回合原地不动，下一回合冲锋 */
+  /* ★ v569 用户指定：不要同时进攻 —— 所有单位都要有「位次」。
+     宿傩打完 → ② 颚吐 → ③ 魔虚罗 → 圆鹿之愈，逐拍出手：
+       · 宿傩自己的动作先收尾（等 fxBusy 落回 false），再留 SEQ_LEAD 的缓冲；
+       · 单位之间固定 SEQ_GAP（1.6s）的间隙，配合 1.25s 斩击特效，读起来就是「一拍一人」；
+       · 整段期间 S.shikWait 冻结读秒，S.__seqUntil 占住回合推进（见 sukunaTurn 尾段）。 */
+  const SEQ_GAP=1600, SEQ_LEAD=240;
+  const ORD=['①','②','③','④'];
+  /* 贯牛：蓄力/冲锋是文本提示，不占出手顺位 */
   if(S.kanju){
     if(S.kanjuPhase==='wind'){ S.kanjuPhase='charge'; fxText(SX()-96*SC,GY-250*SC,'贯牛·蓄力','#111',false,0,{sz:0.9}); say('sys','贯牛绷紧四蹄——下一回合就会直线冲锋（现在打它可打断）。'); }
     else if(S.kanjuPhase==='charge'){ kanjuCharge(); }
   }
-  /* 颚吐：技能1 鵺鸣·电荷（CD2）／ 否则普攻（30% 触发虎葬·碎击） */
+  const acts=[];
+  /* ② 颚吐：鵺鸣·电荷（CD2）／ 普攻（30% 虎葬·碎击）。判定在「排位」时一次算好，避免演出中改主意。 */
   if(S.agyo && !_agyoDebut){
-    if((S.agyoCd||0)<=0){
-      S.agyoCd=2;
-      const d=SUK_MAXHP*AGYO_S1_PCT;
-      fxManga('鵺鸣·电荷',GX()+96*SC,GY-236*SC,false,'#e030c8');
-      shikLunge('agyo');
-      lungeAfter(155,function(){
-        S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
-        addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e030c8',tag:'鵺鸣·电荷'});
-        hurtHero(d);
-        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
-      });
-      say('sys','颚吐「鵺鸣·电荷」——造成 '+heroPct(d)+' 最大生命伤害。');
-      if(Math.random()<0.15){   /* ★ v217 用户指定：颚吐「鵺鸣·电荷」的麻痹概率减半（0.30 → 0.15） */
-        S.para=1;
-        say('sys','★ 麻痹！下一回合无法行动（1 回合）。');
-      }
-    }else{
-      S.agyoCd--;
-      const d=SUK_MAXHP*AGYO_ATK_PCT;
-      shikLunge('agyo');
-      lungeAfter(155,function(){
-        S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
-        addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e0561c',tag:'颚吐'});
-        hurtHero(d);
-        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
-      });
-      if(Math.random()<0.30){
-        const d2=SUK_MAXHP*AGYO_S3_PCT;
-        lungeAfter(250,function(){
-          hurtHero(d2,'agyo');          /* ★ v191 颚吐「虎葬·碎击」（真希架势下可穿透） */ S.heroVulnT=1;
-          fxManga('虎葬·碎击',GX()+96*SC,GY-236*SC,false,'#e0561c');
+    const _charge=((S.agyoCd||0)<=0);
+    if(_charge) S.agyoCd=2; else S.agyoCd--;
+    const _d1=SUK_MAXHP*(_charge?AGYO_S1_PCT:AGYO_ATK_PCT);
+    const _para=(_charge && Math.random()<0.15);
+    const _crit=(!_charge && Math.random()<0.30);
+    const _d2=SUK_MAXHP*AGYO_S3_PCT;
+    const _a={who:'agyo',ord:'',run:function(){
+      if(_charge){
+        fxManga('鵺鸣·电荷',GX()+96*SC,GY-236*SC,false,'#e030c8');
+        shikLunge('agyo');
+        lungeAfter(155,function(){
+          S.shikWait=Math.max(S.shikWait||0,0.95);
+          addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e030c8',tag:(_a.ord?_a.ord+' ':'')+'鵺鸣·电荷'});
+          hurtHero(_d1);
+          fxText(GX(),GY-176*SC,'-'+heroPct(_d1),'#111',false,0,{sz:0.86});
         });
-        say('sys','颚吐「虎葬·碎击」——追加 '+heroPct(d2)+' 伤害，我方防御力 -10%（1 回合）。');
+        say('sys','颚吐「鵺鸣·电荷」——造成 '+heroPct(_d1)+' 最大生命伤害。');
+        if(_para){ S.para=1; say('sys','★ 麻痹！下一回合无法行动（1 回合）。'); }
+      }else{
+        shikLunge('agyo');
+        lungeAfter(155,function(){
+          S.shikWait=Math.max(S.shikWait||0,0.95);
+          addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e0561c',tag:(_a.ord?_a.ord+' ':'')+'颚吐'});
+          hurtHero(_d1);
+          fxText(GX(),GY-176*SC,'-'+heroPct(_d1),'#111',false,0,{sz:0.86});
+        });
+        if(_crit){
+          lungeAfter(560,function(){
+            hurtHero(_d2,'agyo'); S.heroVulnT=1;
+            fxManga('虎葬·碎击',GX()+96*SC,GY-236*SC,false,'#e0561c');
+          });
+          say('sys','颚吐「虎葬·碎击」——追加 '+heroPct(_d2)+' 伤害，我方防御力 -10%（1 回合）。');
+        }
       }
-    }
+    }};
+    acts.push(_a);
   }
-  /* ★ v543 用户指定：所有招式**等概率随机**（全解锁三招各 1/3；CD 中的不进池） */
+  /* ③ 魔虚罗：三招等概率随机（CD 中的不进池） */
   if(S.maha&&!S.mahaDead&&!_mahaDebut){
     const _pool=['slash'];
     if(S.mahaSpace && (S.mahaSpaceCd||0)<=0) _pool.push('space');
     if(S.mahaCopy && (S.mahaCopyCd||0)<=0) _pool.push('copy');
     const _act=_pool[Math.floor(Math.random()*_pool.length)];
-    if(_act==='space'){
-      S.mahaSpaceCd=3;
-      try{ mahaSpaceSlash(); }catch(e){}
-    }else if(_act==='copy'){
-      S.mahaCopyCd=2;
-      try{ mahaCopySlash(); }catch(e){}
+    if(_act==='space' || _act==='copy'){
+      if(_act==='space') S.mahaSpaceCd=3; else S.mahaCopyCd=2;
+      const _a={who:'maha',ord:'',run:function(){
+        try{ if(_act==='space') mahaSpaceSlash(); else mahaCopySlash(); }catch(e){}
+      }};
+      acts.push(_a);
     }else if((S.mahaSlashCd||0)<=0){
       S.mahaSlashCd=1;
-      let d=SUK_MAXHP*MAHO_SLASH_PCT;
-      /* ★ v117c 依用户要求：移除魔虚罗攻击时画面中央的「斩击」大字图案（保留伤害数字与文字提示）。 */
-      shikLunge('maha');
-      lungeAfter(155,function(){
-        S.shikWait=Math.max(S.shikWait||0,0.95);   /* ★ v466 式神演出期间冻结读秒 */
-        addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#8b5cf6',tag:'斩击'});
-        hurtHero(d,'maha');           /* ★ v191 魔虚罗「斩击」（真希架势下可穿透） */
-        fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{sz:0.86});
-      });
-      say('sys','魔虚罗「斩击」——造成 '+heroPct(d)+' 最大生命物理伤害。');
+      const _d=SUK_MAXHP*MAHO_SLASH_PCT;
+      const _a={who:'maha',ord:'',run:function(){
+        shikLunge('maha');
+        lungeAfter(155,function(){
+          S.shikWait=Math.max(S.shikWait||0,0.95);
+          addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#8b5cf6',tag:(_a.ord?_a.ord+' ':'')+'魔虚罗'});
+          hurtHero(_d,'maha');
+          fxText(GX(),GY-176*SC,'-'+heroPct(_d),'#111',false,0,{sz:0.86});
+        });
+        say('sys','魔虚罗「斩击」——造成 '+heroPct(_d)+' 最大生命物理伤害。');
+      }};
+      acts.push(_a);
     }else{
       S.mahaSlashCd--;
     }
   }
   /* 圆鹿之愈（被动·每回合结束）：宿傩回 3% 最大生命，颚吐回自身最大生命 5% */
-  if(S.agyo){
+  const _heal=function(){
+    if(!S.agyo) return;
     const hs=SUK_MAXHP*0.03, ha=S.agyoMax*0.05;
     S.suk.hp=Math.min(SUK_MAXHP,S.suk.hp+hs);
     S.agyoHp=Math.min(S.agyoMax,S.agyoHp+ha);
     fxText(SX()-8*SC,GY-196*SC,'+'+Math.round(hs),'#2f9e5e');
     say('sys','颚吐「圆鹿之愈」——宿傩回复 '+sukPct(hs)+' 最大生命，颚吐回复自身 5% 生命。');
-  }
-  syncHud();
+    syncHud();
+  };
+  if(!acts.length){ _heal(); syncHud(); return; }
+  acts.forEach(function(a,i){ a.ord=ORD[i+1]||''; });
+  /* 占位：这一段没演完，回合推进必须等着（等宿傩收尾最多 2.8s，这里先占 3.6s） */
+  S.__seqUntil=Date.now()+3600;
+  const _t0=Date.now();
+  (function _chain(){
+    if(S.phase!=='fight'){ S.__seqUntil=0; return; }
+    /* 等宿傩自己的动作播完再起位次（否则第一拍会和宿傩的斩击糊在一起） */
+    if(typeof fxBusy==='function' && fxBusy() && Date.now()-_t0<2800){ setTimeout(_chain,80); return; }
+    let t=SEQ_LEAD, last=SEQ_LEAD;
+    acts.forEach(function(a){
+      const _at=t; last=_at;
+      setTimeout(function(){
+        if(S.phase!=='fight') return;
+        try{ a.run(); }catch(e){}
+      }, _at);
+      t+=SEQ_GAP;
+    });
+    const _end=last+1500;   /* 最后一拍还要把 1.25s 的斩击特效播完 */
+    S.__seqUntil=Date.now()+_end+80;
+    S.shikWait=Math.max(S.shikWait||0,(_end+80)/1000);
+    setTimeout(function(){
+      if(S.phase!=='fight'){ S.__seqUntil=0; return; }
+      try{ _heal(); }catch(e){}
+      S.__seqUntil=0;
+    }, _end+120);
+  })();
 }
 /* ★ v474 贯牛本体：宿傩左上侧，蓄力时轻抖 */
 function drawKanjuBody(){
@@ -11128,15 +11166,22 @@ function sukunaTurn(){
   }
     /* ★ v539 用户指定：宿傩／式神的攻击动画必须全部播完，才进入下一回合；
      回合真正开始（倒计时重开、技能栏解禁）才是玩家能出手的时机。 */
-  if(typeof fxBusy==='function' && fxBusy()){
-    const _sqNow=Date.now();
-    if(!S.__sukTailQ || _sqNow-S.__sukTailQ>6000){   /* 时间戳式守卫：旧值不会把下一回合永久卡死 */
-      S.__sukTailQ=_sqNow;
-      afterFx(function(){ S.__sukTailQ=0; if(!S || S.phase!=='fight') return; try{ sukunaTurnTail(); }catch(e){} }, 4200);
+  /* ★ v569：敌方出手顺位 —— 宿傩与所有式神的动作（含 1.25s 斩击特效）全部播完才推进下一回合。
+     旧版 shikigamiAct 在宿傩出手的同一帧就把式神全放出去，且只看 fxBusy，常出现「魔虚罗与颚吐一起扑」。 */
+  const _seqTok=(S.__seqTok=(S.__seqTok||0)+1);
+  const _seqT0=Date.now();
+  (function _seqWait(){
+    if(_seqTok!==S.__seqTok) return;
+    if(S.phase!=='fight') return;
+    const _busy=(typeof fxBusy==='function' && fxBusy()) || (S.__seqUntil||0)>Date.now();
+    if(!_busy || Date.now()-_seqT0>13000){
+      S.__sukTailQ=0;
+      try{ sukunaTurnTail(); }catch(e){}
+      return;
     }
-    return;
-  }
-  sukunaTurnTail();
+    setTimeout(_seqWait,90);
+  })();
+  return;
 
   };
   /* ★ v485：召唤定格演出进行中 ⇒ 攻击段延后（演出结束再打，含领域展开）
@@ -11772,7 +11817,7 @@ function renderVowCards(){
   box.__sig=sig;
   const hpP=S.maxHp?(curHp()/S.maxHp):1;
   box.innerHTML=VW.map(v=>{
-    const u=!!S.vowUsedHeroes[S.hero+'|'+v.id] || !!S.vowHeroDone;   /* ★ v448 本棒已自缚 ⇒ 全部置灰 */
+    const u=!!S.vowUsedHeroes[S.hero+'|'+v.id] || (!!S.vowHeroDone && (!S.vowDoneHero || S.vowDoneHero===S.hero));   /* ★ v448 本棒已自缚 ⇒ 全部置灰 */
     const lock=!u && !!v.hpMax && hpP>v.hpMax;   /* ★ v516 回复型：血线以上不可立 */
     return '<div class="vwCard'+(u?' used':'')+(lock?' lock':'')+'" data-vow="'+v.id+'">'
     + '<div class="vwIc">'+ICO(v.ico)+'<b>'+v.name+'</b></div>'
@@ -11787,6 +11832,24 @@ function syncVowRevoke(){
   if(!b) return;
   const on=!!(S.vowHeroDone && !S.vowRevoked && S.phase==='fight');
   b.classList.toggle('on',on);
+}
+/* ═══ ★ v569 束缚状态统一归零（新局 / 世界线跳跃 / 换人共用） ═══
+   用户报「一条束缚用过之后，点了世界线跳跃重开，那个位置的束缚全都用不了」：
+   旧版把归零散落在 resetBattle 与 startKashimo 里，任何一条路径漏掉（或 resetBattle
+   中途抛错）就会把「本棒已立束缚 / 本回合已立」的旗标带进下一局，三张卡一起变灰、
+   点了也没有任何提示。现在收成一个入口，三条跳转路径都显式调用。 */
+function vowResetAll(){
+  S.vowUsedHeroes={};
+  S.vowHeroDone=false; S.vowDoneHero='';
+  S.vowActiveId=''; S.vowRevoked=false; S.vowTurn=0; S.vowTurnHero=''; S.vowOpen=false;
+  S.vowPub=0; S.vowPubCd=0; S.vowNoGuard=0;
+  S.vowAtkMul=1; S.vowAtkT=0; S.vowDefMul=1; S.vowDefT=0; S.vowNextMul=1;
+  S.vowPierce=false; S.vowBF=false; S.vowCounter=0; S.vowCounterT=0;
+  S.vowSelf=0; S.vowSelfT=0; S.noAdaptT=0; S.vowFragT=0; S.vowFragMul=1.3;
+  S.vowWeakT=0; S.vowOutMul=1; S.vowLowHp=false;
+  /* 面板缓存一起清：否则 __sig 命中旧状态时不会再渲染，卡片会保留上一局的 .used 灰态 */
+  try{ var _b=document.getElementById('vowRow'); if(_b){ _b.__sig=''; _b.innerHTML=''; } }catch(e){}
+  try{ closeVowUI(); }catch(e){}
 }
 function openVowUI(){
   if(S.phase!=='fight'||QTE.active) return;
@@ -11818,7 +11881,7 @@ function openVowUI(){
 function closeVowUI(){ S.vowOpen=false; const el=$('vowUI'); if(el) el.classList.remove('on'); }
 function vowChoose(id){
   if(S.phase!=='fight'){ closeVowUI(); return; }
-  if(S.vowTurn===S.turnN){ closeVowUI(); return; }
+  if(S.vowTurn===S.turnN && (!S.vowTurnHero || S.vowTurnHero===S.hero)){ closeVowUI(); say('sys','这个回合已经立过束缚了——等下一回合再立。'); return; }
   const v=vowList().find(x=>x.id===id);
   if(!v){ closeVowUI(); return; }
   if(v.hpMax && S.maxHp && curHp()>S.maxHp*v.hpMax){   /* ★ v516：满血立回复型＝纯亏，直接不许 */
@@ -11827,11 +11890,11 @@ function vowChoose(id){
     return;
   }
   if(S.vowRevoked){ say('sys','这一棒已经解缚，咒力反噬未平——不能再立束缚。'); return; }
-  if(S.vowHeroDone){ say('sys','这一棒已经立下过束缚——同一位术师不能对自己立第二次束缚。'); return; }
+  if(S.vowHeroDone && (!S.vowDoneHero || S.vowDoneHero===S.hero)){ say('sys','这一棒已经立下过束缚——同一位术师不能对自己立第二次束缚。'); return; }
   if(S.vowUsedHeroes[S.hero+'|'+id]){ say('sys','这条束缚本局已立过。'); return; }
-  S.vowTurn=S.turnN;
+  S.vowTurn=S.turnN; S.vowTurnHero=S.hero;
   S.vowUsedHeroes[S.hero+'|'+id]=true;
-  S.vowHeroDone=true; S.vowActiveId=id;
+  S.vowHeroDone=true; S.vowDoneHero=S.hero; S.vowActiveId=id;
   closeVowUI();
   /* ★ v515 用户指定：立束缚不再消耗行动 —— 只冻结 0.9s 读秒盖住演出，交棒仍由出招决定 */
   S.shikWait=Math.max(S.shikWait||0,0.9);
@@ -12493,15 +12556,16 @@ function rsScrollInit(){
   let _raf=0;
   /* ★ v539 用户报「手机端下移箭头丢失」：旧版只认 html.land / html.rot 两个类，
      夸克等 WebView 在某些视口下两类都不加 ⇒ 箭头永远显示不出来。补触屏与窄视口判定。 */
-  function _mob(){ const h=document.documentElement;
-    return h.classList.contains('land')||h.classList.contains('rot')
-      || ('ontouchstart' in window) || Math.min(window.innerWidth,window.innerHeight)<=560; }
+  function _mob(){ return true; }   /* ★ v569：不再限定手机 —— 桌面/竖屏/横屏只要结算页能滚就给钮 */
   function _sync(){
     if(!_mob() || _rs.classList.contains('hide')){ _dn.classList.remove('on'); _up.classList.remove('on'); return; }
     const sh=_rs.scrollHeight, ch=_rs.clientHeight, st=_rs.scrollTop;
     const can=(sh-ch)>56;
-    const bottom=(st+ch)>=(sh-16);
-    const _sd=can && !bottom, _su=can && bottom;
+    /* ★ v569 用户报「只有向下的按钮，向上的丢了」：
+       旧版向上钮只在「已经滚到最底（误差 16px 内）」时才出现，实机上常常永远触发不到。
+       改成「滚过 24px 就换成向上」，一有位移就一定看得到回顶入口。 */
+    const scrolled=st>24;
+    const _sd=can && !scrolled, _su=can && scrolled;
     _dn.classList.toggle('on', _sd);
     _up.classList.toggle('on', _su);
     /* ★ v539 inline 兜底：CSS 里 html:not(.land):not(.rot) 会把 .on 又压成 display:none，
@@ -24692,6 +24756,8 @@ function forceMainBgm(fade){
   }else{ fadeBGM(BGM_VOL,dur); }
 }
 function _btnAgainGo(){
+  /* ★ v569：不论随后 resetBattle 是否跑到，先把束缚归零 */
+  try{ vowResetAll(); }catch(e){}
   /* ★ v537 用户指定：点击后必须「立即」回到难度模式选择界面。
      旧版先 forceMainBgm（内部建元素 + 起播）再进 enterDiff，只要中间任一步被卡住、
      或 .hide 被更高的层级/样式盖住，观感就是「按了没反应」。现在第一件事就是硬藏结算层
@@ -24736,6 +24802,7 @@ try{ if(typeof window.__imgQ==='function'){
   });
 } }catch(e){}
 $('btnPauseJump').addEventListener('click',function(){
+  try{ vowResetAll(); }catch(e){}   /* ★ v569 暂停页跳线同样归零 */
   /* ★ v475 同结算页：暂停页跳世界线时，宿傩领域曲也必须一起停 */
   try{ forceMainBgm(0.7); }catch(e){}
   /* ★ v492 用户报「世界线跳跃按钮有时候会失效」：
@@ -26492,7 +26559,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 /* ★ v504 跨端版本自检：从旧版本升级来的设备（尤其手机 APK / B 站包 / GH 镜像的
    Service Worker 缓存）主动清缓存并重载一次，保证电脑和手机拿到的是同一版。 */
 (function(){
-  var B='v568';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
+  var B='v569';   /* ★ 发版 v548：跨端版本标识（历史注释里的旧版本号不动） */
   try{
     var k='jjk_build_seen', seen=localStorage.getItem(k);
     if(!seen){ localStorage.setItem(k,B); }
@@ -26528,7 +26595,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
       sessionStorage.removeItem('jjk_build_notice_'+B);
       var old=document.getElementById('verToast'); if(old&&old.parentNode) old.parentNode.removeChild(old);
       var box=document.createElement('div'); box.id='verToast';
-      box.innerHTML='<b>已更新 · v568</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
+      box.innerHTML='<b>已更新 · v569</b><span>魔虚罗新增再生与习得技；真希改体力条、日车技能重做</span><i>关闭</i>';
       (document.getElementById('app')||document.body).appendChild(box);
       var hide=function(){ box.classList.add('out'); setTimeout(function(){ if(box.parentNode) box.parentNode.removeChild(box); },380); };
       box.querySelector('i').addEventListener('click',hide);
@@ -26546,7 +26613,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 <script>/* GitHub Pages：Service Worker + ★ v505 缓存加固（夸克/UC 代理缓存） */
 (function(){ if(!('serviceWorker' in navigator)) return;
   if(location.protocol!=='https:' && location.hostname!=='localhost') return;
-  var B='v568', RK='jjk_ver_reload_'+B;
+  var B='v569', RK='jjk_ver_reload_'+B;
   var hardReset=function(cb){
     var jobs=[];
     try{ if(window.caches&&caches.keys) jobs.push(caches.keys().then(function(ks){ return Promise.all(ks.map(function(n){ return caches.delete(n); })); }).catch(function(){})); }catch(e){}
