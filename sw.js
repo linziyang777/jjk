@@ -1,4 +1,4 @@
-const CORE_CACHE='jjk-core-v585';
+const CORE_CACHE='jjk-core-v591';
 const ASSET_CACHE='jjk-assets';
 self.addEventListener('install',function(){self.skipWaiting();});
 self.addEventListener('activate',function(e){
