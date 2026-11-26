@@ -4915,7 +4915,7 @@ const SFX={
   /* ★ v408 打击感第 5 层：命中瞬间的实心打击音（低频冲击 + 短噪声），必须与伤害同帧触发 */
   hit(p){ nz(p?0.20:0.085, p?0.78:0.46, p?1500:3600, p?90:420);
           tone('sine', p?118:148, p?36:58, p?0.26:0.13, p?0.32:0.17); },
-  block(){ tone('sine',2100,2100,0.2,0.22); tone('sine',3150,3150,0.15,0.11,0.012); },
+   block(v){ const _v=(v==null?1:v); tone('sine',2100,2100,0.2,0.22*_v); tone('sine',3150,3150,0.15,0.11*_v,0.012); },   /* ★ v658 可传音量系数 */
   hollow(){ nz(0.75,0.9,1400,80); tone('sawtooth',130,36,0.75,0.34); tone('square',72,28,0.85,0.18); },
   warn(){ tone('square',920,920,0.06,0.1); tone('square',920,920,0.06,0.1,0.13); },
   adapt(){ tone('sawtooth',170,1600,0.55,0.2); nz(0.55,0.3,600,3200); },
@@ -14717,29 +14717,31 @@ function itaSoulCut(){
     SFX.atk(); shake();
     /* ★ v468 用户指定：释放时时间暂停 → 聚焦变暗 → 径庭拳冲刺立绘冲到宿傩身前 →
        NANO 斩击图炸在宿傩身上 → 宿傩立绘负片，技能结束才恢复。 */
-    freezeCine(2.55); S.cineFx=1;   /* ★ v502 战斗逻辑照冻，但演出特效要按真实时间推进 */
-    addFx({type:'soulDim',dur:2.55});
+    /* ★ v658 用户反馈「打出伤害后的后续太久、显得卡顿」：定格 2.55s → 1.65s，
+       伤害从 600ms 提前到 540ms ⇒ 命中后的静止由 1.95s 压到 1.1s（再叠慢放收尾）。 */
+    freezeCine(1.65); S.cineFx=1;   /* ★ v502 战斗逻辑照冻，但演出特效要按真实时间推进 */
+    addFx({type:'soulDim',dur:1.65});
     addFx({type:'soulDash',dur:0.42});
     /* ★ v524 裁断线先行：冲刺的同时就在宿傩身上划出裁剪线，0.42s 走完全程才炸开斩击 */
     /* ★ v533 裁断线角度随机 ±35°（原来只有 ±5°）；同步给 soulBlip 用，避免白芒和虚线不同向 */
     const _sa=rnd(-0.62,0.62); S.__soulAng=_sa;
-    addFx({type:'soulCut',dur:1.42,x:SX(),y:GY-sukHeight()*0.52,sc:0.66,
+    addFx({type:'soulCut',dur:1.12,x:SX(),y:GY-sukHeight()*0.52,sc:0.66,
            ang:_sa, seed:(rnd(1,40)|0), len:0.96});
     S.hitStop=Math.max(S.hitStop,0.10);
     setTimeout(()=>{
       if(S.phase!=='fight') return;
       /* ★ v524b 去掉原「整屏白色光带」——它会盖住裁断线，改为只留短线爆闪（见 fxSoulBlip） */
-      S.negUntil=performance.now()+3000;      /* ★ v471 宿傩负片延长 */
+      S.negUntil=performance.now()+1900;      /* ★ v471 宿傩负片；★ v658 定格缩到 1.65s，负片同步收到 1.9s，别在收招后还挂着白影 */
       S.hitStop=Math.max(S.hitStop,0.16);
       shake(); shake();
       flash('fHit');
       try{ fxShards(SX(),GY-sukHeight()*0.50,'228,240,255',true); }catch(e){}
       try{ addFx({type:'soulBlip',dur:0.20,x:SX(),y:GY-sukHeight()*0.52,ang:(S.__soulAng||0),seed:(rnd(0,60)|0),dur:0.26}); }catch(e){}   /* ★ v533 跟随随机裁断线 / ★ v534 勾边形状随机 */
       try{ SFX.slash(); }catch(e){}
-    },430);
+    },400);
     setTimeout(()=>{
       if(S.phase!=='fight') return;
-      S.slowT=0.45; S.slowDur=0.45;   /* ★ v87 切中瞬间进慢放，让「灵魂抖散」这一拍留得住 */
+      S.slowT=0.30; S.slowDur=0.30;   /* ★ v87 切中瞬间进慢放；★ v658 0.45 → 0.30，收尾更干脆 */
       if(final){
         /* ★ v49 连动必杀：斩击变亮变大 ⇒ 直接秒杀宿傩（第二张已提前出现、此刻仍在屏上）
            ★ v450 用户指定：共鸣的「真·秒杀」只留给二阶段（原身）。
@@ -14768,7 +14770,7 @@ function itaSoulCut(){
       /* 30% 灵魂伤害：noScale + pierce ⇒ 无视适应、无视一切减伤、必中 */
       hitSukuna(SUK_MAXHP*0.30,true,'black',false,true,'ita_soul',true,false,false,false,true);   /* ★ v451 末位 noNum：数字只留白色「灵魂 30%」 */
       fxText(SX()-20*SC,GY-206*SC,'灵魂 30','#ffffff',true);
-    },600);
+    },540);
     /* ★ v643 删掉 760ms 的白色「解」字残影：灵魂解只留黑色文字动画 */
   };
   if(final){
@@ -16365,10 +16367,13 @@ function chuanFadeArt(im){
 /* ★ v657 穿血特效图（画在立绘下面）：
    图片里线条起点（黑球）在 (0.278, 0.75)，把这个点对齐立绘的下部偏右，
    再从左上到右做同款「擦除显现」，0.92s 后淡出。 */
+/* ★ v658 用户指定：穿血图案从现有尺寸放大到 2.5×，与渐显（擦除显现）同时进行；
+   放大到 2.5× 的那一拍才结算伤害。两处共用这两个常量，避免时间对不上。 */
+const CHUAN_DUR = 920, CHUAN_GROW_K = 0.60, CHUAN_GROW_MS = Math.round(920 * 0.60);
 function drawI68ChuanBack(){
   const t0=S.i68ChuanT0||0; if(!t0) return;
   const _now=(typeof performance!=='undefined'?performance.now():Date.now());
-  const DUR=920;
+  const DUR=CHUAN_DUR;
   const k=(_now-t0)/DUR;
   if(k>=1.25){ S.i68ChuanT0=0; return; }
   const im=i68Img('chuanSfx'); if(!im||!im.width) return;
@@ -16385,7 +16390,9 @@ function drawI68ChuanBack(){
   const _p=Math.max(0,Math.min(1,k/0.72));
   const _e=(_p<0.58)?0.58*Math.pow(_p/0.58,2.05):0.58+0.42*(1-Math.pow(Math.max(0,1-(_p-0.58)/0.42),2.3));   /* 必须 max(0,…)：底数一旦为负，pow 非整数指数会返回 NaN ⇒ clip 宽变 NaN，整块图案不画 */
   /* ★ v657b 从黑球为中心由小放大到完整尺寸（前 52% 完成缩放） */
-  const _scl=0.30+0.70*Math.min(1,Math.pow(Math.min(1,k/0.52),0.70));
+  /* ★ v658：以黑球（手心）为锚点，从当前尺寸匀速放大到 2.5× —— 先慢后半段加速，收在「爆开」那一下 */
+  const _g=Math.min(1,k/CHUAN_GROW_K);
+  const _scl=1+1.5*Math.pow(_g,1.55);
   ctx.translate(px,py); ctx.scale(_scl,_scl); ctx.translate(-px,-py);
   ctx.beginPath();
   ctx.rect(ax-2, ay-2, Math.max(1, ww*(0.04+0.96*_e)), hh+4);
@@ -16635,24 +16642,27 @@ function i68Blood(){
   markActed('atk');
   say('ita','「赤血操术——穿血。」');
   const apply=(hitBlack)=>{   /* ★ v597 用户指定：穿血不再打出黑闪（参数保留，恒为 false） */
-    i68ChuanFx();
-    const d=dmg;
-    hitSukuna(d,false,'hollow',false,false,'i68_blood',true);
-    try{ playCineSfx(SFX_JIE_URI,1.0); }catch(e){}   /* ★ v638 用户指定：穿血造成伤害时同时响起「68 解」音效（并行通道，不打断 BGM） */
-  /* ★ v616 群体伤害：解/穿血同时打在场所有式神（伤害与本体同值，不走式神侧减伤） */
-  try{
-    const _sd=Math.round(d/0.85); if(typeof damageShiki==='function'){ if(S.agyo && (S.agyoHp||0)>0) damageShiki('agyo',_sd,true); if(S.kanju && (S.kanjuHp||0)>0) damageShiki('kanju',_sd,true); }
-    if(typeof damageShiki==='function' && S.maha && !S.mahaDead && (S.mahaHp||0)>0) damageShiki('maha',Math.round(d/0.85),true);
-  }catch(e){}
-    /* ★ v596 参考图的「穿血」大字在命中对手瞬间显现 */
-    setTimeout(function(){ if(S.phase!=='fight') return; (function(){})/* v625 删除原有「穿血」文字动画，改用上传的图案 */; },170);
-    try{ fxText(SX()-70*SC,GY-160*SC,'ザシュッ','#8b1a1a',true); }catch(e){}
-    try{ __haptic(45); }catch(e){}   /* ★ v620 穿血打到右侧震动 */
-    try{ if(typeof SFX!=='undefined' && SFX.block) SFX.block(); }catch(e){}   /* ★ v624 穿血命中的闷击声 */   /* ★ v604 拟声词（纯文字） */
-    /* 中毒：强度取强化后的版本；重复施加则刷新回合数并取较强档 */
-    S.i68Poison=boost?3:2;
-    S.i68PoisonPow=boost?1:0;
-    say('sys','★ 剧毒侵入宿傩体内：接下来 '+S.i68Poison+' 回合，每回合 −5 生命，其攻击伤害 −'+(boost?25:20)+'%。');
+    i68ChuanFx();   /* 图案先出现，从现有尺寸放大到 2.5× */
+    /* ★ v658 用户指定：放大到 2.5× 的那一拍才结算伤害（音效、震动、浮字、中毒全部同帧） */
+    setTimeout(function(){
+      if(S.phase!=='fight' || S.suk.hp<=0) return;
+      const d=dmg;
+      hitSukuna(d,false,'hollow',false,false,'i68_blood',true);
+      try{ playCineSfx(SFX_JIE_URI,0.58); }catch(e){}   /* ★ v638 并行通道；★ v658 音量下调（1.0 → 0.58） */
+      /* ★ v616 群体伤害：解/穿血同时打在场所有式神（伤害与本体同值，不走式神侧减伤） */
+      try{
+        const _sd=Math.round(d/0.85); if(typeof damageShiki==='function'){ if(S.agyo && (S.agyoHp||0)>0) damageShiki('agyo',_sd,true); if(S.kanju && (S.kanjuHp||0)>0) damageShiki('kanju',_sd,true); }
+        if(typeof damageShiki==='function' && S.maha && !S.mahaDead && (S.mahaHp||0)>0) damageShiki('maha',Math.round(d/0.85),true);
+      }catch(e){}
+      try{ fxText(SX()-70*SC,GY-160*SC,'ザシュッ','#8b1a1a',true); }catch(e){}
+      try{ __haptic(45); }catch(e){}   /* ★ v620 穿血打到右侧震动 */
+      try{ if(typeof SFX!=='undefined' && SFX.block) SFX.block(0.5); }catch(e){}   /* ★ v624 闷击声；★ v658 音量减半 */
+      /* 中毒：强度取强化后的版本；重复施加则刷新回合数并取较强档 */
+      S.i68Poison=boost?3:2;
+      S.i68PoisonPow=boost?1:0;
+      say('sys','★ 剧毒侵入宿傩体内：接下来 '+S.i68Poison+' 回合，每回合 −5 生命，其攻击伤害 −'+(boost?25:20)+'%。');
+      syncHud();
+    }, CHUAN_GROW_MS);
   };
   apply(false);
   syncHud();
