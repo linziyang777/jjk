@@ -10077,7 +10077,8 @@ function eggSlotSync(){
     slot.classList.toggle('hide',!on);
     const stage=slot.parentNode;            /* ★ v585 配重跟随解锁状态，未通关时卡阵居中 */
     if(stage && stage.classList) stage.classList.toggle('hasEgg',on);
-    if(on){ const art=slot.querySelector('.egArt'); if(art && !art.__img){ art.__img=1; art.style.backgroundImage='url('+IMG_ITA68+')'; } }
+    if(on){ const art=slot.querySelector('.egArt'); if(art && !art.__img){ art.__img=1; art.style.backgroundImage='url('+IMG_ITA68+')'; }
+      try{ if(typeof i68Warm==='function') i68Warm(); }catch(e){}   /* ★ v656 选人页就预热 68 的战斗大图 */ }
   }catch(e){}
 }
 /* ★ v596x 68虎杖实装开关：主档（线上/TOY）暂不实装，彩蛋卡回到「未完待续」；本地测试版为 true */
@@ -16362,6 +16363,15 @@ function drawIta68Art(){
   let im = _bfW ? ((_mx>=1 ? (i68Img('bf')||i68Img('bfIn')) : (i68Img('bfIn')||i68Img('bf'))))
                : (_ch?i68Img('chuanxue'):i68Img('feather'));   /* ★ v606 必须是 let：下面要给 im 换蒙版图，const 会每帧抛错 ⇒ 整个渲染循环挂掉（黑屏） */
   if(!im) return;
+  /* ★ v656 修「TOY/拆分版里穿血立绘不显示」：外链资源首次使用时可能还没解码完（naturalWidth=0），
+     旧代码拿它算宽高会得到 NaN，drawImage 静默什么都不画。这里退回到已加载的常态立绘，
+     同时踢一次 decode，下一帧就正常了。 */
+  if(!im.width || !im.height){
+    try{ if(im.decode) { const _p=im.decode(); if(_p&&_p.catch) _p.catch(function(){}); } }catch(e){}
+    im = i68Img(_bfW?'bfIn':'feather');
+    if(!im || !im.width) return;
+    if(_ch) { /* 穿血图没就绪：先用常态立绘顶上，别让画面空着 */ }
+  }
   const gx=GX(), gy=GY, scv=SC;
   /* ★ v597 黑闪瞬身：0~0.20 突进、0.20~0.64 定在宿傩身前、0.64~0.88 回位 */
   let _dx=0, _sc=1;
@@ -16510,6 +16520,16 @@ function i68JieFx(boost){
     }catch(e){}
     SFX.slash(); shake();
   }
+}
+/* ★ v656 68 虎杖素材预热：拆分版/TOY 的图是外链文件，第一次按下技能才去请求会来不及。
+   进战（startI68）与选人页出现彩蛋卡时各拉一次，decode 后进内存缓存。 */
+function i68Warm(){
+  ['feather','chuanxue','bf','bfIn','chuanSfx'].forEach(function(k){
+    try{
+      const im=i68Img(k);
+      if(im && im.decode){ const p=im.decode(); if(p&&p.catch) p.catch(function(){}); }
+    }catch(e){}
+  });
 }
 function i68ChuanFx(){
   /* ★ v596b 穿血立绘：使用技能时战斗立绘切换为专属穿血图（镜像、面朝右），结束自动还原 */
@@ -16682,7 +16702,8 @@ function startI68(){
   hideDomainAnnounce();
   setHeroHint('ita68');
   S.hero='ita68';
-  S.maxHp=150; S.ita68.hp=150;   /* ★ v614 上限与当前血一起设，血条才按 150 计算 */
+  S.maxHp=150; S.ita68.hp=150;
+  try{ i68Warm(); }catch(e){}   /* ★ v656 进战即预热，避免第一发穿血没图 */   /* ★ v614 上限与当前血一起设，血条才按 150 计算 */
   S.i68Poison=0; S.i68PoisonPow=0; S.i68PoisonAtk=0;
   S.i68PhysImm=0; S.i68BlackN=0; S.i68Boost={jie:0,blood:0};
   S.i68BloodCd=0; S.i68ImmCd=0; S.i68RevCd=0; S.i68RevNext=0; S.i68BfCd=0; S.i68BfT=0; S.i68SphereT=0; S.i68ChuanT=0; S.i68ChuanUntil=0; S.i68BfUntil=0; S.i68BfMixAt=0; S.i68BfMixDur=0.55; S.i68DashAt=0;
@@ -17809,6 +17830,15 @@ function i68ChuanLayer(im,w,h,holeRx,holeRy){
       g.fillStyle=rg; g.beginPath(); g.arc(0,0,holeRx*1.28,0,Math.PI*2); g.fill();
       g.restore();
     }
+    /* ★ v656 图案缩到 0.8× 后右/下缘会露出硬切的矩形边 —— 用 alpha 渐变把边缘吃掉，看起来像自然收笔。 */
+    /* destination-out + 反向渐变：只在边缘把 alpha 擦掉（用 destination-in 会把渐变外的整片擦空） */
+    g.globalCompositeOperation='destination-out';
+    const _rf=g.createLinearGradient(c.width*0.90,0,c.width,0);
+    _rf.addColorStop(0,'rgba(0,0,0,0)'); _rf.addColorStop(1,'rgba(0,0,0,1)');
+    g.fillStyle=_rf; g.fillRect(c.width*0.90,0,c.width*0.10,c.height);
+    const _bf2=g.createLinearGradient(0,c.height*0.90,0,c.height);
+    _bf2.addColorStop(0,'rgba(0,0,0,0)'); _bf2.addColorStop(1,'rgba(0,0,0,1)');
+    g.fillStyle=_bf2; g.fillRect(0,c.height*0.90,c.width,c.height*0.10);
     g.globalCompositeOperation='source-over';
     _i68ChuanKey=key;
   }
@@ -17826,8 +17856,8 @@ function drawI68Chuan(f,k){
   const al=k>0.88?Math.max(0,1-(k-0.88)/0.12):1;
   if(al<=0) return;
   const ar=im.width/im.height;
-  const need=(f.reach||Math.abs(SX()-cx))*1.30*SC;   /* ★ v597 用户反馈：图案过大看不清，2.10→1.30 */
-  const ww=Math.max(need,H*1.18*SC), hh=ww/ar;   /* ★ v597 1.75→1.18 */
+  const need=(f.reach||Math.abs(SX()-cx))*1.30*SC*0.8;   /* ★ v656 用户指定：特效图再缩 0.2×（1.30→1.04） */
+  const ww=Math.max(need,H*1.18*SC*0.8), hh=ww/ar;   /* ★ v656 1.18→0.94 */
   const W2=ww*grow, H2=hh*grow;
   const hole=f.hole||{rx:0,ry:0};
   const lay=i68ChuanLayer(im,W2,H2,hole.rx*grow,hole.ry*grow);
