@@ -3861,7 +3861,7 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 
 /* ★ v617 黑闪大字：DOM 层（1.5 倍、倒计时正下方、自下而上快速显现） */
 #bfBig{position:absolute;left:44%;top:11%;transform:translate(-50%,0);z-index:34;pointer-events:none;
-  background-repeat:no-repeat;background-position:center top;background-size:contain;width:min(22.88vw,156px);height:min(47.84vh,332.8px);   /* ★ v649 0.8× */
+  background-repeat:no-repeat;background-position:center top;background-size:contain;width:min(18.3vw,124.8px);height:min(38.27vh,266.24px);   /* ★ v657 再 0.8×（累计 0.64×） */
   text-shadow:4px 4px 0 rgba(0,0,0,.85),0 0 18px rgba(0,0,0,.6);opacity:0;}
 #bfBig.on{animation:bfRise 1.15s cubic-bezier(.16,1,.3,1) forwards;}
 @keyframes bfRise{0%{opacity:0;transform:translate(-50%,26px) scale(.86);}
@@ -6624,6 +6624,13 @@ function fxText(x,y,txt,col,big,dir,opt){
   addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,dmg:!!opt.dmg,rise:!!opt.rise,inkW:opt.inkW||0,risePx:opt.risePx||0,top:!!opt.top,z:opt.z||0,rot:opt.rot||0,edge:opt.edge||'',heal:!!opt.heal});   /* ★ v643 edge：自定义描边色；★ v644 heal：回血数字统一米白渐变 */   /* ★ v587 opt.top/z：置顶层（咏唱词） */   /* ★ v498 opt.rise：自下而上显现 */
 }   /* ★ v407 第 6 参数 dir：+1 往右消散、−1 往左消散 */
 /* ★ v643 黑闪统一文字：全部走 68 二技能那记「ドッ」，墨黑字身＋朱红描边，尺寸为原来的 0.8 倍 */
+/* ★ v657 用户指定：术式熔断的示意统一 —— 墨黑字身＋朱红描边、固定 0.78× 字号、落在画面上方空档，
+   不再压在两侧立绘身上。所有「熔断」字样都走这里。 */
+function fxBurnTag(side){
+  const x = (side==='suku') ? W*0.62 : (side==='gojo' ? W*0.38 : W*0.5);
+  const y = H*0.17;
+  try{ fxText(x,y,'熔断','#000000',true,0,{sz:0.78,edge:'#d7263d',dur:1.25}); }catch(e){}
+}
 function blackFlashWord(x,y){ try{ fxText(x,y,'ドッ','#0d0d0f',true,0,{sz:0.8,edge:'#d7263d',dur:1.0,rot:-8}); }catch(e){} }
 /* ★ v644 反转术式回血数字统一入口：所有 RCT 加血字固定字号／固定落点／统一米白渐变＋墨棕描边＋阴影 */
 function fxHealNum(v,enemy){
@@ -7257,7 +7264,7 @@ function gojoVoid(){
           const mahaOn=!!(S.maha && !S.mahaDead);
           S.voidMahaT=1;
           S.sukuBurn=true;
-          fxText(SX()-20*SC,GY-206*SC,'熔断','#8b5cf6',true);   /* ★ v131 术式熔断字样：仅在宿傩领域对拼失败时出现 */
+          fxBurnTag('suku');   /* ★ v657 统一样式 */
           S.sukuVoided=true;       /* ★ v99 无量空处成立 ⇒ 标记宿傩已被击溃（乙骨领域对拼将跳过） */          /* ★ v92 对拼输掉 ⇒ 宿傩·术式熔断 */
           S.misagoT=1;              /* ★ v92 修复后（原身）下一回合起每 2 回合发动弥须葛笼 */
           if(mahaOn){
@@ -7290,7 +7297,7 @@ function gojoVoid(){
              需手动以反转术式治愈（同时解锁第 2 次无量空处展开）。 */
           S.gojoDom=0; S.gojoVoidT=0; S.sukuDom=1; S.sukuDomFirst=true;   /* ★ v192 领域成立 ⇒ 当回合解＋捌双发 */   /* ★ v475 落败侧回一般立绘 */
           S.gojoBurn=true;          /* ★ v92 对拼输掉 ⇒ 五条悟·术式熔断 */
-          fxText(GX()-20*SC,GY-206*SC,'熔断','#8b5cf6',true);   /* ★ v131 术式熔断字样：仅在五条领域对拼失败时出现 */
+          fxBurnTag('gojo');   /* ★ v657 统一样式 */
           addFx({type:'sukuDomWord',dur:2.4});   /* ★ v459 领域名字样同步放慢 */
           flash('fRed'===null?'fWhite':'fWhite'); shake();
           say('sys','★ 伏魔御厨子成立：领域内的必中斩击每回合对五条悟造成 10% 最大生命伤害。');
@@ -8774,6 +8781,9 @@ function hitSukuna(raw,big,kind,noKill,noScale,sid,argPierce,finisher,allowHostB
     d*=adaptAmt;
     if(adaptAmt<=0.5) fxText(SX()-20*SC,GY-196*SC,'适应','#8b5cf6',false);   /* 旧「免疫」字样改称「适应」 */
   }
+  /* ★ v657 用户指定：68 虎杖的所有攻击＝直击灵魂 —— 难度系数、看破、街道、适应、任何束缚一律不吃，
+     结算值就是技能框写的那个数（raw）。上面的倍率只是"先算一遍"，这里直接拉回原值。 */
+  if(S.hero==='ita68' && !finisher && !exec) d=raw;
   d=(d>0)?Math.max(1,Math.round(d)):0;   /* ★ v591：伤害一律整数（正伤害至少 1 点）—— hp 与飘字从此没有小数 */
                                 /* 本回合累计输出（用于打断仪式） */
   /* ★ v27：宿傩仍寄宿在伏黑惠的肉体里（未现原身）时被击倒 —— 死的是「受肉之躯」，
@@ -10063,7 +10073,7 @@ function playCineSfx(uri,vol){
     [70,170,420,900].forEach(function(t){ setTimeout(function(){ try{ if(el.readyState>=2) _go(); }catch(e){} },t); });
   }catch(e){}
 }
-const IMG_I68={bfIn:'assets/539c07115947.webp',entry:'assets/ddcc76f9acf3.webp',jieTxt:'assets/ecf0a4e3c6bb.webp',feather:'assets/d1e9ddffde0d.webp',chuanSfx:'assets/14a090235288.webp',bf:'assets/89314ebda21f.webp',linli:'assets/28764d488bc9.webp',jie:'assets/ddada3a3a82b.webp',chuanxue:'assets/40aa3d21a8bc.webp'   /* ★ v595b 左右镜像＋去气泡：人物面朝右，推向敌人 */};
+const IMG_I68={bfIn:'assets/539c07115947.webp',entry:'assets/ddcc76f9acf3.webp',jieTxt:'assets/ecf0a4e3c6bb.webp',feather:'assets/d1e9ddffde0d.webp',chuanSfx:'assets/69d1cab56441.webp',bf:'assets/89314ebda21f.webp',linli:'assets/28764d488bc9.webp',jie:'assets/ddada3a3a82b.webp',chuanxue:'assets/40aa3d21a8bc.webp'   /* ★ v595b 左右镜像＋去气泡：人物面朝右，推向敌人 */};
 /* ★ v577 彩蛋角色：虎杖悠仁【68年后】—— v595 起从「未完待续」升级为可玩角色 */
 const IMG_ITA68='assets/30f966e61c97.webp';
 function eggUnlocked(){ try{ return !!(SAVE && SAVE.best && SAVE.best.heroes!=null); }catch(e){ return false; } }
@@ -11871,7 +11881,7 @@ function sukunaOpenDomain(force){
     /* ★ v653 用户指定：领域被粉碎就要进术式熔断（与对拼落败同待遇） */
     if(S.hero==='gojo' && !S.gojoBurn){
       S.gojoBurn=true;
-      fxText(GX()-20*SC,GY-206*SC,'熔断','#8b5cf6',true);
+      fxBurnTag('gojo');
       say('sys','★ 术式熔断——领域被粉碎的冲击反噬术式：五条悟除「反转术式」外无法使用任何技能！');
     }
     try{ stopAllOtherDomainBgm(); }catch(e){}
@@ -11978,7 +11988,7 @@ function domMahaCollapse(){
   /* ★ v653 用户指定：五条的无量空处被外力击碎 ⇒ 同样进入术式熔断（只有反转术式能用） */
   if(inVoid && S.hero==='gojo' && !S.gojoBurn){
     S.gojoBurn=true;
-    fxText(GX()-20*SC,GY-206*SC,'熔断','#8b5cf6',true);
+    fxBurnTag('gojo');
     say('sys','★ 术式熔断——无量空处被从外侧击碎，五条悟的术式随之熔断：除「反转术式」外无法使用任何技能！');
   }
   syncHud();
@@ -13326,9 +13336,9 @@ const ENDINGS=[
   {id:'noblack', kind:'win', nm:'不闪的剑', tag:'NO BLACK FLASH',
    desc:'一记黑闪都没有。赢下这场仗靠的是判断、距离，和不肯退的那一步。',
    need:'全程不打出任何黑闪并击倒宿傩'},
-  {id:'maki', kind:'win', nm:'零咒力的答案', tag:'ZERO CURSED ENERGY',
-   desc:'没有咒力，没有领域，也没有术式。她只是把那把刀，递到了该在的位置。',
-   need:'以禅院真希的最后一棒击倒宿傩'},
+  {id:'maki', kind:'win', nm:'黑闪的答案', tag:'BLACK FLASH ×6',
+   desc:'一记、两记……第六记黑闪落下的那一刻，答案就不再是运气，而是他早就握在手里的东西。',
+   need:'一局内打出 6 次黑闪并击倒宿傩'},
   {id:'brk', kind:'win', nm:'正面突破', tag:'CLEAR',
    desc:'硬接下那一刀，仍然把诅咒之王打穿了。',
    need:'击倒宿傩'},
@@ -13355,7 +13365,7 @@ function judgeEndings(){
     cutworld:kill && !!S.worldUsed,
     i68:    kill && last==='ita68',
     noblack:kill && !(S.blackN||0),
-    maki:   kill && last==='maki',
+    maki:   kill && (S.blackN||0)>=6,   /* ★ v657b 用户指定：改为「一局打出 6 次黑闪」 */
     brk:    kill,
     canon:  kill && used[0]==='gojo' && used[1]==='kashimo' && used[2]==='itadori',
     ruin:   !kill && heroesLeft().length===0,
@@ -16352,6 +16362,37 @@ function chuanFadeArt(im){
     _HIGU_FADE[key]=c; return c;
   }catch(e){ return im; }
 }
+/* ★ v657 穿血特效图（画在立绘下面）：
+   图片里线条起点（黑球）在 (0.278, 0.75)，把这个点对齐立绘的下部偏右，
+   再从左上到右做同款「擦除显现」，0.92s 后淡出。 */
+function drawI68ChuanBack(){
+  const t0=S.i68ChuanT0||0; if(!t0) return;
+  const _now=(typeof performance!=='undefined'?performance.now():Date.now());
+  const DUR=920;
+  const k=(_now-t0)/DUR;
+  if(k>=1.25){ S.i68ChuanT0=0; return; }
+  const im=i68Img('chuanSfx'); if(!im||!im.width) return;
+  const ar=im.width/im.height;
+  const hb=i68HeroBox();
+  const ww=Math.max(H*1.42*SC, hb.w*3.6)*1.1*0.6, hh=ww/ar;   /* ★ v657c 用户指定：特效图缩小 0.4×（≈0.66 总倍率） */
+  /* 锚点：黑球直接落在立绘手心（双手前伸处） */
+  const px=GX()+hb.w*0.59, py=GY-hb.h*0.36;
+  const ax=px-ww*0.278, ay=py-hh*0.75;
+  const al=k>0.92?Math.max(0,1-(k-0.92)/0.33):1;
+  if(al<=0) return;
+  ctx.save();
+  ctx.globalAlpha=Math.min(1,al*0.92);
+  const _p=Math.max(0,Math.min(1,k/0.72));
+  const _e=(_p<0.58)?0.58*Math.pow(_p/0.58,2.05):0.58+0.42*(1-Math.pow(Math.max(0,1-(_p-0.58)/0.42),2.3));   /* 必须 max(0,…)：底数一旦为负，pow 非整数指数会返回 NaN ⇒ clip 宽变 NaN，整块图案不画 */
+  /* ★ v657b 从黑球为中心由小放大到完整尺寸（前 52% 完成缩放） */
+  const _scl=0.30+0.70*Math.min(1,Math.pow(Math.min(1,k/0.52),0.70));
+  ctx.translate(px,py); ctx.scale(_scl,_scl); ctx.translate(-px,-py);
+  ctx.beginPath();
+  ctx.rect(ax-2, ay-2, Math.max(1, ww*(0.04+0.96*_e)), hh+4);
+  ctx.clip();
+  ctx.drawImage(im, ax, ay, ww, hh);
+  ctx.restore();
+}
 function drawIta68Art(){
   /* ★ v596 68虎杖战斗立绘：用登场同款立绘（底部虚化）；黑闪期间切黑闪图
      ★ v597 穿血图是横构图的漫画分镜，按原高度会铺满半个屏幕 ⇒ 单独缩到 0.62 高 */
@@ -16535,13 +16576,9 @@ function i68ChuanFx(){
   /* ★ v596b 穿血立绘：使用技能时战斗立绘切换为专属穿血图（镜像、面朝右），结束自动还原 */
   S.i68ChuanT=0.92;
   S.i68ChuanUntil=(typeof performance!=='undefined'?performance.now():Date.now())+920;
-  /* ★ v652 用户指定：恢复穿血·裂变的「漫画图案」分镜（右侧不虚化那张）——
-     图案以立绘中心为放射中心铺开，中心挖洞露立绘，逐块从左到右擦除显现。 */
-  try{
-    const _hb=i68HeroBox();
-    addFx({type:'i68Chuan',dur:0.92,x:_hb.cx,y:_hb.cy,reach:Math.abs(SX()-_hb.cx),
-      hole:{rx:_hb.w*0.80,ry:_hb.h*0.56},z:-2});
-  }catch(e){}
+  /* ★ v657 用户指定：换用新的「穿血特效图」——线条起点（黑球）对齐立绘下部，
+     并且**立绘盖在图案之上**（所以图案不再走 fx 层，而是在 drawIta68Art 之前单独画）。 */
+  try{ S.i68ChuanT0=(typeof performance!=='undefined'?performance.now():Date.now()); }catch(e){}
   /* ★ v652 用户指定：穿血的「文字图案」（CHUAN_TXT_URI）贴右上角，与图案一起退场 */
   try{
     const _jt=document.getElementById('i68JieTxt');
@@ -16559,7 +16596,7 @@ function i68ChuanFx(){
 /* ★ v649 负片改为「画布内反相」：旧版给 #stage 挂 CSS filter(invert)，
    整屏滤镜会让合成器每帧重新栅格化整张画布 —— 68 一技同时命中本体＋3 式神时正是掉帧的主因之一。
    现在只在渲染末尾用 difference 铺一层白，一次 fillRect 完成反相，开销恒定。 */
-function negFlash(){ S.negUntil=performance.now()+440; S.negDur=0.44; }
+function negFlash(ms){ const _d=(ms||440); S.negUntil=performance.now()+_d; S.negDur=_d/1000; }   /* ★ v657 可传时长 */
 function i68Atk(){
   if(S.acted){ say('sys','本回合已经出招了。'); return; }
   const boost=!!S.i68Boost.jie;
@@ -16574,7 +16611,7 @@ function i68Atk(){
   /* ★ v635 用户指定：解的伤害等球面切割开始那一刻才结算 */
   setTimeout(function(){
     if(S.phase!=='fight') return;
-    try{ negFlash(); }catch(e){}   /* ★ v636 负片 */
+    try{ negFlash(1320); }catch(e){}   /* ★ v657 球面切割（0.82s）一起进入负片，结束后再留约 0.5s */
     hitSukuna(dmg,false,'kai',false,false,'i68_jie',true);
   /* ★ v629 群体伤害改走 damageShiki：贯牛一击即散、魔虚罗法轮破碎等原逻辑全部生效 */
   try{
@@ -16675,8 +16712,14 @@ function i68Black(){
     try{ SFX.black(); }catch(e){}
     try{ if(typeof playBlackFlashSfx==='function') playBlackFlashSfx(true,false); }catch(e){}   /* ★ v614 普通黑闪语音（原误用虎杖专属） */
     /* ★ v643 删掉这里单独的「ドッ」fxText：hitSukuna 已统一为你指定的 68 二技能文字（0.8×＋红描边），避免叠两遍 */
+    const _landed=!sukuInShadow();
     hitSukuna(dmg,true,'black',false,false,'i68_black',true);
     i68OnBlack();
+    /* ★ v657 用户指定：黑闪命中（真的造成伤害）⇒ 自身回复 10 点 */
+    if(_landed && S.suk.hp>0){
+      try{ healHero(10); }catch(e){}
+      try{ fxText(GX()-40*SC,GY-232*SC,'+10','#E5E7D4',true,1,{sz:0.9,heal:true,dur:1.0}); }catch(e){}
+    }
     try{ i68BreakSukuDom(); }catch(e){}   /* ★ v653 黑闪贯穿伏魔御厨子 */
     S.i68BfUntil=now+_LEAD+_DASH+140;   /* ★ v649 视窗覆盖整段瞬身（含起手停留） */
     syncHud();
@@ -16706,7 +16749,7 @@ function startI68(){
   try{ i68Warm(); }catch(e){}   /* ★ v656 进战即预热，避免第一发穿血没图 */   /* ★ v614 上限与当前血一起设，血条才按 150 计算 */
   S.i68Poison=0; S.i68PoisonPow=0; S.i68PoisonAtk=0;
   S.i68PhysImm=0; S.i68BlackN=0; S.i68Boost={jie:0,blood:0};
-  S.i68BloodCd=0; S.i68ImmCd=0; S.i68RevCd=0; S.i68RevNext=0; S.i68BfCd=0; S.i68BfT=0; S.i68SphereT=0; S.i68ChuanT=0; S.i68ChuanUntil=0; S.i68BfUntil=0; S.i68BfMixAt=0; S.i68BfMixDur=0.55; S.i68DashAt=0;
+  S.i68BloodCd=0; S.i68ImmCd=0; S.i68RevCd=0; S.i68RevNext=0; S.i68BfCd=0; S.i68BfT=0; S.i68SphereT=0; S.i68ChuanT=0; S.i68ChuanUntil=0; S.i68ChuanT0=0; S.i68BfUntil=0; S.i68BfMixAt=0; S.i68BfMixDur=0.55; S.i68DashAt=0;
   S.downDone=false; try{ S.__downKick=0; S.__downForce=0; S.__downTok=(S.__downTok||0)+1; }catch(_e){}
   S.res=0; S.resUsed=false; S.dmgTaken=0; S.burn=0; S.flameCd=6;
   S.rite=0; S.riteBreak=true; S.actsLeft=1; S.bonus=0; if(S.turnHold){ clearTimeout(S.turnHold); S.turnHold=null; }
@@ -22836,7 +22879,7 @@ function render(){
       ctx.translate(-(26*SC)*Math.pow(_jw,0.7)+Math.sin(_jw*40)*4*SC*_jw, 0);
     }
     if(typeof drawRika==='function') drawRika();   /* ★ v421 里香改画在乙骨之下（先画 ⇒ 被乙骨挡住） */
-    if(H2==='ita68') drawIta68Art();
+    if(H2==='ita68'){ try{ drawI68ChuanBack(); }catch(e){} drawIta68Art(); }
     else if(H2==='kashimo') drawKashimo();
     else if(H2==='itadori') drawItadori();
     else if(H2==='okkotsu') drawOkkotsu();
