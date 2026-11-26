@@ -5075,8 +5075,13 @@ let SUK_MAXHP=150;   /* ★ v600 改 let：自定义对局可调 */   /* ★ v39
 /* ★ v591：倍率 → 整数百分比文案（1.6 ⇒ +60%，0.75 ⇒ −25%，1.0 ⇒ 100%）。
    所有玩家可见的倍率一律走它，先把浮点乘 100 再 round，避免 1.6*100 的尾差。 */
 function mulTxt(v){ var n=Math.round((Number(v)||1)*100-100); return n===0 ? "100%" : ((n<0?"−":"+")+Math.abs(n)+"%"); }
-function heroPct(v){ return String(Math.round(v/(S.maxHp||100)*100)); }   /* ★ v591：整数，不再 toFixed(1) */
-function sukPct(v){ return String(Math.round(v/(S.maxHp||100)*100)); }   /* ★ v591：整数，不再 toFixed(1) */   /* ★ v568 与 heroPct 同基准：玩家满血=100，宿傩满血读数150 */
+/* ★ v660 用户指定：飘字与文案统一显示「点数」，与技能框、血条同一单位。
+   旧版按「玩家满血=100」折算百分比 ⇒ 68 虎杖（150 血）的 40 点伤害被显示成 27，和技能框写的 40 对不上。 */
+function heroPct(v){ return String(Math.round(v)); }   /* 纯点数：给「预告类」文案用（还没结算的固定值） */
+function sukPct(v){ return String(Math.round(v)); }    /* 宿傩受到的伤害：整数点数 */
+/* ★ v660 玩家实际掉血点数 —— hurtHero 把结算落地的整数写进 S.hurtLast（含半咒灵 ×0.8／原身 ×1.2／
+   中毒减攻／各类减伤），飘字用这个数才和血条掉的一致；没有落地记录时退回传入值。 */
+function heroLoss(v){ const _l=S.hurtLast; return String(Math.round(_l!=null?_l:v)); }
 
 /* ★ v40 式神数值模板（以宿傩最大生命为 100% 参照）
    · 颚吐：HP 18% / 攻 45% / 防 70% / 速 85% / 召唤消耗当前咒力 20%
@@ -7381,6 +7386,7 @@ function healHero(v){
   syncHud();
 }
 function hurtHero(d,kind){
+  S.hurtLast=0;   /* ★ v660 每次受击先清零：被免伤／架开时飘字不会沿用上一击的数字 */
   /* ★ v595 68虎杖·剧毒：宿傩中毒期间，其一切攻击伤害 −20%（强化后 −25%）；灼烧(burnTick)也吃，符合「中毒乏力」 */
   if((S.i68Poison||0)>0 && d>0) d=d*0.75;   /* ★ v615 剧毒一律 −25% 攻击（不再分档） */
   /* ★ v595 解·仿无下限：物理攻击（phys/kai/无 kind 的近身）在免疫回合内归零；术式/领域/式神仍可伤 */
@@ -7502,6 +7508,7 @@ function hurtHero(d,kind){
   if(S.hero==='maki' && (S.makiFull||0)>0 && d>0) d*=1.10;
   /* ★ v487 兜底：减伤叠加后不得四舍五入成 0（否则角色又变不死）——正伤害最低保留 0.1 */
   d=(d>0) ? Math.max(1,Math.round(d)) : 0;   /* ★ v591：源头整数化，正伤害至少 1 点（旧版兜底 0.1 会让血量带小数） */
+  S.hurtLast=d;   /* ★ v660 记录这一击实际落地的点数，供飘字／文案（heroLoss）取用 */
   S.dmgTaken+=d;
   /* ★ v408 打击感五层（玩家受击侧）：停帧／位移／点光碎屑闪白／震屏／同帧音效 */
   if(d>0){
@@ -7894,7 +7901,7 @@ function fireFlame(){
     }else{
       hurtHero(10);
       S.gojo.pose='hurt'; S.gojo.poseT=0.45; S.gojo.hurtFx=0.55;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(10),'#111',false,0,{dmg:true});
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroLoss(10),'#111',false,0,{dmg:true});
       fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：我方受击不再糊大墨爆 */
       SFX.hurt(); shake();
       say('narr','旁白：火焰缠上肩头——那是宿傩的「灶·开」。');
@@ -7919,9 +7926,9 @@ function burnTick(){
   S.burn--;
   const bd=5;
   hurtHero(bd);
-  fxText(GX()+rnd(-14,14),GY-182*SC,'灼烧 -'+heroPct(bd),'#111',false,0,{dmg:true});
+  fxText(GX()+rnd(-14,14),GY-182*SC,'灼烧 -'+heroLoss(bd),'#111',false,0,{dmg:true});
   SFX.hurt();
-  say('sys','场地燃烧——受到 '+heroPct(bd)+' 的灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
+  say('sys','场地燃烧——受到 '+heroLoss(bd)+' 点灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
   const hp=curHp();
   syncHud();
   if(hp<=0){
@@ -9117,9 +9124,9 @@ function mahaSpaceSlash(){
       say('sys','你在那一瞬踩住了地面 —— 空间斩从身侧擦过，没有伤到你。');
     }else{
       hurtHero(base,'maha_space');
-      fxText(GX(),GY-176*SC,'-'+heroPct(base),'#111',false,0,{dmg:true});
+      fxText(GX(),GY-176*SC,'-'+heroLoss(base),'#111',false,0,{dmg:true});
       flash('fRed'); shake();
-      say('sys','空间在你脚下裂开 —— 小型空间斩命中，受到 '+heroPct(base)+' 最大生命伤害！');
+      say('sys','空间在你脚下裂开 —— 小型空间斩命中，受到 '+heroLoss(base)+' 点伤害！');
     }
     syncHud();
   },'maha'); }catch(e){ say('sys','魔虚罗的空间斩被中断了。'); }
@@ -9134,9 +9141,9 @@ function mahaCopySlash(){
     S.shikWait=Math.max(S.shikWait||0,0.95);
     addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#b8860b',tag:'返斩'});
     hurtHero(d,'maha');
-    fxText(GX(),GY-176*SC,'-'+heroPct(d),'#111',false,0,{dmg:true});
+    fxText(GX(),GY-176*SC,'-'+heroLoss(d),'#111',false,0,{dmg:true});
   });
-  say('sys','魔虚罗「同型返斩」—— 把挨过的最重一击还给你：'+heroPct(d)+' 最大生命。');
+  say('sys','魔虚罗「同型返斩」—— 把挨过的最重一击还给你：'+heroLoss(d)+' 点。');
 }
 function mahaSlain(direct){
   if(!S.maha&&S.mahaFade<=0) return;
@@ -9240,7 +9247,7 @@ function yugyoAttack(){
       if(S.phase!=='fight') return;
       S.hitStop=Math.max(S.hitStop,0.1);
       hurtHero(d,'yugyo');            /* 必中、不可格挡；真希天与咒缚仍免疫咒力 */
-      fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroPct(d),'#111',false,0,{dmg:true});   /* 黑白小字 */
+      fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroLoss(d),'#111',false,0,{dmg:true});   /* 黑白小字 */
       fxShards(GX()+18*SC,GY-140*SC,'20,20,24',false);
       SFX.slash(); shake();
     });
@@ -9275,7 +9282,7 @@ function kanjuCharge(){
     S.shikWait=Math.max(S.shikWait||0,1.0);
     S.hitStop=Math.max(S.hitStop,0.12);
     hurtHero(d,'phys');              /* 冲撞＝物理，真希也吃 */
-    fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroPct(d),'#111',false,0,{dmg:true});
+    fxText(GX()+rnd(-8,8),GY-178*SC,'-'+heroLoss(d),'#111',false,0,{dmg:true});
     fxShards(GX()+18*SC,GY-140*SC,'24,22,26',false);
     SFX.slash(); shake();
   });
@@ -9321,9 +9328,9 @@ function shikigamiAct(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e030c8',tag:(_a.ord?_a.ord+' ':'')+'鵺鸣·电荷'});
           hurtHero(_d1);
-          fxText(GX(),GY-176*SC,'-'+heroPct(_d1),'#111',false,0,{dmg:true});
+          fxText(GX(),GY-176*SC,'-'+heroLoss(_d1),'#111',false,0,{dmg:true});
         });
-        say('sys','颚吐「鵺鸣·电荷」——造成 '+heroPct(_d1)+' 最大生命伤害。');
+        say('sys','颚吐「鵺鸣·电荷」——造成 '+heroLoss(_d1)+' 点伤害。');
         if(_para){ S.para=1; say('sys','★ 麻痹！下一回合无法行动（1 回合）。'); }
       }else{
         shikLunge('agyo');
@@ -9331,7 +9338,7 @@ function shikigamiAct(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e0561c',tag:(_a.ord?_a.ord+' ':'')+'颚吐'});
           hurtHero(_d1);
-          fxText(GX(),GY-176*SC,'-'+heroPct(_d1),'#111',false,0,{dmg:true});
+          fxText(GX(),GY-176*SC,'-'+heroLoss(_d1),'#111',false,0,{dmg:true});
         });
         if(_crit){
           lungeAfter(560,function(){
@@ -9365,9 +9372,9 @@ function shikigamiAct(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#8b5cf6',tag:(_a.ord?_a.ord+' ':'')+'魔虚罗'});
           hurtHero(_d,'maha');
-          fxText(GX(),GY-176*SC,'-'+heroPct(_d),'#111',false,0,{dmg:true});
+          fxText(GX(),GY-176*SC,'-'+heroLoss(_d),'#111',false,0,{dmg:true});
         });
-        say('sys','魔虚罗「斩击」——造成 '+heroPct(_d)+' 最大生命物理伤害。');
+        say('sys','魔虚罗「斩击」——造成 '+heroLoss(_d)+' 点物理伤害。');
       }};
       acts.push(_a);
     }else{
@@ -9381,7 +9388,7 @@ function shikigamiAct(){
     S.suk.hp=Math.min(SUK_MAXHP,S.suk.hp+hs);
     S.agyoHp=Math.min(S.agyoMax,S.agyoHp+ha);
     fxText(SX()-8*SC,GY-196*SC,'+'+Math.round(hs),'#2f9e5e');
-    say('sys','颚吐「圆鹿之愈」——宿傩回复 '+sukPct(hs)+' 最大生命，颚吐回复自身 5% 生命。');
+    say('sys','颚吐「圆鹿之愈」——宿傩回复 '+sukPct(hs)+' 点生命，颚吐回复自身 5% 生命。');
     syncHud();
   };
   if(!acts.length){ _heal(); syncHud(); return; }
@@ -10137,6 +10144,7 @@ function eggTipShow(){
   }catch(e){}
 }
 function showSelect(isFirst){
+  try{ stopSummonCine(); }catch(e){}   /* ★ v660 回选人前先收掉召唤演出 */
   try{ var _sn=document.getElementById('selNote'); if(_sn){ if(isHard()){ _sn.style.display=''; _sn.textContent=DF().label+'模式：本次仅能选择 '+DF().lim+' 位术师 —— 全员倒下或击败宿傩，方进入结算。'; } else { _sn.style.display='none'; } } }catch(e){}   /* __selNoteSync v446 */
   S.phase='select';
   hideDomainAnnounce();   /* ★ v86 选人界面一律收掉「领域展开」大字（这是所有换人路径的必经之地） */
@@ -11037,7 +11045,7 @@ function sukunaAttack(){
         const bd=SUK_MAXHP*0.03;                 /* ★v39：3% 最大生命（原 4 点） */
         S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd; streetAdd(bd);
         fxText(GX()+40*SC,GY-226*SC,'-'+sukPct(bd),'#111',false,0,{dmg:true});
-        say('sys','里香·防壁反击——宿傩受到 '+sukPct(bd)+' 最大生命反伤。');
+        say('sys','里香·防壁反击——宿傩受到 '+sukPct(bd)+' 点反伤。');
       }
       fxRing(GX(),GY-130*SC,perf?'#f5c542':'#22c1d6');
       SFX.block();
@@ -11058,7 +11066,7 @@ function sukunaAttack(){
       }
       hurtHero(d,'kai');          /* ★ v191 近身斩击＝宿傩「解」/「捌」（真希架势下伤害减半） */
       S.gojo.pose='hurt'; S.gojo.poseT=0.4; S.gojo.hurtFx=0.5;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(d),'#111',false,0,{dmg:true});
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroLoss(d),'#111',false,0,{dmg:true});
       fxShards(GX()+20*SC,GY-130*SC,'163,38,45',false);
       SFX.hurt(); shake();
       say('suku',pick(['「太慢了。」','「你不过是生在没有我的时代的，凡夫。」','「斩。」','「就这样？」']));
@@ -11090,12 +11098,12 @@ function sukuShinbu(){
   setTimeout(()=>{
     if(S.phase!=='fight'||(S.heroGen||0)!==_hg) return;   /* ★ v243 这段延迟命中若跨过换人 ⇒ 不再把麻痹套到新角色 */
     hurtHero(d);
-    fxText(GX()+rnd(-10,10),GY-176*SC,'-'+heroPct(d),'#111',false,0,{dmg:true});
+    fxText(GX()+rnd(-10,10),GY-176*SC,'-'+heroLoss(d),'#111',false,0,{dmg:true});
     fxImpact(GX()+20*SC,GY-130*SC,false,true);   /* ★ v461 soft：同上 */
     SFX.hurt(); shake();
     S.para=1;                         /* ★ v393 麻痹 1 回合：纯粹无法行动，不因受伤解除 */
     say('suku','「神武解——电击。」');
-    say('sys','★ 神武解：电击 —— 造成 '+heroPct(d)+' 最大生命伤害；我方**麻痹**：下一回合无法行动（1 回合，不因受伤解除）。');
+    say('sys','★ 神武解：电击 —— 造成 '+heroLoss(d)+' 点伤害；我方**麻痹**：下一回合无法行动（1 回合，不因受伤解除）。');
     const curHp=S.hero==='kashimo'?S.kashimo.hp:(S.hero==='itadori'?S.itadori.hp:(S.hero==='ita68'?S.ita68.hp:S.gojo.hp));
     if(curHp<=0){ syncHud(); heroDown(); return; }
     syncHud();
@@ -11570,7 +11578,7 @@ function rikaRelease(){
     if(S.phase!=='fight') return;
     const d=SUK_MAXHP*0.40;   /* ★ v581 用户指定：数值翻倍（20% → 40% 最大生命） */
     flash('fWhite'); shake(); shake();
-    say('sys','★ 无限制咒力解放：里香释放全部咒力，对全体敌人造成 '+sukPct(d)+' 最大生命伤害！');
+    say('sys','★ 无限制咒力解放：里香释放全部咒力，对全体敌人造成 '+sukPct(d)+' 点伤害！');
     hitSukuna(d,true,'hollow',false,true,'rika_release',true);
     if(S.agyo) agyoDown();
     if(S.maha) killMaha();
@@ -11643,6 +11651,20 @@ function freezeCine(sec){
   S.cineFx=0;                       /* ★ v502 默认全冻；只有灵魂·解会显式开 fx 推进 */
   S.cineEnd=(performance.now()/1000)+(sec||2.4);
 }
+/* ★ v660 用户指定：离场（返回选人／难度页／世界线跳跃）时必须把召唤演出整套收掉，
+   不然会出现「已经进了选人界面，画面里还在播八握剑」的残留。 */
+function stopSummonCine(){
+  try{ clearTimeout(S.__cineRetry); S.__cineRetry=0; S.__cineN=0; }catch(e){}
+  try{ if(typeof _cineQ!=='undefined' && _cineQ) _cineQ.length=0; }catch(e){}
+  try{ scClear(); }catch(e){}
+  try{ const el=$('summonCine'); if(el){
+    el.classList.remove('on');
+    const ts=el.querySelectorAll('.scTxt');
+    for(let i=0;i<ts.length;i++){ ts[i].classList.remove('on'); ts[i].style.backgroundImage=''; }
+    const fg=el.querySelector('.scFig'); if(fg){ fg.classList.remove('on'); fg.style.backgroundImage=''; }
+  } }catch(e){}
+  try{ if(S){ S.cine=0; S.cineEnd=0; } }catch(e){}
+}
 function scClear(){
   for(let i=0;i<_scT.length;i++) clearTimeout(_scT[i]);
   _scT=[];
@@ -11661,13 +11683,23 @@ function summonCine(who){
   const _tbEl=document.getElementById('turnBanner');
   /* ★ v653 只把「横幅正在播（1.5s 内）」算作忙，不再看永久残留的 .on 类 */
   const _bannerOn=!!(_tbEl && ((performance.now()-(window.__tbAt||0))<1450));
-  const _busy=!!S.paused || ((S.tbHold||0)>0) || _bannerOn || !!S.cutin;
+  /* ★ v660 修「召唤动画丢失」：旧版把 S.paused 当阻塞 —— 但新手引导、以及暂停页都会把 S.paused 置真，
+     宿傩回合里一旦赶上就直接重试到 40 次（≈8.8s）后静默放弃，动画整段不播。
+     现在只认「暂停页 / 引导页真的开着」这一种用户遮罩；横幅、cutin 这类演出只等一小会儿，超时照播。 */
+  const _pauseOv=document.getElementById('pauseOv');
+  const _guideHit=document.getElementById('guideHit');
+  const _blocked=!!(_pauseOv && _pauseOv.classList.contains('on')) || !!(_guideHit && _guideHit.classList.contains('on'));
+  const _busy=_blocked || ((S.tbHold||0)>0) || _bannerOn || !!S.cutin;
   if(_busy){
     S.__cineN=(S.__cineN||0)+1;
-    if(S.__cineN>40){ S.__cineN=0; return; }   /* 最多等 ~9s，超时放弃，绝不无限重试 */
-    clearTimeout(S.__cineRetry);
-    S.__cineRetry=setTimeout(function(){ try{ summonCine(who); }catch(e){} }, 220);
-    return;
+    /* ★ v660 用户遮罩里绝不硬播；只是被横幅／cutin 挡住的，等 ~2.2s 就照播，不再静默丢掉整段动画 */
+    if(_blocked && S.__cineN>40){ S.__cineN=0; return; }
+    if(!_blocked && S.__cineN>10){ S.__cineN=0; }   /* 超时：落到下面照常播 */
+    else{
+      clearTimeout(S.__cineRetry);
+      S.__cineRetry=setTimeout(function(){ try{ summonCine(who); }catch(e){} }, 220);
+      return;
+    }
   }
   S.__cineN=0;
   if(S.cine){ if(_cineQ.indexOf(who)<0) _cineQ.push(who); return; }   /* ★ v468 排队 */
@@ -11795,7 +11827,7 @@ function fireWave(){
       S.hitStop=Math.max(S.hitStop,0.09);      /* ★ 被斩击波命中：同样定格 */
       hurtHero(15,'kai');         /* ★ v191 斩击波＝宿傩「解」（真希架势下伤害减半） */
       S.gojo.pose='hurt'; S.gojo.poseT=0.4; S.gojo.hurtFx=0.5;
-      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroPct(15),'#111',false,0,{dmg:true});
+      fxText(GX()+rnd(-12,12),GY-170*SC,'-'+heroLoss(15),'#111',false,0,{dmg:true});
       fxShards(GX()+20*SC,GY-130*SC,'163,38,45',false);
       SFX.hurt(); shake();
       say('suku',pick(['「解——够不着吧。」','「这一刀，看得见吗。」']));
@@ -11828,7 +11860,7 @@ function sukunaRCT(){
   fxHealNum(sukPct(gain),true);   /* ★ v644 统一 RCT 回血数字 */
   say('suku','「反转术式。」');
   if(_ss>0) say('suku','「……灵魂的伤，愈合不了吗。」');
-  say('sys','★ 反转术式——宿傩回复 '+sukPct(gain)+' 最大生命'+(wasBurn?'，并修复了术式熔断——所有术式恢复可用！':'。')
+  say('sys','★ 反转术式——宿傩回复 '+sukPct(gain)+' 点生命'+(wasBurn?'，并修复了术式熔断——所有术式恢复可用！':'。')
     +(_ss>=3?'（灵魂损伤 3/3：灵魂被切开，反转术式完全无效）':(_ss>0?('（灵魂损伤 '+_ss+'/3：回复量 −'+Math.round(34*_ss)+'%）'):'')));
   syncHud();
 }
@@ -12263,8 +12295,8 @@ function sukunaTurn(){
     S.suk.hp=Math.max(0,S.suk.hp-vd); S.total+=vd; streetAdd(vd);
     fxText(SX()+rnd(-16,16),GY-170*SC,'-'+sukPct(vd),'#111',false,0,{dmg:true});
     say('sys', ISOKKO
-      ? ('★ 真赝相爱 —— 无尽剑林绞杀，宿傩受到 '+sukPct(vd)+' 最大生命侵蚀。')
-      : ('★ 信息洪流——宿傩受到 '+sukPct(vd)+' 最大生命侵蚀。'));
+      ? ('★ 真赝相爱 —— 无尽剑林绞杀，宿傩受到 '+sukPct(vd)+' 点侵蚀。')
+      : ('★ 信息洪流——宿傩受到 '+sukPct(vd)+' 点侵蚀。'));
     /* ★ v86 下一回合开始 ⇒ 魔虚罗击碎无量空处：
          已在场 → 直接由它斩（不重复召唤）；未召唤 → 先登场再斩。两种情况都必须播 domBreak 击碎动画。 */
     if(S.voidMahaT>0 && !ISOKKO){   /* ★ v243 乙骨「真赣相爱」不接入魔虚罗外侧擃碎机制 */
@@ -12327,14 +12359,14 @@ function sukunaTurn(){
     say('suku',pick(['「解。」','「——在这个范围里，你跑不掉的。」']));
     say('sys',_itaNull
       ? '★ 伏魔御厨子——「解」「捌」的必中斩击被虎杖的「简易领域（新·阴流）」中和，没有造成伤害。'
-      : '★ 伏魔御厨子——「解」把领域内无咒力的一切斩成粉碎，「捌」则贴着你的咒力一刀切下：受到 '+sukPct(sd)+' 最大生命伤害（落花之情正在抵消后续的连击）。');
+      : '★ 伏魔御厨子——「解」把领域内无咒力的一切斩成粉碎，「捌」则贴着你的咒力一刀切下：受到 '+sukPct(sd)+' 点伤害（落花之情正在抵消后续的连击）。');
   }
   /* 血契侵蚀（虎杖的穿血残留） */
   if(S.blood>0 && S.phase==='fight'){
     const bd=S.blood*3;
     S.suk.hp=Math.max(0,S.suk.hp-bd); S.total+=bd; streetAdd(bd);
     fxText(SX()+rnd(-16,16),GY-158*SC,'-'+sukPct(bd),'#111',false,0,{dmg:true});
-    say('sys','血契侵蚀——宿傩受到 '+sukPct(bd)+' 最大生命持续伤害（血契 ×'+S.blood+'）');
+    say('sys','血契侵蚀——宿傩受到 '+sukPct(bd)+' 点持续伤害（血契 ×'+S.blood+'）');
     syncHud();
   }
   burnTick();
@@ -12351,7 +12383,7 @@ function sukunaTurn(){
   if(S.vowCounterT>0){
     const cd=S.vowCounter;
     hitSukuna(cd,false,'atk',false,true);   /* ★v39：被动反伤不吃 ×0.70，与里香·防壁一致 */
-    say('sys','里香·反击——宿傩受到 '+sukPct(cd)+' 最大生命伤害。');
+    say('sys','里香·反击——宿傩受到 '+sukPct(cd)+' 点伤害。');
     S.vowCounterT--;
     if(!S.vowCounterT) S.vowCounter=0;
   }
@@ -12718,7 +12750,7 @@ function endDomain(){
   }else{
     hurtHero(20,'dom');
     S.gojo.pose='hurt'; S.gojo.poseT=0.5; S.gojo.hurtFx=0.6;
-    fxText(GX(),GY-210*SC,'-'+heroPct(20),'#111',false,0,{dmg:true});
+    fxText(GX(),GY-210*SC,'-'+heroLoss(20),'#111',false,0,{dmg:true});
     addFx({type:'crack',dur:0.9});
     flash('fWhite'); shake(); SFX.hurt(); SFX.slash();
     say('suku','「无量空处——不过如此，凡夫。」');
@@ -14109,6 +14141,8 @@ function togglePause(){
      刚恢复的音乐立刻被按回去，只能等 1.2 秒一次的补播看守重新拉起（听感就是「响得很慢」）。
      现在：暂停才停（240ms 补一次防漏对白音）；继续立刻恢复，并在 40/240ms 各补一次 play（只恢复、绝不再暂停）。 */
   S.paused=!S.paused;
+  /* ★ v660 用户指定：暂停时把召唤演出收掉，别让它盖住暂停菜单（继续时不重播，避免二次抢镜） */
+  if(S.paused){ try{ const _ce=document.getElementById('summonCine'); if(_ce && _ce.classList.contains('on')) stopSummonCine(); }catch(e){} }
   const b=document.getElementById('pauseBtn'), o=document.getElementById('pauseOv');
   if(b) b.classList.toggle('paused',S.paused);
   if(o) o.classList.toggle('on',S.paused);
@@ -16465,9 +16499,10 @@ function i68OnBlack(fn){
   try{ if(typeof fxBlackCrack==='function') fxBlackCrack(); }catch(e){}
   S.blackN=(S.blackN||0)+1;
   const gb=i68BoostPick();
-  if(gb==='jie') say('sys','★ 黑闪强化：「解·御厨子」升格 —— 伤害 30，化为迅猛的网格斩击！');
-  else if(gb==='blood') say('sys','★ 黑闪强化：「穿血·裂变」升格 —— 伤害 15，剧毒延长至 3 回合、宿傩攻击 −25%！');
+  if(gb==='jie') say('sys','★ 黑闪强化：「解·御厨子」升格 —— 伤害 40，化为迅猛的网格斩击！');
+  else if(gb==='blood') say('sys','★ 黑闪强化：「穿血·裂变」升格 —— 伤害 25，剧毒延长至 3 回合、宿傩攻击 −25%！');
   else say('sys','★ 又一记黑闪——两项术式均已臻至极限（黑闪率 '+(i68BlackP()*100).toFixed(0)+'%）');
+  try{ syncHud(); }catch(e){}   /* ★ v660 强化后立刻刷新技能框（旧版要等下次 syncHud，框里还写着 30） */
   /* 黑闪冲击造成硬直（同虎杖口径，但 68 虎杖每记黑闪都触发） */
   if(S.suk.hp>0 && !sukuInShadow()){   /* ★ v646 影遁免伤时黑闪打不出硬直 */
     S.sukHard=1;
@@ -22825,7 +22860,7 @@ function render(){
      globalCompositeOperation / filter，都会污染下一帧的立绘绘制（用户所见鹿紫解放后、
      换人后角色与宿傩一起变半透明）。每帧开头强制归位，彻底杜绝此类状态泄漏。 */
   ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over'; ctx.filter='none';
-  try{ if(S.cine && performance.now()/1000>=(S.cineEnd||0)) scClear(); }catch(e){}   /* ★ v467 召唤演出看门狗 */
+  try{ if(S.cine && performance.now()/1000>=(S.cineEnd||0)){ scClear(); if(typeof _cineQ!=='undefined' && _cineQ && _cineQ.length) setTimeout(function(){ try{ _cineNext(); }catch(e){} }, 150); } }catch(e){}   /* ★ v467 召唤演出看门狗 */
   drawBg();
   drawFlames();
   /* v297 已废用 */ void 0;   /* ★ v291 虎杖击败宿傩后：最左侧紧贴板边的背景图（画在角色之下，渐显） */
@@ -23545,7 +23580,7 @@ function syncHud(){
       /* ★ v232 五条悟 1 技两形态：形态要进缓存键，切换时整块重刷（角标由 swapSpanHtml() 一并写回） */
       const fist=!!(a==='atk' && S.hero==='gojo' && !stg && gojoFistMode());
       /* ★ v60 快取键必须含里香状态：召唤 / 退场后二技能要换名，否则按钮一直不刷新 */
-      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='maki')?('W'+(S.makiW||0)+'R'+(S.makiRead||0)+'C'+Math.round(S.makiCharge||0)+'F'+(S.makiFull||0)+'S'+(S.soulStack||0)+'X'+((S.gojo&&S.gojo.hp<=S.maxHp*0.50)?1:0)+'U'+(S.makiUsed||0)+'G'+(S.makiGSel==null?'-':S.makiGSel)):'')+((S.hero==='higuruma')?('E'+(S.evidence||0)+'H'+(S.heavyEv||0)+'L'+(S.heavyLocked||0)+'P'+(S.heavyPending||0)+'G'+(S.guilt||0)):'')+((S.hero==='kashimo')?('C'+(S.charge||0)+'H'+Math.round(S.kashimo.hp||0)):'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+'c'+(S.rikaCd||0)+(S.rikaCopy||'-')+(S.rikaCopyCd||0)+(S.rikaCopyPend||'-')+(S.rikaCopyNext||'-')+(S.rikaCopyKeep?'K':'')):'')+((S.hero==='ita68'&&a==='guard')?('B'+(S.i68BfCd||0)):'');   /* ★ v641 CD 数进快取键：新回合标签要从伤害值切成「CD N」 */   /* ★ v69 白板态/灵魂·解 也要刷新；★ v212 K＝里香时限到退场（模仿术式保留） */
+      const kk=S.hero+a+(stg?'S':'')+(soul?'D':'')+(fist?'F':'')+((S.hero==='ita68')?('J'+(S.i68Boost.jie?1:0)+'B'+(S.i68Boost.blood?1:0)+'N'+(S.i68BlackN||0)+'C'+(S.i68BfCd||0)):'')+((S.hero==='maki')?('W'+(S.makiW||0)+'R'+(S.makiRead||0)+'C'+Math.round(S.makiCharge||0)+'F'+(S.makiFull||0)+'S'+(S.soulStack||0)+'X'+((S.gojo&&S.gojo.hp<=S.maxHp*0.50)?1:0)+'U'+(S.makiUsed||0)+'G'+(S.makiGSel==null?'-':S.makiGSel)):'')+((S.hero==='higuruma')?('E'+(S.evidence||0)+'H'+(S.heavyEv||0)+'L'+(S.heavyLocked||0)+'P'+(S.heavyPending||0)+'G'+(S.guilt||0)):'')+((S.hero==='kashimo')?('C'+(S.charge||0)+'H'+Math.round(S.kashimo.hp||0)):'')+((S.hero==='gojo'&&a==='guard')?('V'+(S.revCd||0)):'')+((S.hero==='okkotsu'&&a==='guard')?('R'+(S.rika?'1':'0')+'c'+(S.rikaCd||0)+(S.rikaCopy||'-')+(S.rikaCopyCd||0)+(S.rikaCopyPend||'-')+(S.rikaCopyNext||'-')+(S.rikaCopyKeep?'K':'')):'')+((S.hero==='ita68'&&a==='guard')?('B'+(S.i68BfCd||0)):'');   /* ★ v641 CD 数进快取键：新回合标签要从伤害值切成「CD N」 */   /* ★ v69 白板态/灵魂·解 也要刷新；★ v212 K＝里香时限到退场（模仿术式保留） */
       if(b.__lab!==kk){
         b.__lab=kk;
         /* ★ 查表：6 个角色统一走 HERO_BTN（小字支持函数，用来显示实时进度） */
@@ -23800,6 +23835,7 @@ $('stage').addEventListener('mousedown',tapMash);
    ========================================================= */
 /* ★ v153 推镜转场：来源整屏推近（scale 放大 + 淡出）→ 露出下方的纯白难度页 */
 function enterDiff(fromId){
+  try{ stopSummonCine(); }catch(e){}   /* ★ v660 进难度页（含世界线跳跃）先收掉召唤演出 */
   /* ★ v178 开场影片：播放中 / 刚跳过后 600ms 内，残留的 click / tap 不生效。
      跳过按钮在右下角，残留 click 正好落在同位置的首页「进入「帐」」按钮上，
      旧版因此会「跳过后直接进难度页」——手机端影片卡顿时尤其明显。 */
@@ -25466,7 +25502,7 @@ function staggerStrike(){
     fxText(SX()-30*SC,GY-170*SC,'-'+sukPct(d),'#111',false,0,{dmg:true});
     fxImpact(SX()-30*SC,GY-140*SC,true);
     shake(); flash('fWhite');
-    say('sys','★ 脆弱时间追击——宿傩措手不及，受到 '+sukPct(d)+' 最大生命伤害。');
+    say('sys','★ 脆弱时间追击——宿傩措手不及，受到 '+sukPct(d)+' 点伤害。');
     syncHud();
   },150);
   syncHud();
@@ -27406,6 +27442,7 @@ $('btnPauseJump').addEventListener('click',function(){
     var _ir=document.getElementById('intentRow'); if(_ir) _ir.style.display='none';
     if(typeof clearHeroTimers==='function') clearHeroTimers();
     S.turnWait=0; S.shikWait=0; S.cutin=0; S.cine=0;
+    try{ stopSummonCine(); }catch(e){}   /* ★ v660 跳线时把召唤演出一并收掉 */
     var _tbar=document.getElementById('turnBar'); if(_tbar) _tbar.classList.remove('tbMute');
   }catch(e){}
   /* ★ V520c 用户报「世界线跳跃点了没反应」：这里原来无参调用 enterDiff()，
