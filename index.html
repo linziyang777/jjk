@@ -15005,67 +15005,16 @@ function bgStatic(){
     _vg.addColorStop(1,'rgba(255,255,255,0)');
     g.fillStyle=_vg; g.fillRect(0,0,W,H);
   }
-    const _cg=getCurseGlyph();
-  /* ★ v525 用户指定：背景「呪術」字样再缩小、不要太显眼；并按原图比例画（旧版塞进正方形，横向被压扁） */
-  if(_cg && _cg.naturalWidth){
-    g.save(); g.globalAlpha=0.112;
-    const _gw=Math.min(W,H)*0.33, _gh=_gw*(_cg.naturalHeight||780)/(_cg.naturalWidth||1100);
-    g.drawImage(_cg,W/2-_gw/2,H*0.55-_gh/2,_gw,_gh);
-    g.restore();
-  }else{
-g.globalAlpha=0.112; g.fillStyle='#0d0d0d';
-  g.font='900 '+(Math.min(W,H)*0.17)+'px "Noto Sans SC",serif';   /* ★ v525 回退字形同步缩小，且写完整的「呪術」 */
-  g.textAlign='center'; g.textBaseline='middle';
-  const _cx=W/2, _cy=H*0.55, _fs=Math.min(W,H)*0.17;   /* ★ v525 泼溅半径／垂流长度跟着字样一起缩 */
-  /* 五层叠墨：由外而内，模拟宣纸吸墨的毛边 */
-  for(let _i=5;_i>=1;_i--){ g.globalAlpha=0.035+0.016*(5-_i); g.shadowColor='rgba(8,8,8,.5)'; g.shadowBlur=(6+_i*7)*SC; g.fillText('呪術',_cx+(_i%2?1:-1)*1.5*SC,_cy+(_i%3-1)*1.2*SC); }
-  /* 主体 */
-  g.shadowBlur=0; g.globalAlpha=0.155; g.fillText('呪術',_cx,_cy);
-  /* 泼溅：字缘随机墨点 */
-  for(let _b=0;_b<46;_b++){
-    const _t=_b*2.39996, _rr=(0.30+0.26*Math.abs(Math.sin(_b*1.7)))*_fs;
-    const _bx=_cx+Math.cos(_t)*_rr*0.52, _by=_cy+Math.sin(_t)*_rr*0.42;
-    const _br=(0.6+2.6*Math.abs(Math.cos(_b*0.9)))*SC*(0.5+0.5*Math.random());
-    g.globalAlpha=0.05+0.10*Math.abs(Math.sin(_b));
-    g.beginPath(); g.arc(_bx,_by,_br,0,Math.PI*2); g.fill();
-  }
-  /* 垂流：墨未干前向下淌的水痕 */
-  for(let _d=0;_d<9;_d++){
-    const _dx=_cx+((_d/8)-0.5)*_fs*0.92;
-    const _h=(0.06+0.15*Math.abs(Math.sin(_d*2.1)))*_fs;
-    g.globalAlpha=0.045+0.03*Math.abs(Math.cos(_d));
-    g.fillRect(_dx, _cy+_fs*0.16, (1.2+2.2*Math.abs(Math.sin(_d*1.3)))*SC, _h);
-  }g.restore();
-  }
-  /* 远景天际线（新宿剪影）——稀疏零碎：约 1/3 留空，断续分布不再连续密铺 */
+    /* ★ v659 用户指定：去掉背景里的「呪術」大字水印（含墨点／垂流） —— 背景只留街景线稿 */
+  /* ★ v659 用户指定：去掉远景/前景天际线的「柱状」灰色块（那两圈是旧版的水印陪衬），
+     只在最底边留一层柔和虚化，让画面往下收得干净。 */
   g.save();
-  const bw=W/30;
-  for(let i=0;i<30;i++){
-    if(((i*73)%100)<34) continue;            /* ★ v126 确定性跳过 ≈34%，形成零碎间隔 */
-    const hh=(10+((i*37)%9)*7+((i*11)%5)*4)*SC;
-    const bh=hh*1.35;
-    g.globalAlpha=0.05+((i*7)%4)*0.012;
-    g.fillStyle='#111';
-    g.fillRect(i*bw, GY-bh, bw*0.8, bh);
-    if(i%5===2){ g.fillRect(i*bw+bw*0.3, GY-bh-hh*0.34, bw*0.12, hh*0.34); }
-  }
+  const _bgFade=g.createLinearGradient(0,H*0.90,0,H);
+  _bgFade.addColorStop(0,'rgba(247,244,238,0)');
+  _bgFade.addColorStop(0.62,'rgba(247,244,238,0.52)');
+  _bgFade.addColorStop(1,'rgba(247,244,238,0.9)');
+  g.fillStyle=_bgFade; g.fillRect(0,H*0.90,W,H*0.10);
   g.restore();
-  /* 前景楼群：稀疏零碎（不再连续密铺到底边，约近半留空拉开间隔） */
-  g.save();
-  const bw2=W/22;
-  for(let i=0;i<22;i++){
-    if(((i*157)%100)<46) continue;          /* ★ v126 确定性跳过 ≈46%，零碎错落 */
-    const hh2=(9+((i*53)%7)*7+((i*17)%4)*5)*SC;
-    const yTop=GY-hh2*0.62;                      /* 楼顶略高于地面线，形成层次 */
-    g.globalAlpha=0.028+((i*11)%3)*0.010;
-    g.fillStyle='#111';
-    g.fillRect(i*bw2, yTop, bw2*0.9, H-yTop); /* 一直画到画面底边 */
-    if(i%4===1){
-      g.globalAlpha*=0.72;
-      g.fillRect(i*bw2+bw2*0.28, yTop-hh2*0.28, bw2*0.16, hh2*0.28);
-    }
-  }
-  g.restore();   /* ★ 与前景楼群的 save() 配对 */
   _bgStatic=c; _bgStaticKey=key; return c;
 }
 /* ★ v444 用户指定：领域对拼的「气流冲击」——
@@ -16382,7 +16331,9 @@ function drawI68ChuanBack(){
   const ww=Math.max(H*1.42*SC, hb.w*3.6)*1.1*0.6, hh=ww/ar;   /* ★ v657c 用户指定：特效图缩小 0.4×（≈0.66 总倍率） */
   /* 锚点：黑球直接落在立绘手心（双手前伸处） */
   const px=GX()+hb.w*0.59, py=GY-hb.h*0.36;
-  const ax=px-ww*0.278, ay=py-hh*0.75;
+  /* ★ v659 修正锚点：这张图里黑球实际在 (0.284, 0.806)，旧值 0.278/0.75 让整体低了约 45px，
+     结果黑球总从手下方露出来。锚点校准后黑球正好落在立绘双手之间、被手盖住。 */
+  const ax=px-ww*0.284, ay=py-hh*0.806;
   const al=k>0.92?Math.max(0,1-(k-0.92)/0.33):1;
   if(al<=0) return;
   ctx.save();
