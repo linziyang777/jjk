@@ -9079,13 +9079,19 @@ function summonAgyo(withLog,booked){
   S.agyoUsed=true;   /* ★ v46 记录「已召唤过」，避免击破后无限重生 */
   S.agyoBornTurn=(typeof S.turnN==='number')?S.turnN:-1;   /* ★ v493 登场回合不出手（同魔虚罗） */
   try{ bumpYugyo(); }catch(e){}   /* ★ v474 使用十种影法术 ⇒ 玉犬 +2% */
-  S.agyo=true;
   S.agyoCd=0;
   S.agyoMax=SUK_MAXHP*AGYO_PCT.hp*shikHalveFor('agyo');
   S.agyoHp=S.agyoMax;
   sukPaySuk(AGYO_PCT.cost);
-  /* ★ v467 同款定格演出：嵌合兽→颚吐→形象由下至上 */
-  summonCine('agyo');
+  /* ★ v662 用户指定：先播「嵌合兽→颚吐」演出，播完才让立绘出现（旧版先 S.agyo=true ⇒ 立绘抢在演出前） */
+  let _agyoLanded=false;
+  const _landAgyo=function(){
+    if(_agyoLanded||S.agyo) return;
+    _agyoLanded=true; S.agyo=true;
+    try{ syncHud(); }catch(e){}
+  };
+  summonCine('agyo', _landAgyo);
+  setTimeout(_landAgyo, 6500);   /* 看门狗 */
   flash('fWhite'); shake(); SFX.adapt();
   if(withLog){
     say('suku','「嵌合兽——颚吐。」');
@@ -9525,19 +9531,19 @@ function sukunaTrueForm(){
   stageReset();
   /* ★ v509 用户指定：现原身加「时间暂停」演出 —— 全场定住，只有他的肉体在重塑。
      freezeCine 只冻结世界，不影响结算；演出结束自然解冻。 */
-  try{ freezeCine(1.9); }catch(e){}
+  /* ★ v662 修「原身登场时画面卡住」：freezeCine 会把 cineFx 归零，正在飞的灵魂解特效整段定住、
+     看起来就是卡死。这里改为只延长定格时间、保留 cineFx（特效继续按真实时间推进），并缩短到 1.15s。 */
+  try{ S.cine=1; S.cineEnd=(performance.now()/1000)+1.15; }catch(e){}
   try{ S.hitStop=Math.max(S.hitStop||0,0.26); }catch(e){}
   try{ say('sys','★ 时间暂停 —— 宿傩正在舍弃伏黑惠的肉体。'); }catch(e){}
   /* 立绘万一没加载成功（移动端内存吃紧时会丢），这里再补一次 */
-  if(!IMGS.sukuTrue&&IMG.sukuTrue) /* ★ v451 命中墨爆贴图：黑墨版 + 同形白墨版（深色领域里看得见） */
-/* ★ v534 墨爆贴图已不再使用 ⇒ 预载一并摘除（不占解码内存） */
-loadRGBA('sukuTrue',IMG.sukuTrue);
+   if(!IMGS.sukuTrue&&IMG.sukuTrue){ setTimeout(function(){ try{ loadRGBA('sukuTrue',IMG.sukuTrue); }catch(e){} },80); }   /* ★ v662 兜底解码改到下一拍，别在转场帧同步烤 tint */
   /* ★ v392 定案：受肉崩坏照常「满血」—— 灵魂损伤不改血条。
      它改的是「灵魂与新肉体的同步」：满 3 层时，原身站起来的第一回合动不了。 */
   const _ssT=Math.min(3,S.soulStack||0);
   S.suk.hp=SUK_MAXHP;                       /* 恢复满血（★v38：每阶段 150） */
   if(_ssT>=3) S.soulStun=1;                 /* 灵魂损伤 3/3：灵魂被切开，换了身体也接不上 */
-  S.suk.pose='cast'; S.suk.poseT=1.8;
+  S.suk.pose='cast'; S.suk.poseT=1.1;
   S.hitStop=Math.max(S.hitStop,0.18);
   /* ★ v140 全屏红闪由 80% 降到 50%：叠得过重时立绘会被压得发白、看不清 */
   flashStage('rgba(215,38,61,.50)'); shake();
@@ -11696,6 +11702,8 @@ function stopSummonCine(){
     const fg=el.querySelector('.scFig'); if(fg){ fg.classList.remove('on'); fg.style.backgroundImage=''; }
   } }catch(e){}
   try{ if(S){ S.cine=0; S.cineEnd=0; } }catch(e){}
+  /* ★ v662 演出被强行中断（离场/暂停）也要把式神放上场，避免「召唤了却永远不出现」 */
+  try{ const m=S.__cineEndCb; if(m){ Object.keys(m).forEach(function(k){ try{ const cb=m[k]; delete m[k]; if(typeof cb==='function') cb(); }catch(e){} }); } }catch(e){}
 }
 function scClear(){
   for(let i=0;i<_scT.length;i++) clearTimeout(_scT[i]);
@@ -11708,8 +11716,18 @@ function scClear(){
   const fg=el.querySelector('.scFig');
   if(fg){ fg.classList.remove('on'); fg.style.backgroundImage=''; }
 }
-function summonCine(who){
+/* ★ v662 用户指定：召唤要「先播动画、后出立绘」。
+   做法：召唤演出登记一个结束回调（按 who 存），演出播完（或被迫中断）时再让式神落地。 */
+function _cineFireEnd(who){
+  try{
+    const m=S.__cineEndCb; if(!m) return;
+    const cb=m[who]; if(typeof cb!=='function') return;
+    delete m[who]; cb();
+  }catch(e){}
+}
+function summonCine(who,onEnd){
   const el=$('summonCine'); if(!el) return;
+  if(typeof onEnd==='function'){ S.__cineEndCb=S.__cineEndCb||{}; S.__cineEndCb[who]=onEnd; }
   /* ★ v622 召唤演出不抢拍：必须在战斗内、且回合横幅与暂停都结束之后才播 */
   if(!S || S.phase!=='fight'){ try{ S.__cineN=0; S.__cineRetry&&clearTimeout(S.__cineRetry); }catch(e){} return; }
   const _tbEl=document.getElementById('turnBanner');
@@ -11764,7 +11782,7 @@ function summonCine(who){
   el.classList.add('on');
   S.cine=1;
   S.cineEnd=(performance.now()/1000)+dur+0.15;
-  _scT.push(setTimeout(function(){ scClear(); _cineNext(); }, dur*1000));   /* ★ v468 播完接下一场 */
+  _scT.push(setTimeout(function(){ scClear(); _cineNext(); _cineFireEnd(who); }, dur*1000));   /* ★ v468 播完接下一场；★ v662 再让式神落地 */
 }
 /* 世界斩用的离屏取样画布（把当前画面抓下来再上半／下半错位） */
 let _wldBuf=null;
@@ -11783,7 +11801,7 @@ function summonMaha(withLog){
   try{ bumpYugyo(); }catch(e){}   /* ★ v474 使用十种影法术 ⇒ 玉犬 +2% */
   /* ① 先在宿傩左上方浮现「八握剑」字样 */
   /* ★ v467 改走定格演出：时间暂停 + 压暗聚焦 + 八握剑→异戒神将→魔虚罗→形象由下至上 */
-  summonCine('maha');
+  /* ★ v662 演出启动挪到下面（带结束回调），这里不再重复调用，否则会播两遍 */
   SFX.adapt(); shake();
   /* ② 字样出现后，魔虚罗才现身
      ★ v119 稳健化：落地抽成幂等函数 landMaha()，除原本 640ms 的「字样 → 现身」视觉节奏外，
@@ -11831,8 +11849,9 @@ function summonMaha(withLog){
       }catch(e){ landMaha(); }
     })();
   };
-  setTimeout(function(){ _landAfter(0); },640);
-  setTimeout(function(){ _landAfter(0); },2200);   /* ★ v119 看门狗：正常情况早已落地，这条不会产生任何可见效果 */
+  /* ★ v662 用户指定：魔虚罗必须等召唤演出播完才登场（旧版 640ms 到点就落地，演出还在等横幅时立绘先出现）。 */
+  summonCine('maha', function(){ _landAfter(0); });
+  setTimeout(function(){ _landAfter(0); }, 7000);   /* 看门狗：演出被吞（引导/暂停/异常）时兜底登场 */
 }
 /* 二阶段起：远程斩击波「解」 */
 function fireWave(){
@@ -23704,7 +23723,7 @@ function syncHud(){
       if(b.__vsw!==itaDom){ b.__vsw=itaDom; b.classList.toggle('vowSwapOn',itaDom); }
       if(b.__yuji!==itaFull){ b.__yuji=itaFull; b.classList.toggle('b-yuji',itaFull); }
     }
-    if(typeof shikBusy==='function' && shikBusy()) dim=true;   /* ★ v661 式神出手时按键全暗 */
+    if(typeof playerCanAct==='function' && !playerCanAct()) dim=true;   /* ★ v662 非玩家回合／不可行动 ⇒ 全部灰暗 */
     const selNow=!!(S.acted&&S.lastAct===a);
     if(b.__dim!==dim){ b.__dim=dim; b.classList.toggle('dim',dim); }
     /* ★ v567 持续生效中的技能（文案含「剩 N 回合」）改金框「生效中」，与 CD 区分 */
@@ -23803,6 +23822,18 @@ function shikBusy(){
   }catch(e){}
   return false;
 }
+/* ★ v662 用户指定：非玩家回合、或玩家此刻根本不能动（横幅／演出／式神出手／QTE／暂停）时，
+   所有技能键保持灰暗。这是「能不能动」的唯一口径，padAct 与 syncHud 共用。 */
+function playerCanAct(){
+  try{
+    if(!S || S.phase!=='fight') return false;
+    if(S.paused || S.cine || QTE.active) return false;
+    if((S.cutin||0)>0 || (S.turnWait||0)>0 || (S.tbHold||0)>0) return false;
+    if(typeof sukActing==='function' && sukActing()) return false;
+    if(typeof shikBusy==='function' && shikBusy()) return false;
+  }catch(e){ return true; }
+  return true;
+}
 function padAct(a){
   if(shikBusy()){ say('sys','式神正在出手 —— 等这一拍打完再动。'); return; }   /* ★ v661 */
   if(S.phase==='yujiDom'){ return; }   /* ★ v66：展开动画期间不接收操作 */
@@ -23810,6 +23841,7 @@ function padAct(a){
   if(S.domClash) return;
   if(S.cine) return;   /* ★ v467 式神召唤定格演出期间不接受操作 */
   if(sukActing()) return;   /* ★ v649 宿傩／式神招式动画没播完 ⇒ 不接受操作 */
+  if((S.cutin||0)>0 || (S.turnWait||0)>0) return;   /* ★ v662 演出/等待期间不接受操作 */
   /* ★ v462 连点闸门（用户报「一直点一个按钮，回合飞快就没了」）
      · 本回合已出手（按钮本来就置灰）⇒ 事件层也一并挡掉，不再重复 markActed；
      · 同一波点击：触控装置上 touchstart 与合成 click 会各派发一次，相隔通常 <120ms，
