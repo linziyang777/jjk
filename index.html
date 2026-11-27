@@ -12048,12 +12048,24 @@ let _scT=[];
 /* ★ v468 用户指定：魔虚罗与颚吐同时召唤 ⇒ 先播魔虚罗、再播颚吐 */
 let _cineQ=[];
 function _cineNext(){
-  /* ★ v669 严格排队：当前有演出 / 玩家或敌方动画未收干净时，等下一拍再取队首 */
-  if(S.cine || (typeof fxBusy==='function'&&fxBusy()) || (S.shikWait||0)>0 || (S.hitStop||0)>0){
+  /* ★ v669 严格排队；★ v671 加超时兜底：忙最多等 3.4s（18×190ms）就强制播，
+     避免宿傩回合里小特效不断把召唤永远卡在队列里（表现为「召唤动画不播」）。 */
+  if(S.cine){
     if(!S.__cinePumpT){ S.__cinePumpT=setTimeout(function(){ S.__cinePumpT=0; try{ _cineNext(); }catch(e){} },190); }
     return;
   }
-  if(_cineQ.length){ const w=_cineQ.shift(); summonCine(w); }
+  if(!_cineQ.length) return;
+  const _busy=(typeof fxBusy==='function'&&fxBusy()) || (S.shikWait||0)>0 || (S.hitStop||0)>0 || (S.cutin||0)>0;
+  if(_busy){
+    S.__cinePumpN=(S.__cinePumpN||0)+1;
+    if(S.__cinePumpN<18){
+      if(!S.__cinePumpT){ S.__cinePumpT=setTimeout(function(){ S.__cinePumpT=0; try{ _cineNext(); }catch(e){} },190); }
+      return;
+    }
+    S.__cinePumpN=0; S.__cineForce=1;   /* 超时：允许强播 */
+  }
+  S.__cinePumpN=0;
+  const w=_cineQ.shift(); summonCine(w);
 }
 /* 时间暂停（给其他演出复用；与召唤定格共用 S.cine 闸门） */
 function freezeCine(sec){
@@ -12139,9 +12151,10 @@ function summonCine(who,onEnd){
   const _busy=_blocked || ((S.tbHold||0)>0) || _bannerOn || !!S.cutin
     || (S.shikWait||0)>0 || (S.hitStop||0)>0
     || (typeof fxBusy==='function' && fxBusy());   /* ★ v669 绝不在别的单位攻击动画里插召唤 */
-  if(_busy){
+  if(_busy && !S.__cineForce){
     /* ★ v669 改为「严格 FIFO 入队」：旧版 busy 时各自 220ms 重试，两个召唤谁先抢到空闲谁先播
-       ⇒ 出现「先喊颚吐却播魔虚罗」。现在一律排队，按召唤顺序播，谁召唤就播谁。 */
+       ⇒ 出现「先喊颚吐却播魔虚罗」。现在一律排队，按召唤顺序播，谁召唤就播谁。
+       ★ v671 由 _cineNext 超时置 __cineForce，避免永久排队导致动画不播。 */
     if(_cineQ.indexOf(who)<0) _cineQ.push(who);
     S.__cineN=0;
     if(_blocked && (S.__cineN||0)>400) return;
@@ -12151,6 +12164,7 @@ function summonCine(who,onEnd){
     return;
   }
   S.__cineN=0;
+  if(S.__cineForce){ S.__cineForce=0; }   /* ★ v671 超时强播：跳过 busy 但保留顺序 */
   if(S.cine){ if(_cineQ.indexOf(who)<0) _cineQ.push(who); return; }   /* ★ v468 排队 */
   scClear();
   try{ if(S.__cinePendAt) delete S.__cinePendAt[who]; }catch(e){}   /* ★ v666 真的起播 ⇒ 解除占位 */
