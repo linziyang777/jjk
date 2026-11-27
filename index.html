@@ -23529,7 +23529,7 @@ function renderStatus(){
 if(S.gojoBurn)     chips.push(['melt','purple','五条悟·术式熔断']);   /* ★ v92 对拼输掉方熔断 */
 if(S.sukuBurn)     chips.push(['melt','red','宿傩·术式熔断']);       /* ★ v92 对拼输掉方熔断 */
   /* ★ v243k 用户要求：取消鹿紫云一「正电荷」的显示（机制仍在，仅不显示） */
-  if(S.blood>0)      chips.push(['blood','red','血契 ×'+S.blood]);
+  /* v671 用户指定：血契机制已从普通虎杖移除，状态栏不再显示血契徽标 */
   if(S.burn>0)       chips.push(['flame','fire','燃烧 '+S.burn+' 回合']);
   if(S.para>0)       chips.push(['para','purple','麻痹·无法行动']);
   if((S.anchor||0)>0) chips.push(['cang','red','引力锚点 ×'+S.anchor]);
@@ -24042,7 +24042,7 @@ function syncHud(){
   }
     $('gjHpTxt').textContent=String(Math.round(S.itadori.hp/(S.maxHp||100)*100));
     $('subTag').innerHTML='咒力<small>CE</small>';   /* ★ v520 这条格条本来就是咒力，不该顶着「血契」标签 */
-    try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +2 点（上限 5 点）｜血契 ×'+(S.blood||0)+'（每层每回合侵蚀宿傩 3 点）'; }catch(e){}
+    try{ var _ce=$('gjCe'); if(_ce) _ce.title='咒力点数 · 每回合 +2 点（上限 5 点）'; }catch(e){}
   }
   renderRite();
   renderStatus();
