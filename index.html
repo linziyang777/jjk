@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v669"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v670"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v669">
+<meta name="jjk-build" content="v670">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -2801,13 +2801,13 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   z-index:31;transform:translateY(-50%);white-space:nowrap;}
 #turnBar #actsChip.on{transform:translateY(-50%);}
 /* ★ v440 用户指定：「行动力」二字加粗（描边补足字重的视觉份量） */
-#actsChip b{font-weight:900;letter-spacing:.05em;-webkit-text-stroke:.55px #fff;text-shadow:0 0 2px rgba(255,255,255,.55);}
+/* v670 去粗去描边：小字号下 900 + 0.55px 描边会糊 */ #actsChip b{font-weight:600;letter-spacing:.03em;-webkit-text-stroke:0;text-shadow:none;}
 /* ★ v669 用户指定：行动力标识改挂玩家名牌（#heroTag）正上方，不再用屏幕坐标换算（旋转后必错位） */
 #heroTag{position:relative;}
 #heroTag #actsChip{position:absolute;left:50%;right:auto;top:auto;bottom:100%;margin:0 0 calc(3px*var(--k)) 0;
   transform:translateX(-50%);}
 #heroTag #actsChip.on{transform:translateX(-50%);}
-#actsChip i{font-style:normal;font-weight:700;opacity:.9;margin-left:.34em;}
+#actsChip i{font-style:normal;font-weight:600;opacity:1;margin-left:.3em;}
 /* 结算 */
 /* ★ v125 结算画面桌面端整体放大（吃满画幅） */
 table.res{border-collapse:collapse;font-size:16px;font-weight:800;width:100%;max-width:560px;}
@@ -5545,6 +5545,9 @@ window.__toySafe=function(){ if(TOY.ok) toyApplySafe(TOY.state); };
   try{ if(window.visualViewport){ visualViewport.addEventListener('resize',fix); visualViewport.addEventListener('scroll',fix); } }catch(e){}
 })();
 (function toyBoot(){
+  /* ★ v670 用户指定：留白只属于 B站 TOY 包。TOY 打包时会在 app.js 头部注入 __JJK_TOY_PACK；
+     网页版 / APK 没有这个标记（即使 B站 SDK 在普通浏览器里加载成功），一律全屏显示。 */
+  if(!window.__JJK_TOY_PACK) return;
   let tries=0;
   (function waitSdk(){
     const t=toyApi();
@@ -29422,10 +29425,10 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 #rGrade{z-index:2147483600 !important;width:clamp(64px,16vw,104px) !important;height:clamp(64px,16vw,104px) !important;font-size:clamp(40px,10vw,66px) !important;line-height:1 !important;left:clamp(-16px,-2.2vw,0px) !important;}
 
 /* ═══ ★ v329 结算：全服战况收窄、右边并排回合/黑闪 ═══ */
-/* ★ v669 用户指定：全服战况独占整行（横向排开），回合数／黑闪数移到它下侧 */
-.srvRow{display:flex;flex-direction:column;gap:5px;align-items:stretch;width:100%;margin:2px 0 0;}
-.srvRow #rSrv{flex:0 0 auto !important;max-width:100% !important;width:100% !important;}
-.srvRow #rRec{flex:0 0 auto;min-width:0;justify-content:flex-start;flex-wrap:wrap;gap:5px;}
+/* ★ v670 用户指定：全服战况宽度缩回「原来黑闪次数那一块」（约左半边 56%），回合／黑闪仍在它下侧 */
+.srvRow{display:flex;flex-direction:column;gap:5px;align-items:flex-start;width:100%;margin:2px 0 0;}
+.srvRow #rSrv{flex:0 0 auto !important;max-width:56% !important;width:56% !important;}
+.srvRow #rRec{flex:0 0 auto;min-width:0;max-width:56%;justify-content:flex-start;flex-wrap:wrap;gap:5px;}
 #rSrv .srvBody{line-height:1.5;letter-spacing:.2px;}
 #rColL .btn,#rColL #btnAgain{margin-top:2px !important;}
 #rColL #rFb{margin-top:2px !important;}
