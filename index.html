@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v650"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v667"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v617">
+<meta name="jjk-build" content="v667">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -1090,8 +1090,8 @@ html.rot #app{
 /* ★ v36 旋转 90° 后，#app 的「上下两端」分别落在屏幕的左右两条边上；
    原来 #pad 与上 HUD 是完全贴边的，被手机圆角/挖孔一裁就「技能显示看不全」。
    这里各留 10px（竖屏的 100dvw 恰好等于屏宽，没有多余空间，只能从内部让）。 */
-html.rot #pad{padding-bottom:calc(8px*var(--k) + 10px);}
-html.rot #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 16px);}
+html.rot #pad{padding-bottom:calc(8px*var(--k) + 14px);}
+html.rot #stage>.hud:not(.bottom){padding-top:calc(2px + 2px*var(--k) + env(safe-area-inset-top));}   /* ★ v665 用户指定：宿傩血条再上移（原 18+10k 压得过低） */
 html.rot #rotTip{display:flex;}
 /* ---------- 手机横屏：直接铺满（与网页端同宽，消除信箱黑边） ---------- */
 html.land,html.land body{width:100%;height:100%;overflow:hidden;position:fixed;inset:0;}
@@ -1101,8 +1101,8 @@ html.land #app{
   aspect-ratio:auto;margin:0;
   box-shadow:0 0 40px rgba(0,0,0,.6);
 }
-html.land #pad{padding-bottom:calc(8px*var(--k) + 10px);}
-html.land #stage>.hud:first-child{padding-top:calc(6px*var(--k) + 16px);}
+html.land #pad{padding-bottom:calc(8px*var(--k) + 14px);}
+html.land #stage>.hud:not(.bottom){padding-top:calc(2px + 2px*var(--k) + env(safe-area-inset-top));}   /* ★ v665 同 rot */
 #rotTip{position:fixed;left:0;right:0;bottom:6px;z-index:99;display:none;
   align-items:center;justify-content:center;pointer-events:none;
   font-size:12px;font-weight:800;letter-spacing:2px;color:#fff;
@@ -2077,6 +2077,51 @@ html.rot .tContent .rule{columns:1;max-height:calc(var(--ah,100vh)*0.56);}   /* 
   100%{opacity:0;transform:scale(1.09)}
 }
 
+/* ---------- ★ v666 咒力操控（防御技 30% 触发的小游戏） ---------- */
+#ceCtl{position:absolute;inset:0;z-index:36;display:none;pointer-events:none;--ccTop:46px;}
+#ceCtl.on{display:block;}
+#ceCtl .ccDim{position:absolute;inset:0;
+  background:radial-gradient(ellipse 88% 80% at 50% 52%,rgba(4,5,12,.70) 0%,rgba(2,3,8,.85) 70%,rgba(1,2,6,.92) 100%);}
+#ceCtl .ccHead{position:absolute;left:0;right:0;top:calc(var(--ccTop) + 1px);text-align:center;}
+#ceCtl .ccHead b{display:block;font-size:calc(15px*var(--k));font-weight:900;letter-spacing:.22em;color:#c6ecff;
+  text-shadow:0 0 10px rgba(56,189,248,.75),2px 2px 0 #000,0 0 20px rgba(0,0,0,.95);}
+#ceCtl .ccHead i{display:block;font-style:normal;font-size:calc(9.5px*var(--k));font-weight:800;letter-spacing:1.6px;
+  color:#fff;opacity:.58;margin-top:2px;text-shadow:1px 1px 0 #000,0 0 10px rgba(0,0,0,.95);}
+#ceCtl .ccTarget{position:absolute;left:0;right:0;top:calc(var(--ccTop) + 32px);text-align:center;
+  font-size:calc(12.5px*var(--k));font-weight:900;letter-spacing:6px;color:#fff;
+  text-shadow:2px 2px 0 #000,0 0 14px rgba(0,0,0,.95);}
+#ceCtl .ccTarget span{opacity:.24;transition:opacity .1s linear,color .1s linear;}
+#ceCtl .ccTarget span.done{opacity:1;color:#9ec7ff;text-shadow:0 0 12px rgba(59,130,246,.95),2px 2px 0 #000;}
+#ceCtl .ccTarget span.now{opacity:1;color:#ffe9a8;text-shadow:0 0 14px rgba(245,197,66,.95),2px 2px 0 #000;}
+#ceCtl .ccBar{position:absolute;left:27%;right:27%;top:calc(var(--ccTop) + 57px);height:4px;
+  background:rgba(255,255,255,.13);overflow:hidden;}
+#ceCtl .ccBar i{display:block;height:100%;width:100%;
+  background:linear-gradient(90deg,rgba(56,189,248,.5),rgba(172,232,255,.95));
+  box-shadow:0 0 10px rgba(56,189,248,.85);}
+#ceCtl .ccField{position:absolute;left:1%;right:1%;top:calc(var(--ccTop) + 66px);bottom:24%;}
+/* ★ v666b 去方框：只留字＋重阴影，靠旋转／斜切／大小／透明度做出「乱」的手感 */
+#ceCtl .ccChip{position:absolute;pointer-events:auto;cursor:pointer;line-height:1;font-weight:900;
+  color:#fff;background:none;border:0;padding:0;
+  text-shadow:0 0 2px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9),
+    2px 2px 0 rgba(0,0,0,.92),-2px 2px 0 rgba(0,0,0,.92),
+    0 0 18px rgba(0,0,0,.9),0 7px 18px rgba(0,0,0,.8);
+  opacity:var(--op,1);
+  transform:translate(-50%,-50%) rotate(var(--rot,0deg)) skewX(var(--sk,0deg)) scale(var(--sc,1));
+  transition:opacity .12s linear,filter .12s linear;}
+#ceCtl .ccChip.hit{opacity:0;filter:blur(3px);
+  transform:translate(-50%,-50%) rotate(var(--rot,0deg)) scale(1.9);pointer-events:none;}
+#ceCtl .ccChip.bad{color:#ff8a8a;animation:ccBad .24s ease-out;}
+@keyframes ccBad{0%{transform:translate(-50%,-50%) rotate(var(--rot,0deg)) translateX(-6px)}
+  55%{transform:translate(-50%,-50%) rotate(var(--rot,0deg)) translateX(6px)}
+  100%{transform:translate(-50%,-50%) rotate(var(--rot,0deg))}}
+/* ★ v666 贯牛这类没有字图的式神：定格字样直接用竖排文字 */
+#summonCine .scTxt.tx{background-image:none !important;display:flex;align-items:center;justify-content:center;
+  writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.18em;
+  font-size:calc(30px*var(--k));font-weight:900;color:#fff;
+  text-shadow:0 0 22px rgba(255,255,255,.55),4px 4px 0 rgba(0,0,0,.65);}
+/* ★ v666 致命一击：与「第 X 回合」同一套动画，只把颜色换成暗红 */
+#turnBanner.tbRed{color:#c0392b;text-shadow:0 0 1px #fff,0 0 12px #fff,3px 3px 0 #fff;}
+
 /* ---------- 黑闪 QTE ---------- */
 /* ★ v140 黑闪 QTE：时间暂停＋画面变暗遮罩（命中/错过后还原） */
 #qteDim{position:absolute;inset:0;z-index:13;display:none;pointer-events:none;
@@ -2806,7 +2851,7 @@ table.res td.k{background:var(--ink);color:#fff;width:52%;letter-spacing:1px;}
 /* ★ v186 式神血条行改为绝对定位：此前它是 #stage 的 flex 流成员，出现/消失会改变 #field 高度，
    而 display 变化不触发 window resize ⇒ 画布尺寸停留在血条存在时的较小值 ⇒ 领域场景底部留白。
    现改为叠在场景上（用户要求），#field 高度恒定。 */
-#tgtRow{display:none;gap:8px;justify-content:flex-start;align-items:center;flex-wrap:wrap;
+#tgtRow{display:none;gap:calc(5px*var(--k));justify-content:flex-start;align-items:flex-start;flex-wrap:wrap;flex-direction:column;
   /* ★ v234 用户指定：整行搬到左上角、宿傩血条框（#skRow）正下方 —— 原先叠在底部会与技能栏/血条带
      互相干涉（用户截图）。高度对齐：.hud 顶部 padding 6k + #skRow 行高约 20k+边框，再加一点净空。
      z-index 压到 12（低于暂停遮罩 29），并在 renderTargetRow 里挂起时整行隐藏。 */
@@ -3257,6 +3302,14 @@ html.land #resultScreen.cleared,html.rot #resultScreen.cleared{display:flex !imp
 html.land #resultScreen:not(.hide)::before,html.rot #resultScreen:not(.hide)::before{
   background:radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%) !important;opacity:1;}
 html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-top:8px;}
+/* ★ v663 世界线跳跃按钮：手机上吸附底部，任何结算内容高度都完整可见 */
+#resultScreen > .ctaRow{width:100%;max-width:860px;justify-self:center;margin:6px auto 2px;}
+@media (max-width:900px){
+  #resultScreen > .ctaRow{position:fixed;left:0;right:0;bottom:0;z-index:30;width:100%;max-width:none;margin:0;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);}
+  #resultScreen{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
+}
+html.rot #resultScreen > .ctaRow,html.land #resultScreen > .ctaRow{position:fixed;left:0;right:0;bottom:0;z-index:30;width:100%;max-width:none;margin:0;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);}
+html.rot #resultScreen,html.land #resultScreen{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
 /* ★ v249 极窄（<420px 内宽）才退回单栏 */
 @media (max-width:420px){
   #rCols{grid-template-columns:minmax(0,1fr);}
@@ -3807,10 +3860,10 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
   left:0; top:0; right:auto !important; bottom:auto !important;
   margin:0 !important;
   z-index:60;
-  transform:translate(0,-100%) translateY(-9px);
+  transform:translate(-50%,-100%) translateY(-9px);
   transition:opacity .18s ease, transform .18s ease;
 }
-#actsChip.on{ transform:translate(0,-100%) translateY(-4px); }
+#actsChip.on{ transform:translate(-50%,-100%) translateY(-4px); }
 
 /* ★ v598 思考时间设置行 + 战斗记录 */
 #thinkRow{display:flex;flex-wrap:wrap;gap:7px;align-items:center;justify-content:center;margin:16px auto 0;max-width:680px;}
@@ -3957,6 +4010,9 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
 #eggTip.hide{display:none !important;}
 /* 结算页的通用「直接子元素 max-width:100%」优先级比 #eggTip 高，这里显式压回 430px */
 #resultScreen > #eggTip{max-width:430px !important;}
+/* ★ v663 结算页底部固定了世界线跳跃条：68 解锁气泡上移，避免盖住按钮 */
+@media (max-width:900px){ #eggTip{bottom:calc(88px + env(safe-area-inset-bottom));} }
+html.rot #eggTip,html.land #eggTip{bottom:calc(88px + env(safe-area-inset-bottom));}
 #eggTip .etX{position:absolute;right:5px;top:5px;width:20px;height:20px;border:0;padding:0;line-height:20px;
   background:transparent;color:#111;font:900 15px/1 system-ui,sans-serif;cursor:pointer;opacity:.66;}
 #eggTip .etX:hover{opacity:1;}
@@ -4369,6 +4425,15 @@ html.rot #lsWrap{width:min(42dvh,300px);height:auto;aspect-ratio:1100/780;max-wi
       <div class="qt">黑闪 —— 光标进入金色区域时点击！</div>
       <div class="qbar"><div id="qteGold"></div><div id="qteCur"></div></div>
       <div class="qh">命中 → 伤害 ×2 ｜ 时机错过 → 普通伤害 ｜ 1.5 秒后自动消失（点击屏幕／空格）</div>
+    </div>
+
+    <!-- ★ v666 咒力操控（防御技 30% 触发） -->
+    <div id="ceCtl">
+      <div class="ccDim"></div>
+      <div class="ccHead"><b>咒力操控</b><i>3 秒内依次点出「人外魔境·新宿决战」</i></div>
+      <div class="ccTarget" id="ccTarget"></div>
+      <div class="ccBar"><i id="ccBarFill"></i></div>
+      <div class="ccField" id="ccField"></div>
     </div>
 
     <!-- 虚式漫画页 -->
@@ -5470,6 +5535,7 @@ window.__toySafe=function(){ if(TOY.ok) toyApplySafe(TOY.state); };
     if(!t){ if(++tries<70) setTimeout(waitSdk,150); return; }   /* 最多等 10.5s，SDK 没来就彻底放弃 */
     if(TOY.ok) return;
     TOY.ok=true;
+    try{ document.documentElement.classList.add('toy'); }catch(e){}   /* ★ v667：容器内专属样式钩子 */
     (async function(){
       /* 1) 安全区：先同步取一次，之后靠 onContainerChange 跟进旋转 / 尺寸变化 */
       if(await toySupport('getContainerState')){
@@ -5509,7 +5575,7 @@ const S={
   mahaBornTurn:-1, agyoBornTurn:-1,   /* ★ v493 式神登场回合（该回合不出手） */   /* 「无限制·茈」解锁进度 */
   usedUnlimited:false,                                /* 本局是否打出过「无限制·茈」 */
   blockT:0, guardFx:0,
-  stage:1, maha:false, mahaFade:0, mahaDead:false,
+  stage:1, maha:false, mahaFade:0, mahaDead:false, shikKilled:0,   /* ★ v664 本局击破的式神数（调伏仪式判定） */
   diff:'normal', hitStop:0, fushiN:0,      /* 难度 / 命中定格 / 伏黑惠术式次数 */
   heroJolt:0,                              /* ★ v190 玩家受击顿挫剩余时间（秒） */
   makiStance:0,                            /* ★ v191 真希「天与咒缚·架势」：1＝本回合白名单免伤 */
@@ -5700,7 +5766,7 @@ function resetBattle(){
   S.timeScale=1; S.slowT=0; S.slowDur=0;   /* ★ v63 清慢动作 */
   S.stagger=0; S.staggerUsed=false;
   S.guilt=0; S.okoUsed=false; S.okkoDomCast=false; S.makiCd=0; S.sukLast='';
-  S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false; S.sukuSummonForm=false; S.yujiEndAt=0;   /* ★ v291 换装／结局背景重置 */
+  S.stage=1; S.maha=false; S.mahaFade=0; S.mahaDead=false; S.shikKilled=0; S.sukuSummonForm=false; S.yujiEndAt=0;   /* ★ v291 换装／结局背景重置 */
   S.anaPct=0; S.anaHero='';               /* ★ v484 魔虚罗死后的解析进度 */
   S.target='sukuna'; S.agyo=false; S.agyoHp=0; S.agyoMax=0; S.agyoCd=0; S.agyoPend=0; S.agyoUsed=false; S.mahaBornTurn=-1; S.agyoBornTurn=-1; S.yugyoBonus=0; S.kanju=false; S.kanjuHp=0; S.kanjuMax=0; S.kanjuPhase=''; S.kanjuUsed=false; S.okkoDom=0;  S.misagoT=0; S.rikaDomNote=0; S.gojoDom=0; S.gojoVoidT=0; S.gojoVoidCnt=0; S.gojoVoiceN=0; S.gojoHeUntil=0; S.voidDomBroken=false; S.okkoVoiceUntil=0; S.deathVoiceUntil=0; S.voidMax=1; S.sukuDom=0; S.domClash=null; S.voidMahaT=0; S.sukuOpenT=0; S.makiBlinkT=0; S.higuVerdictN=0; S.higuDomVerdict=0; S.shikWait=0; S.higuExecUsed=false; S.sukuBurn=false; S.gojoBurn=false; S.sukuVoided=false;   /* ★ v81 对拼状态一并清空／★ v92 熔断状态重置 */ S.okkoRelT=0; S.amberTagHide=0; S.rika=false;   S.rikaT=0; S.rikaCopy=''; S.ceCap=100;  S.rikaCd=0; S.rikaCopyCd=0; S.rikaRevCd=0; S.okkoRevCd=0; S.rikaCopyKeep=false; S.rikaCopyPend=''; S.rikaCopyNext=''; S.rikaPool=null; S.copyStun=0; S.copySpent={};   /* ★ v303 一次性招式全局只能用一次 */ S.domLife=0; S.higuDom=0; S.higuJudge=0; S.higuExtend=0; S.makiRead=0; S.makiParry=0; S.makiW=0; S.makiBrace=0; S.makiCharge=0; S.soulWound=0; S.makiAwaken=0; S.makiFull=0; S.makiUsed=0; S.makiGSel=null; S.yunN=0; S.makiGcd=0; S.makiStanceT=0; S.makiBraceT=0;   /* ★ v388/v390 */ stopOkkoDomainBgm();   /* ★ v387 重开一局清掉新机制残留 */
   S.mahaHp=0; S.mahaMax=0; S.mahaSlashCd=0; S.para=0; S.heroVulnT=0; S.cangMark=0; S.heCd=0; S.revCd=0; S.anchor=0; S.anchorCd=0; S.heTrap=0; S.muLimit=0; S.muBroken=false;  S.muBreakAt=0; S.gojoVanish=0; S.fistPick=null; S.muSaid=0;   /* ★ v80 反转术式 CD */
@@ -5723,6 +5789,8 @@ function resetBattle(){
   S.i68BlackN=0; S.i68Boost={jie:0,blood:0}; S.i68BloodCd=0; S.i68ImmCd=0; S.i68RevCd=0; S.i68RevNext=0; S.i68BfCd=0;   /* ★ v638 新局清空四技 CD（含黑闪） */
   S.usedKinds={atk:false,hollow:false,black:false}; S.domBest=0;
   S.burn=0; S.flameCd=5;
+  /* ★ v666 新机制重置：贯牛召唤占位 / 咒力操控（每回合一次） / 召唤占位表 */
+  S.kanjuSummoning=false; S.ceCtlTurn=-1; S.__cinePendAt=null; try{ ceCtlAbort(); }catch(e){}
   S.rite=0; S.riteBreak=false;  S.riteJust=null; 
    S.wsWarn=false; S.wsCast=false;
   S.vowPub=0; S.vowPubCd=0; S.vowNoGuard=0; S.maxHp=HP0(); S.vowTurn=0; S.vowOpen=false;
@@ -5771,7 +5839,27 @@ function say(who,text){
   queue.push([who,text]);
   if(queue.length>7) queue.shift();
 }
+/* ★ v666 立刻清空气泡（连正在显示的那句一起收掉） */
+function clearSayNow(hide){
+  try{ queue.length=0; }catch(e){}
+  try{ showing=false; qTimer=0; }catch(e){}
+  try{ if(typeof bubble!=='undefined'&&bubble){ bubble.className=''; bubble.innerHTML=''; bubble.__live=false; if(hide) bubble.style.display='none'; } }catch(e){}
+}
+/* ★ v666 用户指定：气泡不许跑到别的界面去 —— 选人／结算／暂停／引导 一律不显示 */
+function sayScreenBlocked(){
+  try{
+    if(!S) return true;
+    if(S.phase==='select' || S.phase==='over' || S.phase==='domain') return true;
+    if(S.paused) return true;
+    if(document.querySelector('.screen:not(.hide)')) return true;
+    const po=document.getElementById('pauseOv'); if(po && po.classList.contains('on')) return true;
+    const gh=document.getElementById('guideHit'); if(gh && !gh.classList.contains('hide')) return true;
+  }catch(e){ return true; }
+  return false;
+}
 function flushSay(){
+  /* ★ v666 跨界面兜底：不在战斗里就一律收掉排队与正在显示的气泡 */
+  try{ if(sayScreenBlocked()){ clearSayNow(true); return; } }catch(e){}
   /* ★ v412 文字可读性重做：
      ① 停留时间改按字数自适应（原固定 0.95s，长句根本读不完）；
      ② 入场按说话人分四式（我方左弹／宿傩右砸／审判者印章下压／旁述淡入／系统上浮）；
@@ -6637,7 +6725,7 @@ function fxText(x,y,txt,col,big,dir,opt){
   /* ★ v419 第 7 参 opt：{sz 字号倍数／dur 覆盖停留时间／stamp 印章式落地（大字用）} */
   opt=opt||{};
   /* ★ v491 新增 opt.inkOnly：只留黑色粗勾边（不再加白细边），供「蓝字 + 黑边」用 */
-  addFx({type:'text',dur:opt.dur||(big?1.30:1.00),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,dmg:!!opt.dmg,rise:!!opt.rise,inkW:opt.inkW||0,risePx:opt.risePx||0,top:!!opt.top,z:opt.z||0,rot:opt.rot||0,edge:opt.edge||'',heal:!!opt.heal});   /* ★ v643 edge：自定义描边色；★ v644 heal：回血数字统一米白渐变 */   /* ★ v587 opt.top/z：置顶层（咏唱词） */   /* ★ v498 opt.rise：自下而上显现 */
+  addFx({type:'text',dur:opt.dur||(big?1.55:1.25),x:x,y:y,txt:txt,col:col||'#111',big:!!big,dir:dir||0,sz:opt.sz||1,stamp:!!opt.stamp,inkOnly:!!opt.inkOnly,dmg:!!opt.dmg,rise:!!opt.rise,inkW:opt.inkW||0,risePx:opt.risePx||0,top:!!opt.top,z:opt.z||0,rot:opt.rot||0,edge:opt.edge||'',heal:!!opt.heal});   /* ★ v643 edge：自定义描边色；★ v644 heal：回血数字统一米白渐变 */   /* ★ v587 opt.top/z：置顶层（咏唱词） */   /* ★ v498 opt.rise：自下而上显现 */
 }   /* ★ v407 第 6 参数 dir：+1 往右消散、−1 往左消散 */
 /* ★ v643 黑闪统一文字：全部走 68 二技能那记「ドッ」，墨黑字身＋朱红描边，尺寸为原来的 0.8 倍 */
 /* ★ v657 用户指定：术式熔断的示意统一 —— 墨黑字身＋朱红描边、固定 0.78× 字号、落在画面上方空档，
@@ -6932,6 +7020,22 @@ function flash(id){
 function markActed(a){
   /* ★ v533 新招起手：清掉上一套未播完的气泡，别让台词跨招串台 */
   try{ queue.length=0; showing=false; qTimer=0; if(typeof bubble!=='undefined'&&bubble){ bubble.className=''; bubble.innerHTML=''; bubble.__live=false; } }catch(e){}
+  /* ★ v666 用户新增机制：防御类技能（2 技）使用时 30% 触发「咒力操控」小游戏。
+     触发时先把技能栏锁住（S.acted=true），小游戏结算完再走原本的交棒逻辑；
+     每回合最多触发一次，避免连续防御无限刷。 */
+  try{
+    if(a==='guard' && S.phase==='fight' && !QTE.active && !(S.ceCtl&&S.ceCtl.on)
+       && (S.ceCtlTurn||-1)!==(S.turnN||0) && Math.random()<CE_CTL_P){
+      S.ceCtlTurn=(S.turnN||0);
+      S.acted=true; S.lastAct=a||'';
+      syncHud();
+      startCeCtl(function(ok){ markActedApply(a, !!ok); });
+      return;
+    }
+  }catch(e){}
+  markActedApply(a, false);
+}
+function markActedApply(a, won){
   S.acted=true; S.lastAct=a||'';
   S.shikWait=Math.max(S.shikWait||0,1.6); /* ★ v471c 技能动画期间冻结读秒 */
   /* ★ v652 用户指定：影遁从「玩家出招瞬间随机触发」改为宿傩一阶段常驻技能 ——
@@ -6943,7 +7047,9 @@ function markActed(a){
      读秒结束仍没选定 → 未用掉的行动次数攒下来，下回合可以连发（以此类推）。
      防御技单独走「立即交棒」分支（见下）。 */
   if(a==='guard'){
-    /* ★ v226 用户指定：回血／防御技能用掉之后也**立即交棒**，不再空等读秒（完美格挡仍是「按下那一刻」判定） */
+    /* ★ v666 咒力操控成功 ⇒ 延续这个回合：先 +1 行动力，再走原本的扣除，扣完还剩 1 次就能再出一招 */
+    if(won) S.actsLeft=(S.actsLeft||1)+1;
+    /* ★ v226 用户指定：回血／防御技能用掉之后也**立即交棒**，不再空等读秒 */
     S.actsLeft=Math.max(0,(S.actsLeft||1)-1);
     if((S.actsLeft||0)>0){
       setTimeout(()=>{ if(S.turnCtl && S.phase==='fight' && (S.actsLeft||0)>0){ S.acted=false; S.lastAct=''; syncHud(); try{ if(window.__pendAct){ const _pa=window.__pendAct; window.__pendAct=null; setTimeout(function(){ try{ padAct(_pa); }catch(e){} },50); } }catch(e){} } },520);
@@ -7576,7 +7682,8 @@ function hurtHero(d,kind){
     /* ★ v539 用户指定：慢放太长，玩家会觉得「死亡来得不明不白」——只保留短促顿挫。 */
     S.hitStop=Math.max(S.hitStop||0,0.30);   /* 画面先冻住，看清刀落下的那一拍 */
     S.slowT=1.05; S.slowDur=1.05;              /* ★ v524 之后走三段变速：0.10 保持 → 0.45 → 1 */
-    try{ fxText(W*0.5,H*0.30,'致命一击','#c0392b',true,0,{sz:1.18,dur:1.7,stamp:true}); }catch(e){}
+    try{ clearSayNow(); }catch(e){}   /* ★ v666 用户指定：最后一击气泡直接消失，不再带进死亡/换人 */
+    try{ turnBanner('致命一击','力尽倒下',{red:true}); }catch(e){}   /* ★ v666 与「第 X 回合」同一套动画 */
     try{ flash('fHit'); shake(); }catch(e){}
     try{ say('sys','★ 致命一击 —— '+(HERO_INFO[S.hero]||{nm:'术师'}).nm+'力尽倒下。'); }catch(e){}
   }
@@ -7958,7 +8065,7 @@ function burnTick(){
   hurtHero(bd);
   fxText(GX()+rnd(-14,14),GY-182*SC,'灼烧 -'+heroLoss(bd),'#111',false,0,{dmg:true});
   SFX.hurt();
-  say('sys','场地燃烧——受到 '+heroLoss(bd)+' 点灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
+  say('sys','★ 回合开始 · 场地燃烧——受到 '+heroLoss(bd)+' 点灼烧'+(S.burn>0?'（剩余 '+S.burn+' 回合）':'（火焰熄灭）'));
   const hp=curHp();
   syncHud();
   if(hp<=0){
@@ -9101,6 +9208,7 @@ function summonAgyo(withLog,booked){
 }
 function agyoDown(){
   if(!S.agyo) return;
+  S.shikKilled=(S.shikKilled||0)+1;   /* ★ v664 调伏仪式判定 */
   S.agyo=false; S.agyoHp=0;
   if(S.target==='agyo') S.target='sukuna';
   fxShikFade('颚吐·消散',SX()-96*SC,GY-252*SC,24);   /* ★ v468 统一样式：黑字白描边·小字·渐隐 */
@@ -9175,7 +9283,7 @@ function mahaCopySlash(){
   const base=SUK_MAXHP*MAHO_SLASH_PCT;
   const d=Math.max(base, Math.round((S.mahaMaxTaken||0)*10)/10);
   shikLunge('maha');
-  lungeAfter(155,function(){
+  lungeAfter(260,function(){
     S.shikWait=Math.max(S.shikWait||0,0.95);
     addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#b8860b',tag:'返斩'});
     hurtHero(d,'maha');
@@ -9185,7 +9293,9 @@ function mahaCopySlash(){
 }
 function mahaSlain(direct){
   if(!S.maha&&S.mahaFade<=0) return;
+  if(S.mahaDead) return;
   void direct;
+  S.shikKilled=(S.shikKilled||0)+1;   /* ★ v664 调伏仪式判定 */
   /* ★ v558 血条被打空 ⇒ 直接死亡下场：法轮碎裂、永久退场、不再重生 */
   S.mahaDead=true;
   S.mahaRegen=0; S.mahaRegenAt=0;
@@ -9233,7 +9343,7 @@ function damageShiki(who,d,big){
 /* ★ v463 式神「瞬身」：魔虚罗／颚吐／里香 出手前先冲到对方面前，落地瞬间才出伤害文字。
    时间轴 —— 冲出 0.16s → 定住 0.10s → 回位 0.26s（合计 0.52s）。
    伤害延后 0.155s 执行（＝刚好落在对方面前），且暂停／切页时挂住，不在后台掉血。 */
-const LUNGE_OUT=0.16, LUNGE_HOLD=0.10, LUNGE_BACK=0.26;
+const LUNGE_OUT=0.26, LUNGE_HOLD=0.16, LUNGE_BACK=0.34;
 function shikLunge(who){
   if(!S.lunge) S.lunge={};
   S.lunge[who]=0;
@@ -9295,14 +9405,30 @@ function yugyoAttack(){
 }
 /* ---------- ★ v474 贯牛（一次性·前摇一回合·可打断） ---------- */
 function summonKanju(withLog){
-  if(S.kanju||S.kanjuUsed||S.trueForm) return;
-  S.kanju=true; S.kanjuHp=1; S.kanjuMax=1; S.kanjuPhase='wind';
-  flash('fWhite'); shake(); SFX.adapt();
-  if(withLog){ say('suku','「贯牛。」'); say('sys','★ 贯牛登场（生命 1/1）——在原地蓄力一回合，期间打中它即可打断；下一回合直线冲锋！'); }
-  syncHud();
+  if(S.kanju||S.kanjuUsed||S.trueForm||S.kanjuSummoning) return;
+  /* ★ v666 用户指定：贯牛登场必须是「单独的一拍」—— 走定格演出（时间暂停 → 竖排「贯牛」→ 由下至上显现）。
+     演出没播完之前，宿傩本回合的招式（含领域展开）与其它式神都不会开演。 */
+  S.kanjuSummoning=true;
+  S.kanjuUsed=true;
+  S.kanjuHp=1; S.kanjuMax=1; S.kanjuPhase='wind';
+  S.kanjuBornTurn=(typeof S.turnN==='number')?S.turnN:-1;
+  try{ bumpYugyo(); }catch(e){}   /* ★ v474 使用十种影法术 ⇒ 玉犬 +2% */
+  SFX.adapt(); shake();
+  if(withLog) say('suku','「贯牛。」');
+  let _landed=false;
+  const _land=function(){
+    if(_landed||S.kanju) return;
+    _landed=true; S.kanjuSummoning=false; S.kanju=true;
+    flash('fWhite'); shake();
+    if(withLog) say('sys','★ 贯牛登场（生命 1/1）—— 它只在原地蓄力，这一拍不出手；下一回合直线冲锋，趁现在打中它即可打断。');
+    try{ syncHud(); }catch(e){}
+  };
+  summonCine('kanju', _land);
+  setTimeout(_land, 4200);   /* 看门狗：演出被吞（引导/暂停/异常）时兜底登场 */
 }
 function kanjuDown(){
   if(!S.kanju) return;
+  S.shikKilled=(S.shikKilled||0)+1;   /* ★ v664 调伏仪式判定 */
   S.kanju=false; S.kanjuHp=0; S.kanjuPhase=''; S.kanjuUsed=true;
   if(S.target==='kanju') S.target='sukuna';
   fxShikFade('贯牛·溃散',SX()-96*SC,GY-252*SC,24);
@@ -9344,12 +9470,23 @@ function shikigamiAct(){
        · 整段期间 S.shikWait 冻结读秒，S.__seqUntil 占住回合推进（见 sukunaTurn 尾段）。 */
   const SEQ_GAP=1600, SEQ_LEAD=240;
   const ORD=['①','②','③','④'];
-  /* 贯牛：蓄力/冲锋是文本提示，不占出手顺位 */
-  if(S.kanju){
-    if(S.kanjuPhase==='wind'){ S.kanjuPhase='charge'; fxText(SX()-96*SC,GY-250*SC,'贯牛·蓄力','#111',false,0,{sz:0.9}); say('sys','贯牛绷紧四蹄——下一回合就会直线冲锋（现在打它可打断）。'); }
-    else if(S.kanjuPhase==='charge'){ kanjuCharge(); }
-  }
   const acts=[];
+  /* ★ v666 用户指定：贯牛也必须有自己独立的一拍（显现 → 蓄力 → 冲锋），
+     不能贴着宿傩或其它式神的动画抢拍，所以改成和颚吐/魔虚罗一样进出手顺位。 */
+  if(S.kanju){
+    const _ka={who:'kanju',ord:'',run:function(){
+      if(!S.kanju) return;
+      if(S.kanjuPhase==='wind'){
+        S.kanjuPhase='charge';
+        S.shikWait=Math.max(S.shikWait||0,1.5);
+        fxText(SX()-96*SC,GY-250*SC,'贯牛·蓄力','#111',false,0,{sz:0.9});
+        try{ shake(0.45); }catch(e){}
+        say('suku','「……蓄力。」');
+        say('sys','贯牛绷紧四蹄——下一回合才会直线冲锋（现在打中它即可打断）。');
+      }else if(S.kanjuPhase==='charge'){ kanjuCharge(); }
+    }};
+    acts.push(_ka);
+  }
   /* ② 颚吐：鵺鸣·电荷（CD2）／ 普攻（30% 虎葬·碎击）。判定在「排位」时一次算好，避免演出中改主意。 */
   if(S.agyo && !_agyoDebut){
     const _charge=((S.agyoCd||0)<=0);
@@ -9362,7 +9499,7 @@ function shikigamiAct(){
       if(_charge){
         fxManga('鵺鸣·电荷',GX()+96*SC,GY-236*SC,false,'#e030c8');
         shikLunge('agyo');
-        lungeAfter(155,function(){
+        lungeAfter(260,function(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e030c8',tag:(_a.ord?_a.ord+' ':'')+'鵺鸣·电荷'});
           hurtHero(_d1);
@@ -9372,7 +9509,7 @@ function shikigamiAct(){
         if(_para){ S.para=1; say('sys','★ 麻痹！下一回合无法行动（1 回合）。'); }
       }else{
         shikLunge('agyo');
-        lungeAfter(155,function(){
+        lungeAfter(260,function(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#e0561c',tag:(_a.ord?_a.ord+' ':'')+'颚吐'});
           hurtHero(_d1);
@@ -9406,7 +9543,7 @@ function shikigamiAct(){
       const _d=SUK_MAXHP*MAHO_SLASH_PCT;
       const _a={who:'maha',ord:'',run:function(){
         shikLunge('maha');
-        lungeAfter(155,function(){
+        lungeAfter(260,function(){
           S.shikWait=Math.max(S.shikWait||0,0.95);
           addFx({type:'shikStrike',dur:1.25,x:GX()+18*SC,y:GY-176*SC,col:'#8b5cf6',tag:(_a.ord?_a.ord+' ':'')+'魔虚罗'});
           hurtHero(_d,'maha');
@@ -9437,7 +9574,10 @@ function shikigamiAct(){
   (function _chain(){
     if(S.phase!=='fight'){ S.__seqUntil=0; return; }
     /* 等宿傩自己的动作播完再起位次（否则第一拍会和宿傩的斩击糊在一起） */
-    if(typeof fxBusy==='function' && fxBusy() && Date.now()-_t0<2800){ setTimeout(_chain,80); return; }
+    if(((typeof fxBusy==='function' && fxBusy()) || stageBusyNow()) && Date.now()-_t0<5200){
+      S.__seqUntil=Math.max(S.__seqUntil||0,Date.now()+5400);
+      setTimeout(_chain,80); return;
+    }
     let t=SEQ_LEAD, last=SEQ_LEAD;
     acts.forEach(function(a){
       const _at=t; last=_at;
@@ -9716,6 +9856,9 @@ function __v611Vis(){ try{ if(document.hidden){ if(typeof pauseAllAudio==='funct
       if(typeof autoResumeOnShow==='function') autoResumeOnShow(); } }catch(e){} }
 try{ document.addEventListener('visibilitychange',__v611Vis); window.addEventListener('blur',function(){ try{ if(typeof pauseAllAudio==='function') pauseAllAudio(); }catch(e){} }); }catch(e){}
 function heroDown(){
+  /* ★ v666 用户指定：倒下就收掉气泡（hurtHero 的致命一击已先收一次，这里兜住世界斩等旁路） */
+  try{ clearSayNow(); }catch(e){}
+  try{ ceCtlAbort(); }catch(e){}
   /* ★ v611 用户指定：68 虎杖的死亡台词 */
   try{ if(S.hero==='ita68') say('ita','「抱歉……到最后，还是没能死在大家前面。」'); }catch(e){}
   /* ★ 防重入标记定在入口。
@@ -10091,6 +10234,30 @@ const CHUAN_TXT_URI='assets/47df1893f018.webp';
 const WIN68_URI='assets/2919e420f1bb.webp';
 const SFX_FENG_URI='assets/d5b1a8df0e6d.mp3';
 const SFX_JIE_URI='assets/9a1ef1839cfc.mp3';
+/* ★ v665 68 虎杖 1／3 技能音效偏小：原 mp3 峰值已 0.976，直接抬 volume 会硬削波，
+   改为 <audio> → GainNode(>1) → WaveShaper(tanh 软限幅) → destination，响度上去但峰值锁在 1.0 内。 */
+function _cineBoost(el, gain){
+  try{
+    /* ★ v665c 关键：本作 AUDIO_OFF=true（合成音效总开关关闭），ac() 恒返回 null ⇒ 这里自建独立上下文，
+       且只在「running」时才接线；接不上就让调用方退回普通 volume，绝不会因为上下文挂起而静音。 */
+    const C=window.AudioContext||window.webkitAudioContext; if(!C) return false;
+    if(!window.__cineCtx){ try{ window.__cineCtx=new C(); }catch(e){ return false; } }
+    const c=window.__cineCtx;
+    if(c.state!=='running'){ try{ c.resume(); }catch(e){} if(c.state!=='running') return false; }
+    if(!el.__boost){
+      const s=c.createMediaElementSource(el);
+      const sh=c.createWaveShaper();
+      const n=1024, curve=new Float32Array(n), K=2.0;   /* ★ v665b 实测：+7dB、削波仅 0.2% */
+      for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; curve[i]=0.98*Math.tanh(K*x)/Math.tanh(K); }
+      sh.curve=curve; sh.oversample='none';   /* ★ v665d 4x 过采样会溢出 >1.0，改不过采样，峰值精确锁在 0.98 */
+      const g=c.createGain(); g.gain.value=1;
+      s.connect(g); g.connect(sh); sh.connect(c.destination);
+      el.__boost={g:g, sh:sh};
+    }
+    el.__boost.g.gain.value=gain;
+    return true;
+  }catch(e){ return false; }
+}
 function playCineSfx(uri,vol){
   /* ★ v638 用户报「68 技能音效会打断 BGM／其他音乐」：旧版每次 new Audio() 起一个全新媒体元素，
      手机（荣耀等 WebView）上新元素起播可能抢走系统音频焦点 ⇒ BGM 被掐。
@@ -10109,7 +10276,11 @@ function playCineSfx(uri,vol){
     let _done=false;
     const _go=function(){ if(_done) return; _done=true;
       try{ el.currentTime=0; }catch(e){}
-      try{ if(vol!=null) el.volume=vol; }catch(e){}
+      /* ★ v665 vol>1 的调用走软限幅增益链（68 虎杖 1／3 技能） */
+      try{
+        if(vol!=null && vol>1){ if(!_cineBoost(el, vol)) el.volume=1; }
+        else if(vol!=null){ el.volume=vol; }
+      }catch(e){}
       const p=el.play(); if(p&&p.catch) p.catch(function(){});
     };
     if(el.readyState>=2){ _go(); return; }
@@ -10303,6 +10474,9 @@ function playCutin(id, dur, freeze){
    同时压在战场上 —— 玩家看到的就是两侧立绘一起「变透明」。
    对策：任何退场 / 登场 / 换人之前，一律先把所有演出层归零，再开始新的演出。 */
 function stageReset(){
+  /* ★ v666 离开战斗/重置舞台：咒力操控小游戏一并收掉 */
+  try{ ceCtlAbort(); }catch(e){}
+  try{ S.__cinePendAt=null; S.__cineEndCb=null; }catch(e){}
   /* ★ v619 召唤演出防抢拍：离开战斗或重置舞台时，把定格演出、排队与定时器全清掉 */
   try{
     if(typeof scClear==='function') scClear();
@@ -11169,6 +11343,156 @@ function tryHeal(){
 /* ★ v140 黑闪 QTE：只由「判定将打出黑闪」触发（旧的「普通格挡后 50%」已移除）。
    cb = 结算回调（收到是否命中黄条），命中 → cb(true) 出黑闪；错过 → cb(false) 走普通伤害。
    战斗时间在 QTE 期间冻结（见 update：QTE.active 分支不再递减 S.turn），画面同时压暗。 */
+/* =========================================================
+   ★ v666 咒力操控（用户新增机制）
+   ---------------------------------------------------------
+   触发：所有防御类技能（2 技）使用时 30% 概率。
+   玩法：3 秒内依次点出「人外魔境·新宿决战」八个字（位置/字号随机，
+        另有 10 个干扰字），点错 −0.5 秒。
+   奖励：成功 ⇒ 咒力 +2 格、体力 +2 格、本回合行动力 +1（可再出一招）。
+   ========================================================= */
+const CE_CTL_P=0.30;
+const CE_CTL_DUR=3.0;
+const CE_CTL_WRONG=0.5;
+const CE_CTL_SEQ='人外魔境新宿决战';
+const CE_CTL_DECOY='咒术战斗领域展延反转赫苍狱门伏黑钉崎乙骨真希日车鹿紫';
+function ceCtlShuffle(a){
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function ceCtlAbort(){
+  try{
+    if(!S||!S.ceCtl||!S.ceCtl.on) return;
+    S.ceCtl.on=false; S.ceCtl.cb=null;
+  }catch(e){}
+  try{ const el=document.getElementById('ceCtl'); if(el) el.classList.remove('on'); }catch(e){}
+  try{ const f=document.getElementById('ccField'); if(f) f.innerHTML=''; }catch(e){}
+}
+/* ★ v666b 顶部 HUD（宿傩血条区）在 #app 局部坐标里的底边 —— 用来把标题压到血条下面。
+   用 offsetTop 累加而不是 getBoundingClientRect：手机上是整个 #app 旋转过的，矩形是变换后的值。 */
+function ceCtlTopPx(){
+  try{
+    const stage=document.getElementById('stage');
+    const app=document.getElementById('app');
+    if(!stage||!app) return 46;
+    let hud=null;
+    for(let i=0;i<stage.children.length;i++){
+      const c=stage.children[i];
+      if(c.classList && c.classList.contains('hud') && !c.classList.contains('bottom')){ hud=c; break; }
+    }
+    if(!hud) return 46;
+    let y=0,n=hud,guard=0;
+    while(n && n!==app && guard++<24){ y+=n.offsetTop; n=n.offsetParent; }
+    const h=hud.offsetHeight||24;
+    return Math.max(30, y+h+4);
+  }catch(e){}
+  return 46;
+}
+function startCeCtl(cb){
+  if(!S || S.phase!=='fight' || S.paused || QTE.active){ if(typeof cb==='function') cb(false); return; }
+  const el=document.getElementById('ceCtl'), f=document.getElementById('ccField');
+  if(!el||!f){ if(typeof cb==='function') cb(false); return; }
+  ceCtlAbort();
+  S.ceCtl={on:true,t:0,idx:0,cb:(typeof cb==='function')?cb:null};
+  const tg=document.getElementById('ccTarget');
+  if(tg) tg.innerHTML=CE_CTL_SEQ.split('').map(function(c,i){ return '<span data-i="'+i+'">'+c+'</span>'; }).join('');
+  if(tg&&tg.children[0]) tg.children[0].classList.add('now');
+  const bar=document.getElementById('ccBarFill'); if(bar) bar.style.width='100%';
+  let decoys=CE_CTL_DECOY.split('').filter(function(c,i,a){ return CE_CTL_SEQ.indexOf(c)<0 && a.indexOf(c)===i; });
+  decoys=ceCtlShuffle(decoys).slice(0,10);
+  const list=CE_CTL_SEQ.split('').map(function(c,i){ return {c:c,tag:i}; })
+    .concat(decoys.map(function(c){ return {c:c,tag:-1}; }));
+  ceCtlShuffle(list);
+  /* ★ v666b 标题必须在宿傩血条之下：量一次顶部 HUD 的实际高度，按它决定整块的起点 */
+  try{ el.style.setProperty('--ccTop', Math.round(ceCtlTopPx())+'px'); }catch(e){}
+  el.classList.add('on');
+  f.innerHTML='';
+  const W0=f.clientWidth||720, H0=f.clientHeight||200;
+  const n=list.length, aspect=W0/Math.max(1,H0);
+  let cols=Math.max(3,Math.min(n,Math.round(Math.sqrt(n*aspect/1.9))));
+  let rows=Math.ceil(n/cols);
+  while(cols*rows<n) rows++;
+  while((cols-1)*rows>=n) cols--;
+  const cw=W0/cols, ch=H0/rows;
+  const base=Math.max(12,Math.min(cw*0.32,ch*0.46,28));
+  for(let k=0;k<list.length;k++){
+    const gx=k%cols, gy=Math.floor(k/cols);
+    const d=document.createElement('div');
+    d.className='ccChip';
+    d.textContent=list[k].c;
+    const tgt=(list[k].tag>=0);
+    d.style.fontSize=(base*(0.82+Math.random()*0.52)).toFixed(1)+'px';
+    d.style.setProperty('--rot',((Math.random()-0.5)*44).toFixed(1)+'deg');
+    d.style.setProperty('--sk',((Math.random()-0.5)*14).toFixed(1)+'deg');
+    d.style.setProperty('--sc',(0.86+Math.random()*0.42).toFixed(2));
+    d.style.setProperty('--op',(tgt?(0.82+Math.random()*0.18):(0.52+Math.random()*0.34)).toFixed(2));
+    d.style.fontWeight=(Math.random()<0.45?'800':'900');
+    if(tgt) d.setAttribute('data-t',String(list[k].tag));
+    f.appendChild(d);
+    /* 抖动幅度按「格内剩余空间」算，并夹在场地内：既乱又不互相压住 */
+    const bw=d.offsetWidth||40, bh=d.offsetHeight||30;
+    const jxMax=Math.max(0,(cw-bw)*0.46), jyMax=Math.max(0,(ch-bh)*0.46);
+    let lx=gx*cw+cw*0.5+(Math.random()-0.5)*2*jxMax;
+    let ty=gy*ch+ch*0.5+(Math.random()-0.5)*2*jyMax;
+    lx=Math.min(W0-bw*0.66-2,Math.max(bw*0.66+2,lx));
+    ty=Math.min(H0-bh*0.66-2,Math.max(bh*0.66+2,ty));
+    d.style.left=lx.toFixed(1)+'px';
+    d.style.top=ty.toFixed(1)+'px';
+  }
+  try{ SFX.warn(); }catch(e){}
+  try{ pushLog('提示','sys','★ 咒力操控 —— 3 秒内依次点出「人外魔境·新宿决战」八个字（点错 −0.5 秒）。'); }catch(e){}
+}
+function ceCtlTap(node){
+  const c=S&&S.ceCtl; if(!c||!c.on||!node) return;
+  const t=node.getAttribute('data-t');
+  if(t!==null && +t===c.idx){
+    c.idx++;
+    node.classList.add('hit');
+    try{ SFX.block(); }catch(e){}
+    const tg=document.getElementById('ccTarget');
+    if(tg){
+      const s=tg.children[c.idx-1]; if(s){ s.classList.remove('now'); s.classList.add('done'); }
+      const nx=tg.children[c.idx]; if(nx) nx.classList.add('now');
+    }
+    if(c.idx>=CE_CTL_SEQ.length) ceCtlFinish(true);
+  }else{
+    node.classList.remove('bad'); void node.offsetWidth; node.classList.add('bad');
+    c.t=Math.min(CE_CTL_DUR+0.001,c.t+CE_CTL_WRONG);
+    try{ SFX.hurt(); }catch(e){}
+    try{ shake(0.4); }catch(e){}
+  }
+}
+function ceCtlTick(dt){
+  const c=S&&S.ceCtl; if(!c||!c.on) return;
+  c.t+=dt;
+  const bar=document.getElementById('ccBarFill');
+  if(bar) bar.style.width=(Math.max(0,1-c.t/CE_CTL_DUR)*100).toFixed(1)+'%';
+  if(c.t>=CE_CTL_DUR) ceCtlFinish(false);
+}
+function ceCtlFinish(ok){
+  const c=S&&S.ceCtl; if(!c||!c.on) return;
+  const cb=c.cb;
+  c.on=false; c.cb=null;
+  try{ const el=document.getElementById('ceCtl'); if(el) el.classList.remove('on'); }catch(e){}
+  try{ const f=document.getElementById('ccField'); if(f) f.innerHTML=''; }catch(e){}
+  if(ok){
+    try{
+      const _cg=CE_PIP*2;
+      if(S.hero==='kashimo') S.kashimo.ce=Math.min(100,(S.kashimo.ce||0)+_cg);
+      else S.gojo.ce=Math.min((S.ceCap||100),(S.gojo.ce||0)+_cg);
+      const _hg=Math.max(1,Math.round((S.maxHp||100)*0.4));
+      healHero(_hg);
+      try{ fxHealNum(_hg); }catch(e){}
+      try{ flash('fWhite'); shake(0.6); }catch(e){}
+      try{ fxText(GX(),GY-214*SC,'咒力操控','#22d3ee',true,0,{sz:1.0,inkOnly:true}); }catch(e){}
+      try{ say('sys','★ 咒力操控成功 —— 咒力 +2 格、体力 +2 格（+'+_hg+'）、本回合行动力 +1：可以再出一招！'); }catch(e){}
+    }catch(e){}
+    try{ syncHud(); }catch(e){}
+  }else{
+    try{ say('sys','★ 咒力操控失败 —— 字序没接上，咒力没有回流（本次没有加成）。'); }catch(e){}
+  }
+  if(typeof cb==='function') cb(!!ok);
+}
 function startQTE(cb,mode){
   if(S.phase!=='fight'||QTE.active){ if(typeof cb==='function') cb(false); return; }
   /* ★ v543 黑闪 20%（虎杖 30%）不变；空间斩收窄到 12%（约 180ms 窗口，惩罚性反应游戏应更难）。
@@ -11698,7 +12022,7 @@ function stopSummonCine(){
   try{ const el=$('summonCine'); if(el){
     el.classList.remove('on');
     const ts=el.querySelectorAll('.scTxt');
-    for(let i=0;i<ts.length;i++){ ts[i].classList.remove('on'); ts[i].style.backgroundImage=''; }
+    for(let i=0;i<ts.length;i++){ ts[i].classList.remove('on','tx'); ts[i].style.backgroundImage=''; ts[i].textContent=''; }   /* ★ v666 连文字版字样（贯牛）一起清 */
     const fg=el.querySelector('.scFig'); if(fg){ fg.classList.remove('on'); fg.style.backgroundImage=''; }
   } }catch(e){}
   try{ if(S){ S.cine=0; S.cineEnd=0; } }catch(e){}
@@ -11712,7 +12036,7 @@ function scClear(){
   const el=$('summonCine'); if(!el) return;
   el.classList.remove('on');
   const ts=el.querySelectorAll('.scTxt');
-  for(let i=0;i<ts.length;i++){ ts[i].classList.remove('on'); ts[i].style.backgroundImage=''; }
+  for(let i=0;i<ts.length;i++){ ts[i].classList.remove('on','tx'); ts[i].style.backgroundImage=''; ts[i].textContent=''; }
   const fg=el.querySelector('.scFig');
   if(fg){ fg.classList.remove('on'); fg.style.backgroundImage=''; }
 }
@@ -11725,8 +12049,33 @@ function _cineFireEnd(who){
     delete m[who]; cb();
   }catch(e){}
 }
+/* ★ v666 用户指定：任何单位都不许抢拍 —— 召唤演出可能因横幅/cutin 延后起播，
+   这段时间里「等演出」的判断必须知道还有一场召唤没开演（否则宿傩先动手、贯牛随后才浮现）。
+   用「登记时间戳 + 8s 自然过期」实现，被吞掉的登记不会永久卡住回合。 */
+function cinePending(){
+  try{
+    const m=S&&S.__cinePendAt; if(!m) return false;
+    const now=performance.now(); let on=false;
+    for(const k in m){ if(now-m[k]<8000) on=true; else delete m[k]; }
+    return on;
+  }catch(e){}
+  return false;
+}
+/* 「台上还有整屏演出」的唯一口径：定格召唤 / 排队 / 尚未起播的召唤 / 领域展开大字 / 漫画页 */
+function stageBusyNow(){
+  try{
+    if(S.cine && (S.cineEnd||0)>performance.now()/1000) return true;
+    if(typeof _cineQ!=='undefined' && _cineQ && _cineQ.length) return true;
+    if(cinePending()) return true;
+    const _da=(S.domAnnUntil||0)-performance.now();
+    if(_da>0 && _da<4500) return true;
+    if((S.cutin||0)>0) return true;
+  }catch(e){}
+  return false;
+}
 function summonCine(who,onEnd){
   const el=$('summonCine'); if(!el) return;
+  try{ S.__cinePendAt=S.__cinePendAt||{}; S.__cinePendAt[who]=performance.now(); }catch(e){}   /* ★ v666 占位 */
   if(typeof onEnd==='function'){ S.__cineEndCb=S.__cineEndCb||{}; S.__cineEndCb[who]=onEnd; }
   /* ★ v622 召唤演出不抢拍：必须在战斗内、且回合横幅与暂停都结束之后才播 */
   if(!S || S.phase!=='fight'){ try{ S.__cineN=0; S.__cineRetry&&clearTimeout(S.__cineRetry); }catch(e){} return; }
@@ -11754,27 +12103,33 @@ function summonCine(who,onEnd){
   S.__cineN=0;
   if(S.cine){ if(_cineQ.indexOf(who)<0) _cineQ.push(who); return; }   /* ★ v468 排队 */
   scClear();
-  const maha=(who!=='agyo');
+  try{ if(S.__cinePendAt) delete S.__cinePendAt[who]; }catch(e){}   /* ★ v666 真的起播 ⇒ 解除占位 */
+  const kanju=(who==='kanju');
+  const maha=(who==='maha');
   /* ★ v597 用户反馈「召唤动画略慢」：整段提速 ×0.75 ⇒ 魔虚罗 4.45→3.34s、颚吐 3.50→2.63s */
   const CINE_SPD=0.75;
-  const seq = (maha
-    ? [['eightTxt',0.12,0.94],['ikaiSho',1.02,1.84],['mahoTxt',1.92,2.74]]
-    : [['kaiGou',0.10,0.84],['agyoTxt',0.92,1.64]]
+  const seq = (kanju
+    ? [['kanjuTxt',0.10,0.86]]
+    : (maha
+      ? [['eightTxt',0.12,0.94],['ikaiSho',1.02,1.84],['mahoTxt',1.92,2.74]]
+      : [['kaiGou',0.10,0.84],['agyoTxt',0.92,1.64]])
   ).map(function(x){ return [x[0], x[1]*CINE_SPD, x[2]*CINE_SPD]; });
-  const figAt = (maha?2.32:1.56)*CINE_SPD;
-  const dur   = (maha?4.45:3.50)*CINE_SPD;   /* ★ v469 形象升满后多留 0.6s 让「现身」读得完 */
+  const figAt = (kanju?1.05:(maha?2.32:1.56))*CINE_SPD;
+  const dur   = (kanju?2.25:(maha?4.45:3.50))*CINE_SPD;   /* ★ v469 形象升满后多留 0.6s 让「现身」读得完 */
   const ts=el.querySelectorAll('.scTxt');
   for(let i=0;i<seq.length;i++){
     const box=ts[i]; if(!box) continue;
     const src=IMG[seq[i][0]];
     if(src) box.style.backgroundImage='url("'+src+'")';
+    if(kanju){ box.classList.add('tx'); box.textContent='贯牛'; }
+    else { box.classList.remove('tx'); box.textContent=''; }
     (function(b,tin,tout){
       _scT.push(setTimeout(function(){ b.classList.add('on'); }, tin*1000));
       _scT.push(setTimeout(function(){ b.classList.remove('on'); }, tout*1000));
     })(box,seq[i][1],seq[i][2]);
   }
   const fg=el.querySelector('.scFig');
-  const figSrc = maha?IMG.maho:IMG.agyo;
+  const figSrc = kanju?IMG.kanju:(maha?IMG.maho:IMG.agyo);
   if(fg&&figSrc){
     fg.style.backgroundImage='url("'+figSrc+'")';
     _scT.push(setTimeout(function(){ fg.classList.add('on'); }, figAt*1000));
@@ -11843,7 +12198,7 @@ function summonMaha(withLog){
     const _start=performance.now();
     (function _wait(){
       try{
-        const _busy=(S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length);
+        const _busy=stageBusyNow();
         if(_busy && performance.now()-_start < 12000){ setTimeout(_wait, 140); return; }
         landMaha();
       }catch(e){ landMaha(); }
@@ -12420,7 +12775,7 @@ function sukunaTurn(){
     say('sys','血契侵蚀——宿傩受到 '+sukPct(bd)+' 点持续伤害（血契 ×'+S.blood+'）');
     syncHud();
   }
-  burnTick();
+  /* ★ v666 用户指定：灶·开的灼烧改在「玩家回合开始」受击 —— 宿傩回合内不再扣血 */
   if(S.vowNoGuard>0){
     S.vowNoGuard--;
     if(S.vowNoGuard<=0) say('sys','「不设防之束缚」结束——可以重新使用反转术式了。');
@@ -12560,11 +12915,12 @@ function sukunaTurn(){
   /* ★ v485：召唤定格演出进行中 ⇒ 攻击段延后（演出结束再打，含领域展开）
      ★ v491 改为「轮询到演出彻底结束」：旧版只按第一场演出的剩余时间延后一次，
        同回合连续召唤（魔虚罗 + 颚吐，走 _cineQ 伫列）时，第二场还在演就开打了。 */
-  if((S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length)){
+  if(stageBusyNow()){
+    const _wc0=Date.now();   /* ★ v666 硬上限：演出异常卡住时 15s 后照常出招，绝不永久停摆 */
     (function _waitCine(){
       try{
         if(S.phase!=='fight') return;
-        if((S.cine && (S.cineEnd||0)>performance.now()/1000) || (typeof _cineQ!=='undefined' && _cineQ.length)){
+        if(stageBusyNow() && Date.now()-_wc0<15000){
           setTimeout(_waitCine, 160); return;
         }
         _sukDoAction();
@@ -12579,6 +12935,9 @@ function sukunaTurnTail(){
   /* ★ v543 空间斩 QTE 未结算完不推进回合（1.5s 后自动超时，不会永久卡住） */
   if(QTE.active){ setTimeout(sukunaTurnTail,260); return; }
 S.turnN++;
+  /* ★ v666 用户指定：灼烧在「玩家回合开始」结算（旧版挂在宿傩回合末，读起来像宿傩又补了一拳） */
+  try{ if(S.phase==='fight') burnTick(); }catch(e){}
+  if(S.phase!=='fight') return;
   try{ ceRegenOnTurnStart(); }catch(e){}                /* ★ v567 回合开始立即恢复 2 格咒力／体力 */
   try{ mahaTurnStart(); }catch(e){}                    /* ★ v543 魔虚罗回合开始被动 */
   try{ analyzeTick(); }catch(e){}   /* ★ v484 魔虚罗死后：解析进度每回合 +10%（同一术师） */
@@ -13428,14 +13787,26 @@ const ENDINGS=[
   {id:'canon', kind:'win', nm:'原作再现', tag:'CANON',
    desc:'五条 → 鹿紫云 → 虎杖：照着漫画的顺位，把这场接力走了一遍。',
    need:'前三棒依次为五条悟 → 鹿紫云一 → 虎杖悠仁'},
+  {id:'sukudom3', kind:'win', nm:'伏魔御厨子·三度开宴', tag:'DOMAIN ×3',
+   desc:'三次展开，三次都被你按了回去。厨子的火，最终没能烧穿这条时间线。',
+   need:'宿傩展开领域 3 次后仍被击败'},
+  {id:'shortnight', kind:'win', nm:'最短的夜', tag:'≤10 TURNS',
+   desc:'十回合之内，新宿的夜还没真正开始，就已经结束了。',
+   need:'10 回合内通关'},
+  {id:'tame', kind:'win', nm:'调伏仪式', tag:'NO SHIKIGAMI KILL',
+   desc:'魔虚罗、颚吐、贯牛都还在——你只把刀锋留给了诅咒之王本人。',
+   need:'全程不击破任何式神通关'},
+  {id:'amber', kind:'win', nm:'幻兽琥珀', tag:'AMBER',
+   desc:'两回合的命，换来一记足够远的雷。鹿紫云一把自己烧成了最后的光。',
+   need:'鹿紫云一以幻兽琥珀形态终结宿傩'},
+  {id:'makiend', kind:'win', nm:'天与咒缚', tag:'NO CURSED ENERGY',
+   desc:'没有咒力，也没有退路。真希用一把刀，把诅咒之王留在了新宿。',
+   need:'真希终结宿傩'},
   {id:'ruin', kind:'lose', nm:'新宿陷落', tag:'GAME OVER',
    desc:'所有术师力尽——诅咒之王仍站在新宿的废墟上。',
-   need:'全部术师倒下（失败结局）'},
-  {id:'retreat', kind:'lose', nm:'鸣金收兵', tag:'DRAW',
-   desc:'你选择在这里收手。这场仗，还没打完。',
-   need:'尚有候补时主动结算'}
+   need:'全部术师倒下（失败结局）'}
 ];
-/* 本局达成的全部结局（可同时成立多个）；无匹配时回退到「鸣金收兵」 */
+/* 本局达成的全部结局（可同时成立多个）；无匹配时回退到「新宿陷落」 */
 function judgeEndings(){
   const kill=S.suk.hp<=0, used=S.usedHeroes||[];
   const last=used.length?used[used.length-1]:'';
@@ -13449,10 +13820,14 @@ function judgeEndings(){
     i68:    kill && last==='ita68',
     noblack:kill && !(S.blackN||0),
     maki:   kill && (S.blackN||0)>=6,   /* ★ v657b 用户指定：改为「一局打出 6 次黑闪」 */
+    sukudom3: kill && (S.sukuDomUsed||0)>=3,
+    shortnight: kill && (S.turnN||0)<=10,
+    tame:   kill && !(S.shikKilled||0),
+    amber:  kill && last==='kashimo' && !!S.amberUsed,
+    makiend:kill && last==='maki',
     brk:    kill,
     canon:  kill && used[0]==='gojo' && used[1]==='kashimo' && used[2]==='itadori',
-    ruin:   !kill && heroesLeft().length===0,
-    retreat:!kill && heroesLeft().length>0
+    ruin:   !kill && heroesLeft().length===0
   };
   const hit=ENDINGS.filter(e=>c[e.id]);
   return hit.length?hit:[ENDINGS[ENDINGS.length-1]];
@@ -13899,7 +14274,7 @@ function buildResultCols(){
   /* ★ v500 用户指定：两颗按钮移到「左上」—— 放进左栏、紧跟全服战况那一行。
      v498/v499 把它们作为跨两栏的独立行插在图鉴之前，右栏较高 ⇒ 实际掉到页面下方，
      超宽屏又被 rsWide 规则居中，看起来完全不在左上。回到左栏后位置固定贴左上。 */
-  if(_ctaRow && _ctaRow.parentNode!==L) L.appendChild(_ctaRow);
+  if(_ctaRow){ _host0.insertBefore(_ctaRow,_dexWrap); }   /* ★ v663 世界线跳跃：改为结算层直接子节点，手机端吸底 */
   L.__built=1;
 }
 
@@ -13908,6 +14283,93 @@ function buildResultCols(){
 /* ★ v499 结算页内容带：宽度跟容器高度成比例，超宽画面不再把区块拉成细条。
    同时给 <html> 打两个开关类：rsWide（宽高比≥1.9）/ rsSquat（可视高≤545）。
    只在结算页可见时算，不影响战斗 HUD 与其它页面。 */
+/* ★ v664 留言弹幕 + 竖屏输入浮层（结算页） */
+const DM={on:true,timer:0,layer:null,pool:[],lastFetch:0};
+function dmStyle(){
+  if(document.getElementById("dmCss")) return;
+  const st=document.createElement("style"); st.id="dmCss";
+  st.textContent="#dmLayer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:5;display:none;}"
+    +".dmItem{position:absolute;left:100%;white-space:nowrap;font-weight:900;font-size:clamp(12px,2.4vw,16px);color:#fff;text-shadow:2px 2px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;opacity:.74;will-change:transform;}"
+    +"#dmToggle{position:fixed;right:12px;top:12px;z-index:90;font:900 11px/1 sans-serif;letter-spacing:1px;color:#fff;background:rgba(21,18,16,.78);border:1px solid rgba(247,243,234,.9);padding:7px 9px;border-radius:2px;cursor:pointer;}"
+    +"#fbPortrait{position:fixed;inset:0;z-index:2147483000;background:rgba(8,8,10,.66);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;}"
+    +"#fbPortrait.hide{display:none!important;}"
+    +"#fbPortrait .fbPSheet{width:100%;max-width:420px;background:#f7f3ea;color:#14110f;border:2px solid #14110f;box-shadow:6px 6px 0 #14110f;padding:16px;box-sizing:border-box;text-align:left;font:15px/1.6 sans-serif;}"
+    +"#fbPortrait .fbPTitle{font-weight:900;letter-spacing:2px;margin-bottom:10px;color:#7a0a12;}"
+    +"#fbPortrait textarea{width:100%;height:120px;box-sizing:border-box;border:1.5px solid #14110f;background:#fff;color:#14110f;font:16px/1.5 sans-serif;padding:9px;resize:none;}"
+    +"#fbPortrait .fbPRow{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;}"
+    +"#fbPortrait button{font:900 13px/1 sans-serif;padding:9px 16px;border:2px solid #14110f;background:#fff;color:#14110f;cursor:pointer;}"
+    +"#fbPortrait #fbPSend{background:#14110f;color:#fff;}"
+    +"#fbPortrait #fbPOk{font-size:12px;color:#7a0a12;margin-top:8px;min-height:14px;}";
+  document.head.appendChild(st);
+}
+function dmEnsure(){
+  dmStyle();
+  const rs=document.getElementById("resultScreen"); if(!rs) return null;
+  let layer=document.getElementById("dmLayer");
+  if(!layer){ layer=document.createElement("div"); layer.id="dmLayer"; rs.appendChild(layer); }
+  let btn=document.getElementById("dmToggle");
+  if(!btn){
+    btn=document.createElement("button"); btn.id="dmToggle"; btn.type="button"; btn.textContent="弹幕：开"; rs.appendChild(btn);
+    btn.addEventListener("click",function(){ DM.on=!DM.on; btn.textContent="弹幕："+(DM.on?"开":"关"); if(DM.on){ layer.style.display="block"; dmSpawn(); } else { dmStop(); } });
+  }
+  DM.layer=layer; return layer;
+}
+function dmFetch(){
+  try{
+    fetch(apiBase()+"/api/msgs?n=80"+apiSc(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+      if(j&&j.ok&&Array.isArray(j.msgs)){ DM.pool=j.msgs.slice(-80); DM.lastFetch=Date.now(); }
+    }).catch(function(){});
+  }catch(e){}
+}
+function dmSpawn(){
+  try{
+    if(!DM.on) return; const rs=document.getElementById("resultScreen"); if(!rs||rs.classList.contains("hide")) return;
+    const layer=DM.layer||dmEnsure(); if(!layer||layer.style.display==="none") return;
+    if(layer.childElementCount>=28||!DM.pool.length) return;
+    const m=DM.pool[Math.floor(Math.random()*DM.pool.length)]; if(!m||!m.m) return;
+    const el=document.createElement("div"); el.className="dmItem"; el.textContent=String(m.m).slice(0,80);
+    el.style.top=(8+Math.random()*74)+"%"; layer.appendChild(el);
+    const w=layer.clientWidth||window.innerWidth, dur=9000+Math.random()*5000;
+    try{
+      const an=el.animate([{transform:"translateX(0)"},{transform:"translateX(-"+(w+el.offsetWidth+40)+"px)"}],{duration:dur,easing:"linear"});
+      an.onfinish=function(){ if(el.parentNode) el.parentNode.removeChild(el); };
+    }catch(e){ setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },dur); }
+  }catch(e){}
+}
+function dmStart(){
+  try{
+    const layer=dmEnsure(); if(!layer||!DM.on) return;
+    layer.style.display="block";
+    if(Date.now()-DM.lastFetch>60000) dmFetch();
+    clearInterval(DM.timer); DM.timer=setInterval(dmSpawn,700);
+    for(let i=0;i<6;i++) setTimeout(dmSpawn,i*180);
+  }catch(e){}
+}
+function dmStop(){
+  try{ clearInterval(DM.timer); DM.timer=0; const layer=DM.layer||document.getElementById("dmLayer"); if(layer){ layer.style.display="none"; layer.innerHTML=""; } }catch(e){}
+}
+function installPortraitFb(){
+  try{
+    if(document.getElementById("fbPortrait")) return;
+    dmStyle();
+    const ov=document.createElement("div"); ov.id="fbPortrait"; ov.className="hide";
+    ov.innerHTML="<div class=\"fbPSheet\"><div class=\"fbPTitle\">给作者的话（竖屏输入）</div><textarea id=\"fbPText\" maxlength=\"240\" placeholder=\"想对作者说的话……（选填）\"></textarea><div class=\"fbPRow\"><button type=\"button\" id=\"fbPCancel\">取消</button><button type=\"button\" id=\"fbPSend\">送出</button></div><div id=\"fbPOk\"></div></div>";
+    document.body.appendChild(ov);
+    const close=function(){ ov.classList.add("hide"); };
+    ov.querySelector("#fbPCancel").addEventListener("click",close);
+    ov.querySelector("#fbPSend").addEventListener("click",function(){
+      const t=document.getElementById("rFbText"), p=ov.querySelector("#fbPText");
+      if(t) t.value=p.value; close(); try{ sendFb(); }catch(e){}
+    });
+    document.addEventListener("focusin",function(e){
+      if(e.target&&e.target.id==="rFbText"&&document.documentElement.classList.contains("rot")){
+        try{ e.target.blur(); }catch(_e){}
+        const p=ov.querySelector("#fbPText"); p.value=e.target.value||""; ov.querySelector("#fbPOk").textContent="";
+        ov.classList.remove("hide"); setTimeout(function(){ try{ p.focus(); }catch(_e){} },60);
+      }
+    });
+  }catch(e){}
+}
 function fitResultBand(){
   const rs=$('resultScreen');
   if(!rs) return;
@@ -14143,6 +14605,8 @@ function showResultInternal(){
   /* ★ v537 世界线跳跃用了 inline display:none 硬藏，进结算时必须复原 */
   try{ $('resultScreen').style.display=''; }catch(e){}
   $('resultScreen').classList.remove('hide');
+  try{ installPortraitFb(); }catch(e){}
+  try{ dmStart(); }catch(e){}
   try{ setTimeout(eggTipShow,80); setTimeout(eggTipShow,420); }catch(e){}
   try{ rsResetScroll(); }catch(e){}
   setTimeout(fitResult,20); setTimeout(fitResult,320);   /* ★ v240 一页内：两次兜底（等字体/战况载入） */
@@ -14463,6 +14927,9 @@ function update(dt){
         say('sys',QTE.mode==='maha'?'空间斩擦过——你没能化解。':'光标滑过——黑闪的机会消失了。');
         if(cb) cb(false);   /* ★ v140 超时＝错过黄条：走普通伤害，时间继续 */
       }
+    }else if(S.ceCtl&&S.ceCtl.on){
+      /* ★ v666 咒力操控：战斗时间暂停，只走小游戏计时 */
+      ceCtlTick(dt);
     }else if(S.cutin>0){
       /* 漫画页演出中：战斗时间暂停（不结算回合、不消耗琥珀） */
       S.cutin-=dt;
@@ -16403,7 +16870,7 @@ function chuanFadeArt(im){
    再从左上到右做同款「擦除显现」，0.92s 后淡出。 */
 /* ★ v658 用户指定：穿血图案从现有尺寸放大到 2.5×，与渐显（擦除显现）同时进行；
    放大到 2.5× 的那一拍才结算伤害。两处共用这两个常量，避免时间对不上。 */
-const CHUAN_DUR = 920, CHUAN_GROW_K = 0.60, CHUAN_GROW_MS = Math.round(920 * 0.60);
+const CHUAN_DUR = 1150, CHUAN_GROW_K = 0.38, CHUAN_GROW_MS = Math.round(1150 * 0.38);   /* ★ v664 显现更快、停留与消失更慢 */
 function drawI68ChuanBack(){
   const t0=S.i68ChuanT0||0; if(!t0) return;
   const _now=(typeof performance!=='undefined'?performance.now():Date.now());
@@ -16521,9 +16988,8 @@ function i68BreakSukuDom(){
   sfxOn('block',0.8);
   try{ addFx({type:'domBreak',dur:1.5,x:W/2,y:H/2}); addFx({type:'domShatter',dur:0.9}); }catch(e){}
   try{ flash('fWhite'); shake(); }catch(e){}
-  try{ stopSukuBgm(); }catch(e){}
-  try{ resumeMainBgm(); }catch(e){}
-  try{ fxText(GX()+34*SC,GY-240*SC,'领域破碎','#8b5cf6',true); }catch(e){}
+  try{ stopSukuBgm(true); }catch(e){}   /* ★ v664 保留领域曲断点，后续可接着播 */
+  setTimeout(function(){ try{ resumeMainBgm(1.0); }catch(e){} }, 900);   /* ★ v664 先让黑闪音效完整播完，再补回主 BGM（原位置续播） */
   say('narr','旁白：黑闪的一击穿透了结界——伏魔御厨子的咒力骨架自内侧裂开，整片厨子当场崩塌。');
   say('sys','★ 黑闪贯穿「伏魔御厨子」——领域破碎，宿傩陷入术式熔断：下一回合只会以反转术式修复自身，之后才恢复出招。');
   syncHud();
@@ -16654,7 +17120,7 @@ function i68Atk(){
   say('ita','「解。」');
   /* ★ v597 用户指定：解不再打出黑闪——黑闪统一走第 2 键「黑闪」 */
   try{ __haptic(45); }catch(e){}   /* ★ v620 球面切割开始震动 */
-  try{ playCineSfx(SFX_JIE_URI,1.0); }catch(e){}   /* ★ v633 球面切割：68解音 */   /* ★ v624 玻璃破碎 */
+  try{ playCineSfx(SFX_JIE_URI,1.5); }catch(e){}   /* ★ v665b 音量 +7dB（软限幅） */   /* ★ v633 球面切割：68解音 */   /* ★ v624 玻璃破碎 */
   i68JieFx(boost);
   try{ fxText(GX()+150*SC,GY-120*SC,'ザンッ','#14110f',true); }catch(e){}
   /* ★ v635 用户指定：解的伤害等球面切割开始那一刻才结算 */
@@ -16689,8 +17155,9 @@ function i68Blood(){
     setTimeout(function(){
       if(S.phase!=='fight' || S.suk.hp<=0) return;
       const d=dmg;
+      try{ playCineSfx(SFX_JIE_URI,1.45); }catch(e){}   /* ★ v665b 音量 +7dB（软限幅） */   /* ★ v664 与伤害数字同帧起音 */
+      try{ shake(1.6); flash('fHit'); }catch(e){}
       hitSukuna(d,false,'hollow',false,false,'i68_blood',true);
-      try{ playCineSfx(SFX_JIE_URI,0.95); }catch(e){}   /* ★ v638 并行通道；★ v661 音量 0.58 → 0.95（用户反馈听不到） */
       /* ★ v616 群体伤害：解/穿血同时打在场所有式神（伤害与本体同值，不走式神侧减伤） */
       try{
         const _sd=Math.round(d/0.85); if(typeof damageShiki==='function'){ if(S.agyo && (S.agyoHp||0)>0) damageShiki('agyo',_sd,true); if(S.kanju && (S.kanjuHp||0)>0) damageShiki('kanju',_sd,true); }
@@ -17621,7 +18088,7 @@ function __drawFxTextOne(f,k){
       const _rise=!!f.rise;   /* ★ v498 自下而上形态：不横向漂移、不缩放，退场只淡出 */
       const tIn=Math.min(1,k/0.18);
       const eIn=1-Math.pow(1-tIn,3);
-      const tOut=Math.max(0,(k-0.70)/0.30);
+      const tOut=Math.max(0,(k-0.78)/0.22);
       /* ★ v499 用户反馈「部分技能文字动画太大」：
          ① 基准降一档（大字 26→23、小字 17→16）—— 39px 的黑描边大字在 800 高画面里压住立绘；
          ② 大字再按字数自动收缩（≤3 字不收、4-5 字 0.90、6-7 字 0.82、8 字以上 0.74），
@@ -17633,12 +18100,12 @@ function __drawFxTextOne(f,k){
       const pop=_rise?1:(f.stamp?(1.62-0.62*eIn)
                       :(0.72+0.28*eIn+0.10*Math.sin(Math.PI*Math.min(1,tIn))));
       const y=_rise?(f.y+(1-eIn)*(f.risePx||30)*SC)
-                  :(f.y-(_d?k*8*SC:k*30*SC)-tOut*tOut*(_d?0:22*SC));
+                  :(f.y-(_d?k*6*SC:0));   /* ★ v664 普通文字不再上飘，原地渐隐 */
       const x=_rise?f.x:(f.x+_d*k*62*SC);
       ctx.save();
       ctx.globalAlpha=_rise
         ?Math.max(0,Math.min(Math.min(1,k/0.14),1-tOut))
-        :Math.max(0,Math.min(Math.min(1,k/0.09),1-tOut*tOut));
+        :Math.max(0,Math.min(Math.min(1,k/0.09),1-tOut));
       ctx.translate(x,y); if(f.rot) ctx.rotate(f.rot*Math.PI/180); ctx.scale(pop,pop);
       ctx.font='900 '+size+'px "Noto Sans SC",sans-serif';
       ctx.textAlign='center'; ctx.lineJoin='round';
@@ -23176,11 +23643,10 @@ function actsChipPlace(el){
     el=el||document.getElementById('actsChip');
     const tag=document.getElementById('heroTag');
     if(!el||!tag||!el.parentElement) return;
-    /* ★ v597 用户指定：改贴玩家血条左端上沿（原贴在名牌上，手机端被血条盖住看不见） */
-    const bar=document.querySelector('#heroRow .bar.ghp')||tag;
-    const r=bar.getBoundingClientRect(), p=el.parentElement.getBoundingClientRect();
+    /* ★ v664 用户指定：回到玩家角色名正上方居中 */
+    const r=tag.getBoundingClientRect(), p=el.parentElement.getBoundingClientRect();
     if(r.width<=0||p.width<=0) return;
-    el.style.left=(r.left-p.left+2)+'px';
+    el.style.left=(r.left-p.left+r.width/2)+'px';
     el.style.top=(r.top-p.top-1)+'px';
   }catch(e){}
 }
@@ -23224,7 +23690,7 @@ function syncGuiltCharge(){
   bar.style.setProperty('--cc',col);
 }
 /* ★ v509 回合阶段横幅：把「玩家行动 → 结算 → 宿傩行动」三段变成看得见的节拍 */
-function turnBanner(txt,sub){
+function turnBanner(txt,sub,opt){
   try{
     let el=document.getElementById('turnBanner');
     if(!el){ el=document.createElement('div'); el.id='turnBanner';
@@ -23232,6 +23698,7 @@ function turnBanner(txt,sub){
       (document.getElementById('app')||document.body).appendChild(el); }
     el.children[0].textContent=txt||'';
     el.children[1].textContent=sub||'';
+    el.classList.toggle('tbRed', !!(opt&&opt.red));
     el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
     /* ★ v653 修「式神出场动画丢失」根因：动画是 1.5s 的 CSS，类名从不摘除 ⇒
        summonCine 里「横幅还开着就等」的判断永远为真，重试 40 次后直接放弃，动画整段不播。
@@ -23776,6 +24243,7 @@ document.addEventListener('keydown',e=>{
   if(S.paused){ if(k===' '||k==='enter'||k==='escape'){ e.preventDefault(); togglePause(); } return; }
   if(S.phase==='title'&&(k==='enter'||k===' ')){ start(); return; }
   /* ★ v71 黑闪判定：点击屏幕（PC=滑鼠/空格，手机=点屏幕）—— 全域拦截，QTE 期间任何点按都算 */
+  if(S.ceCtl&&S.ceCtl.on){ if(k===' ') e.preventDefault(); return; }   /* ★ v666 咒力操控中空格不作数 */
   if(QTE.active&&k===' '){ e.preventDefault(); qtePress(); return; }
   /* ★ v178 电脑端快捷键：空格 = 暂停 / 继续（仅战斗相位；QTE 黑闪、领域对拼、选人/结算等不抢键） */
   if(k===' '&&S.phase==='fight'){ e.preventDefault(); togglePause(); return; }
@@ -23806,6 +24274,16 @@ $('dmPad').addEventListener('click',e=>{
   const el=e.target.closest('.dpb'); if(!el) return;
   domInput(+el.dataset.d);
 });
+/* ★ v666 咒力操控：字块用 pointerdown 判定，触屏/鼠标同一路，起手最快 */
+try{
+  const _ccf=document.getElementById('ccField');
+  if(_ccf) _ccf.addEventListener('pointerdown',function(e){
+    const el=e.target&&e.target.closest?e.target.closest('.ccChip'):null;
+    if(!el) return;
+    e.preventDefault(); e.stopPropagation();
+    ceCtlTap(el);
+  },{passive:false});
+}catch(e){}
 $('dmPad').addEventListener('touchstart',e=>{
   const el=e.target.closest('.dpb'); if(!el) return;
   e.preventDefault();
@@ -23827,7 +24305,7 @@ function shikBusy(){
 function playerCanAct(){
   try{
     if(!S || S.phase!=='fight') return false;
-    if(S.paused || S.cine || QTE.active) return false;
+    if(S.paused || S.cine || QTE.active || (S.ceCtl&&S.ceCtl.on)) return false;
     if((S.cutin||0)>0 || (S.turnWait||0)>0 || (S.tbHold||0)>0) return false;
     if(typeof sukActing==='function' && sukActing()) return false;
     if(typeof shikBusy==='function' && shikBusy()) return false;
@@ -23835,6 +24313,7 @@ function playerCanAct(){
   return true;
 }
 function padAct(a){
+  if(S.ceCtl&&S.ceCtl.on) return;   /* ★ v666 咒力操控进行中：不接受任何出招 */
   if(shikBusy()){ say('sys','式神正在出手 —— 等这一拍打完再动。'); return; }   /* ★ v661 */
   if(S.phase==='yujiDom'){ return; }   /* ★ v66：展开动画期间不接收操作 */
   /* ★ v419 用户指定：领域对拼期间整条技能栏锁死（触控／滑鼠三路事件都收敛到这里） */
@@ -23842,6 +24321,11 @@ function padAct(a){
   if(S.cine) return;   /* ★ v467 式神召唤定格演出期间不接受操作 */
   if(sukActing()) return;   /* ★ v649 宿傩／式神招式动画没播完 ⇒ 不接受操作 */
   if((S.cutin||0)>0 || (S.turnWait||0)>0) return;   /* ★ v662 演出/等待期间不接受操作 */
+  /* ★ v665 用户指定：按钮灰暗时一律不能出招。
+     灰化判定在 syncHud 里用 playerCanAct()（含 tbHold／演出／暂停…），旧版 padAct 从没查它，
+     所以「灰着也能点」。这里补同一套判定；另外开局入场缓冲 tbGate 内、回合还没开闸（!turnCtl）也挡住。 */
+  if(!QTE.active && (typeof playerCanAct==='function') && !playerCanAct()) return;
+  if(!QTE.active && ((S.tbGate||0)>0 || !S.turnCtl)) return;
   /* ★ v462 连点闸门（用户报「一直点一个按钮，回合飞快就没了」）
      · 本回合已出手（按钮本来就置灰）⇒ 事件层也一并挡掉，不再重复 markActed；
      · 同一波点击：触控装置上 touchstart 与合成 click 会各派发一次，相隔通常 <120ms，
@@ -24621,7 +25105,6 @@ function beginNext(h){
   $('selectUI').classList.add('hide');
   $('resultScreen').classList.add('hide');   /* ★ 防御：换人时兜底收起结算页，避免层级残留 */
   S.hero=h;
-  reportHero(h);   /* ★ v588 角色登场即上报使用统计 */
   /* ★ v393 用户指定：无下限破解＝「五条在场」＋「魔虚罗在场」满 2 个回合，之后永久失效。
      若魔虚罗在五条上场前就已在场，从五条登场这一刻起重新起算 2 回合。 */
   if(h==='gojo' && S.maha && !S.mahaDead && !S.muBroken && !(S.muBreakAt>0)){
@@ -24666,6 +25149,8 @@ function beginNext(h){
   shake(); flash('fWhite');
   /* ★ v35 出场页统一：白底漫画页居中演出，台词顺延到揭幕之后（不再用 240ms 起手） */
   playHeroIntro(h);
+  try{ clearSayNow(true); }catch(e){}   /* ★ v666 上一棒的气泡不带进新角色 */
+  try{ ceCtlAbort(); }catch(e){}
   queue.length=0;
   const lines=firstOpen().concat(HERO_LINES[h]||[]);   /* ★ v32 首棒时把开场白排在角色台词前面 */
   lines.forEach((l,i)=>{ setTimeout(()=>say(l[0],l[1]), INTRO_MS+240+i*430); });
@@ -24810,6 +25295,8 @@ function maybeGuide(_n){
 }
 
 function startNext(h){
+  /* ★ 使用统计统一入口：鹿紫云一/虎杖/68 走各自 start 函数会绕过 beginNext，必须在这里上报 */
+  reportHero(h);
   /* ★ v646 进战才预热领域／击杀曲（按角色定向，见 warmBattleAudio 注释） */
   try{ if(window.warmBattleAudio) window.warmBattleAudio(h); }catch(e){}
   /* ★ v612 68 独立血量上限：150（其余角色 100），换人即重置，避免上限残留 */
@@ -27466,6 +27953,9 @@ function forceMainBgm(fade){
 function _btnAgainGo(){
   /* ★ v569：不论随后 resetBattle 是否跑到，先把束缚归零 */
   try{ vowResetAll(); }catch(e){}
+  /* ★ v663 跳线前收掉手机端上下滚动钮，避免残留遮挡难度页 */
+  try{ ['rsNavDown','rsNavUp'].forEach(function(id){ var e=document.getElementById(id); if(e) e.classList.remove('on'); }); }catch(e){}
+  try{ dmStop(); }catch(e){}
   /* ★ v537 用户指定：点击后必须「立即」回到难度模式选择界面。
      旧版先 forceMainBgm（内部建元素 + 起播）再进 enterDiff，只要中间任一步被卡住、
      或 .hide 被更高的层级/样式盖住，观感就是「按了没反应」。现在第一件事就是硬藏结算层
@@ -27481,6 +27971,16 @@ function _btnAgainGo(){
   /* ★ v475 改走 forceMainBgm：连宿傩／乙骨领域音轨一起硬停 */
   try{ forceMainBgm(0.7); }catch(e){}
   enterDiff('resultScreen');
+  setTimeout(function(){
+    try{
+      var d=document.getElementById('diffScreen');
+      var rs=document.getElementById('resultScreen');
+      if(rs){ rs.classList.add('hide'); rs.style.display='none'; }
+      if(d && d.classList.contains('hide')){
+        d.classList.remove('hide'); d.classList.remove('in'); void d.offsetWidth; d.classList.add('in');
+      }
+    }catch(e){}
+  },320);
 }
 /* ★ v153 结算「再来一局」→ 难度页
    ★ v539 用户报「手机夸克点了没反应」：WebView 的合成 click 有时被吃掉（长按/选中/点击穿透都会），
@@ -29260,9 +29760,10 @@ html,body,#app,#stage,#bootVideo{-webkit-user-select:none;-moz-user-select:none;
   z-index:74;cursor:pointer;pointer-events:auto;-webkit-tap-highlight-color:transparent;
   transition:opacity .16s ease,transform .16s ease;opacity:.95;font-family:inherit;
 }
-#rsNavDown{bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);}
+#rsNavDown{left:auto;right:calc(12px + env(safe-area-inset-right));bottom:calc(78px + env(safe-area-inset-bottom));transform:none;}
 #rsNavUp{top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);}
-#rsNavDown:active,#rsNavUp:active{transform:translateX(-50%) scale(.9);opacity:1;}
+#rsNavUp:active{transform:translateX(-50%) scale(.9);opacity:1;}
+#rsNavDown:active{transform:scale(.9);opacity:1;}
 #rsNavDown svg,#rsNavUp svg{width:23px;height:23px;fill:none;stroke:currentColor;
   stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round;}
 html:not(.land):not(.rot) #rsNavDown.on,html:not(.land):not(.rot) #rsNavUp.on{display:none;}
@@ -29531,7 +30032,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
 #stage>.hud:not(.bottom){margin-top:var(--sa-t);margin-left:var(--sa-l);margin-right:var(--sa-r);}
 #stage>.hud.bottom{margin-left:var(--sa-l);margin-right:var(--sa-r);}
 #pad{padding-bottom:calc(8px*var(--k) + var(--sa-b));}
-html.rot #pad,html.land #pad{padding-bottom:calc(4px*var(--k) + 6px + var(--sa-b));}
+html.rot #pad,html.land #pad{padding-bottom:calc(8px*var(--k) + 14px + var(--sa-b));}
 #turnBar{top:calc(8px + var(--sa-t));}
 html.rot #turnBar,html.land #turnBar{top:calc(12px + 16px*var(--k) + var(--sa-t));}
 #bgmBtn{top:calc(2.5px + 23.6px*var(--k) + var(--sa-t));}
@@ -29541,6 +30042,17 @@ html.rot #turnBar,html.land #turnBar{top:calc(12px + 16px*var(--k) + var(--sa-t)
 html{height:100%;}
 body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;}
 #app{height:var(--app-h,100vh);}
+/* ★ v667 用户指定（参考 B站 其它 Toy 的居中构图）：容器是固定竖屏，旋转 90° 后画面左右直接顶到屏幕边，
+   圆角 / 挖孔 / B站 悬浮按钮都会压住血条与技能牌。这里在 Toy 容器内给左右各留一段空白，
+   居中呈现；背景沿用 body 的纯黑，视觉上就是一块居中的黑色画布。
+   几何：#app 旋转前 W=100dvh、H=100dvw-2M，rotate(90deg) 后屏幕占位 = 宽 H、高 W，
+   再 left:M 即整体居中，屏幕左右各留 M。 */
+:root{--toy-mx:clamp(8px,4.2vw,36px);}   /* 按屏宽比例自适应：手机约 4.2% 宽，大屏封顶 36px */
+html.toy.rot #app{
+  left:var(--toy-mx);
+  height:calc(100dvw - var(--toy-mx)*2);
+}
+html.toy.rot body{background:#000;}
 </style>
 </body></body>
 </html>
