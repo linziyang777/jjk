@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v670"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v671"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v670">
+<meta name="jjk-build" content="v671">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -3317,12 +3317,17 @@ html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-to
 /* ★ v663 世界线跳跃按钮：手机上吸附底部，任何结算内容高度都完整可见 */
 #resultScreen > .ctaRow{width:100%;max-width:860px;justify-self:center;margin:6px auto 2px;}
 @media (max-width:900px){
-  /* ★ v669 用户指定：按钮不再吸底 —— 吸底条会压住结局图鉴最后一行。改回文档流，紧跟在图鉴上方 */
-  #resultScreen > .ctaRow{position:static;width:100%;max-width:none;margin:4px 0 2px;padding:6px 8px;
-    background:rgba(247,243,234,.94);border-top:1px solid rgba(26,20,16,.10);border-bottom:1px solid rgba(26,20,16,.10);}
+  /* ★ v671 用户指定：恢复吸底（sticky 版）—— 视觉上始终贴在结算页底部，
+     但它在文档流里占位，所以不会压住结局图鉴。fixed 会受结算容器滚动变换影响而跑位。 */
+  #resultScreen > .ctaRow{position:sticky;left:0;right:0;bottom:0;z-index:30;width:100%;max-width:none;margin:0;
+    padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+    background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);}
+  #resultScreen{padding-bottom:calc(14px + env(safe-area-inset-bottom));}
 }
-html.rot #resultScreen > .ctaRow,html.land #resultScreen > .ctaRow{position:static;width:100%;max-width:none;margin:4px 0 2px;padding:6px 8px;
-  background:rgba(247,243,234,.94);border-top:1px solid rgba(26,20,16,.10);border-bottom:1px solid rgba(26,20,16,.10);}
+html.rot #resultScreen > .ctaRow,html.land #resultScreen > .ctaRow{position:sticky;left:0;right:0;bottom:0;z-index:30;width:100%;max-width:none;margin:0;
+  padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+  background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);}
+html.rot #resultScreen,html.land #resultScreen{padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important;}
 html.rot #resultScreen,html.land #resultScreen{padding-bottom:calc(74px + env(safe-area-inset-bottom));}
 /* ★ v249 极窄（<420px 内宽）才退回单栏 */
 @media (max-width:420px){
@@ -5796,7 +5801,7 @@ function resetBattle(){
   S.hero='gojo'; S.kashimo.hp=HP0(); S.amber=0;  S.amberUsed=false; S.amberOn=0; S.amberLethal=0; S.amberCastTurn=0; S.trueForm=false;   /* ★ v46 amber＝剩余回合 */
   setHeroHint('gojo');   /* ★ v135 提示条跟随角色 */
   S.downDone=false; try{ S.__downKick=0; S.__downForce=0; S.__downTok=(S.__downTok||0)+1; }catch(_e){} S.pendingTrueForm=false; S.kashimoDead=0; S.usedHeroes=[]; window.__hardPick=null;   /* v378 新局重抽 */   /* ★ v32 开局空名单：不预置五条悟 */
-  S.itadori.hp=HP0(); S.blood=0; S.itaUltCd=0; S.itaHeal=false; S.itaDom=0; S.itaSimpleDom=0;
+  S.itadori.hp=HP0(); S.blood=0; S.itaPoison=0; S.itaUltCd=0; S.itaHeal=false; S.itaDom=0; S.itaSimpleDom=0;
   S.turn=turnSec(); S.turnN=1; S.sukPlan=null; window.__intentN=0; S.turnWarn=false; S.guardUp=false; S.mahaSummoning=false;
   S.actsLeft=1; S.bonus=0; S.turnCtl=true; S.turnWait=0; if(S.turnHold){ clearTimeout(S.turnHold); S.turnHold=null; }
   S.acted=false; S.lastAct='';
@@ -7544,6 +7549,7 @@ function hurtHero(d,kind){
   S.hurtLast=0;   /* ★ v660 每次受击先清零：被免伤／架开时飘字不会沿用上一击的数字 */
   /* ★ v595 68虎杖·剧毒：宿傩中毒期间，其一切攻击伤害 −20%（强化后 −25%）；灼烧(burnTick)也吃，符合「中毒乏力」 */
   if((S.i68Poison||0)>0 && d>0) d=d*0.75;   /* ★ v615 剧毒一律 −25% 攻击（不再分档） */
+  if((S.itaPoison||0)>0 && d>0) d=d*0.80;   /* ★ v671 普通虎杖的剧毒：宿傩攻击 −20% */
   /* ★ v595 解·仿无下限：物理攻击（phys/kai/无 kind 的近身）在免疫回合内归零；术式/领域/式神仍可伤 */
   /* ★ v610 半咒灵：所受一切伤害 −20% */
   try{ if(S.hero==='ita68' && d>0) d*=0.8; }catch(e){}
@@ -12897,6 +12903,7 @@ function sukunaTurn(){
     say('sys','★ 反转术式的余韵：本回合再回复 20 生命。');
   }
   try{ i68PoisonTick(); }catch(e){}          /* ★ v47 穿血：改回合制递减 */
+  try{ itaPoisonTick(); }catch(e){}          /* ★ v671 普通虎杖的剧毒 */
   /* ★ v89 领域时长规则（按原作逻辑重订）：
      · 虎杖「领域展开」/ 乙骨「真赝相爱」/ 五条「无量空处」/ 宿傩「伏魔御厨子」一律持续到施术者自身下场（退场）才结束，
        不再按回合数收束（下面两个 -- 是旧版的「剩 N 回合」倒计时，已移除）。
@@ -14287,7 +14294,7 @@ function buildResultCols(){
   let _row=L.querySelector('.srvRow');
   if(!_row){ _row=document.createElement('div'); _row.className='srvRow'; }
   if(g('rSrv')) _row.appendChild(g('rSrv'));
-  if(_rc) _row.appendChild(_rc);
+  /* ★ v671 用户指定：回合数／黑闪数不再跟在全服战况下面，改挂到右栏「本局解锁」上方（见 right 数组） */
   /* ★ v446 分享按钮紧跟世界线跳跃一起放左栏（否则会独立占一行、整页被顶高一截）；
      解锁块提到右栏最前，一打开结算就看到「这局拿到了什么」。 */
   /* ★ v492 用户指定「结局图鉴上移」：CTA 行不再放左栏（见下方插入位置） */
@@ -14300,7 +14307,8 @@ function buildResultCols(){
      ★ v492 两颗按钮改为「跨两栏的独立一行」，插在 #rCols 与 #dexWrap 之间 ——
        左栏因此矮 160px，图鉴上移，右栏下方的空白消失，按钮也更醒目。 */
   const left =[g('rEndCard'), _row];
-  const right=[(g('achBlock')||g('achWrap')), g('rFb')];
+  /* ★ v671 右栏顺序：回合/黑闪 → 本局解锁 → 给作者的话 */
+  const right=[_rc, (g('achBlock')||g('achWrap')), g('rFb')].filter(Boolean);
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
   /* ★ v648 用户要求：接力链整块删除，原「两栏之后」的插入逻辑一并移除 */
@@ -16841,12 +16849,11 @@ function itaUlt(){
       if(S.phase!=='fight') return;
       const d=rnd(SUK_MAXHP*0.15,SUK_MAXHP*0.20);   /* ★ v541 sid 补齐：穿血独立适应 */   /* ★ v394 对齐文案：穿血＝一阶段 15~20% 最大生命（150 基准 ⇒ 22.5~30 点） */
       hitSukuna(d,true,'hollow',false,false,'ita_blood');
-      if(S.blood<3){
-        S.blood++;
-        say('sys','血契附着 ×'+S.blood+'——宿傩每回合受到 '+(S.blood*3)+' 点持续侵蚀。');
-      }else{
-        say('sys','血契已满（×3），持续侵蚀 '+S.blood*3+' 点/回合。');
-      }
+      /* ★ v671 用户指定：普通虎杖穿血与 68 虎杖一致（剧毒 + 减攻），去掉血契；
+         只打本体、不带群体伤害，CD 维持 2 回合。 */
+      S.blood=0;
+      S.itaPoison=2;
+      say('sys','★ 剧毒侵入宿傩体内：接下来 2 回合，每回合 −5 生命，其攻击伤害 −20%。');
       addRes(8);
       syncHud();
     },390);
@@ -17223,6 +17230,17 @@ function i68Blood(){
     }, CHUAN_GROW_MS);
   };
   apply(false);
+  syncHud();
+}
+/* ★ v671 普通虎杖的剧毒：与 68 同款，但强度固定（2 回合 · 每回合 5 点 · 攻击 −20%） */
+function itaPoisonTick(){
+  if((S.itaPoison||0)<=0||S.phase!=='fight'||S.suk.hp<=0) return;
+  const d=5;
+  S.itaPoison--;
+  try{ hitSukuna(d,false,'poison',false,true,'ita_poison',true,false,false,false,true); }
+  catch(e){ S.suk.hp=Math.max(0,S.suk.hp-d); }
+  fxText(SX()+rnd(-16,16),GY-196*SC,'剧毒 -'+d,'#8b5cf6',false,0,{dmg:true});
+  say('sys','剧毒侵蚀——宿傩 −'+d+' 生命'+(S.itaPoison>0?'（剩余 '+S.itaPoison+' 回合）':'（毒已散尽）'));
   syncHud();
 }
 function i68PoisonTick(){
@@ -29430,14 +29448,20 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 .srvRow #rSrv{flex:0 0 auto !important;max-width:56% !important;width:56% !important;}
 .srvRow #rRec{flex:0 0 auto;min-width:0;max-width:56%;justify-content:flex-start;flex-wrap:wrap;gap:5px;}
 #rSrv .srvBody{line-height:1.5;letter-spacing:.2px;}
+/* ★ v671 回合数／黑闪数：右栏顶部右对齐，作为「本局解锁」的右上角信息条 */
+#rColR #rRec{width:100%;justify-content:flex-end;gap:8px;margin:0 0 3px;flex-wrap:wrap;}
 #rColL .btn,#rColL #btnAgain{margin-top:2px !important;}
 #rColL #rFb{margin-top:2px !important;}
 
 /* ★ v669 用户指定：结局图鉴卡片字号／排布统一，不再有的字大有的字小 */
-#rDex .eCard{display:flex;flex-direction:column;justify-content:flex-start;
-  padding:8px 10px;min-height:calc(86px*var(--k,1));}
-#rDex .eCard .eTag{font-size:9px !important;letter-spacing:2.4px !important;line-height:1.2 !important;}
-#rDex .eCard .eNm{font-size:clamp(15px,2.05vw,19px) !important;letter-spacing:1.2px !important;line-height:1.25 !important;}
+#rDex .eCard{display:flex;flex-direction:column;justify-content:flex-start;position:relative;
+  padding:9px 10px 8px;min-height:calc(86px*var(--k,1));}
+/* ★ v671 用户指定：红色英文改右上角小角标，不再与标题抢一行 */
+#rDex .eCard .eTag{position:absolute;top:5px;right:7px;font-size:7.5px !important;
+  letter-spacing:1.1px !important;line-height:1 !important;opacity:.72;margin:0 !important;}
+#rDex .eCard .eNm{font-size:clamp(15px,2.05vw,19px) !important;letter-spacing:1.2px !important;
+  line-height:1.25 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding-right:calc(3px + 3.4em);}
 #rDex .eCard .eDesc{font-size:clamp(10.5px,1.42vw,12px) !important;line-height:1.5 !important;}
 #rDex .eCard .eAlso{font-size:10px !important;line-height:1.45 !important;}
 
