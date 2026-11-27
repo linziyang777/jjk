@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v667"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v668"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v667">
+<meta name="jjk-build" content="v668">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -30042,15 +30042,15 @@ html.rot #turnBar,html.land #turnBar{top:calc(12px + 16px*var(--k) + var(--sa-t)
 html{height:100%;}
 body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;}
 #app{height:var(--app-h,100vh);}
-/* ★ v667 用户指定（参考 B站 其它 Toy 的居中构图）：容器是固定竖屏，旋转 90° 后画面左右直接顶到屏幕边，
-   圆角 / 挖孔 / B站 悬浮按钮都会压住血条与技能牌。这里在 Toy 容器内给左右各留一段空白，
-   居中呈现；背景沿用 body 的纯黑，视觉上就是一块居中的黑色画布。
-   几何：#app 旋转前 W=100dvh、H=100dvw-2M，rotate(90deg) 后屏幕占位 = 宽 H、高 W，
-   再 left:M 即整体居中，屏幕左右各留 M。 */
-:root{--toy-mx:clamp(8px,4.2vw,36px);}   /* 按屏宽比例自适应：手机约 4.2% 宽，大屏封顶 36px */
+/* ★ v668 用户指定修正：留白指的是**游戏画面的左右**（横屏时的左右），旋转成竖屏后落在图的上下。
+   几何（实测校准）：#app 的 width 对应屏幕高度、top 对应屏幕垂直偏移 ——
+   收窄 width 并下移 M，即屏幕上下各留 M（游戏画面左右留白），水平方向仍满幅。 */
+:root{--toy-mx:clamp(14px,4.2vh,64px);}   /* 按容器高度比例：1000 高约 42px（参考 B站 居中画面），大屏封顶 64px；基准用 --app-h（真实可视高） */
 html.toy.rot #app{
-  left:var(--toy-mx);
-  height:calc(100dvw - var(--toy-mx)*2);
+  top:var(--toy-mx);
+  left:0;
+  width:calc(var(--app-h, 100dvh) - var(--toy-mx)*2);
+  height:100dvw;
 }
 html.toy.rot body{background:#000;}
 </style>
