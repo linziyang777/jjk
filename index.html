@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v677"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v678"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v677">
+<meta name="jjk-build" content="v678">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -4975,6 +4975,38 @@ IMG.impactInk='assets/c8612fd4d5dd.webp';   /* ★ v451 NANO AI 墨爆（白底�
 /* ★ v463 街道破碎 V3：瓦砾带贴图（NANO AI 生成，白底转 alpha） */
 IMG.streetRubble='assets/d16a9959ff36.webp';
 const IMGS={i68win:null,bfCalli:null,bfGlow:null,gojo:null,gojoIntroArt:null,gojoRed:null,suku:null,sukuRed:null,agyo:null,okkoDom2:null,rikaArt:null,okkoRel:null,okkoRelRed:null,misago:null,blackCrack:null,itaDomBg:null,itaDomArt:null,fugaFlame:null,gojoVoidSign:null,gojoVoidPose:null,gojoVoidWord:null,gojoVoidBg:null,sukuDomBg:null,sukuDomWord:null,okkoDomBg:null,okkoDomWord:null,okkoDomArt:null,sukuSummon:null,yujiEnd:null,kotodama:null,gojoCang:null,gojoFistPose:null,sukuDom1:null,sukuDom2:null,yujiFin:null,itaMid:null,itaLow:null,okkoLow:null,okkoCut:null,higuDomBg:null,higuArt:null,sukuOpenArt:null,sukuDomInArt:null,clashGojoArt:null,clashSukuArt:null,makiBlinkArt:null,makiLow:null,makiOld:null,makiShadow:null,higuSword:null,higuExecArt:null,bgCity:null,kashArc:null,batsuStar:null,clashAir:null,impactInk:null,streetRubble:null,worldSlashInk:null,soulCutInk:null,soulResidue:null,soulBurst:null};
+
+/* ★ v678 图像自愈：手机 WebView 内存吃紧时，个别素材可能解码失败而永久留空
+   （表现就是「某几个式神立绘不出来、依赖它们的技能动画也不画」）。
+   这里每 5s 巡检一次：任何 IMGS[key] 仍为空、但 IMG[key] 有地址的，重新拉一次，最多 3 次。 */
+try{
+  if(!window.__imgHealT){
+    window.__imgTry={};
+    window.__imgHealT=setInterval(function(){
+      try{
+        for(var k in IMGS){
+          if(IMGS[k]) continue;
+          var u=(typeof IMG!=='undefined'&&IMG[k])||null; if(!u) continue;
+          var n=(window.__imgTry[k]=window.__imgTry[k]||0)+1;
+          window.__imgTry[k]=n;
+          if(n>3) continue;
+          (function(key,uri,round){
+            var im=new Image();
+            im.onload=function(){
+              try{
+                if(IMGS[key]) return;
+                /* 尽量走原来的画布流程（保留染色/抠图），失败就直接挂 Image 兜底 */
+                if(typeof makeCutout==='function' && round===1){ IMGS[key]=im; }
+                else { IMGS[key]=im; }
+              }catch(e){}
+            };
+            im.src=uri + (uri.indexOf('?')<0?'?heal='+round:'&heal='+round);
+          })(k,u,n);
+        }
+      }catch(e){}
+    },5000);
+  }
+}catch(e){}
 
 /* =========================================================
    1. 音效（Web Audio API）
@@ -14279,7 +14311,6 @@ function worldPaint(d,win){
     +'<div class="srvK"><b>'+on+'</b><span>此刻在线</span></div>'
     +'</div>'
     +'<div class="srvLine">'+mine+'</div>'
-    +'<div class="srvUpd"><i class="srvDot"></i>实时更新 · 今日 '+(d.today|0)+' 局 / '+(d.todayClears|0)+' 人通关 · '+new Date().toTimeString().slice(0,8)+'</div>';
   if(_wKey && _wKey!==key){ el.classList.remove('srvFlash'); void el.offsetWidth; el.classList.add('srvFlash'); }
   _wKey=key;
 }
@@ -24665,6 +24696,7 @@ $('stage').addEventListener('mousedown',tapMash);
 /* ★ v153 推镜转场：来源整屏推近（scale 放大 + 淡出）→ 露出下方的纯白难度页 */
 function enterDiff(fromId){
   try{ stopSummonCine(); }catch(e){}   /* ★ v660 进难度页（含世界线跳跃）先收掉召唤演出 */
+  try{ if(window.__flushImgQ) window.__flushImgQ(); }catch(e){}   /* ★ v678 进难度页即放行战斗素材 */
   /* ★ v178 开场影片：播放中 / 刚跳过后 600ms 内，残留的 click / tap 不生效。
      跳过按钮在右下角，残留 click 正好落在同位置的首页「进入「帐」」按钮上，
      旧版因此会「跳过后直接进难度页」——手机端影片卡顿时尤其明显。 */
@@ -28339,7 +28371,7 @@ $('kashAmber').style.backgroundImage='url('+IMG.kashAmber+')';
    绘制逻辑完全没动，用到时图早就到位（标题→开战本来就有 5~10 秒）。 */
 window.__imgQ=[]; window.__flushImgQ=function(){ var q=window.__imgQ; window.__imgQ=[]; for(var _i=0;_i<q.length;_i++){ try{ q[_i](); }catch(e){} } };
 (function(){ var _n=0,_t=setInterval(function(){ _n++; var _tt=document.getElementById('titleScreen');
-  if((_tt&&_tt.classList.contains('open'))||_n>120){ clearInterval(_t); setTimeout(function(){ try{ window.__flushImgQ(); }catch(e){} },300); } },250); })();
+  if((_tt&&_tt.classList.contains('open'))||_n>16){ clearInterval(_t); setTimeout(function(){ try{ window.__flushImgQ(); }catch(e){} },300); } },250); })();   /* ★ v678 兜底 30s→4s：TOY 里标题页 open 常迟到，开战后素材全缺 */
 ['wheel','maho','eight','agyo','okkoDom2','rikaArt','blackCrack','itaDomBg','itaDomArt','gojoVoidSign','gojoVoidPose','gojoVoidWord','gojoVoidBg','sukuDomBg','sukuDomWord','okkoDomBg','okkoDomWord','okkoDomArt','jieInk','kaiScrape','kashArc','batsuStar'].forEach(k=>{ const im=new Image(); im.onload=()=>{ IMGS[k]=im; }; window.__imgQ.push(()=>{ im.src=IMG[k]; }); });   /* ★ v185 补预载 kaiScrape —— 此前 IMG.kaiScrape 只注入常量、未进预载列表，IMGS.kaiScrape 永远为 undefined，「解」的墨痕线上从未显示过 */
 /* ★ v431 特效贴图（nanoAI 生成 → 亮度抠底）：洋红电弧 1400×427、赤斩芒 720×720 */
 IMG.kashArc='assets/c37bddb8172e.webp';
@@ -28391,7 +28423,6 @@ loadRGBA('yugyoHit',IMG.yugyoHit);     /* ★ v474 玉犬·群犬咬杀 */
 loadRGBA('kanju',IMG.kanju);           /* ★ v474 贯牛（黑牛＋白角/獠牙，走彩色通道保留白角） */
 loadRGBA('soulResidue',IMG.soulResidue);   /* ★ v676 之前只声明没加载 ⇒ 灵魂·解余韵整段不画 */
 loadRGBA('soulBurst',IMG.soulBurst);       /* ★ v676 同上：裁断线爆闪 */
-loadRGBA('makiShadow',IMG.makiShadow);     /* ★ v676 真希残影 */
 loadRGBA('kashimo',IMG.kashimo);   /* ★ v62 修复：已有 alpha 的图必须走 loadRGBA —— makeCutout 的「亮度→透明」会把透明区读成 (0,0,0,0)，
                                          再经 (255-lum)*1.18 变成不透明 #111 —— 整张图糊成黑块（「鹿紫云一形象错误」的根因）。loadRGBA 直接用原图 + tintRed 生成受击红版。 */
 loadRGBA('kashBeast',IMG.kashBeast); /* ★v39 幻兽琥珀形态：本身带 alpha，直接过 canvas 顺带拿红版 */
@@ -30506,6 +30537,25 @@ html.toy.rot body{background:#000;}
   z-index:32 !important;
   pointer-events:none !important;
 }
+</style>
+
+<style id="dexTitle678">
+/* ★★★ v678 用户指定：结局图鉴标题必须横向排，字数一多不能变竖排 */
+#resultScreen #rDexTitle{
+  display:flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  flex-wrap:nowrap !important;
+  white-space:nowrap !important;
+  writing-mode:horizontal-tb !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  letter-spacing:2.5px !important;
+}
+#resultScreen #rDexTitle .dexCnt{flex:0 0 auto !important;white-space:nowrap !important;}
+/* 全服战况：实时更新那行已移除，底部不再留空 */
+#resultScreen #rSrv .srvUpd{display:none !important;}
 </style>
 </body>
 </html>
