@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v671"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v672"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v671">
+<meta name="jjk-build" content="v672">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -5517,8 +5517,21 @@ async function toySupport(name){
    旋转后 app 的「上」贴着屏幕右缘、「下」贴左缘、「左」贴上缘 ⇒ 四个方向要换位。 */
 function toyApplySafe(st){
   try{
+    /* ★ v672 方案A（合规版）：B站 safeArea 是「安全区矩形坐标」——竖屏下 right=安全区宽度、
+       bottom=屏幕高度；横屏下 right=屏幕宽度、bottom=安全区高度。它不是「四边往里缩多少」。
+       旧版直接当 inset 写进 --sa-*，在 500×1080 容器里会得到 --sa-t≈500 / --sa-r≈1080，
+       于是血条、技能栏、回合条被 margin/padding 推出画面（真机截图可见）。
+       这里做语义判别：只有四个值都明显小于视口一半（真正的 inset 形态）才采用；
+       坐标式一律归零 —— 版面由 B站 容器自身的圆角/控件遮罩 + 游戏既有内边距保障，
+       平台返回键、关闭按钮都不会被游戏内容压住，符合 Toy 的展示规范。 */
+    const vw=Math.max(1,window.innerWidth||0);
+    const vv=window.visualViewport;
+    const vh=Math.max(1,Math.round((vv&&vv.height)||window.innerHeight||0));
     const sa=(st&&st.safeArea)||{};
-    let a={t:+sa.top||0, r:+sa.right||0, b:+sa.bottom||0, l:+sa.left||0};
+    const T=+sa.top||0, R=+sa.right||0, Bm=+sa.bottom||0, L=+sa.left||0;
+    const lim=Math.min(vw,vh)*0.5;
+    const isInset = T>=0 && R>=0 && Bm>=0 && L>=0 && T<lim && R<lim && Bm<lim && L<lim;
+    let a = isInset ? {t:T, r:R, b:Bm, l:L} : {t:0, r:0, b:0, l:0};
     if(document.documentElement.classList.contains('rot')) a={t:a.r, r:a.b, b:a.l, l:a.t};
     const el=document.documentElement.style;
     el.setProperty('--sa-t', a.t+'px');
@@ -12051,8 +12064,12 @@ function _cineNext(){
   /* ★ v669 严格排队；★ v671 加超时兜底：忙最多等 3.4s（18×190ms）就强制播，
      避免宿傩回合里小特效不断把召唤永远卡在队列里（表现为「召唤动画不播」）。 */
   if(S.cine){
-    if(!S.__cinePumpT){ S.__cinePumpT=setTimeout(function(){ S.__cinePumpT=0; try{ _cineNext(); }catch(e){} },190); }
-    return;
+    /* ★ v672 S.cine 过期就自愈：残留旗标不能让队列永远等下去 */
+    if((S.cineEnd||0) > performance.now()/1000){
+      if(!S.__cinePumpT){ S.__cinePumpT=setTimeout(function(){ S.__cinePumpT=0; try{ _cineNext(); }catch(e){} },190); }
+      return;
+    }
+    S.cine=0;
   }
   if(!_cineQ.length) return;
   const _busy=(typeof fxBusy==='function'&&fxBusy()) || (S.shikWait||0)>0 || (S.hitStop||0)>0 || (S.cutin||0)>0;
@@ -12066,6 +12083,30 @@ function _cineNext(){
   }
   S.__cinePumpN=0;
   const w=_cineQ.shift(); summonCine(w);
+}
+/* ★ v672 用户要求：宿傩回合开始先把该召唤的演出播完、立绘落地后再行动。
+   一次只推一位：等这一位的立绘真的出现（S.agyo/S.maha/S.kanju）才调下一位；
+   8s 看门狗兜底，任何异常都不会把宿傩回合卡死。 */
+function summonSequence(list,done){
+  let _i=0;
+  const _next=function(){
+    if(_i>=list.length){ try{ done && done(); }catch(e){} return; }
+    const who=list[_i++], t0=Date.now();
+    try{
+      if(who==='agyo') summonAgyo(true,true);
+      else if(who==='maha') summonMaha(true);
+      else if(who==='kanju') summonKanju(true);
+    }catch(e){}
+    (function _wait(){
+      let landed=false;
+      try{
+        landed=(who==='agyo')?!!S.agyo:(who==='maha')?!!S.maha:!!S.kanju;
+      }catch(e){ landed=true; }
+      if(landed || Date.now()-t0>8000){ _next(); return; }
+      setTimeout(_wait,120);
+    })();
+  };
+  _next();
 }
 /* 时间暂停（给其他演出复用；与召唤定格共用 S.cine 闸门） */
 function freezeCine(sec){
@@ -12533,6 +12574,27 @@ function sukunaTurn(){
   }
   if(S.suk.pose==='shadow') S.suk.pose='idle';
   if((S.sukuShadowCd||0)>0) S.sukuShadowCd=(S.sukuShadowCd||0)-1;   /* ★ v652 影遁冷却 */
+  /* ★ v672 用户要求：检测到召唤条件时，在回合开始先播召唤演出，播完落地方允许宿傩行动。
+     用 __summonGateTurn 记录已处理过的回合；演完后重新进入 sukunaTurn，闸门自动放行。 */
+  try{
+    if(S.__summonGateTurn!==(S.turnN||1)){
+      const _need=[];
+      if(!S.agyo && (S.agyoPend||0)>0) _need.push('agyo');
+      if(!S.trueForm && S.suk.hp<100 && !S.maha && !S.mahaDead && !S.mahaSummoning) _need.push('maha');
+      if(!S.kanju && !S.kanjuUsed && S.suk.hp<SUK_MAXHP*0.60) _need.push('kanju');
+      if(_need.length){
+        S.__summonGateTurn=(S.turnN||1);
+        if(_need.indexOf('agyo')>=0) S.agyoPend=0;   /* 已交给闸门，原流程不再重复召唤 */
+        S.sukActT=Date.now();                        /* 锁住玩家输入 */
+        summonSequence(_need, function(){
+          S.sukActT=Date.now();
+          setTimeout(function(){ try{ if(S.phase==='fight' && !S.paused) sukunaTurn(); }catch(e){} }, 90);
+        });
+        return;
+      }
+    }
+  }catch(e){}
+
   /* ★ v509：宿傩回合横幅（同一回合只播一次） */
   try{ if(window.__tbSukuN!==(S.turnN||1)){ window.__tbSukuN=(S.turnN||1); turnBanner('宿傩的回合','对手行动'); } }catch(e){}
   S.sukActT=Date.now();   /* ★ v649 敌方演出开始：动画没播完前玩家不能出手／读秒也不推进 */
