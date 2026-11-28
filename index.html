@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v673"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v674"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v673">
+<meta name="jjk-build" content="v674">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -3317,7 +3317,7 @@ html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-to
 /* ★ v673 三按钮固定在 #app 底部（随旋转，TOY/网页/APK 一致） */
 /* ★ v673 NEW RECORD 作为「你已掌握咒力的核心」右上角角标 */
 /* ★ v673 NEW RECORD：fixed 浮层按核心文字的屏幕矩形定位到右上角，不参与任何旋转容器 */
-#coreNewFloat{position:fixed;z-index:71;display:none;pointer-events:none;
+#coreNewFloat{position:absolute;top:0;left:0;right:auto !important;z-index:71;display:none;pointer-events:none;
   background:#fff;color:#d7263d;border:2px solid #d7263d;
   font:900 11px/1 sans-serif;letter-spacing:2px;padding:2px 6px;
   box-shadow:3px 3px 0 rgba(215,38,61,.28);}
@@ -3326,6 +3326,19 @@ html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-to
   background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);display:none;}
 /* ★ v673 结算内容给固定条留出 88px，最后一行不会被压住 */
 #resultScreen{padding-bottom:calc(88px + env(safe-area-inset-bottom));}
+
+/* ★★ v674 结算页结构修复（B站 TOY 真机 392×850 实测）
+   现象：两栏被压成 137px 高，全服战况／本局解锁／图鉴互相重叠，整页只剩几条被拉宽的横条。
+   根因：.resCol 是 flex column，子块默认 flex-shrink:1；结算内容高于视口时被强行压扁，
+        子卡片自身高度不变 ⇒ 溢出叠到下一块上，"基本结构"看起来全丢了。
+   修法：① 栏内子块一律不可收缩；② 网格行按内容高度走；③ 内容超出交给整页滚动（已有分段下拉）。
+        桌面（≥901px，高度充裕）行为不变。 */
+#resultScreen .resCol > *{flex:0 0 auto !important;}
+#resultScreen #rCols{grid-auto-rows:min-content;align-content:start;}
+#resultScreen .srvRow,#resultScreen .srvRow > *{flex:0 0 auto !important;}
+/* 记录卡纵排时给两张卡设上限，避免窄栏里被文字撑得过高 */
+#resultScreen .srvRow #rRec{align-self:stretch;}
+#resultScreen .srvRow #rRec .recBox{min-height:0;}
 /* ★ v663 世界线跳跃按钮：手机上吸附底部，任何结算内容高度都完整可见 */
 #resultScreen > .ctaRow{width:100%;max-width:860px;justify-self:center;margin:6px auto 2px;}
 @media (max-width:900px){
@@ -14362,6 +14375,12 @@ function doSendFb(r,m){
     .then(function(j){
       if(j && j.ok){
         box.__sent=1;
+        /* ★ v674 轻量实时：自己的留言立刻进弹幕池，不等轮询 */
+        try{
+          DM.pool=Array.isArray(DM.pool)?DM.pool:[];
+          DM.pool.push({m:String(m).slice(0,80), t:Date.now()});
+          if(DM.on){ dmStart(); }
+        }catch(e){}
         if(ok) ok.textContent='已送出 · 谢谢你的话，作者会看到。';
         if(btn){ btn.textContent='已送出'; btn.disabled=true; }
         if(txt) txt.disabled=true;
@@ -14386,27 +14405,27 @@ function mountCoreNew(){
     let el=document.getElementById('coreNewFloat');
     if(!el){
       el=src; el.id='coreNewFloat'; el.classList.remove('coreNew');
-      document.body.appendChild(el);
+      (document.getElementById("rCoreWrap")||document.body).appendChild(el);
     }
     el.style.display='inline-block';
     placeCoreNew();
   }catch(e){}
 }
 function placeCoreNew(){
+  /* ★ v674 用 offset 在 #rCoreWrap 内部定位到核心文字右上角（offset 不受旋转矩阵影响） */
   try{
-    const el=document.getElementById('coreNewFloat');
-    const core=document.getElementById('rCore');
-    if(!el || !core || el.style.display==='none') return;
-    const cr=core.getBoundingClientRect();
-    const w=el.offsetWidth||96, h=el.offsetHeight||20;
-    const vw=window.innerWidth||0;
-    /* 视觉右上角：文字右边缘内缩 10%，顶边上方 0.6 个标签高 */
-    let x=cr.right - w*0.15;
-    let y=cr.top - h*0.6;
-    x=Math.max(2, Math.min(vw-w-2, x));
-    y=Math.max(2, y);
-    el.style.left=Math.round(x)+'px';
-    el.style.top=Math.round(y)+'px';
+    const el=document.getElementById("coreNewFloat");
+    const core=document.getElementById("rCore");
+    const wrap=document.getElementById("rCoreWrap");
+    if(!el||!core||!wrap||el.style.display==="none") return;
+    if(el.parentElement!==wrap) wrap.appendChild(el);
+    const w=el.offsetWidth||92;
+    let x=core.offsetLeft+core.offsetWidth-w*0.45;
+    let y=core.offsetTop-10;
+    x=Math.max(0,Math.min(wrap.clientWidth-w-2,x));
+    y=Math.max(-6,y);
+    el.style.left=Math.round(x)+"px";
+    el.style.top=Math.round(y)+"px";
   }catch(e){}
 }
 function buildResultCols(){
@@ -14528,11 +14547,15 @@ function dmStart(){
     const layer=dmEnsure(); if(!layer||!DM.on) return;
     layer.style.display="block";
     if(Date.now()-DM.lastFetch>60000) dmFetch();
+    /* ★ v674 轻量实时：弹幕开着就每 1.6s 拉一次，别人刚发的留言几秒内就能滚出来 */
+    clearInterval(DM.pollTimer);
+    DM.pollTimer=setInterval(function(){ try{ if(DM.on) dmFetch(); }catch(e){} },1600);
     clearInterval(DM.timer); DM.timer=setInterval(dmSpawn,700);
     for(let i=0;i<6;i++) setTimeout(dmSpawn,i*180);
   }catch(e){}
 }
 function dmStop(){
+  try{ clearInterval(DM.pollTimer); DM.pollTimer=0; }catch(e){}
   try{ clearInterval(DM.timer); DM.timer=0; const layer=DM.layer||document.getElementById("dmLayer"); if(layer){ layer.style.display="none"; layer.innerHTML=""; } }catch(e){}
 }
 function installPortraitFb(){
@@ -30272,5 +30295,112 @@ body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;}
    B站 的返回/关闭按钮浮在容器层，不占用游戏布局。 */
 html.toy.rot body{background:#000;}
 </style>
-</body></body>
+</body>
+<style id="rsPhoneFix674">
+/* ★★★ v674b 旋转手机结算页确定性布局（真机 392×850 实测：旧规则下两栏被压成 137px，核心文字与图鉴卡溢出叠压，整页只剩几条被拉宽的横条）
+   只在 max-width:520px（= 竖屏旋转手机的视口宽）生效，将 DOM 顺序固定为：
+   标题 → 核心横幅 → 两栏（左：全服战况+记录 / 右：本局解锁+留言）→ 图鉴通栏；超出即整页滚动。 */
+@media (max-width:900px){
+  /* 页容器：纵排、内容不可压缩、底部给固定按钮条留位 */
+  #resultScreen:not(.hide){
+    display:flex !important;flex-direction:column !important;
+    align-items:stretch !important;justify-content:flex-start !important;
+    gap:5px !important;padding:8px 10px calc(120px + env(safe-area-inset-bottom)) !important;
+    overflow-y:auto !important;overflow-x:hidden !important;
+  }
+  #resultScreen:not(.hide) > *{flex:0 0 auto !important;width:100% !important;max-width:100% !important;}
+
+  /* 两栏：左 1.06 / 右 0.94，与桌面比例一致 */
+  #resultScreen #rCols{
+    display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;
+    align-items:flex-start !important;gap:10px !important;width:100% !important;max-width:100% !important;
+  }
+  #resultScreen #rColL{flex:0 0 56% !important;width:56% !important;min-width:0 !important;
+    display:flex !important;flex-direction:column !important;gap:7px !important;}
+  #resultScreen #rColR{flex:1 1 auto !important;width:auto !important;min-width:0 !important;
+    display:flex !important;flex-direction:column !important;gap:7px !important;}
+  #resultScreen .resCol > *{flex:0 0 auto !important;width:100% !important;max-width:100% !important;}
+
+  /* 全服战况在左 56%，回合数/黑闪纵排在右 */
+  #resultScreen .srvRow{display:flex !important;flex-direction:row !important;gap:8px !important;
+    align-items:stretch !important;width:100% !important;margin:0 !important;}
+  #resultScreen .srvRow #rSrv{flex:0 0 56% !important;width:56% !important;max-width:56% !important;}
+  #resultScreen .srvRow #rRec{flex:1 1 auto !important;width:auto !important;min-width:0 !important;
+    display:flex !important;flex-direction:column !important;gap:6px !important;justify-content:flex-start !important;}
+  #resultScreen .srvRow #rRec .recBox{width:100% !important;box-sizing:border-box !important;}
+
+  /* 核心横幅：收小，避免大字压到别处 */
+  #resultScreen #rCore{position:relative !important;}
+  #resultScreen #rCoreWrap{max-width:100% !important;padding:2px 0 4px !important;overflow:hidden !important;}
+  #resultScreen #rCore{font-size:clamp(17px,4.6vw,24px) !important;letter-spacing:.14em !important;line-height:1.25 !important;}
+  #resultScreen #rCoreWrap .ring,
+  #resultScreen #rCoreWrap canvas,
+  #resultScreen #rCoreWrap svg{max-height:min(38vw,150px) !important;}
+
+  /* 结局图鉴：6 列等宽小卡，不再被压成细条 */
+  #resultScreen #dexWrap{width:100% !important;margin:0 !important;padding:0 !important;}
+  #resultScreen #rDex{display:grid !important;grid-template-columns:repeat(auto-fit,minmax(118px,1fr)) !important;
+    gap:6px !important;width:100% !important;}
+  #resultScreen #rDex .eCard{width:auto !important;max-width:none !important;min-width:0 !important;
+    min-height:0 !important;padding:5px 6px 6px !important;overflow:hidden !important;}
+  #resultScreen #rDex .eNm{font-size:11.5px !important;line-height:1.25 !important;}
+  #resultScreen #rDex .eDesc{font-size:8.5px !important;line-height:1.28 !important;
+    display:-webkit-box !important;-webkit-line-clamp:2 !important;-webkit-box-orient:vertical !important;overflow:hidden !important;}
+  #resultScreen #rDex .eTag{font-size:7px !important;}
+
+  /* 本局解锁 / 留言卡：贴右栏顶部，与全服战况平齐 */
+  #resultScreen #rColR > #achBlock,
+  #resultScreen #rColR > #achWrap{margin:0 !important;width:100% !important;}
+  #resultScreen #rFb{width:100% !important;max-width:100% !important;margin:0 !important;}
+}
+</style>
+
+<style id="ctaRowFix674">
+/* ★★★ v674c 用户指定：弹幕／分享战绩／世界线跳跃 三按钮统一平行四边形、整体靠右；
+   该行不再铺底色，空白部分可透出结算内容（也不拦截点击）。 */
+#app > .ctaRow,
+#resultScreen > .ctaRow{
+  justify-content:flex-end !important;
+  gap:10px !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border:0 !important;
+  pointer-events:none !important;            /* 整行不挡内容 */
+  padding:3px 12px calc(3px + env(safe-area-inset-bottom)) !important;
+}
+#app > .ctaRow > *,
+#resultScreen > .ctaRow > *{pointer-events:auto !important;}
+#app > .ctaRow .cta,
+#resultScreen > .ctaRow .cta{flex:0 0 auto !important;width:auto !important;
+  padding:6px 14px !important;font-size:13.5px !important;letter-spacing:3px !important;}
+#app > .ctaRow .cta .ctaSub,
+#resultScreen > .ctaRow .cta .ctaSub{font-size:8.5px !important;letter-spacing:.5px !important;}
+/* 弹幕按钮：与 .cta 同款斜切平行四边形，排到最左 */
+/* 免责声明：单行小字靠左，右下的按钮不会盖住它 */
+#resultScreen .resDisc{max-width:calc(100% - 330px) !important;font-size:8px !important;
+  line-height:1.2 !important;white-space:nowrap !important;overflow:hidden !important;
+  text-overflow:ellipsis !important;margin:0 !important;}
+#app > .ctaRow #dmToggle,
+#resultScreen > .ctaRow #dmToggle{
+  order:-1;                                   /* 弹幕最左 */
+  flex:0 0 auto !important;
+  border:4px solid var(--ink,#14110f) !important;
+  background:var(--ink,#14110f) !important;
+  color:#fff !important;
+  font-weight:900 !important;
+  font-size:11px !important;
+  letter-spacing:2px !important;
+  line-height:1 !important;
+  padding:6px 12px !important;
+  border-radius:0 !important;
+  box-shadow:4px 4px 0 rgba(0,0,0,.22) !important;
+  transform:skewX(-6deg) !important;
+  align-self:stretch !important;min-height:46px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  cursor:pointer !important;
+}
+</style>
+</body>
 </html>
