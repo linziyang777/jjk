@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v676"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v677"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v676">
+<meta name="jjk-build" content="v677">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -5041,7 +5041,7 @@ const SFX={
   hollow(){ nz(0.75,0.9,1400,80); tone('sawtooth',130,36,0.75,0.34); tone('square',72,28,0.85,0.18); },
   warn(){ tone('square',920,920,0.06,0.1); tone('square',920,920,0.06,0.1,0.13); },
   adapt(){ tone('sawtooth',170,1600,0.55,0.2); nz(0.55,0.3,600,3200); },
-  black(){ nz(0.38,0.32,5000,70); tone('sine',95,28,0.5,0.16); }   /* ★ v634 用户要求：黑闪音效音量调小 */,   /* ★ v204 音量对齐音乐盒 BGM（原 1.0/0.5），时机改由 QTE 点中瞬间统一触发 */
+  black(){ nz(0.30,0.32,5000,70); tone('sine',95,28,0.40,0.16); }   /* ★ v677 用户指定：黑闪音量再略降 */   /* ★ v634 用户要求：黑闪音效音量调小 */,   /* ★ v204 音量对齐音乐盒 BGM（原 1.0/0.5），时机改由 QTE 点中瞬间统一触发 */
   glass(){ nz(0.28,0.55,8500,2200); nz(0.16,0.38,9500,3200,0.05); tone('triangle',2600,1100,0.14,0.22,0.02); tone('sine',3400,1500,0.09,0.15,0.06); },   /* ★ v206 玻璃破碎声（音量对齐黑闪 0.55/0.28 档），领域破碎时触发 */
   heal(){ [523,659,784,1047].forEach((f,i)=>tone('sine',f,f,0.28,0.15,i*0.07)); },
   hurt(){ nz(0.16,0.42,1800,280); tone('square',170,75,0.16,0.14); },
@@ -6703,6 +6703,7 @@ function prewarmBlackFlashSfx(special){
     const _src=special?((typeof SND_BLACKFLASH_SP!=='undefined'&&SND_BLACKFLASH_SP)?SND_BLACKFLASH_SP:SND_BLACKFLASH):SND_BLACKFLASH;
     if(_src && !window[_key]){
       const el=new Audio(); el.preload='auto'; el.src=sndUrl(_src);
+      el.volume=0.82;   /* ★ v677 用户指定：黑闪原声略降 */
       try{ el.load(); }catch(e){}
       window[_key]=el;
     }
@@ -8693,9 +8694,9 @@ function actHe(){
 }
 
 /* ★ v676 新增语音（茈 / 日车三技能 / 真希一技能） */
-const V676_ZI="assets/7a1c0f3d92e5.mp3";
-const V676_HIGU="assets/c4b8e61a07d9.mp3";
-const V676_MAKI="assets/e92d5b3c81af.mp3";
+const V676_ZI="assets/7a1c0f3d92e5.wav";
+const V676_HIGU="assets/c4b8e61a07d9.wav";
+const V676_MAKI="assets/e92d5b3c81af.wav";
 function actHollow(){
   if(S.phase!=='fight'||QTE.active) return;
   if(S.para>0){ say('sys','麻痹中——这一回合无法行动（1 回合）。'); return; }
@@ -8716,6 +8717,7 @@ function actHollow(){
   /* ★ v512 六眼：茈不消耗咒力 */
   S.gojo.ce=100;   /* ★ v512 六眼：咒力消耗归零（还原原作「无消耗」） */ S.hollowCd=HOLLOW_CD;   /* ★ v80 六眼：极低消耗 */
   S.hollowUsedTurn=S.turnN; S.hollowSkip=0;
+  try{ playCineSfx(V676_ZI,1.0); }catch(e){}   /* ★ v677 茈：点击即起播（原素材峰值仅 0.27，走 +12dB 软限幅） */
   if(S.agyo) agyoDown();   /* ★ v52 虚式菈的冲击连颚吐一起扫掉 */   /* 动过茈 → 解锁进度归零 */
   markActed('hollow');
   S.gojo.pose='cast'; S.gojo.poseT=0.8;
@@ -8765,6 +8767,7 @@ function hollowUnlimited(){
   S.hollowFree=false; S.hollowSkip=0; S.hollowUsedTurn=S.turnN;
   S.usedUnlimited=true;                     /* 成就「术式上限解除」 */
   S.hollowCd=HOLLOW_CD;
+  try{ playCineSfx(V676_ZI,1.0); }catch(e){}   /* ★ v677 无限制·茈 同样起播 */
   markActed('hollow');
   S.gojo.pose='cast'; S.gojo.poseT=1.1;
   /* ★ v219 原作 235 话台词：无限制茈是「不指定对象、连自己都被卷进去」的自爆式一击 */
@@ -25754,7 +25757,7 @@ function higuUlt(){
   /* ★ v407 用户指定：三技能一律需要「罪状 ≥3」才能开庭（罪状获取方式不变）。 */
   if((S.guilt||0)<3){ say('sys','罪状不足（'+(S.guilt||0)+'/3）——「审判·下达」需要 3 层罪状才能开庭：先用「法槌·开廷」举证，再用「领域展延」质询锁定。'); return; }   /* ★ v646 完美格挡已移除 */
   if(S.gojo.ce<ceCost('higuruma','hollow')){ say('sys','咒力不足 2 点，无法下达判决！'); return; }
-  try{ playCineSfx(V676_HIGU,2.8); }catch(e){}   /* ★ v676 日车「审判·下达」法槌声 */
+  try{ playCineSfx(V676_HIGU,1.0); }catch(e){}   /* ★ v677 日车「审判·下达」法槌声（原素材峰值 0.39） */
   try{__haptic(60);}catch(e){}   /* ★ v586 震动：审判·下达 */
   const _n=S.higuVerdictN||0;
   /* ★ v448 用户指定：处刑人之剑不再「绕过血条」，改为固定 60% 最大生命；且每局只能出鞘一次。 */
@@ -26165,6 +26168,7 @@ function makiAtk(){
   /* ★ v542 体力：释魂刀 2 点 / 游云·龙骨 1 点 */
   if(S.gojo.ce<ceCost('maki','atk')){ say('sys','体力不足 '+cePipFor('maki','atk')+' 点——挥不动这把咒具。'); return; }
   S.gojo.ce-=ceCost('maki','atk');
+  try{ playCineSfx(V676_MAKI,1.0); }catch(e){}   /* ★ v677 真希挥刀（原始峰值 0.91，只做小幅提升） */
   /* ★ v408 游云：用满 4 次 ⇒ 这一回合多一次行动。
      必须在 markActed 之前把 actsLeft +1，否则 markActed 已经把回合交出去了、加了也没用。 */
   let _yunExtra=0;
