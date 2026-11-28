@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v675"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v676"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v675">
+<meta name="jjk-build" content="v676">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -6620,7 +6620,7 @@ function fxInkRim(cx_ctx,cx,cy,R,t,seed,sc){
   cx_ctx.restore();
 }
 
-function fxOrb(){ addFx({type:'orb',dur:0.90,x0:GX()+40*SC,y0:GY-140*SC,x1:SX()-40*SC,y1:GY-140*SC}); }
+function fxOrb(){ addFx({type:'orb',dur:1.15,   /* ★ v676 用户指定：略减慢「苍」 */x0:GX()+40*SC,y0:GY-140*SC,x1:SX()-40*SC,y1:GY-140*SC}); }
 function fxHollow(){
   const deb=[];
   for(let i=0;i<30;i++) deb.push({a:rnd(0,Math.PI*2),sp:rnd(50,190),sz:rnd(2.5,6.5),rot:rnd(0,Math.PI)});
@@ -8377,7 +8377,7 @@ function syncHeBtn(){
     b.__hhl=k;
     b.innerHTML=ICO('bolt')+'术式反转·赫<small>'+(cd>0?('CD '+cd+' 回合'):'引爆苍合并为茈')+'</small>';
   }
-  const dim=(cd>0||S.acted);   /* ★ v512 六眼：不判咒力 */
+  const dim=(cd>0||S.acted||(typeof playerCanAct==='function'&&!playerCanAct()));   /* ★ v676 与全局灰暗对齐 */   /* ★ v512 六眼：不判咒力 */
   if(b.__hdim!==dim){ b.__hdim=dim; b.classList.toggle('dim',dim); }
   const selNow=!!(S.acted&&S.lastAct==='he');
   if(b.__hsel!==selNow){ b.__hsel=selNow; b.classList.toggle('sel',selNow); }
@@ -8391,7 +8391,7 @@ function syncGuardBtn(){
     return;
   }   /* 其他角色由各自逻辑接管 */
   const lowHp=(S.gojo.hp<=S.maxHp*0.40);
-  let k,html,dim=!!S.acted;
+  let k,html,dim=!!S.acted||(typeof playerCanAct==="function"&&!playerCanAct());   /* ★ v676 与全局灰暗对齐（开局/演出期同样灰） */
   if((S.muLimit||0)>0){
     k='mu'+S.muLimit;
     html=ICO('guard')+'不可侵<small>剩 '+S.muLimit+' 回合</small>';
@@ -8546,7 +8546,7 @@ function syncVoidBtn(){
       :((vleft<=0)?((vmax<2)?'已无法开启领域·反转术式可刷新':'已无法开启领域')   /* ★ v116 用户指定文案 */
       :'领域展开'))+'</small>';
   }
-  const dim=(vleft<=0||S.gojoDom>0||S.gojoVoidT>0||S.domClash||S.acted);   /* ★ v512 六眼：不判咒力 */
+  const dim=(vleft<=0||S.gojoDom>0||S.gojoVoidT>0||S.domClash||S.acted||(typeof playerCanAct==='function'&&!playerCanAct()));   /* ★ v676 */   /* ★ v512 六眼：不判咒力 */
   if(b.__dim!==dim){ b.__dim=dim; b.classList.toggle('dim',dim); }
 }
 /* ★ v40 目标切换列：场上有式神时出现 —— 玩家可以「集火」式神 */
@@ -8691,6 +8691,11 @@ function actHe(){
   }
   syncHud();
 }
+
+/* ★ v676 新增语音（茈 / 日车三技能 / 真希一技能） */
+const V676_ZI="assets/7a1c0f3d92e5.mp3";
+const V676_HIGU="assets/c4b8e61a07d9.mp3";
+const V676_MAKI="assets/e92d5b3c81af.mp3";
 function actHollow(){
   if(S.phase!=='fight'||QTE.active) return;
   if(S.para>0){ say('sys','麻痹中——这一回合无法行动（1 回合）。'); return; }
@@ -10962,7 +10967,7 @@ try{ if(typeof window.__flushImgQ==='function'){
   /* 复用既有的「标题页 open 后放队列」节奏，把六张登场立绘一起排进去 */
   window.__imgQ.push(function(){ Object.keys(HI_CFG).forEach(prewarmHeroArt);
     /* ★ v596c 68虎杖战斗立绘/切换图提前解码，避免登场后首帧空白 */
-    try{ ['feather','bf','chuanxue'].forEach(function(k){ i68Img(k); }); }catch(e){} });
+    try{ Object.keys(IMG_I68).forEach(function(k){ i68Img(k); }); }catch(e){} });   /* ★ v676 全量预热：穿血图案/字样首次使用来不及解码 */
 } }catch(e){}
 function hiArt(h,cfg){
   if(HI_ART[h]) return HI_ART[h];
@@ -11302,7 +11307,7 @@ function fxSukuMelee(){
   setTimeout(()=>{
     if(S.phase!=='fight') return;
     fxManga('捌',SX()+30*SC,GY-262*SC,false,'#d7263d',false,false,0.42);   /* ★ v403 0.6→0.42 */
-    addFx({type:'batsuCharge',dur:0.15,x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
+    addFx({type:'batsuCharge',dur:0.19,   /* ★ v676 略减慢「捌」 */x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
   },50);   /* ★ v403 连斩第二拍 70→50ms */
   setTimeout(()=>{
     if(S.phase!=='fight') return;
@@ -11311,8 +11316,8 @@ function fxSukuMelee(){
   },190);
   setTimeout(()=>{
     if(S.phase!=='fight') return;
-    addFx({type:'batsuScar',dur:0.58,x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
-  },470);
+    addFx({type:'batsuScar',dur:0.72,   /* ★ v676 略减慢「捌」 */x:GX()+26*SC,y:GY-140*SC,seed:rnd(1,40)});
+  },560);   /* ★ v676 与放慢后的节拍对齐 */
   /* ★ v527：原第三拍第二道「解」（fxJieInk + fxKaiScrape）已移除；
      打击反馈由 190ms 捌爆发自带 shake(true) 承担。 */
 }
@@ -14445,6 +14450,8 @@ function placeCoreNew(){
 function buildResultCols(){
   const rs=$('resultScreen'), L=$('rColL'), R=$('rColR');
   if(!rs||!L||!R||L.__built) return;
+  /* ★ v676 评级字母改挂结算层（原在 #rCoreWrap 内，绝对定位只能相对横幅，挪不到右上角） */
+  try{ const _g=$('rGrade'); if(_g && _g.parentElement!==rs) rs.appendChild(_g); }catch(e){}
   const secs=rs.querySelectorAll('.secTitle');
   const g=id=>$(id);
   /* ★ v312 用户指定：左栏＝结局卡 → 全服战况 → 挑战纪录（回合数／黑闪）；右栏不变 */
@@ -17109,7 +17116,10 @@ function drawI68ChuanBack(){
   const DUR=CHUAN_DUR;
   const k=(_now-t0)/DUR;
   if(k>=1.25){ S.i68ChuanT0=0; return; }
-  const im=i68Img('chuanSfx'); if(!im||!im.width) return;
+  const im=i68Img('chuanSfx'); if(!im) return;
+  /* ★ v676 修「TOY/手机端穿血图案不出现」：外链 webp 首次使用往往还没解码完，
+     旧版直接 return ⇒ 整段 0.9s 演出空白。这里踢一次 decode，解码好后的下一帧就能画。 */
+  if(!im.width){ try{ if(im.decode){ const _p=im.decode(); if(_p&&_p.catch) _p.catch(function(){}); } }catch(e){} return; }
   const ar=im.width/im.height;
   const hb=i68HeroBox();
   const ww=Math.max(H*1.42*SC, hb.w*3.6)*1.1*0.6, hh=ww/ar;   /* ★ v657c 用户指定：特效图缩小 0.4×（≈0.66 总倍率） */
@@ -17536,9 +17546,7 @@ function startI68(){
   queue.length=0;
   firstOpen().concat([
     ['ita','「六十八年——我一天都没有停过。」'],
-    ['ita','「现在，黑闪不需要运气了。」'],
     ['sys','★ 虎杖悠仁【68年后】登场：解·御厨子 ／ 黑闪（CD 1 回合） ／ 穿血·裂变 ／ 反转术式——四技全免咒力，黑闪必中且越打越强，第 4 键即反转术式（没有束缚）。'],
-    ['sys','★ 天生黑闪率 40%：每打出一记黑闪 +5%（上限 50%），并随机强化「解」或「穿血·裂变」中的一项。'],
     ['suku',pick(['「六十八年……你还活着。」','「那股味道，倒是一点没变。」'])]
   ]).forEach((l,i)=>{ setTimeout(()=>say(l[0],l[1]), INTRO_MS+240+i*430); });
   syncHud();
@@ -18663,11 +18671,14 @@ function drawI68Chuan(f,k){
   const ar=im.width/im.height;
   const need=(f.reach||Math.abs(SX()-cx))*1.30*SC*0.8;   /* ★ v656 用户指定：特效图再缩 0.2×（1.30→1.04） */
   const ww=Math.max(need,H*1.18*SC*0.8), hh=ww/ar;   /* ★ v656 1.18→0.94 */
-  const W2=ww*grow, H2=hh*grow;
+  /* ★ v676 性能修复：旧版把 grow 乘进图层尺寸 ⇒ 缓存键每帧都变，等于每帧重建一张全屏画布
+     （drawImage + 径向渐变 + 两条线性渐变），场上式神一多就掉帧到卡死。
+     现在按基准尺寸烤一次，生长改用 canvas 变换。 */
   const hole=f.hole||{rx:0,ry:0};
-  const lay=i68ChuanLayer(im,W2,H2,hole.rx*grow,hole.ry*grow);
+  const lay=i68ChuanLayer(im,ww,hh,hole.rx,hole.ry);
   ctx.save();
   ctx.globalAlpha=Math.min(1,al*0.78);
+  ctx.translate(cx,cy); ctx.scale(grow,grow); ctx.translate(-cx,-cy);
   /* 图案的放射中心(26%,72%)对齐立绘中心 */
   /* ★ v604 把图案里那个人形（图内约 67.1% / 60.8%）的屏幕坐标留给 drawIta68Art */
   try{ S.i68GhostX=cx+(0.671-0.26)*ww; S.i68GhostY=cy+(0.608-0.72)*hh; }catch(e){}
@@ -18675,7 +18686,7 @@ function drawI68Chuan(f,k){
   {
     const _p=Math.max(0,Math.min(1,(k-0.04)/0.68));
     const _e=(_p<0.58) ? 0.58*Math.pow(_p/0.58,2.05) : 0.58+0.42*(1-Math.pow(1-(_p-0.58)/0.42,2.3));
-    const _x0=cx-W2*0.26, _y0=cy-H2*0.72;
+    const _x0=cx-ww*0.26, _y0=cy-hh*0.72;
     ctx.save();
     ctx.beginPath();
     ctx.rect(_x0, _y0-2, Math.max(1, ww*(0.03+0.97*_e)), hh+4);
@@ -24549,6 +24560,12 @@ function playerCanAct(){
     if(!S || S.phase!=='fight') return false;
     if(S.paused || S.cine || QTE.active || (S.ceCtl&&S.ceCtl.on)) return false;
     if((S.cutin||0)>0 || (S.turnWait||0)>0 || (S.tbHold||0)>0) return false;
+    /* ★ v676 与 padAct 的拦截条件对齐：旧版只查演出，不查「开局入场缓冲 tbGate」「领域对拼 domClash」
+       「虎杖领域演出 yujiDom」「回合控制未开闸 turnCtl」——于是出现「点不动但按钮不灰」。
+       用户反馈五条悟开局就是这种：技能点不了，整条技能栏却是亮的。 */
+    if((S.tbGate||0)>0) return false;
+    if(S.domClash || S.phase==='yujiDom') return false;
+    if(S.turnCtl===false) return false;
     if(typeof sukActing==='function' && sukActing()) return false;
     if(typeof shikBusy==='function' && shikBusy()) return false;
   }catch(e){ return true; }
@@ -25347,6 +25364,8 @@ function beginNext(h){
   $('selectUI').classList.add('hide');
   $('resultScreen').classList.add('hide');   /* ★ 防御：换人时兜底收起结算页，避免层级残留 */
   S.hero=h;
+  /* ★ v676 68 虎杖登场就预热全套素材：穿血图案/字样首次施放才解码会在 TOY/手机上整段空白 */
+  try{ if(h==='ita68') Object.keys(IMG_I68).forEach(function(k){ i68Img(k); }); }catch(e){}
   /* ★ v393 用户指定：无下限破解＝「五条在场」＋「魔虚罗在场」满 2 个回合，之后永久失效。
      若魔虚罗在五条上场前就已在场，从五条登场这一刻起重新起算 2 回合。 */
   if(h==='gojo' && S.maha && !S.mahaDead && !S.muBroken && !(S.muBreakAt>0)){
@@ -25735,6 +25754,7 @@ function higuUlt(){
   /* ★ v407 用户指定：三技能一律需要「罪状 ≥3」才能开庭（罪状获取方式不变）。 */
   if((S.guilt||0)<3){ say('sys','罪状不足（'+(S.guilt||0)+'/3）——「审判·下达」需要 3 层罪状才能开庭：先用「法槌·开廷」举证，再用「领域展延」质询锁定。'); return; }   /* ★ v646 完美格挡已移除 */
   if(S.gojo.ce<ceCost('higuruma','hollow')){ say('sys','咒力不足 2 点，无法下达判决！'); return; }
+  try{ playCineSfx(V676_HIGU,2.8); }catch(e){}   /* ★ v676 日车「审判·下达」法槌声 */
   try{__haptic(60);}catch(e){}   /* ★ v586 震动：审判·下达 */
   const _n=S.higuVerdictN||0;
   /* ★ v448 用户指定：处刑人之剑不再「绕过血条」，改为固定 60% 最大生命；且每局只能出鞘一次。 */
@@ -28365,6 +28385,9 @@ loadRGBA('sukuTrue',IMG.sukuTrue);   /* ★ 宿傩原身（四臂二面）：专
 loadRGBA('yugyoBack',IMG.yugyoBack);   /* ★ v474 玉犬·宿傩身后剪影 */
 loadRGBA('yugyoHit',IMG.yugyoHit);     /* ★ v474 玉犬·群犬咬杀 */
 loadRGBA('kanju',IMG.kanju);           /* ★ v474 贯牛（黑牛＋白角/獠牙，走彩色通道保留白角） */
+loadRGBA('soulResidue',IMG.soulResidue);   /* ★ v676 之前只声明没加载 ⇒ 灵魂·解余韵整段不画 */
+loadRGBA('soulBurst',IMG.soulBurst);       /* ★ v676 同上：裁断线爆闪 */
+loadRGBA('makiShadow',IMG.makiShadow);     /* ★ v676 真希残影 */
 loadRGBA('kashimo',IMG.kashimo);   /* ★ v62 修复：已有 alpha 的图必须走 loadRGBA —— makeCutout 的「亮度→透明」会把透明区读成 (0,0,0,0)，
                                          再经 (255-lum)*1.18 变成不透明 #111 —— 整张图糊成黑块（「鹿紫云一形象错误」的根因）。loadRGBA 直接用原图 + tintRed 生成受击红版。 */
 loadRGBA('kashBeast',IMG.kashBeast); /* ★v39 幻兽琥珀形态：本身带 alpha，直接过 canvas 顺带拿红版 */
@@ -30461,6 +30484,24 @@ html.toy.rot body{background:#000;}
 #resultScreen #rDex .eCard .eNm,
 #resultScreen #rDex .eCard .eDesc,
 #resultScreen #rDex .eCard .eAlso{transform:skewX(7deg);}
+</style>
+
+<style id="gradeFix676">
+/* ★★★ v676 用户指定：字母评级移到「战绩报告」右上角（终 印章左侧）并放大 */
+#resultScreen{position:relative;}
+#resultScreen > #rGrade{
+  position:absolute !important;
+  left:auto !important;
+  right:calc(66px + 1.8vw) !important;
+  top:calc(4px + 1.2vh) !important;
+  transform:skewX(-8deg) rotate(-6deg) !important;
+  width:auto !important;height:auto !important;
+  padding:0 4px !important;
+  font-size:clamp(64px,11.5vw,132px) !important;
+  line-height:.86 !important;
+  z-index:32 !important;
+  pointer-events:none !important;
+}
 </style>
 </body>
 </html>
