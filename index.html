@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v674"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v675"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v674">
+<meta name="jjk-build" content="v675">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -12143,6 +12143,7 @@ function freezeCine(sec){
 function stopSummonCine(){
   try{ clearTimeout(S.__cineRetry); S.__cineRetry=0; S.__cineN=0; }catch(e){}
   try{ if(typeof _cineQ!=='undefined' && _cineQ) _cineQ.length=0; }catch(e){}
+  try{ S.__cineQAt={}; S.__cineForce=0; }catch(e){}
   try{ scClear(); }catch(e){}
   try{ const el=$('summonCine'); if(el){
     el.classList.remove('on');
@@ -12213,9 +12214,17 @@ function summonCine(who,onEnd){
   const _pauseOv=document.getElementById('pauseOv');
   const _guideHit=document.getElementById('guideHit');
   const _blocked=!!(_pauseOv && _pauseOv.classList.contains('on')) || !!(_guideHit && _guideHit.classList.contains('on'));
-  const _busy=_blocked || ((S.tbHold||0)>0) || _bannerOn || !!S.cutin
+  /* ★ v675 修「僵直时召唤演出永不播」：旧版写 !!S.cutin，cutin 自然衰减到 -0.01 仍算真 ⇒ 永久 busy，
+     演出只在队列里来回搬运。所有计时类判定一律 >0。 */
+  const _busy=_blocked || ((S.tbHold||0)>0) || _bannerOn || (S.cutin||0)>0
     || (S.shikWait||0)>0 || (S.hitStop||0)>0
     || (typeof fxBusy==='function' && fxBusy());   /* ★ v669 绝不在别的单位攻击动画里插召唤 */
+  /* ★ v675 入队太久（>3.2s）就强播：横幅／引导／小特效再怎么叠，也不能把召唤演出彻底饿死 */
+  try{
+    S.__cineQAt=S.__cineQAt||{};
+    if(!S.__cineQAt[who]) S.__cineQAt[who]=performance.now();
+    if(_busy && !S.__cineForce && (performance.now()-S.__cineQAt[who])>3200) S.__cineForce=1;
+  }catch(e){}
   if(_busy && !S.__cineForce){
     /* ★ v669 改为「严格 FIFO 入队」：旧版 busy 时各自 220ms 重试，两个召唤谁先抢到空闲谁先播
        ⇒ 出现「先喊颚吐却播魔虚罗」。现在一律排队，按召唤顺序播，谁召唤就播谁。
@@ -12233,6 +12242,7 @@ function summonCine(who,onEnd){
   if(S.cine){ if(_cineQ.indexOf(who)<0) _cineQ.push(who); return; }   /* ★ v468 排队 */
   scClear();
   try{ if(S.__cinePendAt) delete S.__cinePendAt[who]; }catch(e){}   /* ★ v666 真的起播 ⇒ 解除占位 */
+  try{ if(S.__cineQAt) delete S.__cineQAt[who]; }catch(e){}           /* ★ v675 */
   const kanju=(who==='kanju');
   const maha=(who==='maha');
   /* ★ v597 用户反馈「召唤动画略慢」：整段提速 ×0.75 ⇒ 魔虚罗 4.45→3.34s、颚吐 3.50→2.63s */
@@ -12603,9 +12613,13 @@ function sukunaTurn(){
   try{
     if(S.__summonGateTurn!==(S.turnN||1)){
       const _need=[];
-      if(!S.agyo && (S.agyoPend||0)>0) _need.push('agyo');
-      if(!S.trueForm && S.suk.hp<100 && !S.maha && !S.mahaDead && !S.mahaSummoning) _need.push('maha');
-      if(!S.kanju && !S.kanjuUsed && S.suk.hp<SUK_MAXHP*0.60) _need.push('kanju');
+      /* ★ v675 用户指定：顺序固定 颚吐 → 魔虚罗 → 贯牛。
+         旧版颚吐只认 agyoPend，血量一记黑闪从高处砸到 20% 以下时 pend 还没排上，颚吐会被漏掉；
+         这里补「血量瞬降到 20% 以下」也视为该召唤（并清掉 pend，避免下回合重复）。 */
+      const _agyoDue=(!S.agyo && !S.agyoUsed) && (((S.agyoPend||0)>0) || S.suk.hp<SUK_MAXHP*0.2);
+      if(_agyoDue) _need.push('agyo');
+      if(!S.trueForm && !S.maha && !S.mahaDead && !S.mahaSummoning && (S.suk.hp<100 || S.mahaPend)) _need.push('maha');
+      if(!S.trueForm && !S.kanju && !S.kanjuUsed && !S.kanjuSummoning && S.suk.hp<SUK_MAXHP*0.60) _need.push('kanju');
       if(_need.length){
         S.__summonGateTurn=(S.turnN||1);
         if(_need.indexOf('agyo')>=0) S.agyoPend=0;   /* 已交给闸门，原流程不再重复召唤 */
@@ -30402,6 +30416,51 @@ html.toy.rot body{background:#000;}
   justify-content:center !important;
   cursor:pointer !important;
 }
+</style>
+
+<style id="rsUi675">
+/* ★★★ v675 结算页视觉调整 */
+/* ① 弹幕按钮回到之前的灰底（半透明深灰 + 黑边），形状仍是斜切平行四边形 */
+#app > .ctaRow #dmToggle,
+#resultScreen > .ctaRow #dmToggle{
+  background:rgba(21,18,16,.82) !important;
+  border-color:#14110f !important;
+}
+/* ② 「你已掌握咒力的核心」：白字 + 黑描边；蓝色刻度环恢复，压在最底层，不参与排版 */
+#resultScreen #rCoreWrap{overflow:visible !important;z-index:1 !important;}
+#resultScreen #rCols{position:relative !important;z-index:2 !important;}
+#resultScreen #rRing{display:block !important;z-index:0 !important;opacity:.85 !important;
+  width:min(150px,34vw) !important;}
+#resultScreen #rCore{
+  color:#fff !important;
+  -webkit-text-stroke:1.6px #0b0b0b;
+  paint-order:stroke fill;
+  -webkit-mask-image:none !important;mask-image:none !important;
+  text-shadow:0 2px 0 rgba(0,0,0,.55), 0 0 16px rgba(34,211,238,.55) !important;
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.35)) !important;
+  position:relative !important;z-index:2 !important;
+}
+/* ③ 全服战况：字距行距放开，数字红字白描边 */
+#resultScreen #rSrv .srvGrid{gap:13px 26px !important;justify-content:space-between !important;}
+#resultScreen #rSrv .srvGrid .srvK{gap:4px !important;}
+#resultScreen #rSrv .srvGrid .srvK span{letter-spacing:3.4px !important;opacity:.9 !important;}
+#resultScreen #rSrv .srvGrid .srvK b{letter-spacing:1.6px !important;}
+#resultScreen #rSrv .srvGrid .srvK b{
+  color:#d7263d !important;
+  -webkit-text-stroke:.7px #fff;
+  text-shadow:
+    1.3px 0 0 #fff,-1.3px 0 0 #fff,0 1.3px 0 #fff,0 -1.3px 0 #fff,
+    1.3px 1.3px 0 #fff,-1.3px -1.3px 0 #fff,1.3px -1.3px 0 #fff,-1.3px 1.3px 0 #fff !important;
+}
+#resultScreen #rSrv .srvLine{letter-spacing:1.8px !important;margin-top:7px !important;}
+#resultScreen #rSrv .srvUpd{letter-spacing:1.1px !important;line-height:1.6 !important;margin-top:6px !important;}
+#resultScreen #rSrv .srvHd{letter-spacing:3px !important;}
+/* ④ 结局图鉴：每张卡片都改成平行四边形（内文反向斜切保持正立） */
+#resultScreen #rDex .eCard{transform:skewX(-7deg);margin:0 3px;}
+#resultScreen #rDex .eCard .eTag,
+#resultScreen #rDex .eCard .eNm,
+#resultScreen #rDex .eCard .eDesc,
+#resultScreen #rDex .eCard .eAlso{transform:skewX(7deg);}
 </style>
 </body>
 </html>
