@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v678"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v679"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v678">
+<meta name="jjk-build" content="v679">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -14429,7 +14429,9 @@ function doSendFb(r,m){
       if(j && j.ok){
         box.__sent=1;
         /* ★ v674 轻量实时：自己的留言立刻进弹幕池，不等轮询 */
+        /* ★ v679 同时落盘：B站 里下次进来也能看到自己发过的话 */
         try{
+          dmLogAdd(m, Date.now());
           DM.pool=Array.isArray(DM.pool)?DM.pool:[];
           DM.pool.push({m:String(m).slice(0,80), t:Date.now()});
           if(DM.on){ dmStart(); }
@@ -14543,6 +14545,32 @@ function buildResultCols(){
    只在结算页可见时算，不影响战斗 HUD 与其它页面。 */
 /* ★ v664 留言弹幕 + 竖屏输入浮层（结算页） */
 const DM={on:true,timer:0,layer:null,pool:[],lastFetch:0};
+/* ★ v679 弹幕本地记录：B站 TOY 是上传的静态包，容器可能限制外网请求；
+   这里把「自己发的 + 线上拉到的」全部落盘（localStorage），下次进结算页直接回放，
+   保证 B站 里也看得到弹幕更新；线上能连上时仍然与网页共享同一份数据。 */
+const DM_LOG_KEY='jjk_dm_log_v1';
+function dmLogLoad(){
+  try{ const a=JSON.parse(localStorage.getItem(DM_LOG_KEY)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+}
+function dmLogSave(a){ try{ localStorage.setItem(DM_LOG_KEY, JSON.stringify(a.slice(-200))); }catch(e){} }
+function dmLogAdd(text,t,unread){
+  try{
+    const m=String(text||'').trim().slice(0,80); if(!m) return;
+    const a=dmLogLoad();
+    for(let i=0;i<a.length;i++){ if(a[i] && a[i].m===m && Math.abs((a[i].t||0)-(t||Date.now()))<90000) return; }
+    a.push({m:m,t:t||Date.now(),u:unread?1:0});
+    dmLogSave(a);
+  }catch(e){}
+}
+function dmLogSeed(){
+  try{
+    const a=dmLogLoad(); if(!a.length) return;
+    DM.pool=Array.isArray(DM.pool)?DM.pool:[];
+    const seen={}; DM.pool.forEach(function(x){ if(x&&x.m) seen[x.m]=1; });
+    a.forEach(function(x){ if(x&&x.m&&!seen[x.m]){ seen[x.m]=1; DM.pool.push({m:x.m,t:x.t,r:-1}); } });
+    if(DM.pool.length>80) DM.pool=DM.pool.slice(-80);
+  }catch(e){}
+}
 function dmStyle(){
   if(document.getElementById("dmCss")) return;
   const st=document.createElement("style"); st.id="dmCss";
@@ -14578,9 +14606,19 @@ function dmEnsure(){
 function dmFetch(){
   try{
     fetch(apiBase()+"/api/msgs?n=80"+apiSc(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
-      if(j&&j.ok&&Array.isArray(j.msgs)){ DM.pool=j.msgs.slice(-80); DM.lastFetch=Date.now(); }
-    }).catch(function(){});
-  }catch(e){}
+      if(j&&j.ok&&Array.isArray(j.msgs)){
+        window.__dmOffline=false;
+        const online=j.msgs.slice(-80);
+        /* ★ v679 线上 + 本地记录合并（按文字去重），线上新到的同时落盘 */
+        const seen={}, merged=[];
+        online.forEach(function(x){ if(x&&x.m&&!seen[x.m]){ seen[x.m]=1; merged.push(x); } });
+        dmLogLoad().forEach(function(x){ if(x&&x.m&&!seen[x.m]){ seen[x.m]=1; merged.push({m:x.m,t:x.t,r:-1}); } });
+        DM.pool=merged.slice(-80);
+        DM.lastFetch=Date.now();
+        try{ j.msgs.forEach(function(x){ dmLogAdd(x.m, x.t); }); }catch(e){}
+      }
+    }).catch(function(){ window.__dmOffline=true; });
+  }catch(e){ window.__dmOffline=true; }
 }
 function dmSpawn(){
   try{
@@ -14601,10 +14639,12 @@ function dmStart(){
   try{
     const layer=dmEnsure(); if(!layer||!DM.on) return;
     layer.style.display="block";
+    dmLogSeed();                       /* ★ v679 先把本地记录的弹幕铺进池子（离线也有内容） */
     if(Date.now()-DM.lastFetch>60000) dmFetch();
-    /* ★ v674 轻量实时：弹幕开着就每 1.6s 拉一次，别人刚发的留言几秒内就能滚出来 */
+    /* ★ v674 轻量实时：弹幕开着就每 1.6s 拉一次；★ v679 连不上时降到 6s，别一直空转 */
     clearInterval(DM.pollTimer);
-    DM.pollTimer=setInterval(function(){ try{ if(DM.on) dmFetch(); }catch(e){} },1600);
+    DM.pollTimer=setInterval(function(){ try{ if(DM.on) dmFetch(); }catch(e){} }, 1600);
+    DM.pollSlow=setInterval(function(){ try{ if(DM.on && window.__dmOffline) dmFetch(); }catch(e){} }, 6000);
     clearInterval(DM.timer); DM.timer=setInterval(dmSpawn,700);
     for(let i=0;i<6;i++) setTimeout(dmSpawn,i*180);
   }catch(e){}
