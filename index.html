@@ -206,7 +206,7 @@
      ① 盘点发现各分发渠道版本真的不一样：主站 / 网页版 zip / TOY_v503 / GH 镜像是 v503，
         APK 还停在 v499，TapTap 两个包停在 v497，B 站线上包更旧 ⇒ 手机装 APK 或在 B 站玩，
         与电脑开主站看到的界面、音频自然不一致。本版把所有渠道统一到 v504。
-     ② 版本可见：<meta name="jjk-build" content="v672"> + 标题页右下角「v6.5 · b504」小字，
+     ② 版本可见：<meta name="jjk-build" content="v673"> + 标题页右下角「v6.5 · b504」小字，
         两端一眼能比对；另有跨端版本自检：从旧版升级来的设备主动清 SW 缓存并重载一次，
         避免手机长期停在旧缓存。
      ③ 竖屏强制横屏（手机看 GH 镜像加载动画方向不对的根因）：
@@ -1037,7 +1037,7 @@
 <head>
 <!-- 本地副本：平台注入脚本 /page/page_comm/inject.js 已彻底移除，双击即可离线打开 -->
 <meta charset="UTF-8">
-<meta name="jjk-build" content="v672">
+<meta name="jjk-build" content="v673">
 <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" name="viewport">
 <title>人外魔境·新宿决战</title>
 <!-- ★ v650 B站 Toy JS SDK：只在 B站 App / Toy Web 容器内提供 window.toy。
@@ -3314,6 +3314,18 @@ html.land #resultScreen.cleared,html.rot #resultScreen.cleared{display:flex !imp
 html.land #resultScreen:not(.hide)::before,html.rot #resultScreen:not(.hide)::before{
   background:radial-gradient(130% 58% at 50% -10%,rgba(255,255,255,.5),rgba(255,255,255,0) 72%) !important;opacity:1;}
 html.land #resultScreen > #btnAgain,html.rot #resultScreen > #btnAgain{margin-top:8px;}
+/* ★ v673 三按钮固定在 #app 底部（随旋转，TOY/网页/APK 一致） */
+/* ★ v673 NEW RECORD 作为「你已掌握咒力的核心」右上角角标 */
+/* ★ v673 NEW RECORD：fixed 浮层按核心文字的屏幕矩形定位到右上角，不参与任何旋转容器 */
+#coreNewFloat{position:fixed;z-index:71;display:none;pointer-events:none;
+  background:#fff;color:#d7263d;border:2px solid #d7263d;
+  font:900 11px/1 sans-serif;letter-spacing:2px;padding:2px 6px;
+  box-shadow:3px 3px 0 rgba(215,38,61,.28);}
+#app > .ctaRow{position:absolute;left:0;right:0;bottom:0;z-index:70;width:100%;max-width:none;margin:0;
+  padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+  background:rgba(247,243,234,.97);box-shadow:0 -2px 0 rgba(26,20,16,.12);display:none;}
+/* ★ v673 结算内容给固定条留出 88px，最后一行不会被压住 */
+#resultScreen{padding-bottom:calc(88px + env(safe-area-inset-bottom));}
 /* ★ v663 世界线跳跃按钮：手机上吸附底部，任何结算内容高度都完整可见 */
 #resultScreen > .ctaRow{width:100%;max-width:860px;justify-self:center;margin:6px auto 2px;}
 @media (max-width:900px){
@@ -5494,6 +5506,9 @@ window.addEventListener('orientationchange',()=>setTimeout(layoutOrientation,180
 window.addEventListener('resize',function(){ try{ if(window.__toySafe) window.__toySafe(); }catch(e){} });
 window.addEventListener('orientationchange',function(){ setTimeout(function(){ try{ if(window.__toySafe) window.__toySafe(); }catch(e){} },260); });
 function tryLandscapeLock(){
+  /* ★ v672-fix2 用户指定：B站 容器内不请求 requestFullscreen、不锁 orientation ——
+     进选人不再切全屏，容器尺寸保持稳定，HUD 与视口始终一致。 */
+  if(window.__JJK_TOY_PACK) return;
   try{
     const el=document.documentElement;
     const lock=()=>{ if(screen.orientation&&screen.orientation.lock){ screen.orientation.lock('landscape').catch(()=>{}); } };
@@ -5585,12 +5600,8 @@ window.__toySafe=function(){ if(TOY.ok) toyApplySafe(TOY.state); };
       if(await toySupport('onPageClose')){
         try{ t.onPageClose(function(){ try{ putSave(SAVE); }catch(e){} }); }catch(e){}
       }
-      /* 3) 进沉浸态：App 内把系统状态栏让出来（失败无声，不影响布局） */
-      if(!TOY.sunk && (await toySupport('setContainerMode'))){
-        const kick=function(){ TOY.sunk=true; try{ t.setContainerMode({immersive:true}).catch(function(){}); }catch(e){} };
-        try{ document.addEventListener('pointerdown',kick,{once:true,passive:true}); }catch(e){}
-        setTimeout(kick,6000);   /* 没有任何手势也要试一次 */
-      }
+      /* ★ v672-fix2 用户指定：不再请求沉浸态。沉浸会隐藏容器 chrome 并改变可视区，
+         反而让布局与容器尺寸对不上；保持普通容器模式，游戏铺满即可。 */
     })();
   })();
 })();
@@ -13982,6 +13993,14 @@ function renderRecords(kill){
     +'<span class="rb">'+(best!=null?('最佳 '+best):'—')+'</span></div>'
     +(isNew?'<span class="recNew">NEW RECORD</span>':'');
   /* ★ v240 用户指定：去掉「出战术师」格子（最佳人数仍写进 SAVE，成就「不屈之魂」依赖它） */
+  /* ★ v673 用户指定：rRec 生成后把 NEW RECORD 角标挪到「你已掌握咒力的核心」右上角 */
+  const _recStamp=function(){
+    try{
+      const rn=document.querySelector('#rRec .recNew');
+      const cw=document.getElementById('rCoreWrap');
+      if(rn){ rn.classList.add('coreNew'); cw.insertBefore(rn, cw.firstChild); }
+    }catch(e){}
+  };
   $('rRec').innerHTML =
       box('回合数',turns+' 回合',(SAVE.best.turns!=null?SAVE.best.turns+' 回合':null),pbT,newT)
     + box('本局黑闪',S.blackN+' 次',null,false,false);
@@ -14359,6 +14378,37 @@ function doSendFb(r,m){
 
 /* ★ v240 结算页左右排布：把各区块搬进左右两栏（只搬一次，之后每次结算只更新内容）
    左栏＝结局卡 / 接力链 / 挑战纪录 / 全服战况 / 手感反馈（★ v248 下移）；右栏＝结局图鉴 / 藏彩蛋成就（横向轮播）。 */
+/* ★ v673 把 NEW RECORD 挂成 fixed 角标，并用核心文字的屏幕矩形定位到右上角 */
+function mountCoreNew(){
+  try{
+    const src=document.querySelector('#rRec .recNew') || document.getElementById('coreNewFloat');
+    if(!src) { try{ const f=document.getElementById('coreNewFloat'); if(f) f.style.display='none'; }catch(e){} return; }
+    let el=document.getElementById('coreNewFloat');
+    if(!el){
+      el=src; el.id='coreNewFloat'; el.classList.remove('coreNew');
+      document.body.appendChild(el);
+    }
+    el.style.display='inline-block';
+    placeCoreNew();
+  }catch(e){}
+}
+function placeCoreNew(){
+  try{
+    const el=document.getElementById('coreNewFloat');
+    const core=document.getElementById('rCore');
+    if(!el || !core || el.style.display==='none') return;
+    const cr=core.getBoundingClientRect();
+    const w=el.offsetWidth||96, h=el.offsetHeight||20;
+    const vw=window.innerWidth||0;
+    /* 视觉右上角：文字右边缘内缩 10%，顶边上方 0.6 个标签高 */
+    let x=cr.right - w*0.15;
+    let y=cr.top - h*0.6;
+    x=Math.max(2, Math.min(vw-w-2, x));
+    y=Math.max(2, y);
+    el.style.left=Math.round(x)+'px';
+    el.style.top=Math.round(y)+'px';
+  }catch(e){}
+}
 function buildResultCols(){
   const rs=$('resultScreen'), L=$('rColL'), R=$('rColR');
   if(!rs||!L||!R||L.__built) return;
@@ -14370,7 +14420,7 @@ function buildResultCols(){
   let _row=L.querySelector('.srvRow');
   if(!_row){ _row=document.createElement('div'); _row.className='srvRow'; }
   if(g('rSrv')) _row.appendChild(g('rSrv'));
-  /* ★ v671 用户指定：回合数／黑闪数不再跟在全服战况下面，改挂到右栏「本局解锁」上方（见 right 数组） */
+  if(_rc) _row.appendChild(_rc);   /* ★ v673 回到全服战况右侧，纵向排列 */
   /* ★ v446 分享按钮紧跟世界线跳跃一起放左栏（否则会独立占一行、整页被顶高一截）；
      解锁块提到右栏最前，一打开结算就看到「这局拿到了什么」。 */
   /* ★ v492 用户指定「结局图鉴上移」：CTA 行不再放左栏（见下方插入位置） */
@@ -14383,8 +14433,8 @@ function buildResultCols(){
      ★ v492 两颗按钮改为「跨两栏的独立一行」，插在 #rCols 与 #dexWrap 之间 ——
        左栏因此矮 160px，图鉴上移，右栏下方的空白消失，按钮也更醒目。 */
   const left =[g('rEndCard'), _row];
-  /* ★ v671 右栏顺序：回合/黑闪 → 本局解锁 → 给作者的话 */
-  const right=[_rc, (g('achBlock')||g('achWrap')), g('rFb')].filter(Boolean);
+  /* ★ v673 用户指定：回合/黑闪回到全服战况右侧纵向排列；右栏只剩本局解锁 + 给作者的话 */
+  const right=[(g('achBlock')||g('achWrap')), g('rFb')].filter(Boolean);
   left.forEach(function(el){ if(el) L.appendChild(el); });
   right.forEach(function(el){ if(el) R.appendChild(el); });
   /* ★ v648 用户要求：接力链整块删除，原「两栏之后」的插入逻辑一并移除 */
@@ -14403,7 +14453,12 @@ function buildResultCols(){
   /* ★ v500 用户指定：两颗按钮移到「左上」—— 放进左栏、紧跟全服战况那一行。
      v498/v499 把它们作为跨两栏的独立行插在图鉴之前，右栏较高 ⇒ 实际掉到页面下方，
      超宽屏又被 rsWide 规则居中，看起来完全不在左上。回到左栏后位置固定贴左上。 */
-  if(_ctaRow){ _host0.insertBefore(_ctaRow,_dexWrap); }   /* ★ v663 世界线跳跃：改为结算层直接子节点，手机端吸底 */
+  /* ★ v673 用户指定：三按钮在 TOY 里也要固定 —— 挂到 #app 用 absolute 贴底，
+     不再依赖 #resultScreen 的滚动容器（B站 容器里 sticky 不生效）。显示由 showResult 控制。 */
+  try{
+    const appEl=document.getElementById('app');
+    if(appEl && _ctaRow){ appEl.appendChild(_ctaRow); _ctaRow.style.display='flex'; }
+  }catch(e){}
   L.__built=1;
 }
 
@@ -14594,10 +14649,16 @@ function rsScrollInit(){
     }
     step();
   }
-  _dn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); _glide(_rs.scrollHeight); });
+  /* ★ v673 用户要求：向下按钮分段滚动，不再一按到底 —— 每次走 78% 视口高度 */
+  _dn.addEventListener('click',function(e){
+    e.preventDefault(); e.stopPropagation();
+    const step=Math.round(_rs.clientHeight*0.78);
+    _glide(Math.min(_rs.scrollTop+step, _rs.scrollHeight));
+  });
   _up.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); _glide(0); });
   _rs.addEventListener('scroll',_sync,{passive:true});
   window.addEventListener('resize',_sync);
+  window.addEventListener('resize',function(){ try{ placeCoreNew(); }catch(e){} });
   try{ new MutationObserver(_sync).observe(_rs,{attributes:true,attributeFilter:['class','style']}); }catch(e){}
   setInterval(function(){ if(!_rs.classList.contains('hide')) _sync(); },900);
   window.__rsNavSync=_sync;   /* ★ v539 结算页一显示就立刻算一次，不必等 900ms 巡检 */
@@ -14662,6 +14723,8 @@ function showResultInternal(){
   /* ★ v266 段位统计栏位保底 */
   S.dmgTaken=S.dmgTaken||0; S.perfectN=S.perfectN||0; S.blackN=S.blackN||0;
   buildResultCols();                                 /* ★ v240 先归位左右两栏 */
+  /* ★ v673 NEW RECORD 角标（屏幕坐标定位到核心文字右上角） */
+  try{ mountCoreNew(); }catch(e){}
   resetFbCard();                                     /* ★ v445 每局都把「给作者的话」重置成可填 */
   if($('gzFin')) $('gzFin').classList.remove('on');   /* ★ v63 收起终幕演出层 */
   $('deathCut').classList.remove('on');
@@ -28097,6 +28160,8 @@ function _btnAgainGo(){
   try{ vowResetAll(); }catch(e){}
   /* ★ v663 跳线前收掉手机端上下滚动钮，避免残留遮挡难度页 */
   try{ ['rsNavDown','rsNavUp'].forEach(function(id){ var e=document.getElementById(id); if(e) e.classList.remove('on'); }); }catch(e){}
+  try{ const _cr=document.querySelector('#app > .ctaRow'); if(_cr) _cr.style.display='none'; }catch(e){}
+  try{ const _cn=document.getElementById('coreNewFloat'); if(_cn) _cn.style.display='none'; }catch(e){}
   try{ dmStop(); }catch(e){}
   /* ★ v537 用户指定：点击后必须「立即」回到难度模式选择界面。
      旧版先 forceMainBgm（内部建元素 + 起播）再进 enterDiff，只要中间任一步被卡住、
@@ -29520,12 +29585,14 @@ html.land #turnBar,html.rot #turnBar{top:calc(12px + 16px*var(--k));}   /* ★ v
 
 /* ═══ ★ v329 结算：全服战况收窄、右边并排回合/黑闪 ═══ */
 /* ★ v670 用户指定：全服战况宽度缩回「原来黑闪次数那一块」（约左半边 56%），回合／黑闪仍在它下侧 */
-.srvRow{display:flex;flex-direction:column;gap:5px;align-items:flex-start;width:100%;margin:2px 0 0;}
-.srvRow #rSrv{flex:0 0 auto !important;max-width:56% !important;width:56% !important;}
-.srvRow #rRec{flex:0 0 auto;min-width:0;max-width:56%;justify-content:flex-start;flex-wrap:wrap;gap:5px;}
+/* ★ v673 用户指定：全服战况在左（56%），回合/黑闪两张小卡在右、纵向排列 */
+.srvRow{display:flex;flex-direction:row;gap:8px;align-items:flex-start;width:100%;margin:2px 0 0;}
+.srvRow #rSrv{flex:0 0 56% !important;max-width:56% !important;width:56% !important;}
+.srvRow #rRec{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:flex-start;align-items:stretch;}
+.srvRow #rRec .recBox{width:100%;box-sizing:border-box;}
+.srvRow #rRec .recNew{display:none;}   /* ★ v673 已移到核心横幅右上角 */
 #rSrv .srvBody{line-height:1.5;letter-spacing:.2px;}
-/* ★ v671 回合数／黑闪数：右栏顶部右对齐，作为「本局解锁」的右上角信息条 */
-#rColR #rRec{width:100%;justify-content:flex-end;gap:8px;margin:0 0 3px;flex-wrap:wrap;}
+/* ★ v673 记录卡已回 srvRow，不再需要右栏定位 */
 #rColL .btn,#rColL #btnAgain{margin-top:2px !important;}
 #rColL #rFb{margin-top:2px !important;}
 
@@ -30174,7 +30241,7 @@ html.rot #lsWrap{width:min(34vh,390px);}
   }catch(e){}
   /* 竖屏时尝试系统级锁定横屏；多数浏览器会拒绝，忽略即可，CSS 旋转才是主路径 */
   try{
-    if(screen.orientation&&screen.orientation.lock&&document.documentElement.classList.contains('rot'))
+    if(!window.__JJK_TOY_PACK && screen.orientation&&screen.orientation.lock&&document.documentElement.classList.contains('rot'))
       screen.orientation.lock('landscape').catch(function(){});
   }catch(e){}
 })();
@@ -30200,16 +30267,9 @@ html.rot #turnBar,html.land #turnBar{top:calc(12px + 16px*var(--k) + var(--sa-t)
 html{height:100%;}
 body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;}
 #app{height:var(--app-h,100vh);}
-/* ★ v668 用户指定修正：留白指的是**游戏画面的左右**（横屏时的左右），旋转成竖屏后落在图的上下。
-   几何（实测校准）：#app 的 width 对应屏幕高度、top 对应屏幕垂直偏移 ——
-   收窄 width 并下移 M，即屏幕上下各留 M（游戏画面左右留白），水平方向仍满幅。 */
-:root{--toy-mx:clamp(14px,4.2vh,64px);}   /* 按容器高度比例：1000 高约 42px（参考 B站 居中画面），大屏封顶 64px；基准用 --app-h（真实可视高） */
-html.toy.rot #app{
-  top:var(--toy-mx);
-  left:0;
-  width:calc(var(--app-h, 100dvh) - var(--toy-mx)*2);
-  height:100dvw;
-}
+/* ★ v672-fix2 用户指定：B站 容器内不留白、不缩画面 —— #app 直接用 html.rot 的原尺寸铺满
+   （width:100dvh / height:100dvw），HUD 与容器同宽，不会再出现两侧被裁。
+   B站 的返回/关闭按钮浮在容器层，不占用游戏布局。 */
 html.toy.rot body{background:#000;}
 </style>
 </body></body>
